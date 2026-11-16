@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Recipe,
   Household,
@@ -15,6 +16,7 @@ import {
   DeliveryAddress
 } from '@rasoi/shared-types';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { HeroSection } from '@/components/landing/HeroSection';
@@ -35,29 +37,49 @@ import { RetailerAdminViews } from '@/components/app/RetailerAdminViews';
 import { RecipePickerModal } from '@/components/app/RecipePickerModal';
 import { SEED_RECIPES, SEED_DEMO_HOUSEHOLD, SEED_PANTRY_ITEMS, SEED_RETAILERS, SEED_PRODUCT_VARIANTS } from '@rasoi/database';
 import { calculateMealPlanRequirements, buildGroceryBasket } from '@rasoi/grocery-engine';
+import { ChefHat } from 'lucide-react';
 
 type ActiveTab = 'landing' | 'dashboard' | 'planner' | 'recipes' | 'basket' | 'pantry' | 'retailer-admin';
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const [activeTab, setActiveTab] = useState<ActiveTab>('landing');
 
-  // Synchronize tab changes to URL hash and localStorage so reloads and deep links preserve the active view
+  // Synchronize tab changes to URL hash
   const changeTab = (tab: ActiveTab) => {
+    if (!isAuthenticated && tab !== 'landing' && tab !== 'recipes') {
+      router.push(`/login?redirect=${tab}`);
+      return;
+    }
     setActiveTab(tab);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('rasoi_active_tab', tab);
       const newUrl = tab === 'landing' ? window.location.pathname : `${window.location.pathname}#${tab}`;
       window.history.replaceState(null, '', newUrl);
     }
   };
 
-  // Restore saved tab on initial page load / refresh
+  // Restore saved tab or redirect to login based on authentication
   useEffect(() => {
+    if (isAuthLoading) return;
+
+    const validTabs: ActiveTab[] = [
+      'landing', 'dashboard', 'planner', 'recipes', 'basket', 'pantry', 'retailer-admin'
+    ];
+
+    if (!isAuthenticated) {
+      const hash = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : '';
+      if (hash && hash !== 'landing' && hash !== 'recipes') {
+        router.push(`/login?redirect=${hash}`);
+      } else if (hash === 'recipes') {
+        setActiveTab('recipes');
+      } else {
+        setActiveTab('landing');
+      }
+      return;
+    }
+
     if (typeof window !== 'undefined') {
-      const validTabs: ActiveTab[] = [
-        'landing', 'dashboard', 'planner', 'recipes', 'basket', 'pantry', 'retailer-admin'
-      ];
-      
       // 1. Check URL hash first (e.g. #dashboard, #planner, #basket)
       const hash = window.location.hash.replace('#', '') as any;
       if (validTabs.includes(hash)) {
@@ -73,16 +95,11 @@ export default function HomePage() {
         return;
       }
 
-      // 3. Check persistent localStorage
-      const saved = localStorage.getItem('rasoi_active_tab') as any;
-      if (validTabs.includes(saved) && saved !== 'landing') {
-        setActiveTab(saved);
-        window.history.replaceState(null, '', `${window.location.pathname}#${saved}`);
-      } else if (!window.location.hash && !params.get('tab')) {
+      if (!window.location.hash && !params.get('tab')) {
         setActiveTab('dashboard');
       }
     }
-  }, []);
+  }, [isAuthLoading, isAuthenticated, router]);
 
   // Handle browser back / forward navigation
   useEffect(() => {
@@ -92,14 +109,18 @@ export default function HomePage() {
         'landing', 'dashboard', 'planner', 'recipes', 'basket', 'pantry', 'retailer-admin'
       ];
       if (validTabs.includes(hash)) {
-        setActiveTab(hash);
+        if (!isAuthenticated && hash !== 'landing' && hash !== 'recipes') {
+          router.push(`/login?redirect=${hash}`);
+        } else {
+          setActiveTab(hash);
+        }
       } else if (!window.location.hash) {
-        setActiveTab('dashboard');
+        setActiveTab(isAuthenticated ? 'dashboard' : 'landing');
       }
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+  }, [isAuthenticated, router]);
 
   // Application State
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -170,28 +191,12 @@ export default function HomePage() {
   // Initialize data on mount
   useEffect(() => {
     async function loadData() {
+      // 1. Always load public catalog recipes
       try {
-        // Try fetching from backend API
-        const [recs, plan, hh, pnt, ords] = await Promise.all([
-          api.getRecipes(),
-          api.getCurrentPlan(),
-          api.getHousehold(),
-          api.getPantry(),
-          api.getOrders().catch(() => [])
-        ]);
+        const recs = await api.getRecipes();
         setRecipes(recs);
-        setMealPlanItems(plan);
-        setHousehold(hh);
-        setPantryItems(pnt);
-        setOrders(ords || []);
-
-        const bkt = await api.getBasket();
-        setBasket(bkt);
-        const reqs = await api.getRequirements();
-        setRequirements(reqs);
       } catch (err) {
-        console.warn('Backend loading or in progress; initializing local state seamlessly:', err);
-        // Fallback to rich local seed state
+        console.warn('Backend loading or in progress; initializing local recipe state:', err);
         const initialRecipes: Recipe[] = SEED_RECIPES.map(r => ({
           ...r,
           ingredients: r.ingredients.map((ing, idx) => ({
@@ -214,104 +219,45 @@ export default function HomePage() {
           ratingCount: 120
         }));
         setRecipes(initialRecipes);
+      }
 
-        const initialHousehold: Household = {
-          id: SEED_DEMO_HOUSEHOLD.id,
-          userId: SEED_DEMO_HOUSEHOLD.userId,
-          name: SEED_DEMO_HOUSEHOLD.name,
-          primaryCuisines: ['North Indian', 'Gujarati'],
-          spiceTolerance: 'Medium',
-          weeklyBudgetInr: SEED_DEMO_HOUSEHOLD.weeklyBudgetInr,
-          cookingFrequency: 'Daily Fresh',
-          members: SEED_DEMO_HOUSEHOLD.members.map(m => ({
-            ...m,
-            ageGroup: m.ageGroup as any,
-            dietaryPreference: m.dietaryPreference as any
-          }))
-        };
-        setHousehold(initialHousehold);
+      // 2. If unauthenticated, clear any private household state and exit
+      if (!isAuthenticated) {
+        setHousehold(null);
+        setMealPlanItems([]);
+        setPantryItems([]);
+        setOrders([]);
+        setBasket(null);
+        setRequirements([]);
+        return;
+      }
 
-        const initialPlan: MealPlanItem[] = [
-          {
-            id: 'plan-item-1',
-            mealPlanId: 'mp-week-1',
-            dayOfWeek: 'monday',
-            mealCategory: 'breakfast',
-            recipeId: 'recipe-methi-thepla',
-            recipe: initialRecipes.find(r => r.id === 'recipe-methi-thepla')!,
-            servings: 4
-          },
-          {
-            id: 'plan-item-2',
-            mealPlanId: 'mp-week-1',
-            dayOfWeek: 'monday',
-            mealCategory: 'lunch',
-            recipeId: 'recipe-paneer-butter-masala',
-            recipe: initialRecipes.find(r => r.id === 'recipe-paneer-butter-masala')!,
-            servings: 4
-          },
-          {
-            id: 'plan-item-3',
-            mealPlanId: 'mp-week-1',
-            dayOfWeek: 'tuesday',
-            mealCategory: 'breakfast',
-            recipeId: 'recipe-kanda-poha',
-            recipe: initialRecipes.find(r => r.id === 'recipe-kanda-poha')!,
-            servings: 4
-          },
-          {
-            id: 'plan-item-4',
-            mealPlanId: 'mp-week-1',
-            dayOfWeek: 'tuesday',
-            mealCategory: 'lunch',
-            recipeId: 'recipe-rajma-chawal',
-            recipe: initialRecipes.find(r => r.id === 'recipe-rajma-chawal')!,
-            servings: 4
-          }
-        ];
-        setMealPlanItems(initialPlan);
+      // 3. If authenticated, fetch customer household, plan, pantry, and orders
+      try {
+        const [plan, hh, pnt, ords] = await Promise.all([
+          api.getCurrentPlan().catch(() => []),
+          api.getHousehold().catch(() => null),
+          api.getPantry().catch(() => []),
+          api.getOrders().catch(() => [])
+        ]);
+        setMealPlanItems(plan || []);
+        setHousehold(hh);
+        setPantryItems(pnt || []);
+        setOrders(ords || []);
 
-        const initialPantry: PantryItem[] = SEED_PANTRY_ITEMS.map((p, idx) => ({
-          id: `pantry-${idx}`,
-          householdId: initialHousehold.id,
-          ingredientId: p.ingredientId,
-          ingredient: {
-            id: p.ingredientId,
-            name: p.ingredientId.replace('ing-', '').replace('-', ' '),
-            category: 'Pantry Staples',
-            standardUnit: p.unit as any,
-            isJainPermissible: true
-          },
-          currentQuantity: p.currentQuantity,
-          unit: p.unit as any,
-          isLowStock: p.isLowStock,
-          updatedAt: new Date().toISOString()
-        }));
-        setPantryItems(initialPantry);
-
-        // Run Grocery Engine locally
-        const reqs = calculateMealPlanRequirements(initialPlan, initialPantry);
-        setRequirements(reqs);
-
-        const variants = SEED_PRODUCT_VARIANTS.map(v => ({
-          ...v,
-          productId: `prod-${v.brand}`
-        }));
-        const bResult = buildGroceryBasket(reqs, variants, SEED_RETAILERS, SEED_RETAILERS[0].id);
-        setBasket({
-          id: 'basket-local',
-          householdId: initialHousehold.id,
-          selectedRetailerId: SEED_RETAILERS[0].id,
-          items: bResult.items,
-          subtotalInr: bResult.subtotalInr,
-          deliveryFeeInr: bResult.deliveryFeeInr,
-          totalInr: bResult.totalInr,
-          comparisons: bResult.comparisons
-        });
+        const bkt = await api.getBasket().catch(() => null);
+        setBasket(bkt);
+        const reqs = await api.getRequirements().catch(() => []);
+        setRequirements(reqs || []);
+      } catch (err) {
+        console.warn('Failed to load private customer household data:', err);
       }
     }
-    loadData();
-  }, []);
+
+    if (!isAuthLoading) {
+      loadData();
+    }
+  }, [isAuthLoading, isAuthenticated]);
 
   // Recalculate grocery basket whenever meal plan or pantry items change
   const refreshBasket = async () => {

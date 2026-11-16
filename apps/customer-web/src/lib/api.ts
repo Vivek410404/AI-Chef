@@ -26,14 +26,29 @@ function getApiBaseUrl(): string {
   return 'http://localhost:4000/api';
 }
 
-async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
+let inMemoryAuthToken: string | null = null;
+let isRefreshing = false;
+let refreshPromise: Promise<string | null> | null = null;
+
+export function setMemoryToken(token: string | null) {
+  inMemoryAuthToken = token;
+}
+
+export function getMemoryToken(): string | null {
+  return inMemoryAuthToken;
+}
+
+async function fetchJson<T>(endpoint: string, options?: RequestInit, isRetry = false): Promise<T> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}${endpoint}`;
   try {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('rasoi_auth_token') : null;
-    const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    const authHeaders: Record<string, string> = inMemoryAuthToken
+      ? { Authorization: `Bearer ${inMemoryAuthToken}` }
+      : {};
+
     const res = await fetch(url, {
       ...options,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...authHeaders,
@@ -41,9 +56,56 @@ async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T>
       }
     });
 
+    if (
+      res.status === 401 &&
+      !isRetry &&
+      !endpoint.startsWith('/auth/login') &&
+      !endpoint.startsWith('/auth/refresh') &&
+      !endpoint.startsWith('/auth/logout')
+    ) {
+      try {
+        if (!isRefreshing) {
+          isRefreshing = true;
+          refreshPromise = (async () => {
+            try {
+              const refreshRes = await fetch(`${baseUrl}/auth/refresh`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+              });
+              if (refreshRes.ok) {
+                const data = await refreshRes.json();
+                inMemoryAuthToken = data.accessToken || null;
+                return inMemoryAuthToken;
+              }
+              inMemoryAuthToken = null;
+              return null;
+            } catch {
+              inMemoryAuthToken = null;
+              return null;
+            } finally {
+              isRefreshing = false;
+            }
+          })();
+        }
+        const newToken = await refreshPromise;
+        if (newToken) {
+          return fetchJson<T>(endpoint, options, true);
+        }
+      } catch {
+        inMemoryAuthToken = null;
+      }
+    }
+
     if (!res.ok) {
       const errText = await res.text();
-      throw new Error(`API ${res.status}: ${errText}`);
+      let parsedMessage = errText;
+      try {
+        const json = JSON.parse(errText);
+        parsedMessage = json.message || errText;
+      } catch {}
+      throw new Error(`API ${res.status}: ${parsedMessage}`);
     }
 
     return await res.json();
@@ -70,12 +132,12 @@ export const api = {
   },
 
   async verifyEmail(token: string) {
-    const res = await fetchJson<{ success: boolean; message: string; token?: string; user?: any }>('/auth/verify-email', {
+    const res = await fetchJson<{ success: boolean; message: string; token?: string; accessToken?: string; user?: any }>('/auth/verify-email', {
       method: 'POST',
       body: JSON.stringify({ token })
     });
-    if (res?.token && typeof window !== 'undefined') {
-      localStorage.setItem('rasoi_auth_token', res.token);
+    if (res?.accessToken || res?.token) {
+      inMemoryAuthToken = res.accessToken || res.token || null;
     }
     return res;
   },
@@ -109,11 +171,29 @@ export const api = {
   },
 
   async getMe() {
-    return fetchJson<{ user: any; memberships: any[] }>('/auth/me');
+    const res = await fetchJson<any>('/auth/me');
+    return {
+      user: res?.user || res,
+      memberships: res?.memberships || []
+    };
+  },
+
+  async getProfile() {
+    return fetchJson<any>('/auth/profile');
+  },
+
+  async updateProfile(data: { fullName?: string; phoneNumber?: string }) {
+    return fetchJson<any>('/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
   },
 
   async getSessions() {
-    return fetchJson<{ sessions: any[] }>('/auth/sessions');
+    const res = await fetchJson<any>('/auth/sessions');
+    return {
+      sessions: res?.sessions || (Array.isArray(res) ? res : [])
+    };
   },
 
   async revokeSession(sessionId: string) {
@@ -133,19 +213,19 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ role, ...(body || {}) })
     });
-    if (res?.token && typeof window !== 'undefined') {
-      localStorage.setItem('rasoi_auth_token', res.token);
+    if (res?.token) {
+      inMemoryAuthToken = res.token;
     }
     return res;
   },
 
   async login(email: string, password?: string) {
-    const res = await fetchJson<{ token: string; user: any; refreshToken?: string }>('/auth/login', {
+    const res = await fetchJson<{ token?: string; accessToken?: string; user: any; refreshToken?: string }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password })
     });
-    if (res?.token && typeof window !== 'undefined') {
-      localStorage.setItem('rasoi_auth_token', res.token);
+    if (res?.accessToken || res?.token) {
+      inMemoryAuthToken = res.accessToken || res.token || null;
     }
     return res;
   },
@@ -156,17 +236,12 @@ export const api = {
     } catch {
       // Ignore network failure on logout
     } finally {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('rasoi_auth_token');
-      }
+      inMemoryAuthToken = null;
     }
   },
 
   getAuthToken(): string | null {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('rasoi_auth_token');
-    }
-    return null;
+    return inMemoryAuthToken;
   },
 
   // Households (Multi-Tenant & Invitations)

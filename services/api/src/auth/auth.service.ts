@@ -31,7 +31,7 @@ export class AuthService implements OnModuleInit {
     private readonly rateLimiter: RateLimiterService,
     private readonly auditService: AuditService,
     private readonly emailService: EmailService
-  ) {}
+  ) { }
 
   async onModuleInit() {
     await this.loadRevokedTokensFromDatabase();
@@ -300,7 +300,7 @@ export class AuthService implements OnModuleInit {
       }
 
       if (user.status === 'PENDING_VERIFICATION') {
-        throw new UnauthorizedException('Account pending verification. Please verify your email before logging in.');
+        throw new UnauthorizedException('Account pending verificati on. Please verify your email before logging in.');
       }
 
       if (user.status === 'SUSPENDED' || user.status === 'DELETED') {
@@ -751,6 +751,118 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
+   * Get Full User Profile
+   */
+  async getProfile(userId: string) {
+    if (this.store.isPrismaConnected) {
+      const user = await this.store.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          phoneNumber: true,
+          role: true,
+          status: true,
+          emailVerifiedAt: true,
+          createdAt: true,
+          households: {
+            select: { id: true, name: true, dietaryPreference: true }
+          },
+          householdMembers: {
+            select: {
+              id: true,
+              householdId: true,
+              role: true,
+              household: {
+                select: { id: true, name: true, dietaryPreference: true }
+              }
+            }
+          }
+        }
+      });
+      if (!user) {
+        throw new NotFoundException('User profile not found');
+      }
+      return user;
+    }
+    return {
+      id: userId,
+      email: 'user@example.com',
+      fullName: 'Household Member',
+      phoneNumber: null,
+      role: 'CUSTOMER',
+      status: 'ACTIVE',
+      emailVerifiedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      households: [],
+      householdMembers: []
+    };
+  }
+
+  /**
+   * Update User Profile (editable fields: fullName, phoneNumber)
+   */
+  async updateProfile(userId: string, dto: { fullName?: string; phoneNumber?: string }, clientIp = '127.0.0.1') {
+    if (dto.fullName !== undefined) {
+      if (typeof dto.fullName !== 'string' || dto.fullName.trim().length < 2) {
+        throw new BadRequestException('Full name must be at least 2 characters long');
+      }
+    }
+
+    if (dto.phoneNumber !== undefined && dto.phoneNumber !== null && dto.phoneNumber.trim().length > 0) {
+      const cleanPhone = dto.phoneNumber.trim().replace(/[\s-]/g, '');
+      if (!/^\+?[0-9]{10,13}$/.test(cleanPhone)) {
+        throw new BadRequestException('Please provide a valid phone number (10 to 13 digits)');
+      }
+    }
+
+    if (this.store.isPrismaConnected) {
+      const updateData: any = {};
+      if (dto.fullName !== undefined) {
+        updateData.fullName = dto.fullName.trim();
+      }
+      if (dto.phoneNumber !== undefined) {
+        updateData.phoneNumber = dto.phoneNumber ? dto.phoneNumber.trim() : null;
+      }
+
+      const updated = await this.store.prisma.user.update({
+        where: { id: userId },
+        data: updateData,
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          phoneNumber: true,
+          role: true,
+          status: true,
+          emailVerifiedAt: true,
+          createdAt: true
+        }
+      });
+
+      await this.auditService.log({
+        action: 'PROFILE_UPDATED',
+        userId,
+        ipAddress: clientIp,
+        metadata: {
+          updatedFields: Object.keys(updateData)
+        }
+      });
+
+      return updated;
+    }
+
+    return {
+      id: userId,
+      fullName: dto.fullName || 'Household Member',
+      phoneNumber: dto.phoneNumber || null,
+      role: 'CUSTOMER',
+      status: 'ACTIVE'
+    };
+  }
+
+  /**
    * Revoke Specific Session
    */
   async revokeSession(userId: string, sessionId: string, clientIp = '127.0.0.1') {
@@ -794,11 +906,11 @@ export class AuthService implements OnModuleInit {
 
     const email = options?.email || (
       role === 'SUPER_ADMIN' ? 'superadmin@rasoiiq.in' :
-      role === 'ADMIN' ? 'admin@rasoiiq.in' :
-      role === 'OPERATIONS' ? 'operations@rasoiiq.in' :
-      role === 'SUPPORT' ? 'support@rasoiiq.in' :
-      role === 'RETAILER' ? 'partner@blinkit.com' :
-      'demo@rasoiiq.in'
+        role === 'ADMIN' ? 'admin@rasoiiq.in' :
+          role === 'OPERATIONS' ? 'operations@rasoiiq.in' :
+            role === 'SUPPORT' ? 'support@rasoiiq.in' :
+              role === 'RETAILER' ? 'partner@blinkit.com' :
+                'demo@rasoiiq.in'
     );
     const adminSecret = process.env.ADMIN_DEMO_SECRET || 'rasoi_admin_secret_2026';
     const hasValidSecret = options?.secret === adminSecret;
@@ -875,7 +987,7 @@ export class AuthService implements OnModuleInit {
           defaultUserId = existingDbUser.id;
           fullName = existingDbUser.fullName || fullName;
         }
-      } catch {}
+      } catch { }
     }
 
     const userId = options?.userId || defaultUserId;
@@ -886,10 +998,10 @@ export class AuthService implements OnModuleInit {
       id: userId,
       email,
       fullName: role === 'SUPER_ADMIN' ? 'Super Administrator' :
-                role === 'ADMIN' ? 'Platform Administrator' :
-                role === 'OPERATIONS' ? 'Operations Specialist' :
-                role === 'SUPPORT' ? 'Support Specialist' :
-                role === 'RETAILER' ? 'Retail Partner Manager' : fullName,
+        role === 'ADMIN' ? 'Platform Administrator' :
+          role === 'OPERATIONS' ? 'Operations Specialist' :
+            role === 'SUPPORT' ? 'Support Specialist' :
+              role === 'RETAILER' ? 'Retail Partner Manager' : fullName,
       role,
       householdId,
       retailerId,
@@ -947,7 +1059,16 @@ export class AuthService implements OnModuleInit {
         try {
           const dbUser = await this.store.prisma.user.findUnique({
             where: { id: targetUserId },
-            select: { id: true, status: true, role: true, email: true }
+            select: {
+              id: true,
+              status: true,
+              role: true,
+              email: true,
+              fullName: true,
+              phoneNumber: true,
+              emailVerifiedAt: true,
+              createdAt: true
+            }
           });
           if (dbUser) {
             if (dbUser.status === 'SUSPENDED') {
@@ -962,7 +1083,11 @@ export class AuthService implements OnModuleInit {
               sub: dbUser.id,
               role: dbUser.role || normalizedRole,
               status: dbUser.status,
-              email: dbUser.email || decoded.email
+              email: dbUser.email || decoded.email,
+              fullName: dbUser.fullName || decoded.fullName,
+              phoneNumber: dbUser.phoneNumber,
+              emailVerifiedAt: dbUser.emailVerifiedAt,
+              createdAt: dbUser.createdAt
             };
           }
         } catch (dbErr: any) {

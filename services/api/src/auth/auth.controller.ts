@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Patch,
   Body,
   Get,
   Delete,
@@ -61,8 +62,19 @@ export class AuthController {
   }
 
   private clearAuthCookies(res: Response) {
-    res.clearCookie('rasoi_access_token', { path: '/' });
-    res.clearCookie('rasoi_refresh_token', { path: '/' });
+    const isProd = process.env.NODE_ENV === 'production';
+    res.clearCookie('rasoi_access_token', {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      path: '/'
+    });
+    res.clearCookie('rasoi_refresh_token', {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      path: '/'
+    });
   }
 
   @Post('register')
@@ -72,9 +84,18 @@ export class AuthController {
   }
 
   @Post('verify-email')
-  async verifyEmail(@Body() dto: VerifyEmailDto, @Req() req: Request, @Ip() ip: string) {
+  async verifyEmail(
+    @Body() dto: VerifyEmailDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Ip() ip: string
+  ) {
     const clientIp = this.extractClientIp(req, ip);
-    return this.authService.verifyEmail(dto.token, clientIp);
+    const result: any = await this.authService.verifyEmail(dto.token, clientIp);
+    if (result.token || result.accessToken) {
+      this.setAuthCookies(res, result.token || result.accessToken, result.refreshToken);
+    }
+    return result;
   }
 
   @Post('resend-verification')
@@ -183,12 +204,38 @@ export class AuthController {
   async getMe(@Headers('authorization') authHeader: string, @Req() req: Request) {
     const token = authHeader?.replace(/^Bearer\s+/i, '') || (req as any).cookies?.rasoi_access_token;
     if (!token) {
-      if (process.env.NODE_ENV !== 'production' || process.env.ALLOW_DEMO_AUTH === 'true') {
+      if (process.env.ALLOW_DEMO_AUTH === 'true') {
         return (await this.authService.createDemoSession()).user;
       }
       throw new UnauthorizedException('Authentication required');
     }
     return this.authService.verifyToken(token);
+  }
+
+  @Get('profile')
+  async getProfile(@Headers('authorization') authHeader: string, @Req() req: Request) {
+    const token = authHeader?.replace(/^Bearer\s+/i, '') || (req as any).cookies?.rasoi_access_token;
+    if (!token) {
+      throw new UnauthorizedException('Authentication required');
+    }
+    const user: any = await this.authService.verifyToken(token);
+    return this.authService.getProfile(user.id || user.sub);
+  }
+
+  @Patch('profile')
+  async updateProfile(
+    @Body() dto: { fullName?: string; phoneNumber?: string },
+    @Headers('authorization') authHeader: string,
+    @Req() req: Request,
+    @Ip() ip: string
+  ) {
+    const clientIp = this.extractClientIp(req, ip);
+    const token = authHeader?.replace(/^Bearer\s+/i, '') || (req as any).cookies?.rasoi_access_token;
+    if (!token) {
+      throw new UnauthorizedException('Authentication required');
+    }
+    const user: any = await this.authService.verifyToken(token);
+    return this.authService.updateProfile(user.id || user.sub, dto, clientIp);
   }
 
   @Get('sessions')
@@ -198,7 +245,8 @@ export class AuthController {
       throw new UnauthorizedException('Authentication required');
     }
     const user: any = await this.authService.verifyToken(token);
-    return this.authService.getSessions(user.id || user.sub);
+    const sessions = await this.authService.getSessions(user.id || user.sub);
+    return { sessions };
   }
 
   @Delete('sessions/:sessionId')
