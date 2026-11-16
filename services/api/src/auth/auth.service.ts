@@ -286,12 +286,12 @@ export class AuthService implements OnModuleInit {
         where: ({
           OR: [{ email: cleanEmail }, { normalizedEmail: cleanEmail }]
         } as any),
-        include: {
+        include: ({
           householdMembers: {
             include: { household: true }
           },
           households: true
-        }
+        } as any)
       });
 
       if (!user) {
@@ -417,14 +417,14 @@ export class AuthService implements OnModuleInit {
     if (this.store.isPrismaConnected) {
       const session = await this.store.prisma.refreshSession.findUnique({
         where: { tokenHash },
-        include: {
+        include: ({
           user: {
             include: {
               householdMembers: true,
               households: true
             }
           }
-        }
+        } as any)
       });
 
       // Token Replay Detection: If session was already revoked, revoke whole family!

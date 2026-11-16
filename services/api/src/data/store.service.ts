@@ -43,7 +43,7 @@ function resolveDatabaseUrl(): string {
 @Injectable()
 export class StoreService implements OnModuleInit {
   private readonly logger = new Logger(StoreService.name);
-  public prisma: PrismaClient & { retailerApplication?: any; [key: string]: any };
+  public prisma: any;
   public isPrismaConnected = false;
 
   // In-memory robust store fallback
