@@ -10,6 +10,7 @@ import { PantryModule } from './pantry/pantry.module';
 import { MarketplaceModule } from './marketplace/marketplace.module';
 import { AiModule } from './ai/ai.module';
 import { HealthModule } from './health/health.module';
+import { AdminModule } from './admin/admin.module';
 
 @Global()
 @Module({
@@ -33,7 +34,8 @@ export class StoreModule {}
     PantryModule,
     MarketplaceModule,
     AiModule,
-    HealthModule
+    HealthModule,
+    AdminModule
   ]
 })
 export class AppModule {}

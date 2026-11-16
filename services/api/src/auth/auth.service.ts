@@ -783,21 +783,35 @@ export class AuthService implements OnModuleInit {
    * Legacy demo session support
    */
   async createDemoSession(
-    role: 'CUSTOMER' | 'RETAILER' | 'ADMIN' = 'CUSTOMER',
+    role: 'CUSTOMER' | 'RETAILER' | 'ADMIN' | 'SUPER_ADMIN' | 'OPERATIONS' | 'SUPPORT' = 'CUSTOMER',
     options?: { userId?: string; householdId?: string; retailerId?: string; email?: string; secret?: string }
   ) {
     if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEMO_AUTH !== 'true') {
       throw new ForbiddenException('Demo session endpoint is disabled in production environment');
     }
 
-    const email = options?.email || (role === 'ADMIN' ? 'admin@rasoiiq.in' : role === 'RETAILER' ? 'partner@blinkit.com' : 'demo@rasoiiq.in');
+    const email = options?.email || (
+      role === 'SUPER_ADMIN' ? 'superadmin@rasoiiq.in' :
+      role === 'ADMIN' ? 'admin@rasoiiq.in' :
+      role === 'OPERATIONS' ? 'operations@rasoiiq.in' :
+      role === 'SUPPORT' ? 'support@rasoiiq.in' :
+      role === 'RETAILER' ? 'partner@blinkit.com' :
+      'demo@rasoiiq.in'
+    );
     const adminSecret = process.env.ADMIN_DEMO_SECRET || 'rasoi_admin_secret_2026';
     const hasValidSecret = options?.secret === adminSecret;
 
-    if (role === 'ADMIN') {
-      const isKnownAdmin = ['admin@rasoiiq.in', 'ops@rasoiiq.com', 'admin@rasoi.demo'].includes(email.toLowerCase());
+    if (['SUPER_ADMIN', 'ADMIN', 'OPERATIONS', 'SUPPORT'].includes(role)) {
+      const isKnownAdmin = [
+        'superadmin@rasoiiq.in',
+        'admin@rasoiiq.in',
+        'ops@rasoiiq.com',
+        'operations@rasoiiq.in',
+        'support@rasoiiq.in',
+        'admin@rasoi.demo'
+      ].includes(email.toLowerCase());
       if (!isKnownAdmin && !hasValidSecret) {
-        throw new ForbiddenException('Privilege escalation blocked. Role "ADMIN" requires verified platform administrative identity.');
+        throw new ForbiddenException(`Privilege escalation blocked. Role "${role}" requires verified platform administrative identity.`);
       }
     } else if (role === 'RETAILER') {
       const isKnownRetailer =
@@ -814,10 +828,21 @@ export class AuthService implements OnModuleInit {
     let fullName = 'Pooja Sharma';
     let defaultUserId = 'user-demo-1';
 
-    if (role === 'ADMIN') {
+    if (role === 'SUPER_ADMIN') {
+      defaultUserId = 'user-superadmin-1';
+      fullName = 'Super Administrator';
+    } else if (role === 'ADMIN') {
       defaultUserId = 'user-admin-1';
+      fullName = 'Platform Administrator';
+    } else if (role === 'OPERATIONS') {
+      defaultUserId = 'user-ops-1';
+      fullName = 'Operations Specialist';
+    } else if (role === 'SUPPORT') {
+      defaultUserId = 'user-support-1';
+      fullName = 'Support Specialist';
     } else if (role === 'RETAILER') {
       defaultUserId = 'user-retailer-blinkit';
+      fullName = 'Retail Partner Manager';
     } else if (role === 'CUSTOMER') {
       if (householdId === 'hh-patel-family' || options?.userId === 'user-demo-patel' || email.includes('patel')) {
         householdId = 'hh-patel-family';
@@ -834,6 +859,23 @@ export class AuthService implements OnModuleInit {
       }
     }
 
+    if (this.store.isPrismaConnected && !options?.userId) {
+      try {
+        const existingDbUser = await this.store.prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: email.toLowerCase() },
+              { normalizedEmail: email.toLowerCase() }
+            ]
+          }
+        });
+        if (existingDbUser) {
+          defaultUserId = existingDbUser.id;
+          fullName = existingDbUser.fullName || fullName;
+        }
+      } catch {}
+    }
+
     const userId = options?.userId || defaultUserId;
 
     const retailerId = options?.retailerId || (role === 'RETAILER' ? 'ret-blinkit' : undefined);
@@ -841,7 +883,11 @@ export class AuthService implements OnModuleInit {
     const user = {
       id: userId,
       email,
-      fullName: role === 'ADMIN' ? 'Platform Administrator' : role === 'RETAILER' ? 'Retail Partner Manager' : fullName,
+      fullName: role === 'SUPER_ADMIN' ? 'Super Administrator' :
+                role === 'ADMIN' ? 'Platform Administrator' :
+                role === 'OPERATIONS' ? 'Operations Specialist' :
+                role === 'SUPPORT' ? 'Support Specialist' :
+                role === 'RETAILER' ? 'Retail Partner Manager' : fullName,
       role,
       householdId,
       retailerId,
@@ -886,7 +932,7 @@ export class AuthService implements OnModuleInit {
         throw new UnauthorizedException('Token payload is missing valid authorization claims');
       }
       const normalizedRole = String(decoded.role).toUpperCase();
-      if (!['CUSTOMER', 'RETAILER', 'ADMIN'].includes(normalizedRole)) {
+      if (!['CUSTOMER', 'RETAILER', 'ADMIN', 'SUPER_ADMIN', 'OPERATIONS', 'SUPPORT'].includes(normalizedRole)) {
         throw new UnauthorizedException(`Invalid role claim "${decoded.role}" in token`);
       }
       return { ...decoded, role: normalizedRole };

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict LXlqxRLRgw1bMNGTUvE8x7IbxqsY5qPbfgwfBjomICOzbx7oxfc8U4rE5xW8N3a
+\restrict zwjGqbfjXZCaYUMT3fSnKJOZQZlcjnbsKV6JDSXlLl71FJM06SxczabECmM1xSD
 
 -- Dumped from database version 18.6 (Ubuntu 18.6-0ubuntu0.26.04.1)
 -- Dumped by pg_dump version 18.6 (Ubuntu 18.6-0ubuntu0.26.04.1)
@@ -68,7 +68,10 @@ ALTER TYPE public."RetailerApplicationStatus" OWNER TO postgres;
 CREATE TYPE public."Role" AS ENUM (
     'CUSTOMER',
     'RETAILER',
-    'ADMIN'
+    'ADMIN',
+    'SUPER_ADMIN',
+    'OPERATIONS',
+    'SUPPORT'
 );
 
 
@@ -342,7 +345,12 @@ CREATE TABLE public."Order" (
     "deliveryFeeInr" double precision NOT NULL,
     "deliveryAddress" text NOT NULL,
     "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "updatedAt" timestamp(3) without time zone NOT NULL
+    "updatedAt" timestamp(3) without time zone NOT NULL,
+    "fulfillmentNotes" text,
+    "isDemoOrder" boolean DEFAULT true NOT NULL,
+    "statusReason" text,
+    "substitutionNotes" text,
+    "updatedBy" text
 );
 
 
@@ -478,7 +486,10 @@ CREATE TABLE public."Recipe" (
     "jainAlternativeNotes" text,
     rating double precision DEFAULT 4.8 NOT NULL,
     "ratingCount" integer DEFAULT 120 NOT NULL,
-    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "archivedAt" timestamp(3) without time zone,
+    "archivedBy" text,
+    "isArchived" boolean DEFAULT false NOT NULL
 );
 
 
@@ -549,7 +560,10 @@ CREATE TABLE public."Retailer" (
     "deliveryFeeInr" double precision DEFAULT 29 NOT NULL,
     "freeDeliveryThresholdInr" double precision DEFAULT 500 NOT NULL,
     "minOrderValueInr" double precision DEFAULT 99 NOT NULL,
-    rating double precision DEFAULT 4.7 NOT NULL
+    rating double precision DEFAULT 4.7 NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    "suspendedAt" timestamp(3) without time zone,
+    "suspendedReason" text
 );
 
 
@@ -567,7 +581,8 @@ CREATE TABLE public."RetailerApplication" (
     "applicationStatus" public."RetailerApplicationStatus" DEFAULT 'PENDING'::public."RetailerApplicationStatus" NOT NULL,
     "submittedAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "reviewedAt" timestamp(3) without time zone,
-    "reviewedBy" text
+    "reviewedBy" text,
+    "rejectionReason" text
 );
 
 
@@ -635,6 +650,23 @@ CREATE TABLE public."StoreProduct" (
 ALTER TABLE public."StoreProduct" OWNER TO postgres;
 
 --
+-- Name: SystemSetting; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public."SystemSetting" (
+    id text NOT NULL,
+    key text NOT NULL,
+    value text NOT NULL,
+    description text,
+    "updatedBy" text,
+    "updatedAt" timestamp(3) without time zone NOT NULL,
+    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+ALTER TABLE public."SystemSetting" OWNER TO postgres;
+
+--
 -- Name: User; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -650,7 +682,10 @@ CREATE TABLE public."User" (
     "emailVerifiedAt" timestamp(3) without time zone,
     "lastLoginAt" timestamp(3) without time zone,
     "normalizedEmail" text DEFAULT ''::text NOT NULL,
-    status public."UserStatus" DEFAULT 'ACTIVE'::public."UserStatus" NOT NULL
+    status public."UserStatus" DEFAULT 'ACTIVE'::public."UserStatus" NOT NULL,
+    "suspendedAt" timestamp(3) without time zone,
+    "suspendedBy" text,
+    "suspensionReason" text
 );
 
 
@@ -670,6 +705,8 @@ COPY public."Address" (id, "userId", label, "flatBuilding", street, landmark, ci
 
 COPY public."AuditLog" (id, "userId", action, "entityType", "entityId", metadata, "ipAddress", "userAgent", "createdAt") FROM stdin;
 cmwj2fa550002l3s464kocjcw	cmwj2fa4w0000l3s4x4q1jmst	ADMIN_BOOTSTRAP	User	cmwj2fa4w0000l3s4x4q1jmst	{"role": "ADMIN", "email": "admin@rasoiiq.in", "source": "CLI"}	\N	\N	2026-11-16 09:32:54.425
+cmwj4y7o5003ll3rcp82y51yy	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 10:43:36.917
+cmwj4y8cw003ol3rcrq1ge2xl	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 10:43:37.809
 cmwj33fok001nl33k4nnujlfn	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{}	::1	node	2026-11-16 09:51:41.349
 cmwj33fqj001pl33ku00roxwz	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 09:51:41.42
 cmwj33f0h0017l33koaahx5vj	\N	REGISTER	User	cmwj33f060013l33k4h6pos88	{}	::1	\N	2026-11-16 09:51:40.481
@@ -713,6 +750,69 @@ cmwj3a2l3001xl3i4buqdh8w6	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 09:56:50.967
 cmwj3a5pp001yl3i4podm1yeq	\N	LOGIN_FAILURE	\N	\N	{"email": "pilot.user.mwj3a5jf@testrasoi.in"}	::1	\N	2026-11-16 09:56:55.021
 cmwj3evwq0001l3g0mlkdnof4	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 10:00:35.594
 cmwj3ewwl0003l3g0rf8gmfb4	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 10:00:36.885
+cmwj3f5ln001rl3g0ynpo3uco	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{}	::1	node	2026-11-16 10:00:48.155
+cmwj3f5pl001tl3g0n9z3thxa	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 10:00:48.298
+cmwj3f4kn001bl3g0h2f21spk	\N	REGISTER	User	cmwj3f4k80017l3g0jqxzp0ee	{}	::1	\N	2026-11-16 10:00:46.823
+cmwj3f4lr001dl3g06xjcs5xn	\N	EMAIL_VERIFIED	User	cmwj3f4k80017l3g0jqxzp0ee	{}	::1	\N	2026-11-16 10:00:46.863
+cmwj3f50d001hl3g0yw79zvbn	\N	LOGIN_SUCCESS	\N	\N	{}	::1	node	2026-11-16 10:00:47.389
+cmwj3f522001ll3g0ny8twawv	\N	HOUSEHOLD_INVITATION_ACCEPTED	Household	cmwj3f41z000yl3g0hw94vn6f	{"role": "MEMBER"}	\N	\N	2026-11-16 10:00:47.45
+cmwj3f1k80008l3g01873z23s	\N	REGISTER	User	cmwj3f1jm0004l3g0ilbzzana	{}	::1	\N	2026-11-16 10:00:42.92
+cmwj3f1ov000al3g0k1th2x63	\N	EMAIL_VERIFIED	User	cmwj3f1jm0004l3g0ilbzzana	{}	::1	\N	2026-11-16 10:00:43.087
+cmwj3f23s000cl3g0cadllyrh	\N	LOGIN_FAILURE	\N	\N	{}	::1	\N	2026-11-16 10:00:43.624
+cmwj3f2nc000gl3g04kjbbj55	\N	LOGIN_SUCCESS	\N	\N	{}	::1	node	2026-11-16 10:00:44.328
+cmwj3f2pj000kl3g0ywv08g9y	\N	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"tokenFamilyId": "fam_b757dcd9-9957-4cde-b858-c062f25c9336"}	::1	\N	2026-11-16 10:00:44.407
+cmwj3f2qt000ol3g06evc7yx7	\N	PASSWORD_RESET_REQUESTED	\N	\N	{}	::1	\N	2026-11-16 10:00:44.453
+cmwj3f357000ql3g0llcdiq55	\N	PASSWORD_RESET_COMPLETED	\N	\N	{}	::1	\N	2026-11-16 10:00:44.971
+cmwj3f3kw000sl3g0aqoo6va8	\N	LOGIN_FAILURE	\N	\N	{}	::1	\N	2026-11-16 10:00:45.536
+cmwj3f417000wl3g0slv2f2pf	\N	LOGIN_SUCCESS	\N	\N	{}	::1	node	2026-11-16 10:00:46.123
+cmwj3f42n0012l3g0hhza86oc	\N	HOUSEHOLD_CREATED	Household	cmwj3f41z000yl3g0hw94vn6f	{"name": "Joshi Family Kitchen"}	\N	\N	2026-11-16 10:00:46.175
+cmwj3f45c0016l3g05p2kvtiu	\N	HOUSEHOLD_INVITATION_SENT	HouseholdInvitation	cmwj3f44y0014l3g0ujuemz2w	{"role": "MEMBER", "invitedEmail": "invited.family.mwj3f0ys@testrasoi.in"}	\N	\N	2026-11-16 10:00:46.272
+cmwj4nyuj0002l3ic232maioh	cmwj4nyub0000l3ic1cbm4scv	ADMIN_BOOTSTRAP	User	cmwj4nyub0000l3ic1cbm4scv	{"role": "SUPER_ADMIN", "email": "superadmin@rasoiiq.in", "source": "CLI"}	\N	\N	2026-11-16 10:35:38.924
+cmwj4rt390004l32w59a2wa5e	cmwj4rt2s0000l32wbc1f7nfy	REGISTER	User	cmwj4rt2s0000l32wbc1f7nfy	{}	::1	\N	2026-11-16 10:38:38.085
+cmwj4s4sq0009l32wnbd6dzbi	cmwj4s4se0005l32w7q19yt5l	REGISTER	User	cmwj4s4se0005l32w7q19yt5l	{}	::1	\N	2026-11-16 10:38:53.259
+cmwj4tzuq0004l3rc7vv9igk1	cmwj4tzu40000l3rcqmpkfu8l	REGISTER	User	cmwj4tzu40000l3rcqmpkfu8l	{"actorId": "cmwj4tzu40000l3rcqmpkfu8l"}	::1	\N	2026-11-16 10:40:20.162
+cmwj4u07b0006l3rcs6bvenso	cmwj2fa4w0000l3s4x4q1jmst	USER_SUSPENDED	User	cmwj4tzu40000l3rcqmpkfu8l	{"reason": "Investigating suspicious order activity", "actorId": "cmwj2fa4w0000l3s4x4q1jmst", "newStatus": "SUSPENDED", "targetEmail": "rogue.admin.mwj4tzkq@test.in", "previousStatus": "PENDING_VERIFICATION"}	\N	\N	2026-11-16 10:40:20.615
+cmwj4u08y0008l3rcy1v3i57h	cmwj2fa4w0000l3s4x4q1jmst	USER_REACTIVATED	User	cmwj4tzu40000l3rcqmpkfu8l	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "newStatus": "ACTIVE", "targetEmail": "rogue.admin.mwj4tzkq@test.in", "previousStatus": "SUSPENDED"}	\N	\N	2026-11-16 10:40:20.674
+cmwj4u0aq000al3rcw575mp9p	cmwj2fa4w0000l3s4x4q1jmst	RETAILER_APPROVED	RetailerApplication	cmwj4u0960003l3q0fuogx841	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "applicantId": "cmwj4tzu40000l3rcqmpkfu8l", "businessName": "Fresh Greens Mart mwj4tzkq", "applicantEmail": "rogue.admin.mwj4tzkq@test.in"}	\N	\N	2026-11-16 10:40:20.738
+cmwj4u0br000cl3rcu0mbo0r5	cmwj2fa4w0000l3s4x4q1jmst	RETAILER_SUSPENDED	Retailer	ret-fresh-greens-mart-mwj4tzkq	{"reason": "Audit pending", "status": "SUSPENDED", "actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	\N	\N	2026-11-16 10:40:20.775
+cmwj4u0db000el3rclltm2rqk	\N	ORDER_STATUS_CHANGED	Order	ord-1794823237743	{"reason": "Out with delivery executive", "actorId": "user-ops-1", "newStatus": "DISPATCHED", "fulfillmentNotes": "Customer requested contactless delivery at doorstep"}	\N	\N	2026-11-16 10:40:20.831
+cmwj4u0em000gl3rcgm9cgd4d	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_CREATED	Recipe	rec-1794825620862	{"title": "Kathiyawadi Ringan No Olo mwj4tzkq", "actorId": "cmwj2fa4w0000l3s4x4q1jmst", "cuisine": "Kathiyawadi"}	\N	\N	2026-11-16 10:40:20.878
+cmwj4u0fa000il3rcx3t3u7y4	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_ARCHIVED	Recipe	rec-1794825620862	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "isArchived": true}	\N	\N	2026-11-16 10:40:20.902
+cmwj4u0fw000kl3rc98ca37v1	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_ARCHIVED	Recipe	rec-1794825620862	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "isArchived": false}	\N	\N	2026-11-16 10:40:20.924
+cmwj4u0qg000nl3rcpr1hnpow	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj4u0q5000ll3rc65255uth	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "staffEmail": "ops.lead.mwj4tzkq@rasoiiq.in", "assignedRole": "OPERATIONS"}	\N	\N	2026-11-16 10:40:21.304
+cmwj4u0r5000pl3rcbmfyu2t1	cmwj4nyub0000l3ic1cbm4scv	STAFF_ROLE_CHANGED	User	cmwj4u0q5000ll3rc65255uth	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "newRole": "SUPPORT", "previousRole": "OPERATIONS"}	\N	\N	2026-11-16 10:40:21.329
+cmwj4u0s4000sl3rczy96sxq6	cmwj4nyub0000l3ic1cbm4scv	SETTINGS_UPDATED	SystemSetting	cmwj4s5on0011l32wh1uxro1d	{"key": "pricing.default_delivery_fee_inr", "value": "35", "actorId": "cmwj4nyub0000l3ic1cbm4scv"}	\N	\N	2026-11-16 10:40:21.364
+cmwj4vm5t000vl3rcpjx5ya4w	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 10:41:35.729
+cmwj4vmqq000yl3rcdov52b4j	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 10:41:36.482
+cmwj4vquo0013l3rc2ncsvxgk	cmwj4vqu8000zl3rcxghmhy5s	REGISTER	User	cmwj4vqu8000zl3rcxghmhy5s	{"actorId": "cmwj4vqu8000zl3rcxghmhy5s"}	::1	\N	2026-11-16 10:41:41.808
+cmwj4vr8o0015l3rc9ujox6s9	cmwj2fa4w0000l3s4x4q1jmst	USER_SUSPENDED	User	cmwj4vqu8000zl3rcxghmhy5s	{"reason": "Investigating suspicious order activity", "actorId": "cmwj2fa4w0000l3s4x4q1jmst", "newStatus": "SUSPENDED", "targetEmail": "rogue.admin.mwj4vql1@test.in", "previousStatus": "PENDING_VERIFICATION"}	\N	\N	2026-11-16 10:41:42.312
+cmwj4vrb10017l3rc2jeaq74m	cmwj2fa4w0000l3s4x4q1jmst	USER_REACTIVATED	User	cmwj4vqu8000zl3rcxghmhy5s	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "newStatus": "ACTIVE", "targetEmail": "rogue.admin.mwj4vql1@test.in", "previousStatus": "SUSPENDED"}	\N	\N	2026-11-16 10:41:42.397
+cmwj4vrdc0019l3rcgtf425s1	cmwj2fa4w0000l3s4x4q1jmst	RETAILER_APPROVED	RetailerApplication	cmwj4vrbe0003l31grh99dfcb	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "applicantId": "cmwj4vqu8000zl3rcxghmhy5s", "businessName": "Fresh Greens Mart mwj4vql1", "applicantEmail": "rogue.admin.mwj4vql1@test.in"}	\N	\N	2026-11-16 10:41:42.48
+cmwj4vreg001bl3rc349vsjup	cmwj2fa4w0000l3s4x4q1jmst	RETAILER_SUSPENDED	Retailer	ret-fresh-greens-mart-mwj4vql1	{"reason": "Audit pending", "status": "SUSPENDED", "actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	\N	\N	2026-11-16 10:41:42.52
+cmwj4vrg2001dl3rciy9zgs6k	\N	ORDER_STATUS_CHANGED	Order	ord-1794825696926	{"reason": "Out with delivery executive", "actorId": "user-ops-1", "newStatus": "DISPATCHED", "fulfillmentNotes": "Customer requested contactless delivery at doorstep"}	\N	\N	2026-11-16 10:41:42.578
+cmwj4vrh1001fl3rco05ddoxu	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_CREATED	Recipe	rec-1794825702604	{"title": "Kathiyawadi Ringan No Olo mwj4vql1", "actorId": "cmwj2fa4w0000l3s4x4q1jmst", "cuisine": "Kathiyawadi"}	\N	\N	2026-11-16 10:41:42.613
+cmwj4vrhj001hl3rcqrrn2z9a	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_ARCHIVED	Recipe	rec-1794825702604	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "isArchived": true}	\N	\N	2026-11-16 10:41:42.631
+cmwj4vri7001jl3rcc05ee04v	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_ARCHIVED	Recipe	rec-1794825702604	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "isArchived": false}	\N	\N	2026-11-16 10:41:42.655
+cmwj4vrp7001ml3rc469s9kzu	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj4vrp1001kl3rcpspgngcx	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "staffEmail": "ops.lead.mwj4vql1@rasoiiq.in", "assignedRole": "OPERATIONS"}	\N	\N	2026-11-16 10:41:42.908
+cmwj4vrpl001ol3rc1e8v02f8	cmwj4nyub0000l3ic1cbm4scv	STAFF_ROLE_CHANGED	User	cmwj4vrp1001kl3rcpspgngcx	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "newRole": "SUPPORT", "previousRole": "OPERATIONS"}	\N	\N	2026-11-16 10:41:42.921
+cmwj4vrq9001rl3rcrqgi3yhx	cmwj4nyub0000l3ic1cbm4scv	SETTINGS_UPDATED	SystemSetting	cmwj4s5on0011l32wh1uxro1d	{"key": "pricing.default_delivery_fee_inr", "value": "35", "actorId": "cmwj4nyub0000l3ic1cbm4scv"}	\N	\N	2026-11-16 10:41:42.946
+cmwj4wmxt003fl3rcv7sjw8ax	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-16 10:42:23.394
+cmwj4wn04003il3rcc286gdv5	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 10:42:23.476
+cmwj4wlzk002zl3rc7d6v6qdf	\N	REGISTER	User	cmwj4wlz2002vl3rc79aoqcp7	{"actorId": "cmwj4wlz2002vl3rc79aoqcp7"}	::1	\N	2026-11-16 10:42:22.16
+cmwj4wm0z0031l3rc0gz1s5cs	\N	EMAIL_VERIFIED	User	cmwj4wlz2002vl3rc79aoqcp7	{"actorId": "cmwj4wlz2002vl3rc79aoqcp7"}	::1	\N	2026-11-16 10:42:22.212
+cmwj4wmff0035l3rcarj3f060	\N	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj4wlz2002vl3rc79aoqcp7"}	::1	node	2026-11-16 10:42:22.731
+cmwj4wmgy0039l3rc85xihed4	\N	HOUSEHOLD_INVITATION_ACCEPTED	Household	cmwj4wlil002ml3rccec27hcr	{"role": "MEMBER", "actorId": "cmwj4wlz2002vl3rc79aoqcp7"}	\N	\N	2026-11-16 10:42:22.786
+cmwj4wjom001wl3rcbmjfzroi	\N	REGISTER	User	cmwj4wjo1001sl3rciqufcoap	{"actorId": "cmwj4wjo1001sl3rciqufcoap"}	::1	\N	2026-11-16 10:42:19.174
+cmwj4wjsm001yl3rcup1ze6l4	\N	EMAIL_VERIFIED	User	cmwj4wjo1001sl3rciqufcoap	{"actorId": "cmwj4wjo1001sl3rciqufcoap"}	::1	\N	2026-11-16 10:42:19.319
+cmwj4wk2s0020l3rcdhlsk6xc	\N	LOGIN_FAILURE	\N	\N	{"actorId": "cmwj4wjo1001sl3rciqufcoap"}	::1	\N	2026-11-16 10:42:19.684
+cmwj4wkct0024l3rc6l95oe32	\N	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj4wjo1001sl3rciqufcoap"}	::1	node	2026-11-16 10:42:20.045
+cmwj4wkel0028l3rchdk8f2zc	\N	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"actorId": "cmwj4wjo1001sl3rciqufcoap", "tokenFamilyId": "fam_2f1b9157-1897-4ebc-a6f3-c4061c7e88e4"}	::1	\N	2026-11-16 10:42:20.109
+cmwj4wkfr002cl3rcxsxywseu	\N	PASSWORD_RESET_REQUESTED	\N	\N	{"actorId": "cmwj4wjo1001sl3rciqufcoap"}	::1	\N	2026-11-16 10:42:20.151
+cmwj4wkq7002el3rcaknsah8v	\N	PASSWORD_RESET_COMPLETED	\N	\N	{"actorId": "cmwj4wjo1001sl3rciqufcoap"}	::1	\N	2026-11-16 10:42:20.527
+cmwj4wl41002gl3rckstljpf8	\N	LOGIN_FAILURE	\N	\N	{"actorId": "cmwj4wjo1001sl3rciqufcoap"}	::1	\N	2026-11-16 10:42:21.025
+cmwj4wli0002kl3rclidj7x5q	\N	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj4wjo1001sl3rciqufcoap"}	::1	node	2026-11-16 10:42:21.528
+cmwj4wlja002ql3rcmf3rllba	\N	HOUSEHOLD_CREATED	Household	cmwj4wlil002ml3rccec27hcr	{"name": "Joshi Family Kitchen", "actorId": "cmwj4wjo1001sl3rciqufcoap"}	\N	\N	2026-11-16 10:42:21.575
+cmwj4wlkt002ul3rc12670ajp	\N	HOUSEHOLD_INVITATION_SENT	HouseholdInvitation	cmwj4wlkh002sl3rcev0esbod	{"role": "MEMBER", "actorId": "cmwj4wjo1001sl3rciqufcoap", "invitedEmail": "invited.family.mwj4wjax@testrasoi.in"}	\N	\N	2026-11-16 10:42:21.629
 \.
 
 
@@ -737,6 +837,10 @@ COPY public."BasketItem" (id, "basketId", "productVariantId", "quantityPacks", "
 --
 
 COPY public."EmailVerificationToken" (id, "userId", "tokenHash", "expiresAt", "consumedAt", "createdAt") FROM stdin;
+cmwj4rt310002l32w53qa8xw0	cmwj4rt2s0000l32wbc1f7nfy	ea42551044ed3435693e065e5a71d4126fbfa168350f4afd3cdfba47885a6270	2026-11-16 11:08:38.073	\N	2026-11-16 10:38:38.077
+cmwj4s4sl0007l32wdzf4y51k	cmwj4s4se0005l32w7q19yt5l	58d7c55073a0bc326eb51f47e0751de28c871eea99109434520fc3ac331175b9	2026-11-16 11:08:53.25	\N	2026-11-16 10:38:53.254
+cmwj4tzue0002l3rcr71qryg1	cmwj4tzu40000l3rcqmpkfu8l	58ba28cc0dec9b26a6078d7840b29f311ba9f729d876fa663d00b56fe1c169c4	2026-11-16 11:10:20.144	\N	2026-11-16 10:40:20.15
+cmwj4vquf0011l3rcg0h7udsw	cmwj4vqu8000zl3rcxghmhy5s	487f8a25d8dd01ac16f5f57a63d8d42b040c4cf8189e491acb88e2c62c335342	2026-11-16 11:11:41.797	\N	2026-11-16 10:41:41.799
 \.
 
 
@@ -754,8 +858,8 @@ COPY public."Feedback" (id, "userId", rating, comment, category, "createdAt") FR
 
 COPY public."Household" (id, "userId", name, "spiceTolerance", "weeklyBudgetInr", "cookingFrequency", "createdAt", "updatedAt", city, country, "cuisinePreference", "dietaryPreference", locality, size, state) FROM stdin;
 hh-mehta-family	user-demo-mehta	Mehta Family	MEDIUM	4500	Daily Fresh	2026-11-16 06:15:05.095	2026-11-16 07:27:44.43	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
-hh-patel-family	user-demo-patel	Patel Family	MEDIUM	99999	Daily Fresh	2026-11-16 06:15:05.059	2026-11-16 10:00:31.218	Ahmedabad	India	ALL_INDIAN	JAIN	\N	4	Gujarat
-hh-sharma-family	user-demo-1	Sharma Family	MEDIUM	4500	Daily Fresh	2026-11-16 06:15:04.99	2026-11-16 10:00:35.74	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+hh-patel-family	user-demo-patel	Patel Family	MEDIUM	99999	Daily Fresh	2026-11-16 06:15:05.059	2026-11-16 10:43:33.447	Ahmedabad	India	ALL_INDIAN	JAIN	\N	4	Gujarat
+hh-sharma-family	user-demo-1	Sharma Family	MEDIUM	4500	Daily Fresh	2026-11-16 06:15:04.99	2026-11-16 10:43:36.998	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
 \.
 
 
@@ -864,27 +968,27 @@ mp-hh-sharma-family	hh-sharma-family	2026-11-16 06:46:00.145	2026-11-16 06:46:00
 --
 
 COPY public."MealPlanItem" (id, "mealPlanId", "dayOfWeek", "mealCategory", "recipeId", servings, notes) FROM stdin;
-plan-item-1794823230126-43j98	mp-hh-sharma-family	monday	breakfast	recipe-kanda-poha	4	\N
-plan-item-1794823230126-969if	mp-hh-sharma-family	monday	lunch	recipe-gujarati-khatti-meethi-dal	4	\N
-plan-item-1794823230126-o7ovk	mp-hh-sharma-family	monday	dinner	recipe-paneer-butter-masala	4	\N
-plan-item-1794823230126-cfm5u	mp-hh-sharma-family	tuesday	breakfast	recipe-rava-upma	4	\N
-plan-item-1794823230126-u1drw	mp-hh-sharma-family	tuesday	lunch	recipe-rajma-chawal	4	\N
-plan-item-1794823230126-u44h6	mp-hh-sharma-family	tuesday	dinner	recipe-amritsari-chole	4	\N
-plan-item-1794823230126-saduk	mp-hh-sharma-family	wednesday	breakfast	recipe-masala-dosa	4	\N
-plan-item-1794823230126-e0kz5	mp-hh-sharma-family	wednesday	dinner	recipe-baingan-bharta	4	\N
-plan-item-1794823230126-3joc2	mp-hh-sharma-family	thursday	breakfast	recipe-idli-sambar	4	\N
-plan-item-1794823230126-bijs6	mp-hh-sharma-family	thursday	lunch	recipe-sev-tameta-nu-shaak	4	\N
-plan-item-1794823230126-ezqhd	mp-hh-sharma-family	thursday	dinner	recipe-bajra-no-rotlo	4	\N
-plan-item-1794823230126-jh3ij	mp-hh-sharma-family	friday	breakfast	recipe-gujarati-handvo	4	\N
-plan-item-1794823230126-7v74b	mp-hh-sharma-family	friday	lunch	recipe-ringna-no-olo	4	\N
-plan-item-1794823230126-5eif1	mp-hh-sharma-family	friday	dinner	recipe-bajra-no-rotlo-vegan	4	\N
-plan-item-1794823230126-qkf7y	mp-hh-sharma-family	saturday	breakfast	recipe-khaman-dhokla	4	\N
-plan-item-1794823230126-yua33	mp-hh-sharma-family	saturday	lunch	recipe-surati-undhiyu-jain	4	\N
-plan-item-1794823230126-fadcx	mp-hh-sharma-family	saturday	dinner	recipe-palak-paneer	4	\N
-plan-item-1794823230126-lfoj6	mp-hh-sharma-family	sunday	breakfast	recipe-methi-na-gota	4	\N
-plan-item-1794823230126-6i2sj	mp-hh-sharma-family	sunday	lunch	recipe-surati-undhiyu	4	\N
-plan-item-1794823230126-eau74	mp-hh-sharma-family	sunday	dinner	recipe-gujarati-kadhi	4	\N
-plan-item-1794823230126-dezfn	mp-hh-sharma-family	wednesday	lunch	recipe-paneer-butter-masala	4	\N
+plan-item-1794825812899-uoz8k	mp-hh-sharma-family	monday	breakfast	recipe-methi-thepla	4	\N
+plan-item-1794825812899-ej7zw	mp-hh-sharma-family	monday	lunch	recipe-rajma-chawal	4	\N
+plan-item-1794825812899-luo1q	mp-hh-sharma-family	monday	dinner	recipe-palak-paneer	4	\N
+plan-item-1794825812899-5xdin	mp-hh-sharma-family	tuesday	breakfast	recipe-idli-sambar	4	\N
+plan-item-1794825812899-2aovz	mp-hh-sharma-family	tuesday	lunch	recipe-amritsari-chole	4	\N
+plan-item-1794825812899-fprn9	mp-hh-sharma-family	tuesday	dinner	recipe-gujarati-khatti-meethi-dal	4	\N
+plan-item-1794825812899-we6wz	mp-hh-sharma-family	wednesday	breakfast	recipe-kanda-poha	4	\N
+plan-item-1794825812899-mbc37	mp-hh-sharma-family	wednesday	dinner	recipe-bengali-cholar-dal	4	\N
+plan-item-1794825812899-t38gr	mp-hh-sharma-family	thursday	breakfast	recipe-rava-upma	4	\N
+plan-item-1794825812899-x2kk8	mp-hh-sharma-family	thursday	lunch	recipe-sambhar-rice	4	\N
+plan-item-1794825812899-aa5oy	mp-hh-sharma-family	thursday	dinner	recipe-aloo-gobi	4	\N
+plan-item-1794825812899-dcaqv	mp-hh-sharma-family	friday	breakfast	recipe-khaman-dhokla	4	\N
+plan-item-1794825812899-mg88b	mp-hh-sharma-family	friday	lunch	recipe-bhindi-masala	4	\N
+plan-item-1794825812899-4r07x	mp-hh-sharma-family	friday	dinner	recipe-moong-dal-khichdi	4	\N
+plan-item-1794825812899-voujo	mp-hh-sharma-family	saturday	breakfast	recipe-methi-na-gota	4	\N
+plan-item-1794825812899-0irhd	mp-hh-sharma-family	saturday	lunch	recipe-baingan-bharta	4	\N
+plan-item-1794825812899-wib8h	mp-hh-sharma-family	saturday	dinner	recipe-sev-tameta-nu-shaak	4	\N
+plan-item-1794825812899-uchsd	mp-hh-sharma-family	sunday	breakfast	recipe-masala-dosa	4	\N
+plan-item-1794825812899-w4kk5	mp-hh-sharma-family	sunday	lunch	recipe-surati-undhiyu	4	\N
+plan-item-1794825812899-iv7od	mp-hh-sharma-family	sunday	dinner	recipe-dal-tadka	4	\N
+plan-item-1794825812899-q3w7i	mp-hh-sharma-family	wednesday	lunch	recipe-gujarati-khatti-meethi-dal	4	\N
 \.
 
 
@@ -892,185 +996,211 @@ plan-item-1794823230126-dezfn	mp-hh-sharma-family	wednesday	lunch	recipe-paneer-
 -- Data for Name: Order; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."Order" (id, "userId", "retailerName", status, "totalAmountInr", "deliveryFeeInr", "deliveryAddress", "createdAt", "updatedAt") FROM stdin;
-ord-1794810679972	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794810679970)	2026-11-16 06:31:19.974	2026-11-16 06:31:19.974
-ord-1794810679985	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794810679970)	2026-11-16 06:31:19.986	2026-11-16 06:31:19.986
-ord-1794810680000	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794810679970)	2026-11-16 06:31:20.002	2026-11-16 06:31:20.002
-ord-1794810680007	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794810679970)	2026-11-16 06:31:20.008	2026-11-16 06:31:20.008
-ord-1794810680011	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794810679970)	2026-11-16 06:31:20.012	2026-11-16 06:31:20.012
-ord-1794810685357	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 06:31:25.359	2026-11-16 06:31:25.359
-ord-1794810807797	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	0	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:33:27.801	2026-11-16 06:33:27.801
-ord-1794810810125	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	0	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:33:30.129	2026-11-16 06:33:30.129
-ord-1794811140988	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:39:00.996	2026-11-16 06:39:00.996
-ord-1794811143232	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:39:03.238	2026-11-16 06:39:03.238
-ord-1794811385019	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:05.021	2026-11-16 06:43:05.021
-ord-1794811387312	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:07.314	2026-11-16 06:43:07.314
-ord-1794811387318	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:43:07.32	2026-11-16 06:43:07.32
-ord-1794811429516	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:49.518	2026-11-16 06:43:49.518
-ord-1794811431745	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:51.747	2026-11-16 06:43:51.747
-ord-1794811431751	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:43:51.753	2026-11-16 06:43:51.753
-ord-1794811550892	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	1563	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 06:45:50.898	2026-11-16 06:45:50.898
-ord-1794811560233	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	1976	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 06:46:00.239	2026-11-16 06:46:00.239
-ord-1794811560548	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794811560549)	2026-11-16 06:46:00.554	2026-11-16 06:46:00.554
-ord-1794811560557	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794811560549)	2026-11-16 06:46:00.563	2026-11-16 06:46:00.563
-ord-1794811560566	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794811560549)	2026-11-16 06:46:00.572	2026-11-16 06:46:00.572
-ord-1794811560574	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794811560549)	2026-11-16 06:46:00.58	2026-11-16 06:46:00.58
-ord-1794811560578	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794811560549)	2026-11-16 06:46:00.584	2026-11-16 06:46:00.584
-ord-1794811560837	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 06:46:00.843	2026-11-16 06:46:00.843
-ord-1794811561424	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:46:01.43	2026-11-16 06:46:01.43
-ord-1794811563666	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:46:03.672	2026-11-16 06:46:03.672
-ord-1794811563674	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:46:03.68	2026-11-16 06:46:03.68
-ord-1794811689362	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794811689362)	2026-11-16 06:48:09.365	2026-11-16 06:48:09.365
-ord-1794811689377	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794811689362)	2026-11-16 06:48:09.38	2026-11-16 06:48:09.38
-ord-1794811689387	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794811689362)	2026-11-16 06:48:09.389	2026-11-16 06:48:09.389
-ord-1794811689391	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794811689362)	2026-11-16 06:48:09.394	2026-11-16 06:48:09.394
-ord-1794811689396	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794811689362)	2026-11-16 06:48:09.399	2026-11-16 06:48:09.399
-ord-1794811709720	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:48:29.723	2026-11-16 06:48:29.723
-ord-1794811711940	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:48:31.942	2026-11-16 06:48:31.942
-ord-1794811711945	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:48:31.947	2026-11-16 06:48:31.947
-ord-1794811739645	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:48:59.647	2026-11-16 06:48:59.647
-ord-1794811741991	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:49:01.992	2026-11-16 06:49:01.992
-ord-1794811742003	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:49:02.005	2026-11-16 06:49:02.005
-ord-1794811885447	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2680	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 06:51:25.449	2026-11-16 06:51:25.449
-ord-1794811929962	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:52:09.966	2026-11-16 06:52:09.966
-ord-1794811932183	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:52:12.186	2026-11-16 06:52:12.186
-ord-1794811932190	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:52:12.193	2026-11-16 06:52:12.193
-ord-1794814450004	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2680	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:34:10.007	2026-11-16 07:34:10.007
-ord-1794814456824	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2534	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 07:34:16.826	2026-11-16 07:34:16.826
-ord-1794814457196	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794814457182)	2026-11-16 07:34:17.198	2026-11-16 07:34:17.198
-ord-1794814457205	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794814457182)	2026-11-16 07:34:17.207	2026-11-16 07:34:17.207
-ord-1794814457219	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794814457182)	2026-11-16 07:34:17.22	2026-11-16 07:34:17.22
-ord-1794814457226	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794814457182)	2026-11-16 07:34:17.228	2026-11-16 07:34:17.228
-ord-1794814457232	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794814457182)	2026-11-16 07:34:17.233	2026-11-16 07:34:17.233
-ord-1794814457483	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 07:34:17.485	2026-11-16 07:34:17.485
-ord-1794814458050	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:34:18.052	2026-11-16 07:34:18.052
-ord-1794814460343	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:34:20.345	2026-11-16 07:34:20.345
-ord-1794814460351	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:34:20.353	2026-11-16 07:34:20.353
-ord-1794814626095	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:37:06.104	2026-11-16 07:37:06.104
-ord-1794814628341	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:37:08.35	2026-11-16 07:37:08.35
-ord-1794814628348	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:37:08.357	2026-11-16 07:37:08.357
-ord-1794814892625	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:41:32.635	2026-11-16 07:41:32.635
-ord-1794815003346	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2534	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:43:23.351	2026-11-16 07:43:23.351
-ord-1794815057256	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794815055188)	2026-11-16 07:44:17.269	2026-11-16 07:44:17.269
-ord-1794815058843	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794815055188)	2026-11-16 07:44:18.856	2026-11-16 07:44:18.856
-ord-1794815058852	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794815055188)	2026-11-16 07:44:18.864	2026-11-16 07:44:18.864
-ord-1794815058858	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794815055188)	2026-11-16 07:44:18.871	2026-11-16 07:44:18.871
-ord-1794815059257	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 07:44:19.269	2026-11-16 07:44:19.269
-ord-1794815061238	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:44:21.25	2026-11-16 07:44:21.25
-ord-1794815063531	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:44:23.543	2026-11-16 07:44:23.543
-ord-1794815063536	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:44:23.549	2026-11-16 07:44:23.549
-ord-1794815064076	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:44:24.088	2026-11-16 07:44:24.088
-ord-1794815302442	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2502	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:48:22.444	2026-11-16 07:48:22.444
-ord-1794815434576	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:50:34.578	2026-11-16 07:50:34.578
-ord-1794815436819	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:50:36.821	2026-11-16 07:50:36.821
-ord-1794815436826	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:50:36.828	2026-11-16 07:50:36.828
-ord-1794815437417	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:50:37.418	2026-11-16 07:50:37.418
-ord-1794815751185	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2569	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:55:51.196	2026-11-16 07:55:51.196
-ord-1794815758045	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2775	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 07:55:58.057	2026-11-16 07:55:58.057
-ord-1794815758521	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794815758527)	2026-11-16 07:55:58.532	2026-11-16 07:55:58.532
-ord-1794815758535	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794815758527)	2026-11-16 07:55:58.546	2026-11-16 07:55:58.546
-ord-1794815758552	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794815758527)	2026-11-16 07:55:58.563	2026-11-16 07:55:58.563
-ord-1794815758562	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794815758527)	2026-11-16 07:55:58.573	2026-11-16 07:55:58.573
-ord-1794815758570	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794815758527)	2026-11-16 07:55:58.581	2026-11-16 07:55:58.581
-ord-1794815758893	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 07:55:58.904	2026-11-16 07:55:58.904
-ord-1794815759614	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:55:59.625	2026-11-16 07:55:59.625
-ord-1794815761985	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:56:01.996	2026-11-16 07:56:01.996
-ord-1794815761995	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:56:02.006	2026-11-16 07:56:02.006
-ord-1794815762738	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:56:02.749	2026-11-16 07:56:02.749
-ord-1794817209291	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2852	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 08:20:09.293	2026-11-16 08:20:09.293
-ord-1794817219541	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2367	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 08:20:19.543	2026-11-16 08:20:19.543
-ord-1794817220036	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794817220033)	2026-11-16 08:20:20.038	2026-11-16 08:20:20.038
-ord-1794817220049	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794817220033)	2026-11-16 08:20:20.051	2026-11-16 08:20:20.051
-ord-1794817220070	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794817220033)	2026-11-16 08:20:20.072	2026-11-16 08:20:20.072
-ord-1794817220081	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794817220033)	2026-11-16 08:20:20.083	2026-11-16 08:20:20.083
-ord-1794817220088	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794817220033)	2026-11-16 08:20:20.09	2026-11-16 08:20:20.09
-ord-1794817220427	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 08:20:20.429	2026-11-16 08:20:20.429
-ord-1794817221225	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:20:21.227	2026-11-16 08:20:21.227
-ord-1794817223639	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:20:23.641	2026-11-16 08:20:23.641
-ord-1794817223649	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 08:20:23.651	2026-11-16 08:20:23.651
-ord-1794817224528	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:20:24.53	2026-11-16 08:20:24.53
-ord-1794817822270	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:30:22.278	2026-11-16 08:30:22.278
-ord-1794818154448	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:35:54.451	2026-11-16 08:35:54.451
-ord-1794818318403	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2633	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 08:38:38.413	2026-11-16 08:38:38.413
-ord-1794818318851	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794818318854)	2026-11-16 08:38:38.861	2026-11-16 08:38:38.861
-ord-1794818318865	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794818318854)	2026-11-16 08:38:38.875	2026-11-16 08:38:38.875
-ord-1794818318881	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794818318854)	2026-11-16 08:38:38.891	2026-11-16 08:38:38.891
-ord-1794818318889	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794818318854)	2026-11-16 08:38:38.899	2026-11-16 08:38:38.899
-ord-1794818318898	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794818318854)	2026-11-16 08:38:38.908	2026-11-16 08:38:38.908
-ord-1794818319229	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 08:38:39.238	2026-11-16 08:38:39.238
-ord-1794818320015	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:38:40.024	2026-11-16 08:38:40.024
-ord-1794818322341	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:38:42.351	2026-11-16 08:38:42.351
-ord-1794818322350	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 08:38:42.359	2026-11-16 08:38:42.359
-ord-1794818323039	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:38:43.049	2026-11-16 08:38:43.049
-ord-1794818323463	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:38:43.473	2026-11-16 08:38:43.473
-ord-1794818377176	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:39:37.18	2026-11-16 08:39:37.18
-ord-1794818554226	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2827	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 08:42:34.231	2026-11-16 08:42:34.231
-ord-1794818567353	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2342	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 08:42:47.355	2026-11-16 08:42:47.355
-ord-1794818567850	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794818567848)	2026-11-16 08:42:47.853	2026-11-16 08:42:47.853
-ord-1794818567865	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794818567848)	2026-11-16 08:42:47.867	2026-11-16 08:42:47.867
-ord-1794818567882	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794818567848)	2026-11-16 08:42:47.885	2026-11-16 08:42:47.885
-ord-1794818567891	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794818567848)	2026-11-16 08:42:47.894	2026-11-16 08:42:47.894
-ord-1794818567899	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794818567848)	2026-11-16 08:42:47.901	2026-11-16 08:42:47.901
-ord-1794818568267	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 08:42:48.27	2026-11-16 08:42:48.27
-ord-1794818569015	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:42:49.017	2026-11-16 08:42:49.017
-ord-1794818571364	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:42:51.367	2026-11-16 08:42:51.367
-ord-1794818571375	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 08:42:51.378	2026-11-16 08:42:51.378
-ord-1794818572170	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:42:52.172	2026-11-16 08:42:52.172
-ord-1794818572579	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:42:52.582	2026-11-16 08:42:52.582
-ord-1794822041138	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822031100)	2026-11-16 09:40:41.139	2026-11-16 09:40:41.139
-ord-1794822041797	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822031100)	2026-11-16 09:40:41.799	2026-11-16 09:40:41.799
-ord-1794822041810	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822031100)	2026-11-16 09:40:41.812	2026-11-16 09:40:41.812
-ord-1794822041822	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822031100)	2026-11-16 09:40:41.824	2026-11-16 09:40:41.824
-ord-1794822678759	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794822678756)	2026-11-16 09:51:18.761	2026-11-16 09:51:18.761
-ord-1794822678778	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822678756)	2026-11-16 09:51:18.781	2026-11-16 09:51:18.781
-ord-1794822678800	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822678756)	2026-11-16 09:51:18.802	2026-11-16 09:51:18.802
-ord-1794822678810	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822678756)	2026-11-16 09:51:18.812	2026-11-16 09:51:18.812
-ord-1794822678820	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822678756)	2026-11-16 09:51:18.823	2026-11-16 09:51:18.823
-ord-1794822740009	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2689	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 09:52:20.014	2026-11-16 09:52:20.014
-ord-1794822741933	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2333	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 09:52:21.938	2026-11-16 09:52:21.938
-ord-1794822742958	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794822742955)	2026-11-16 09:52:22.963	2026-11-16 09:52:22.963
-ord-1794822742988	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822742955)	2026-11-16 09:52:22.992	2026-11-16 09:52:22.992
-ord-1794822743020	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822742955)	2026-11-16 09:52:23.025	2026-11-16 09:52:23.025
-ord-1794822743037	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822742955)	2026-11-16 09:52:23.041	2026-11-16 09:52:23.041
-ord-1794822743054	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822742955)	2026-11-16 09:52:23.058	2026-11-16 09:52:23.058
-ord-1794822743811	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:52:23.816	2026-11-16 09:52:23.816
-ord-1794822745019	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:52:25.023	2026-11-16 09:52:25.023
-ord-1794822747527	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:52:27.531	2026-11-16 09:52:27.531
-ord-1794822747540	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:52:27.544	2026-11-16 09:52:27.544
-ord-1794822748460	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:52:28.464	2026-11-16 09:52:28.464
-ord-1794822748988	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:52:28.992	2026-11-16 09:52:28.992
-ord-1794822915943	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:55:15.947	2026-11-16 09:55:15.947
-ord-1794822931859	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:55:31.862	2026-11-16 09:55:31.862
-ord-1794822934281	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:55:34.284	2026-11-16 09:55:34.284
-ord-1794822934290	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:55:34.293	2026-11-16 09:55:34.293
-ord-1794822948567	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:55:48.571	2026-11-16 09:55:48.571
-ord-1794822958891	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:55:58.894	2026-11-16 09:55:58.894
-ord-1794823004627	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2372	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 09:56:44.631	2026-11-16 09:56:44.631
-ord-1794823005755	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794823005753)	2026-11-16 09:56:45.758	2026-11-16 09:56:45.758
-ord-1794823005766	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794823005753)	2026-11-16 09:56:45.769	2026-11-16 09:56:45.769
-ord-1794823005785	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794823005753)	2026-11-16 09:56:45.788	2026-11-16 09:56:45.788
-ord-1794823005793	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794823005753)	2026-11-16 09:56:45.796	2026-11-16 09:56:45.796
-ord-1794823005800	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794823005753)	2026-11-16 09:56:45.803	2026-11-16 09:56:45.803
-ord-1794823006121	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:56:46.124	2026-11-16 09:56:46.124
-ord-1794823007828	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:56:47.831	2026-11-16 09:56:47.831
-ord-1794823010273	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:56:50.276	2026-11-16 09:56:50.276
-ord-1794823010285	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:56:50.288	2026-11-16 09:56:50.288
-ord-1794823010988	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:56:50.992	2026-11-16 09:56:50.992
-ord-1794823011360	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:56:51.363	2026-11-16 09:56:51.363
-ord-1794823210498	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2350	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:00:10.503	2026-11-16 10:00:10.503
-ord-1794823229199	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2350	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 10:00:29.203	2026-11-16 10:00:29.203
-ord-1794823230317	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2505	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:00:30.323	2026-11-16 10:00:30.323
-ord-1794823231293	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794823231286)	2026-11-16 10:00:31.301	2026-11-16 10:00:31.301
-ord-1794823231322	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794823231286)	2026-11-16 10:00:31.327	2026-11-16 10:00:31.327
-ord-1794823231353	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794823231286)	2026-11-16 10:00:31.357	2026-11-16 10:00:31.357
-ord-1794823231370	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794823231286)	2026-11-16 10:00:31.374	2026-11-16 10:00:31.374
-ord-1794823231385	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794823231286)	2026-11-16 10:00:31.39	2026-11-16 10:00:31.39
-ord-1794823231891	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 10:00:31.895	2026-11-16 10:00:31.895
-ord-1794823233090	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:00:33.094	2026-11-16 10:00:33.094
-ord-1794823235686	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:00:35.691	2026-11-16 10:00:35.691
-ord-1794823235701	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 10:00:35.706	2026-11-16 10:00:35.706
-ord-1794823236933	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 10:00:36.938	2026-11-16 10:00:36.938
-ord-1794823237743	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 10:00:37.748	2026-11-16 10:00:37.748
+COPY public."Order" (id, "userId", "retailerName", status, "totalAmountInr", "deliveryFeeInr", "deliveryAddress", "createdAt", "updatedAt", "fulfillmentNotes", "isDemoOrder", "statusReason", "substitutionNotes", "updatedBy") FROM stdin;
+ord-1794810679972	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794810679970)	2026-11-16 06:31:19.974	2026-11-16 06:31:19.974	\N	t	\N	\N	\N
+ord-1794810679985	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794810679970)	2026-11-16 06:31:19.986	2026-11-16 06:31:19.986	\N	t	\N	\N	\N
+ord-1794810680000	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794810679970)	2026-11-16 06:31:20.002	2026-11-16 06:31:20.002	\N	t	\N	\N	\N
+ord-1794810680007	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794810679970)	2026-11-16 06:31:20.008	2026-11-16 06:31:20.008	\N	t	\N	\N	\N
+ord-1794810680011	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794810679970)	2026-11-16 06:31:20.012	2026-11-16 06:31:20.012	\N	t	\N	\N	\N
+ord-1794810685357	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 06:31:25.359	2026-11-16 06:31:25.359	\N	t	\N	\N	\N
+ord-1794810807797	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	0	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:33:27.801	2026-11-16 06:33:27.801	\N	t	\N	\N	\N
+ord-1794810810125	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	0	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:33:30.129	2026-11-16 06:33:30.129	\N	t	\N	\N	\N
+ord-1794811140988	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:39:00.996	2026-11-16 06:39:00.996	\N	t	\N	\N	\N
+ord-1794811143232	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:39:03.238	2026-11-16 06:39:03.238	\N	t	\N	\N	\N
+ord-1794811385019	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:05.021	2026-11-16 06:43:05.021	\N	t	\N	\N	\N
+ord-1794811387312	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:07.314	2026-11-16 06:43:07.314	\N	t	\N	\N	\N
+ord-1794811387318	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:43:07.32	2026-11-16 06:43:07.32	\N	t	\N	\N	\N
+ord-1794811429516	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:49.518	2026-11-16 06:43:49.518	\N	t	\N	\N	\N
+ord-1794811431745	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:51.747	2026-11-16 06:43:51.747	\N	t	\N	\N	\N
+ord-1794811431751	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:43:51.753	2026-11-16 06:43:51.753	\N	t	\N	\N	\N
+ord-1794811550892	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	1563	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 06:45:50.898	2026-11-16 06:45:50.898	\N	t	\N	\N	\N
+ord-1794811560233	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	1976	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 06:46:00.239	2026-11-16 06:46:00.239	\N	t	\N	\N	\N
+ord-1794811560548	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794811560549)	2026-11-16 06:46:00.554	2026-11-16 06:46:00.554	\N	t	\N	\N	\N
+ord-1794811560557	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794811560549)	2026-11-16 06:46:00.563	2026-11-16 06:46:00.563	\N	t	\N	\N	\N
+ord-1794811560566	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794811560549)	2026-11-16 06:46:00.572	2026-11-16 06:46:00.572	\N	t	\N	\N	\N
+ord-1794811560574	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794811560549)	2026-11-16 06:46:00.58	2026-11-16 06:46:00.58	\N	t	\N	\N	\N
+ord-1794811560578	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794811560549)	2026-11-16 06:46:00.584	2026-11-16 06:46:00.584	\N	t	\N	\N	\N
+ord-1794811560837	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 06:46:00.843	2026-11-16 06:46:00.843	\N	t	\N	\N	\N
+ord-1794811561424	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:46:01.43	2026-11-16 06:46:01.43	\N	t	\N	\N	\N
+ord-1794811563666	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:46:03.672	2026-11-16 06:46:03.672	\N	t	\N	\N	\N
+ord-1794811563674	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:46:03.68	2026-11-16 06:46:03.68	\N	t	\N	\N	\N
+ord-1794811689362	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794811689362)	2026-11-16 06:48:09.365	2026-11-16 06:48:09.365	\N	t	\N	\N	\N
+ord-1794811689377	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794811689362)	2026-11-16 06:48:09.38	2026-11-16 06:48:09.38	\N	t	\N	\N	\N
+ord-1794811689387	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794811689362)	2026-11-16 06:48:09.389	2026-11-16 06:48:09.389	\N	t	\N	\N	\N
+ord-1794811689391	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794811689362)	2026-11-16 06:48:09.394	2026-11-16 06:48:09.394	\N	t	\N	\N	\N
+ord-1794811689396	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794811689362)	2026-11-16 06:48:09.399	2026-11-16 06:48:09.399	\N	t	\N	\N	\N
+ord-1794811709720	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:48:29.723	2026-11-16 06:48:29.723	\N	t	\N	\N	\N
+ord-1794811711940	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:48:31.942	2026-11-16 06:48:31.942	\N	t	\N	\N	\N
+ord-1794811711945	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:48:31.947	2026-11-16 06:48:31.947	\N	t	\N	\N	\N
+ord-1794811739645	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:48:59.647	2026-11-16 06:48:59.647	\N	t	\N	\N	\N
+ord-1794811741991	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:49:01.992	2026-11-16 06:49:01.992	\N	t	\N	\N	\N
+ord-1794811742003	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:49:02.005	2026-11-16 06:49:02.005	\N	t	\N	\N	\N
+ord-1794811885447	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2680	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 06:51:25.449	2026-11-16 06:51:25.449	\N	t	\N	\N	\N
+ord-1794811929962	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:52:09.966	2026-11-16 06:52:09.966	\N	t	\N	\N	\N
+ord-1794811932183	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:52:12.186	2026-11-16 06:52:12.186	\N	t	\N	\N	\N
+ord-1794811932190	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:52:12.193	2026-11-16 06:52:12.193	\N	t	\N	\N	\N
+ord-1794814450004	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2680	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:34:10.007	2026-11-16 07:34:10.007	\N	t	\N	\N	\N
+ord-1794814456824	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2534	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 07:34:16.826	2026-11-16 07:34:16.826	\N	t	\N	\N	\N
+ord-1794814457196	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794814457182)	2026-11-16 07:34:17.198	2026-11-16 07:34:17.198	\N	t	\N	\N	\N
+ord-1794814457205	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794814457182)	2026-11-16 07:34:17.207	2026-11-16 07:34:17.207	\N	t	\N	\N	\N
+ord-1794814457219	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794814457182)	2026-11-16 07:34:17.22	2026-11-16 07:34:17.22	\N	t	\N	\N	\N
+ord-1794814457226	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794814457182)	2026-11-16 07:34:17.228	2026-11-16 07:34:17.228	\N	t	\N	\N	\N
+ord-1794814457232	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794814457182)	2026-11-16 07:34:17.233	2026-11-16 07:34:17.233	\N	t	\N	\N	\N
+ord-1794814457483	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 07:34:17.485	2026-11-16 07:34:17.485	\N	t	\N	\N	\N
+ord-1794814458050	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:34:18.052	2026-11-16 07:34:18.052	\N	t	\N	\N	\N
+ord-1794814460343	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:34:20.345	2026-11-16 07:34:20.345	\N	t	\N	\N	\N
+ord-1794814460351	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:34:20.353	2026-11-16 07:34:20.353	\N	t	\N	\N	\N
+ord-1794814626095	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:37:06.104	2026-11-16 07:37:06.104	\N	t	\N	\N	\N
+ord-1794814628341	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:37:08.35	2026-11-16 07:37:08.35	\N	t	\N	\N	\N
+ord-1794814628348	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:37:08.357	2026-11-16 07:37:08.357	\N	t	\N	\N	\N
+ord-1794814892625	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:41:32.635	2026-11-16 07:41:32.635	\N	t	\N	\N	\N
+ord-1794815003346	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2534	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:43:23.351	2026-11-16 07:43:23.351	\N	t	\N	\N	\N
+ord-1794815057256	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794815055188)	2026-11-16 07:44:17.269	2026-11-16 07:44:17.269	\N	t	\N	\N	\N
+ord-1794815058843	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794815055188)	2026-11-16 07:44:18.856	2026-11-16 07:44:18.856	\N	t	\N	\N	\N
+ord-1794815058852	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794815055188)	2026-11-16 07:44:18.864	2026-11-16 07:44:18.864	\N	t	\N	\N	\N
+ord-1794815058858	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794815055188)	2026-11-16 07:44:18.871	2026-11-16 07:44:18.871	\N	t	\N	\N	\N
+ord-1794815059257	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 07:44:19.269	2026-11-16 07:44:19.269	\N	t	\N	\N	\N
+ord-1794815061238	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:44:21.25	2026-11-16 07:44:21.25	\N	t	\N	\N	\N
+ord-1794815063531	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:44:23.543	2026-11-16 07:44:23.543	\N	t	\N	\N	\N
+ord-1794815063536	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:44:23.549	2026-11-16 07:44:23.549	\N	t	\N	\N	\N
+ord-1794815064076	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:44:24.088	2026-11-16 07:44:24.088	\N	t	\N	\N	\N
+ord-1794815302442	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2502	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:48:22.444	2026-11-16 07:48:22.444	\N	t	\N	\N	\N
+ord-1794815434576	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:50:34.578	2026-11-16 07:50:34.578	\N	t	\N	\N	\N
+ord-1794815436819	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:50:36.821	2026-11-16 07:50:36.821	\N	t	\N	\N	\N
+ord-1794815436826	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:50:36.828	2026-11-16 07:50:36.828	\N	t	\N	\N	\N
+ord-1794815437417	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:50:37.418	2026-11-16 07:50:37.418	\N	t	\N	\N	\N
+ord-1794815751185	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2569	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:55:51.196	2026-11-16 07:55:51.196	\N	t	\N	\N	\N
+ord-1794815758045	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2775	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 07:55:58.057	2026-11-16 07:55:58.057	\N	t	\N	\N	\N
+ord-1794815758521	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794815758527)	2026-11-16 07:55:58.532	2026-11-16 07:55:58.532	\N	t	\N	\N	\N
+ord-1794815758535	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794815758527)	2026-11-16 07:55:58.546	2026-11-16 07:55:58.546	\N	t	\N	\N	\N
+ord-1794815758552	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794815758527)	2026-11-16 07:55:58.563	2026-11-16 07:55:58.563	\N	t	\N	\N	\N
+ord-1794815758562	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794815758527)	2026-11-16 07:55:58.573	2026-11-16 07:55:58.573	\N	t	\N	\N	\N
+ord-1794815758570	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794815758527)	2026-11-16 07:55:58.581	2026-11-16 07:55:58.581	\N	t	\N	\N	\N
+ord-1794815758893	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 07:55:58.904	2026-11-16 07:55:58.904	\N	t	\N	\N	\N
+ord-1794815759614	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:55:59.625	2026-11-16 07:55:59.625	\N	t	\N	\N	\N
+ord-1794815761985	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:56:01.996	2026-11-16 07:56:01.996	\N	t	\N	\N	\N
+ord-1794815761995	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:56:02.006	2026-11-16 07:56:02.006	\N	t	\N	\N	\N
+ord-1794815762738	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:56:02.749	2026-11-16 07:56:02.749	\N	t	\N	\N	\N
+ord-1794817209291	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2852	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 08:20:09.293	2026-11-16 08:20:09.293	\N	t	\N	\N	\N
+ord-1794817219541	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2367	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 08:20:19.543	2026-11-16 08:20:19.543	\N	t	\N	\N	\N
+ord-1794817220036	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794817220033)	2026-11-16 08:20:20.038	2026-11-16 08:20:20.038	\N	t	\N	\N	\N
+ord-1794817220049	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794817220033)	2026-11-16 08:20:20.051	2026-11-16 08:20:20.051	\N	t	\N	\N	\N
+ord-1794817220070	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794817220033)	2026-11-16 08:20:20.072	2026-11-16 08:20:20.072	\N	t	\N	\N	\N
+ord-1794817220081	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794817220033)	2026-11-16 08:20:20.083	2026-11-16 08:20:20.083	\N	t	\N	\N	\N
+ord-1794817220088	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794817220033)	2026-11-16 08:20:20.09	2026-11-16 08:20:20.09	\N	t	\N	\N	\N
+ord-1794817220427	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 08:20:20.429	2026-11-16 08:20:20.429	\N	t	\N	\N	\N
+ord-1794817221225	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:20:21.227	2026-11-16 08:20:21.227	\N	t	\N	\N	\N
+ord-1794817223639	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:20:23.641	2026-11-16 08:20:23.641	\N	t	\N	\N	\N
+ord-1794817223649	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 08:20:23.651	2026-11-16 08:20:23.651	\N	t	\N	\N	\N
+ord-1794817224528	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:20:24.53	2026-11-16 08:20:24.53	\N	t	\N	\N	\N
+ord-1794817822270	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:30:22.278	2026-11-16 08:30:22.278	\N	t	\N	\N	\N
+ord-1794818154448	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:35:54.451	2026-11-16 08:35:54.451	\N	t	\N	\N	\N
+ord-1794818318403	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2633	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 08:38:38.413	2026-11-16 08:38:38.413	\N	t	\N	\N	\N
+ord-1794818318851	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794818318854)	2026-11-16 08:38:38.861	2026-11-16 08:38:38.861	\N	t	\N	\N	\N
+ord-1794818318865	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794818318854)	2026-11-16 08:38:38.875	2026-11-16 08:38:38.875	\N	t	\N	\N	\N
+ord-1794818318881	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794818318854)	2026-11-16 08:38:38.891	2026-11-16 08:38:38.891	\N	t	\N	\N	\N
+ord-1794818318889	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794818318854)	2026-11-16 08:38:38.899	2026-11-16 08:38:38.899	\N	t	\N	\N	\N
+ord-1794818318898	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794818318854)	2026-11-16 08:38:38.908	2026-11-16 08:38:38.908	\N	t	\N	\N	\N
+ord-1794818319229	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 08:38:39.238	2026-11-16 08:38:39.238	\N	t	\N	\N	\N
+ord-1794818320015	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:38:40.024	2026-11-16 08:38:40.024	\N	t	\N	\N	\N
+ord-1794818322341	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:38:42.351	2026-11-16 08:38:42.351	\N	t	\N	\N	\N
+ord-1794818322350	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 08:38:42.359	2026-11-16 08:38:42.359	\N	t	\N	\N	\N
+ord-1794818323039	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:38:43.049	2026-11-16 08:38:43.049	\N	t	\N	\N	\N
+ord-1794818323463	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:38:43.473	2026-11-16 08:38:43.473	\N	t	\N	\N	\N
+ord-1794818377176	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:39:37.18	2026-11-16 08:39:37.18	\N	t	\N	\N	\N
+ord-1794818554226	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2827	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 08:42:34.231	2026-11-16 08:42:34.231	\N	t	\N	\N	\N
+ord-1794818567353	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2342	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 08:42:47.355	2026-11-16 08:42:47.355	\N	t	\N	\N	\N
+ord-1794818567850	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794818567848)	2026-11-16 08:42:47.853	2026-11-16 08:42:47.853	\N	t	\N	\N	\N
+ord-1794818567865	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794818567848)	2026-11-16 08:42:47.867	2026-11-16 08:42:47.867	\N	t	\N	\N	\N
+ord-1794818567882	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794818567848)	2026-11-16 08:42:47.885	2026-11-16 08:42:47.885	\N	t	\N	\N	\N
+ord-1794818567891	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794818567848)	2026-11-16 08:42:47.894	2026-11-16 08:42:47.894	\N	t	\N	\N	\N
+ord-1794818567899	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794818567848)	2026-11-16 08:42:47.901	2026-11-16 08:42:47.901	\N	t	\N	\N	\N
+ord-1794818568267	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 08:42:48.27	2026-11-16 08:42:48.27	\N	t	\N	\N	\N
+ord-1794818569015	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:42:49.017	2026-11-16 08:42:49.017	\N	t	\N	\N	\N
+ord-1794818571364	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:42:51.367	2026-11-16 08:42:51.367	\N	t	\N	\N	\N
+ord-1794818571375	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 08:42:51.378	2026-11-16 08:42:51.378	\N	t	\N	\N	\N
+ord-1794818572170	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:42:52.172	2026-11-16 08:42:52.172	\N	t	\N	\N	\N
+ord-1794818572579	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:42:52.582	2026-11-16 08:42:52.582	\N	t	\N	\N	\N
+ord-1794822041138	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822031100)	2026-11-16 09:40:41.139	2026-11-16 09:40:41.139	\N	t	\N	\N	\N
+ord-1794822041797	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822031100)	2026-11-16 09:40:41.799	2026-11-16 09:40:41.799	\N	t	\N	\N	\N
+ord-1794822041810	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822031100)	2026-11-16 09:40:41.812	2026-11-16 09:40:41.812	\N	t	\N	\N	\N
+ord-1794822041822	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822031100)	2026-11-16 09:40:41.824	2026-11-16 09:40:41.824	\N	t	\N	\N	\N
+ord-1794822678759	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794822678756)	2026-11-16 09:51:18.761	2026-11-16 09:51:18.761	\N	t	\N	\N	\N
+ord-1794822678778	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822678756)	2026-11-16 09:51:18.781	2026-11-16 09:51:18.781	\N	t	\N	\N	\N
+ord-1794822678800	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822678756)	2026-11-16 09:51:18.802	2026-11-16 09:51:18.802	\N	t	\N	\N	\N
+ord-1794822678810	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822678756)	2026-11-16 09:51:18.812	2026-11-16 09:51:18.812	\N	t	\N	\N	\N
+ord-1794822678820	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822678756)	2026-11-16 09:51:18.823	2026-11-16 09:51:18.823	\N	t	\N	\N	\N
+ord-1794822740009	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2689	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 09:52:20.014	2026-11-16 09:52:20.014	\N	t	\N	\N	\N
+ord-1794822741933	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2333	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 09:52:21.938	2026-11-16 09:52:21.938	\N	t	\N	\N	\N
+ord-1794822742958	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794822742955)	2026-11-16 09:52:22.963	2026-11-16 09:52:22.963	\N	t	\N	\N	\N
+ord-1794822742988	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822742955)	2026-11-16 09:52:22.992	2026-11-16 09:52:22.992	\N	t	\N	\N	\N
+ord-1794822743020	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822742955)	2026-11-16 09:52:23.025	2026-11-16 09:52:23.025	\N	t	\N	\N	\N
+ord-1794822743037	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822742955)	2026-11-16 09:52:23.041	2026-11-16 09:52:23.041	\N	t	\N	\N	\N
+ord-1794822743054	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822742955)	2026-11-16 09:52:23.058	2026-11-16 09:52:23.058	\N	t	\N	\N	\N
+ord-1794822743811	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:52:23.816	2026-11-16 09:52:23.816	\N	t	\N	\N	\N
+ord-1794822745019	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:52:25.023	2026-11-16 09:52:25.023	\N	t	\N	\N	\N
+ord-1794822747527	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:52:27.531	2026-11-16 09:52:27.531	\N	t	\N	\N	\N
+ord-1794822747540	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:52:27.544	2026-11-16 09:52:27.544	\N	t	\N	\N	\N
+ord-1794822748460	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:52:28.464	2026-11-16 09:52:28.464	\N	t	\N	\N	\N
+ord-1794822748988	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:52:28.992	2026-11-16 09:52:28.992	\N	t	\N	\N	\N
+ord-1794822915943	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:55:15.947	2026-11-16 09:55:15.947	\N	t	\N	\N	\N
+ord-1794822931859	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:55:31.862	2026-11-16 09:55:31.862	\N	t	\N	\N	\N
+ord-1794822934281	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:55:34.284	2026-11-16 09:55:34.284	\N	t	\N	\N	\N
+ord-1794822934290	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:55:34.293	2026-11-16 09:55:34.293	\N	t	\N	\N	\N
+ord-1794822948567	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:55:48.571	2026-11-16 09:55:48.571	\N	t	\N	\N	\N
+ord-1794822958891	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:55:58.894	2026-11-16 09:55:58.894	\N	t	\N	\N	\N
+ord-1794823004627	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2372	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 09:56:44.631	2026-11-16 09:56:44.631	\N	t	\N	\N	\N
+ord-1794823005755	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794823005753)	2026-11-16 09:56:45.758	2026-11-16 09:56:45.758	\N	t	\N	\N	\N
+ord-1794823005766	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794823005753)	2026-11-16 09:56:45.769	2026-11-16 09:56:45.769	\N	t	\N	\N	\N
+ord-1794823005785	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794823005753)	2026-11-16 09:56:45.788	2026-11-16 09:56:45.788	\N	t	\N	\N	\N
+ord-1794823005793	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794823005753)	2026-11-16 09:56:45.796	2026-11-16 09:56:45.796	\N	t	\N	\N	\N
+ord-1794823005800	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794823005753)	2026-11-16 09:56:45.803	2026-11-16 09:56:45.803	\N	t	\N	\N	\N
+ord-1794823006121	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:56:46.124	2026-11-16 09:56:46.124	\N	t	\N	\N	\N
+ord-1794823007828	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:56:47.831	2026-11-16 09:56:47.831	\N	t	\N	\N	\N
+ord-1794823010273	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:56:50.276	2026-11-16 09:56:50.276	\N	t	\N	\N	\N
+ord-1794823010285	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:56:50.288	2026-11-16 09:56:50.288	\N	t	\N	\N	\N
+ord-1794823010988	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:56:50.992	2026-11-16 09:56:50.992	\N	t	\N	\N	\N
+ord-1794823011360	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:56:51.363	2026-11-16 09:56:51.363	\N	t	\N	\N	\N
+ord-1794823210498	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2350	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:00:10.503	2026-11-16 10:00:10.503	\N	t	\N	\N	\N
+ord-1794823229199	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2350	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 10:00:29.203	2026-11-16 10:00:29.203	\N	t	\N	\N	\N
+ord-1794823230317	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2505	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:00:30.323	2026-11-16 10:00:30.323	\N	t	\N	\N	\N
+ord-1794823231293	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794823231286)	2026-11-16 10:00:31.301	2026-11-16 10:00:31.301	\N	t	\N	\N	\N
+ord-1794823231322	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794823231286)	2026-11-16 10:00:31.327	2026-11-16 10:00:31.327	\N	t	\N	\N	\N
+ord-1794823231353	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794823231286)	2026-11-16 10:00:31.357	2026-11-16 10:00:31.357	\N	t	\N	\N	\N
+ord-1794823231370	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794823231286)	2026-11-16 10:00:31.374	2026-11-16 10:00:31.374	\N	t	\N	\N	\N
+ord-1794823231385	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794823231286)	2026-11-16 10:00:31.39	2026-11-16 10:00:31.39	\N	t	\N	\N	\N
+ord-1794823231891	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 10:00:31.895	2026-11-16 10:00:31.895	\N	t	\N	\N	\N
+ord-1794823233090	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:00:33.094	2026-11-16 10:00:33.094	\N	t	\N	\N	\N
+ord-1794823235686	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:00:35.691	2026-11-16 10:00:35.691	\N	t	\N	\N	\N
+ord-1794823235701	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 10:00:35.706	2026-11-16 10:00:35.706	\N	t	\N	\N	\N
+ord-1794823236933	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 10:00:36.938	2026-11-16 10:00:36.938	\N	t	\N	\N	\N
+ord-1794823237743	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 10:00:37.748	2026-11-16 10:40:20.806	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in
+ord-1794825684884	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2808	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 10:41:24.886	2026-11-16 10:41:24.886	\N	t	\N	\N	\N
+ord-1794825691731	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2475	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:41:31.733	2026-11-16 10:41:31.733	\N	t	\N	\N	\N
+ord-1794825692196	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794825692187)	2026-11-16 10:41:32.198	2026-11-16 10:41:32.198	\N	t	\N	\N	\N
+ord-1794825692208	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794825692187)	2026-11-16 10:41:32.21	2026-11-16 10:41:32.21	\N	t	\N	\N	\N
+ord-1794825692222	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794825692187)	2026-11-16 10:41:32.224	2026-11-16 10:41:32.224	\N	t	\N	\N	\N
+ord-1794825692231	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794825692187)	2026-11-16 10:41:32.233	2026-11-16 10:41:32.233	\N	t	\N	\N	\N
+ord-1794825692238	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794825692187)	2026-11-16 10:41:32.24	2026-11-16 10:41:32.24	\N	t	\N	\N	\N
+ord-1794825692587	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 10:41:32.588	2026-11-16 10:41:32.588	\N	t	\N	\N	\N
+ord-1794825693372	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:41:33.374	2026-11-16 10:41:33.374	\N	t	\N	\N	\N
+ord-1794825695792	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:41:35.794	2026-11-16 10:41:35.794	\N	t	\N	\N	\N
+ord-1794825695802	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 10:41:35.804	2026-11-16 10:41:35.804	\N	t	\N	\N	\N
+ord-1794825696510	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 10:41:36.512	2026-11-16 10:41:36.512	\N	t	\N	\N	\N
+ord-1794825696926	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 10:41:36.928	2026-11-16 10:41:42.556	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in
+ord-1794825806875	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2475	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 10:43:26.877	2026-11-16 10:43:26.877	\N	t	\N	\N	\N
+ord-1794825812985	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2741	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:43:32.986	2026-11-16 10:43:32.986	\N	t	\N	\N	\N
+ord-1794825813476	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794825813475)	2026-11-16 10:43:33.478	2026-11-16 10:43:33.478	\N	t	\N	\N	\N
+ord-1794825813488	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794825813475)	2026-11-16 10:43:33.49	2026-11-16 10:43:33.49	\N	t	\N	\N	\N
+ord-1794825813504	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794825813475)	2026-11-16 10:43:33.506	2026-11-16 10:43:33.506	\N	t	\N	\N	\N
+ord-1794825813511	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794825813475)	2026-11-16 10:43:33.513	2026-11-16 10:43:33.513	\N	t	\N	\N	\N
+ord-1794825813518	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794825813475)	2026-11-16 10:43:33.519	2026-11-16 10:43:33.519	\N	t	\N	\N	\N
+ord-1794825813845	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 10:43:33.847	2026-11-16 10:43:33.847	\N	t	\N	\N	\N
+ord-1794825814586	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:43:34.587	2026-11-16 10:43:34.587	\N	t	\N	\N	\N
+ord-1794825816965	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:43:36.967	2026-11-16 10:43:36.967	\N	t	\N	\N	\N
+ord-1794825816972	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 10:43:36.974	2026-11-16 10:43:36.974	\N	t	\N	\N	\N
+ord-1794825817840	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 10:43:37.842	2026-11-16 10:43:37.842	\N	t	\N	\N	\N
+ord-1794825818247	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 10:43:38.249	2026-11-16 10:43:38.249	\N	t	\N	\N	\N
 \.
 
 
@@ -1102,9 +1232,9 @@ cmwivcvpu00efl3q4g85o0or9	hh-mehta-family	ing-bajra-flour	2000	g	f	\N	2026-11-16
 cmwivcvpz00ehl3q4aybn4ci6	hh-mehta-family	ing-ghee	1000	g	f	\N	2026-11-16 06:15:05.111
 cmwivcvq300ejl3q4lq5iioe7	hh-mehta-family	ing-green-chilli	250	g	f	\N	2026-11-16 06:15:05.115
 cmwivcvq800ell3q411ejwkrd	hh-mehta-family	ing-mustard-seeds	200	g	f	\N	2026-11-16 06:15:05.121
-cmwivcvo000e1l3q4teh4nxo1	hh-sharma-family	ing-mustard-seeds	200	g	f	\N	2026-11-16 10:00:33.076
-pantry-1794817781894	hh-patel-family	ing-bajra-flour	2000	g	f	\N	2026-11-16 10:00:37.613
-pantry-1794817791932	hh-mehta-family	ing-raw-banana	1500	g	f	\N	2026-11-16 10:00:37.638
+cmwivcvo000e1l3q4teh4nxo1	hh-sharma-family	ing-mustard-seeds	200	g	f	\N	2026-11-16 10:43:34.577
+pantry-1794817781894	hh-patel-family	ing-bajra-flour	2000	g	f	\N	2026-11-16 10:43:38.179
+pantry-1794817791932	hh-mehta-family	ing-raw-banana	1500	g	f	\N	2026-11-16 10:43:38.192
 \.
 
 
@@ -1237,41 +1367,44 @@ var-tata-sesame-200	prod-Tata Sampann-ing-sesame-seeds	ing-sesame-seeds	TATA-SES
 -- Data for Name: Recipe; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."Recipe" (id, title, slug, description, cuisine, "dietaryTags", "mealTypes", "prepTimeMinutes", "cookTimeMinutes", "defaultServings", difficulty, "caloriesPerServing", "proteinGrams", "carbsGrams", "fatGrams", "fiberGrams", "imageUrl", "estimatedCostInr", "isJainFriendly", "jainAlternativeNotes", rating, "ratingCount", "createdAt") FROM stdin;
-recipe-gujarati-khatti-meethi-dal	Authentic Gujarati Khatti Meethi Dal	gujarati-khatti-meethi-dal	A delicate harmony of sweet organic jaggery and tangy kokum or lemon, tempered with mustard, cumin, and fragrant curry leaves. A Jain dietary staple.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly",Diabetic-Friendly}	{lunch,dinner}	10	20	4	Easy	185	8	30	4	6	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	95	t	\N	4.8	120	2026-11-16 06:15:04.323
-recipe-methi-thepla	Spiced Gujarati Methi Thepla	methi-thepla	Golden spiced flatbreads made with whole wheat flour, fresh fenugreek leaves, sesame, and yogurt. The iconic travel and breakfast food of Gujarat.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly",Kid-Friendly}	{breakfast,snack}	15	15	4	Easy	210	6	32	7	5	https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80	80	t	\N	4.8	120	2026-11-16 06:15:04.341
-recipe-masala-dosa	Crispy Bengaluru Masala Dosa	bengaluru-masala-dosa	Golden fermented rice and urad dal crepe slathered with red garlic chutney and stuffed with comforting spiced potato palya.	South Indian	{Vegetarian,Gluten-Free}	{breakfast,dinner}	10	20	4	Medium	310	7	52	9	4	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80	120	f	Replace potato palya with raw banana (kacha kela) palya cooked with mustard and turmeric.	4.8	120	2026-11-16 06:15:04.353
-recipe-rajma-chawal	Dhaba Style Kashmiri Rajma Chawal	punjabi-rajma-chawal	Slow-simmered red kidney beans in an aromatic ginger-garlic and tomato masala served over steaming cumin-scented basmati rice.	Punjabi	{"Pure Vegetarian",Vegetarian,High-Protein,Gluten-Free}	{lunch,dinner}	20	35	4	Medium	420	18	68	8	12	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=800&q=80	160	f	\N	4.8	120	2026-11-16 06:15:04.366
-recipe-palak-paneer	Creamy Homestyle Palak Paneer	homestyle-palak-paneer	Blanched fresh green spinach puree infused with garlic, cumin, and mild spices, gently folded with soft paneer cubes.	North Indian	{"Pure Vegetarian",Vegetarian,High-Protein,Gluten-Free}	{lunch,dinner}	15	20	4	Easy	320	15	10	24	5	https://images.unsplash.com/photo-1589647363585-745280b57b8f?auto=format&fit=crop&w=800&q=80	210	f	\N	4.8	120	2026-11-16 06:15:04.378
-recipe-kanda-poha	Mumbai Style Batata Kanda Poha	batata-kanda-poha	Fluffy flattened rice tossed with crunchy peanuts, diced potatoes, caramelized onions, mustard seeds, and fresh lime.	Maharashtrian	{"Pure Vegetarian",Vegetarian,Kid-Friendly}	{breakfast,snack}	10	15	4	Easy	240	5	42	6	3	https://images.unsplash.com/photo-1645177628172-a94c1f96e6db?auto=format&fit=crop&w=800&q=80	70	f	\N	4.8	120	2026-11-16 06:15:04.389
-recipe-moong-dal-khichdi	Sattvic Moong Dal Khichdi with Desi Ghee	moong-dal-khichdi	The ultimate comforting, gut-healing Indian one-pot meal made with yellow moong dal, basmati rice, turmeric, and aromatic cumin ghee tadka.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly",Diabetic-Friendly,Kid-Friendly}	{lunch,dinner}	10	15	4	Easy	260	10	45	6	5	https://images.unsplash.com/photo-1633945274405-b6c8069047b0?auto=format&fit=crop&w=800&q=80	90	t	\N	4.8	120	2026-11-16 06:15:04.398
-recipe-egg-curry	Dhaba Style Masala Egg Curry	dhaba-style-egg-curry	Golden shallow-fried boiled eggs enveloped in a spiced onion, tomato, and garam masala gravy.	North Indian	{Eggetarian,High-Protein,Gluten-Free}	{lunch,dinner}	15	20	4	Easy	280	14	12	18	3	https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80	130	f	\N	4.8	120	2026-11-16 06:15:04.408
-recipe-khaman-dhokla	Surati Nylon Khaman Dhokla	surati-khaman-dhokla	Feather-light, spongy savory steamed cakes made from gram flour, drizzled with sweet-tangy mustard and green chilli tempering.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly",Kid-Friendly}	{breakfast,snack}	10	20	4	Easy	160	6	24	4	3	https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80	65	t	\N	4.8	120	2026-11-16 06:15:04.419
-recipe-amritsari-chole	Authentic Amritsari Pindi Chole	amritsari-chole	Dark, tangy and robust Punjabi chickpeas slow-simmered with pomegranate seeds, amchoor, and aromatic whole spices.	Punjabi	{"Pure Vegetarian",Vegetarian,High-Protein,Gluten-Free}	{lunch,dinner}	15	30	4	Medium	320	16	48	8	11	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=800&q=80	110	f	\N	4.8	120	2026-11-16 06:15:04.43
-recipe-dal-tadka	Dhaba Style Yellow Dal Tadka	dal-tadka	Creamy slow-simmered yellow toor and moong lentils finished with a double sizzling tadka of cow ghee, cumin, and garlic.	North Indian	{"Pure Vegetarian",Vegetarian,High-Protein,Gluten-Free}	{lunch,dinner}	10	20	4	Easy	210	11	32	6	7	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	85	f	\N	4.8	120	2026-11-16 06:15:04.443
-recipe-aloo-gobi	Homestyle Adraki Aloo Gobi	adraki-aloo-gobi	Tender cauliflower florets and golden potatoes sautéed with loads of freshly julienned ginger, turmeric, and roasted cumin.	North Indian	{"Pure Vegetarian",Vegetarian,Vegan,Gluten-Free}	{lunch,dinner}	15	20	4	Easy	195	5	28	7	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80	75	f	\N	4.8	120	2026-11-16 06:15:04.452
-recipe-rava-upma	Spiced Vegetable Rava Upma	rava-upma	Classic South Indian roasted semolina breakfast tempered with mustard, crunchy roasted peanuts, ginger, and curry leaves.	South Indian	{"Pure Vegetarian",Vegetarian,Kid-Friendly}	{breakfast,snack}	10	12	4	Easy	230	6	38	7	4	https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80	60	f	\N	4.8	120	2026-11-16 06:15:04.472
-recipe-bhindi-masala	Chatpati Homestyle Bhindi Masala	bhindi-masala	Crisp-tender okra tossed in tangy amchoor, roasted coriander powder, cumin, and sliced green chillies.	North Indian	{"Pure Vegetarian",Vegetarian,Vegan,Gluten-Free,"Jain Friendly"}	{lunch,dinner}	15	15	4	Easy	165	4	16	9	5	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=800&q=80	70	t	\N	4.8	120	2026-11-16 06:15:04.481
-recipe-sambhar-rice	Chennai Sambar Sadam (One-Pot Sambar Rice)	sambar-sadam	Hearty Tamil Nadu style one-pot rice and toor dal simmered with country vegetables, tangy tamarind, and fragrant ghee tadka.	South Indian	{"Pure Vegetarian",Vegetarian,Gluten-Free}	{lunch,dinner}	10	20	4	Easy	290	9	52	6	6	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	95	f	\N	4.8	120	2026-11-16 06:15:04.49
-recipe-baingan-bharta	Dhaba Style Smoked Baingan Bharta	baingan-bharta	Charcoal-roasted large eggplant mashed and braised with browned onions, ripe tomatoes, fresh green chillies, and ginger.	Punjabi	{"Pure Vegetarian",Vegetarian,Vegan,Gluten-Free}	{lunch,dinner}	15	20	4	Medium	180	4	18	9	7	https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80	80	f	\N	4.8	120	2026-11-16 06:15:04.498
-recipe-punjabi-chicken-curry	Dhaba Style Tariwala Chicken Curry	tariwala-chicken-curry	Rustic homestyle Punjabi chicken curry simmered in a golden onion-tomato gravy with bone-in chicken cuts, garlic, and freshly crushed spices.	Punjabi	{Non-Vegetarian,High-Protein,Gluten-Free}	{lunch,dinner}	15	30	4	Medium	340	28	10	16	3	https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=800&q=80	280	f	\N	4.8	120	2026-11-16 06:15:04.508
-recipe-bengali-macher-jhol	Authentic Bengali Macher Jhol	bengali-macher-jhol	Light and comforting Kolkata style fish curry made with fresh fish steaks, potato wedges, kalonji, turmeric, and green chillies in mustard oil.	Bengali	{Non-Vegetarian,High-Protein,Gluten-Free}	{lunch,dinner}	15	20	4	Medium	280	24	16	12	2	https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80	260	f	\N	4.8	120	2026-11-16 06:15:04.517
-recipe-bengali-cholar-dal	Traditional Bengali Narkel Cholar Dal	bengali-cholar-dal	Festive festive Bengal chana dal slow-simmered with ginger, cumin, bay leaf, and crisp fried coconut chips. Naturally plant-based and Jain permissible.	Bengali	{"Pure Vegetarian",Vegetarian,Vegan,"Jain Friendly",High-Protein}	{lunch,dinner}	15	25	4	Easy	230	12	36	6	8	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	105	t	\N	4.8	120	2026-11-16 06:15:04.526
-recipe-jain-paneer-bhurji	Sattvic Jain Malai Paneer Bhurji	jain-paneer-bhurji	Scrambled fresh paneer tossed with ripe country tomatoes, fresh green chillies, crushed kasuri methi, and fragrant cumin ghee tadka. 100% root-vegetable free.	North Indian	{"Pure Vegetarian",Vegetarian,"Jain Friendly",High-Protein,Gluten-Free}	{lunch,dinner}	10	12	4	Easy	280	16	8	20	2	https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=800&q=80	160	t	\N	4.8	120	2026-11-16 06:15:04.535
-recipe-jain-moong-dal-tadka	Sattvic Homestyle Moong Dal Tadka	jain-moong-dal-tadka	Golden yellow moong dal simmered with turmeric and tempered with sizzling cow ghee, cumin seeds, fresh curry leaves, and green chillies.	North Indian	{"Pure Vegetarian",Vegetarian,"Jain Friendly",High-Protein,Gluten-Free}	{lunch,dinner}	10	20	4	Easy	210	11	30	5	6	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	85	t	\N	4.8	120	2026-11-16 06:15:04.543
-recipe-sev-tameta-nu-shaak	Kathiyawadi Sev Tameta nu Shaak	kathiyawadi-sev-tameta-nu-shaak	Iconic sweet, tangy, and spicy tomato curry tempered with mustard and cumin, topped with crisp Ratlami nylon sev right before serving.	Kathiyawadi	{"Pure Vegetarian",Vegetarian,"Jain Friendly"}	{lunch,dinner}	10	15	4	Easy	245	7.2	28.5	11.8	3.2	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	90	t	\N	4.8	120	2026-11-16 06:15:04.552
-recipe-ringna-no-olo	Kathiyawadi Ringna no Olo (Baingan Bharta)	kathiyawadi-ringna-no-olo	Rustic Kathiyawadi roasted eggplant mash infused with green garlic, chillies, and mustard oil, served with hot Bajra no Rotlo.	Kathiyawadi	{"Pure Vegetarian",Vegetarian,Vegan,Gluten-Free}	{lunch,dinner}	15	25	4	Medium	165	3.8	18.2	8.5	6.2	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	95	f	Jain variation substitutes roasted green plantain or bottle gourd mash without garlic or onions.	4.8	120	2026-11-16 06:15:04.561
-recipe-bajra-no-rotlo	Traditional Kathiyawadi Bajra no Rotlo	traditional-kathiyawadi-bajra-no-rotlo	Thick, wholesome gluten-free flatbread hand-patted from pearl millet flour and roasted on a clay tava, slathered with pure desi ghee.	Kathiyawadi	{"Pure Vegetarian",Vegetarian,Gluten-Free,"Jain Friendly"}	{lunch,dinner}	10	15	4	Medium	195	5.8	34.2	4.1	6	https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80	60	t	\N	4.8	120	2026-11-16 06:15:04.57
-recipe-paneer-butter-masala	Restaurant Style Paneer Butter Masala	paneer-butter-masala	Tender cottage cheese cubes simmered in a velvety, rich tomato, cashew, and butter gravy perfumed with kasuri methi.	North Indian	{"Pure Vegetarian",Vegetarian,High-Protein}	{lunch,dinner}	15	25	4	Medium	380	16	14	28	4	https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=800&q=80	280	f	Replace onion and garlic paste with pure tomato-ginger puree and a pinch of asafoetida (hing).	4.8	120	2026-11-16 06:15:04.273
-recipe-idli-sambar	Steamed Idli with Drumstick Vegetable Sambar	idli-sambar	Pillowy soft fermented steamed rice cakes served with aromatic Madras lentil sambar and fresh coconut chutney.	South Indian	{"Pure Vegetarian",Vegetarian,Vegan,Gluten-Free,"Jain Friendly"}	{breakfast}	10	15	4	Easy	220	8	42	3	5	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80	90	t	\N	4.8	120	2026-11-16 06:15:04.462
-recipe-bajra-no-rotlo-vegan	Kathiyawadi Bajra no Rotlo (Vegan / Til Oil)	kathiyawadi-bajra-no-rotlo-vegan	Authentic rustic Gujarati pearl millet flatbread hand-patted and roasted over fire, brushed with cold-pressed sesame oil (til tel) for a 100% plant-based, gluten-free traditional meal.	Kathiyawadi	{"Pure Vegetarian",Vegetarian,Vegan,Gluten-Free,"Jain Friendly"}	{lunch,dinner}	10	15	4	Medium	190	5.8	34.2	4	6	https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80	55	t	\N	4.8	120	2026-11-16 07:27:44.02
-recipe-surati-undhiyu	Authentic Surati Undhiyu with Methi Muthiya	authentic-surati-undhiyu	Celebrated Gujarati winter specialty uniting tender Surti papdi, tuver lilva, purple yam, baby eggplants, and spiced fenugreek dumplings.	Gujarati	{"Pure Vegetarian",Vegetarian}	{lunch,dinner}	30	40	4	Advanced	385	11.2	48.6	16.5	10.5	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	180	f	Authentic Jain Undhiyu replaces purple yam and potatoes with firm raw green plantain (Kacha Kela) and extra Surti papdi.	4.8	120	2026-11-16 06:15:04.578
-recipe-surati-undhiyu-jain	Authentic Jain Surati Undhiyu (Kacha Kela & Papdi)	authentic-jain-surati-undhiyu	Revered Jain Gujarati winter banquet preparation slow-cooked strictly without root vegetables, onions, or garlic, using fresh Surti papdi, tuver lilva, raw green plantain (kacha kela), and steamed methi muthiya.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly"}	{lunch,dinner}	30	35	4	Advanced	350	10.8	46.2	14.5	11	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	175	t	\N	4.8	120	2026-11-16 07:27:44.046
-recipe-gujarati-dal-dhokli	Traditional Gujarati One-Pot Dal Dhokli	traditional-gujarati-dal-dhokli	Wholesome one-pot meal where thin spiced whole wheat pasta diamonds are simmered in a sweet, tangy, and aromatic toor dal curry.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly"}	{lunch,dinner}	20	25	4	Medium	320	12.5	52	6.8	7.8	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	110	t	\N	4.8	120	2026-11-16 06:15:04.588
-recipe-gujarati-kadhi	Traditional Sweet & Sour Gujarati Kadhi	traditional-sweet-and-sour-gujarati-kadhi	Thin, soothing sweet-tangy soup made with churned yogurt and chickpea flour, tempered with cinnamon, cloves, mustard seeds, and curry leaves.	Gujarati	{"Pure Vegetarian",Vegetarian,Gluten-Free,"Jain Friendly"}	{lunch,dinner}	10	15	4	Easy	145	5.2	16.8	6.5	1.5	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	75	t	\N	4.8	120	2026-11-16 06:15:04.596
-recipe-vaghireli-khichdi	Kathiyawadi Vaghireli Khichdi with Desi Ghee	kathiyawadi-vaghireli-khichdi	Comforting spicy tempered rice and split yellow moong dal infused with whole spices, tomatoes, curry leaves, and a generous dollop of ghee.	Kathiyawadi	{"Pure Vegetarian",Vegetarian,Gluten-Free,"Jain Friendly"}	{dinner}	10	20	4	Easy	285	9.8	46.5	6.8	5.2	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	80	t	\N	4.8	120	2026-11-16 06:15:04.605
-recipe-gujarati-handvo	Gujarati Baked Vegetable Handvo (Savory Lentil Cake)	gujarati-baked-vegetable-handvo	Traditional Gujarati savory baked cake made with fermented rice and mixed lentils, bottle gourd, and a crunchy sesame-mustard seed crust.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly",Gluten-Free}	{breakfast,snack,dinner}	15	35	4	Medium	260	9.5	36.8	8.5	4.8	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	100	t	\N	4.8	120	2026-11-16 06:15:04.614
-recipe-methi-na-gota	Crispy Gujarati Methi na Gota (Dakor Style)	crispy-gujarati-methi-na-gota	Pillowy soft inside and crisp outside fenugreek fritters spiced with crushed pepper, ajwain, and jaggery, famously served at Dakor temple.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly"}	{breakfast,snack}	15	15	4	Easy	230	7.8	26.2	10.5	4.2	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	70	t	\N	4.8	120	2026-11-16 06:15:04.624
+COPY public."Recipe" (id, title, slug, description, cuisine, "dietaryTags", "mealTypes", "prepTimeMinutes", "cookTimeMinutes", "defaultServings", difficulty, "caloriesPerServing", "proteinGrams", "carbsGrams", "fatGrams", "fiberGrams", "imageUrl", "estimatedCostInr", "isJainFriendly", "jainAlternativeNotes", rating, "ratingCount", "createdAt", "archivedAt", "archivedBy", "isArchived") FROM stdin;
+recipe-gujarati-khatti-meethi-dal	Authentic Gujarati Khatti Meethi Dal	gujarati-khatti-meethi-dal	A delicate harmony of sweet organic jaggery and tangy kokum or lemon, tempered with mustard, cumin, and fragrant curry leaves. A Jain dietary staple.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly",Diabetic-Friendly}	{lunch,dinner}	10	20	4	Easy	185	8	30	4	6	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	95	t	\N	4.8	120	2026-11-16 06:15:04.323	\N	\N	f
+recipe-methi-thepla	Spiced Gujarati Methi Thepla	methi-thepla	Golden spiced flatbreads made with whole wheat flour, fresh fenugreek leaves, sesame, and yogurt. The iconic travel and breakfast food of Gujarat.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly",Kid-Friendly}	{breakfast,snack}	15	15	4	Easy	210	6	32	7	5	https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80	80	t	\N	4.8	120	2026-11-16 06:15:04.341	\N	\N	f
+recipe-masala-dosa	Crispy Bengaluru Masala Dosa	bengaluru-masala-dosa	Golden fermented rice and urad dal crepe slathered with red garlic chutney and stuffed with comforting spiced potato palya.	South Indian	{Vegetarian,Gluten-Free}	{breakfast,dinner}	10	20	4	Medium	310	7	52	9	4	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80	120	f	Replace potato palya with raw banana (kacha kela) palya cooked with mustard and turmeric.	4.8	120	2026-11-16 06:15:04.353	\N	\N	f
+recipe-rajma-chawal	Dhaba Style Kashmiri Rajma Chawal	punjabi-rajma-chawal	Slow-simmered red kidney beans in an aromatic ginger-garlic and tomato masala served over steaming cumin-scented basmati rice.	Punjabi	{"Pure Vegetarian",Vegetarian,High-Protein,Gluten-Free}	{lunch,dinner}	20	35	4	Medium	420	18	68	8	12	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=800&q=80	160	f	\N	4.8	120	2026-11-16 06:15:04.366	\N	\N	f
+recipe-palak-paneer	Creamy Homestyle Palak Paneer	homestyle-palak-paneer	Blanched fresh green spinach puree infused with garlic, cumin, and mild spices, gently folded with soft paneer cubes.	North Indian	{"Pure Vegetarian",Vegetarian,High-Protein,Gluten-Free}	{lunch,dinner}	15	20	4	Easy	320	15	10	24	5	https://images.unsplash.com/photo-1589647363585-745280b57b8f?auto=format&fit=crop&w=800&q=80	210	f	\N	4.8	120	2026-11-16 06:15:04.378	\N	\N	f
+recipe-kanda-poha	Mumbai Style Batata Kanda Poha	batata-kanda-poha	Fluffy flattened rice tossed with crunchy peanuts, diced potatoes, caramelized onions, mustard seeds, and fresh lime.	Maharashtrian	{"Pure Vegetarian",Vegetarian,Kid-Friendly}	{breakfast,snack}	10	15	4	Easy	240	5	42	6	3	https://images.unsplash.com/photo-1645177628172-a94c1f96e6db?auto=format&fit=crop&w=800&q=80	70	f	\N	4.8	120	2026-11-16 06:15:04.389	\N	\N	f
+recipe-moong-dal-khichdi	Sattvic Moong Dal Khichdi with Desi Ghee	moong-dal-khichdi	The ultimate comforting, gut-healing Indian one-pot meal made with yellow moong dal, basmati rice, turmeric, and aromatic cumin ghee tadka.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly",Diabetic-Friendly,Kid-Friendly}	{lunch,dinner}	10	15	4	Easy	260	10	45	6	5	https://images.unsplash.com/photo-1633945274405-b6c8069047b0?auto=format&fit=crop&w=800&q=80	90	t	\N	4.8	120	2026-11-16 06:15:04.398	\N	\N	f
+recipe-egg-curry	Dhaba Style Masala Egg Curry	dhaba-style-egg-curry	Golden shallow-fried boiled eggs enveloped in a spiced onion, tomato, and garam masala gravy.	North Indian	{Eggetarian,High-Protein,Gluten-Free}	{lunch,dinner}	15	20	4	Easy	280	14	12	18	3	https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80	130	f	\N	4.8	120	2026-11-16 06:15:04.408	\N	\N	f
+recipe-khaman-dhokla	Surati Nylon Khaman Dhokla	surati-khaman-dhokla	Feather-light, spongy savory steamed cakes made from gram flour, drizzled with sweet-tangy mustard and green chilli tempering.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly",Kid-Friendly}	{breakfast,snack}	10	20	4	Easy	160	6	24	4	3	https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80	65	t	\N	4.8	120	2026-11-16 06:15:04.419	\N	\N	f
+recipe-amritsari-chole	Authentic Amritsari Pindi Chole	amritsari-chole	Dark, tangy and robust Punjabi chickpeas slow-simmered with pomegranate seeds, amchoor, and aromatic whole spices.	Punjabi	{"Pure Vegetarian",Vegetarian,High-Protein,Gluten-Free}	{lunch,dinner}	15	30	4	Medium	320	16	48	8	11	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=800&q=80	110	f	\N	4.8	120	2026-11-16 06:15:04.43	\N	\N	f
+recipe-dal-tadka	Dhaba Style Yellow Dal Tadka	dal-tadka	Creamy slow-simmered yellow toor and moong lentils finished with a double sizzling tadka of cow ghee, cumin, and garlic.	North Indian	{"Pure Vegetarian",Vegetarian,High-Protein,Gluten-Free}	{lunch,dinner}	10	20	4	Easy	210	11	32	6	7	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	85	f	\N	4.8	120	2026-11-16 06:15:04.443	\N	\N	f
+recipe-aloo-gobi	Homestyle Adraki Aloo Gobi	adraki-aloo-gobi	Tender cauliflower florets and golden potatoes sautéed with loads of freshly julienned ginger, turmeric, and roasted cumin.	North Indian	{"Pure Vegetarian",Vegetarian,Vegan,Gluten-Free}	{lunch,dinner}	15	20	4	Easy	195	5	28	7	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80	75	f	\N	4.8	120	2026-11-16 06:15:04.452	\N	\N	f
+recipe-rava-upma	Spiced Vegetable Rava Upma	rava-upma	Classic South Indian roasted semolina breakfast tempered with mustard, crunchy roasted peanuts, ginger, and curry leaves.	South Indian	{"Pure Vegetarian",Vegetarian,Kid-Friendly}	{breakfast,snack}	10	12	4	Easy	230	6	38	7	4	https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80	60	f	\N	4.8	120	2026-11-16 06:15:04.472	\N	\N	f
+recipe-bhindi-masala	Chatpati Homestyle Bhindi Masala	bhindi-masala	Crisp-tender okra tossed in tangy amchoor, roasted coriander powder, cumin, and sliced green chillies.	North Indian	{"Pure Vegetarian",Vegetarian,Vegan,Gluten-Free,"Jain Friendly"}	{lunch,dinner}	15	15	4	Easy	165	4	16	9	5	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=800&q=80	70	t	\N	4.8	120	2026-11-16 06:15:04.481	\N	\N	f
+recipe-sambhar-rice	Chennai Sambar Sadam (One-Pot Sambar Rice)	sambar-sadam	Hearty Tamil Nadu style one-pot rice and toor dal simmered with country vegetables, tangy tamarind, and fragrant ghee tadka.	South Indian	{"Pure Vegetarian",Vegetarian,Gluten-Free}	{lunch,dinner}	10	20	4	Easy	290	9	52	6	6	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	95	f	\N	4.8	120	2026-11-16 06:15:04.49	\N	\N	f
+recipe-baingan-bharta	Dhaba Style Smoked Baingan Bharta	baingan-bharta	Charcoal-roasted large eggplant mashed and braised with browned onions, ripe tomatoes, fresh green chillies, and ginger.	Punjabi	{"Pure Vegetarian",Vegetarian,Vegan,Gluten-Free}	{lunch,dinner}	15	20	4	Medium	180	4	18	9	7	https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=800&q=80	80	f	\N	4.8	120	2026-11-16 06:15:04.498	\N	\N	f
+recipe-punjabi-chicken-curry	Dhaba Style Tariwala Chicken Curry	tariwala-chicken-curry	Rustic homestyle Punjabi chicken curry simmered in a golden onion-tomato gravy with bone-in chicken cuts, garlic, and freshly crushed spices.	Punjabi	{Non-Vegetarian,High-Protein,Gluten-Free}	{lunch,dinner}	15	30	4	Medium	340	28	10	16	3	https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=800&q=80	280	f	\N	4.8	120	2026-11-16 06:15:04.508	\N	\N	f
+recipe-bengali-macher-jhol	Authentic Bengali Macher Jhol	bengali-macher-jhol	Light and comforting Kolkata style fish curry made with fresh fish steaks, potato wedges, kalonji, turmeric, and green chillies in mustard oil.	Bengali	{Non-Vegetarian,High-Protein,Gluten-Free}	{lunch,dinner}	15	20	4	Medium	280	24	16	12	2	https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80	260	f	\N	4.8	120	2026-11-16 06:15:04.517	\N	\N	f
+recipe-bengali-cholar-dal	Traditional Bengali Narkel Cholar Dal	bengali-cholar-dal	Festive festive Bengal chana dal slow-simmered with ginger, cumin, bay leaf, and crisp fried coconut chips. Naturally plant-based and Jain permissible.	Bengali	{"Pure Vegetarian",Vegetarian,Vegan,"Jain Friendly",High-Protein}	{lunch,dinner}	15	25	4	Easy	230	12	36	6	8	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	105	t	\N	4.8	120	2026-11-16 06:15:04.526	\N	\N	f
+recipe-jain-paneer-bhurji	Sattvic Jain Malai Paneer Bhurji	jain-paneer-bhurji	Scrambled fresh paneer tossed with ripe country tomatoes, fresh green chillies, crushed kasuri methi, and fragrant cumin ghee tadka. 100% root-vegetable free.	North Indian	{"Pure Vegetarian",Vegetarian,"Jain Friendly",High-Protein,Gluten-Free}	{lunch,dinner}	10	12	4	Easy	280	16	8	20	2	https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=800&q=80	160	t	\N	4.8	120	2026-11-16 06:15:04.535	\N	\N	f
+recipe-jain-moong-dal-tadka	Sattvic Homestyle Moong Dal Tadka	jain-moong-dal-tadka	Golden yellow moong dal simmered with turmeric and tempered with sizzling cow ghee, cumin seeds, fresh curry leaves, and green chillies.	North Indian	{"Pure Vegetarian",Vegetarian,"Jain Friendly",High-Protein,Gluten-Free}	{lunch,dinner}	10	20	4	Easy	210	11	30	5	6	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	85	t	\N	4.8	120	2026-11-16 06:15:04.543	\N	\N	f
+recipe-sev-tameta-nu-shaak	Kathiyawadi Sev Tameta nu Shaak	kathiyawadi-sev-tameta-nu-shaak	Iconic sweet, tangy, and spicy tomato curry tempered with mustard and cumin, topped with crisp Ratlami nylon sev right before serving.	Kathiyawadi	{"Pure Vegetarian",Vegetarian,"Jain Friendly"}	{lunch,dinner}	10	15	4	Easy	245	7.2	28.5	11.8	3.2	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	90	t	\N	4.8	120	2026-11-16 06:15:04.552	\N	\N	f
+recipe-ringna-no-olo	Kathiyawadi Ringna no Olo (Baingan Bharta)	kathiyawadi-ringna-no-olo	Rustic Kathiyawadi roasted eggplant mash infused with green garlic, chillies, and mustard oil, served with hot Bajra no Rotlo.	Kathiyawadi	{"Pure Vegetarian",Vegetarian,Vegan,Gluten-Free}	{lunch,dinner}	15	25	4	Medium	165	3.8	18.2	8.5	6.2	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	95	f	Jain variation substitutes roasted green plantain or bottle gourd mash without garlic or onions.	4.8	120	2026-11-16 06:15:04.561	\N	\N	f
+recipe-bajra-no-rotlo	Traditional Kathiyawadi Bajra no Rotlo	traditional-kathiyawadi-bajra-no-rotlo	Thick, wholesome gluten-free flatbread hand-patted from pearl millet flour and roasted on a clay tava, slathered with pure desi ghee.	Kathiyawadi	{"Pure Vegetarian",Vegetarian,Gluten-Free,"Jain Friendly"}	{lunch,dinner}	10	15	4	Medium	195	5.8	34.2	4.1	6	https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80	60	t	\N	4.8	120	2026-11-16 06:15:04.57	\N	\N	f
+recipe-paneer-butter-masala	Restaurant Style Paneer Butter Masala	paneer-butter-masala	Tender cottage cheese cubes simmered in a velvety, rich tomato, cashew, and butter gravy perfumed with kasuri methi.	North Indian	{"Pure Vegetarian",Vegetarian,High-Protein}	{lunch,dinner}	15	25	4	Medium	380	16	14	28	4	https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=800&q=80	280	f	Replace onion and garlic paste with pure tomato-ginger puree and a pinch of asafoetida (hing).	4.8	120	2026-11-16 06:15:04.273	\N	\N	f
+recipe-idli-sambar	Steamed Idli with Drumstick Vegetable Sambar	idli-sambar	Pillowy soft fermented steamed rice cakes served with aromatic Madras lentil sambar and fresh coconut chutney.	South Indian	{"Pure Vegetarian",Vegetarian,Vegan,Gluten-Free,"Jain Friendly"}	{breakfast}	10	15	4	Easy	220	8	42	3	5	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80	90	t	\N	4.8	120	2026-11-16 06:15:04.462	\N	\N	f
+recipe-bajra-no-rotlo-vegan	Kathiyawadi Bajra no Rotlo (Vegan / Til Oil)	kathiyawadi-bajra-no-rotlo-vegan	Authentic rustic Gujarati pearl millet flatbread hand-patted and roasted over fire, brushed with cold-pressed sesame oil (til tel) for a 100% plant-based, gluten-free traditional meal.	Kathiyawadi	{"Pure Vegetarian",Vegetarian,Vegan,Gluten-Free,"Jain Friendly"}	{lunch,dinner}	10	15	4	Medium	190	5.8	34.2	4	6	https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80	55	t	\N	4.8	120	2026-11-16 07:27:44.02	\N	\N	f
+recipe-surati-undhiyu	Authentic Surati Undhiyu with Methi Muthiya	authentic-surati-undhiyu	Celebrated Gujarati winter specialty uniting tender Surti papdi, tuver lilva, purple yam, baby eggplants, and spiced fenugreek dumplings.	Gujarati	{"Pure Vegetarian",Vegetarian}	{lunch,dinner}	30	40	4	Advanced	385	11.2	48.6	16.5	10.5	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	180	f	Authentic Jain Undhiyu replaces purple yam and potatoes with firm raw green plantain (Kacha Kela) and extra Surti papdi.	4.8	120	2026-11-16 06:15:04.578	\N	\N	f
+recipe-surati-undhiyu-jain	Authentic Jain Surati Undhiyu (Kacha Kela & Papdi)	authentic-jain-surati-undhiyu	Revered Jain Gujarati winter banquet preparation slow-cooked strictly without root vegetables, onions, or garlic, using fresh Surti papdi, tuver lilva, raw green plantain (kacha kela), and steamed methi muthiya.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly"}	{lunch,dinner}	30	35	4	Advanced	350	10.8	46.2	14.5	11	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	175	t	\N	4.8	120	2026-11-16 07:27:44.046	\N	\N	f
+recipe-gujarati-dal-dhokli	Traditional Gujarati One-Pot Dal Dhokli	traditional-gujarati-dal-dhokli	Wholesome one-pot meal where thin spiced whole wheat pasta diamonds are simmered in a sweet, tangy, and aromatic toor dal curry.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly"}	{lunch,dinner}	20	25	4	Medium	320	12.5	52	6.8	7.8	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	110	t	\N	4.8	120	2026-11-16 06:15:04.588	\N	\N	f
+recipe-gujarati-kadhi	Traditional Sweet & Sour Gujarati Kadhi	traditional-sweet-and-sour-gujarati-kadhi	Thin, soothing sweet-tangy soup made with churned yogurt and chickpea flour, tempered with cinnamon, cloves, mustard seeds, and curry leaves.	Gujarati	{"Pure Vegetarian",Vegetarian,Gluten-Free,"Jain Friendly"}	{lunch,dinner}	10	15	4	Easy	145	5.2	16.8	6.5	1.5	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	75	t	\N	4.8	120	2026-11-16 06:15:04.596	\N	\N	f
+recipe-vaghireli-khichdi	Kathiyawadi Vaghireli Khichdi with Desi Ghee	kathiyawadi-vaghireli-khichdi	Comforting spicy tempered rice and split yellow moong dal infused with whole spices, tomatoes, curry leaves, and a generous dollop of ghee.	Kathiyawadi	{"Pure Vegetarian",Vegetarian,Gluten-Free,"Jain Friendly"}	{dinner}	10	20	4	Easy	285	9.8	46.5	6.8	5.2	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	80	t	\N	4.8	120	2026-11-16 06:15:04.605	\N	\N	f
+recipe-gujarati-handvo	Gujarati Baked Vegetable Handvo (Savory Lentil Cake)	gujarati-baked-vegetable-handvo	Traditional Gujarati savory baked cake made with fermented rice and mixed lentils, bottle gourd, and a crunchy sesame-mustard seed crust.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly",Gluten-Free}	{breakfast,snack,dinner}	15	35	4	Medium	260	9.5	36.8	8.5	4.8	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	100	t	\N	4.8	120	2026-11-16 06:15:04.614	\N	\N	f
+recipe-methi-na-gota	Crispy Gujarati Methi na Gota (Dakor Style)	crispy-gujarati-methi-na-gota	Pillowy soft inside and crisp outside fenugreek fritters spiced with crushed pepper, ajwain, and jaggery, famously served at Dakor temple.	Gujarati	{"Pure Vegetarian",Vegetarian,"Jain Friendly"}	{breakfast,snack}	15	15	4	Easy	230	7.8	26.2	10.5	4.2	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80	70	t	\N	4.8	120	2026-11-16 06:15:04.624	\N	\N	f
+rec-1794825533927	Kathiyawadi Ringan No Olo mwj4s4j1	kathiyawadi-ringan-no-olo-mwj4s4j1	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 10:38:53.931	\N	\N	f
+rec-1794825620862	Kathiyawadi Ringan No Olo mwj4tzkq	kathiyawadi-ringan-no-olo-mwj4tzkq	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 10:40:20.868	\N	\N	f
+rec-1794825702604	Kathiyawadi Ringan No Olo mwj4vql1	kathiyawadi-ringan-no-olo-mwj4vql1	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 10:41:42.606	\N	\N	f
 \.
 
 
@@ -1784,8 +1917,10 @@ cmwixyb3i00c2l3bsfere0ea4	recipe-surati-undhiyu-jain	5	Cover tightly with a rimm
 --
 
 COPY public."RefreshSession" (id, "userId", "tokenHash", "tokenFamilyId", "deviceName", "userAgent", "createdAt", "lastUsedAt", "expiresAt", "revokedAt") FROM stdin;
+cmwj4wmxe003dl3rc6qr63ovy	cmwj2fa4w0000l3s4x4q1jmst	c0a17ed8e682b39441f94c6c1640d7f33331f0352342e08c250a38caf16112b0	fam_517bf96d-7a50-4590-bc33-a419754b57bd	Web Browser	node	2026-11-16 10:42:23.378	2026-11-16 10:42:23.378	2026-11-23 10:42:23.375	\N
 cmwj33fo9001ll33ksqrhin9z	cmwj2fa4w0000l3s4x4q1jmst	0a88bbe62b2c90df8f962c27be5c70fcb4a051c46edad5d2ea8b7ccd4916a70b	fam_3cb50e83-6c00-48e2-8dc5-0bfbdd57ff44	Web Browser	node	2026-11-16 09:51:41.337	2026-11-16 09:51:41.337	2026-11-23 09:51:41.333	\N
 cmwj39g35001pl3i4ovfyws6j	cmwj2fa4w0000l3s4x4q1jmst	129292068ce1b8f6f847aee1daa4627fae8a354f4935271aa282f1b922cc664b	fam_7b702b3b-b3a3-4316-b512-1b4ade491bbc	Web Browser	node	2026-11-16 09:56:21.809	2026-11-16 09:56:21.809	2026-11-23 09:56:21.806	\N
+cmwj3f5l3001pl3g0uor6vqmv	cmwj2fa4w0000l3s4x4q1jmst	c3a5f2fe76c4c273af09ce5b1337d48a56035979a30d4f8afff28968a5308b1d	fam_665c3cb8-668f-4db9-92bf-2f19ac483253	Web Browser	node	2026-11-16 10:00:48.135	2026-11-16 10:00:48.135	2026-11-23 10:00:48.132	\N
 \.
 
 
@@ -1793,11 +1928,14 @@ cmwj39g35001pl3i4ovfyws6j	cmwj2fa4w0000l3s4x4q1jmst	129292068ce1b8f6f847aee1daa4
 -- Data for Name: Retailer; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."Retailer" (id, name, slug, "logoUrl", "deliveryTimeEstimate", "deliveryFeeInr", "freeDeliveryThresholdInr", "minOrderValueInr", rating) FROM stdin;
-ret-blinkit	Blinkit	blinkit	https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?auto=format&fit=crop&w=200&q=80	10-15 mins	25	399	99	4.8
-ret-zepto	Zepto	zepto	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	10 mins	29	499	99	4.9
-ret-dmart	DMart Ready	dmart-ready	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=200&q=80	Tomorrow Morning	49	1000	500	4.7
-ret-bigbasket	BigBasket	bigbasket	https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=200&q=80	Same Day (2-4 hrs)	35	600	200	4.6
+COPY public."Retailer" (id, name, slug, "logoUrl", "deliveryTimeEstimate", "deliveryFeeInr", "freeDeliveryThresholdInr", "minOrderValueInr", rating, status, "suspendedAt", "suspendedReason") FROM stdin;
+ret-blinkit	Blinkit	blinkit	https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?auto=format&fit=crop&w=200&q=80	10-15 mins	25	399	99	4.8	ACTIVE	\N	\N
+ret-zepto	Zepto	zepto	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	10 mins	29	499	99	4.9	ACTIVE	\N	\N
+ret-dmart	DMart Ready	dmart-ready	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=200&q=80	Tomorrow Morning	49	1000	500	4.7	ACTIVE	\N	\N
+ret-bigbasket	BigBasket	bigbasket	https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=200&q=80	Same Day (2-4 hrs)	35	600	200	4.6	ACTIVE	\N	\N
+ret-fresh-greens-mart-mwj4s4j1	Fresh Greens Mart mwj4s4j1	fresh-greens-mart-mwj4s4j1	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	SUSPENDED	2026-11-16 10:38:53.834	Audit pending
+ret-fresh-greens-mart-mwj4tzkq	Fresh Greens Mart mwj4tzkq	fresh-greens-mart-mwj4tzkq	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	SUSPENDED	2026-11-16 10:40:20.758	Audit pending
+ret-fresh-greens-mart-mwj4vql1	Fresh Greens Mart mwj4vql1	fresh-greens-mart-mwj4vql1	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	SUSPENDED	2026-11-16 10:41:42.51	Audit pending
 \.
 
 
@@ -1805,7 +1943,10 @@ ret-bigbasket	BigBasket	bigbasket	https://images.unsplash.com/photo-157891617172
 -- Data for Name: RetailerApplication; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."RetailerApplication" (id, "userId", "businessName", "contactInformation", "applicationStatus", "submittedAt", "reviewedAt", "reviewedBy") FROM stdin;
+COPY public."RetailerApplication" (id, "userId", "businessName", "contactInformation", "applicationStatus", "submittedAt", "reviewedAt", "reviewedBy", "rejectionReason") FROM stdin;
+cmwj4s56k0003l3hgzyy648f6	cmwj4s4se0005l32w7q19yt5l	Fresh Greens Mart mwj4s4j1	{"city": "Ahmedabad", "phone": "9876543210"}	APPROVED	2026-11-16 10:38:53.757	2026-11-16 10:38:53.787	admin@rasoiiq.in	\N
+cmwj4u0960003l3q0fuogx841	cmwj4tzu40000l3rcqmpkfu8l	Fresh Greens Mart mwj4tzkq	{"city": "Ahmedabad", "phone": "9876543210"}	APPROVED	2026-11-16 10:40:20.682	2026-11-16 10:40:20.706	admin@rasoiiq.in	\N
+cmwj4vrbe0003l31grh99dfcb	cmwj4vqu8000zl3rcxghmhy5s	Fresh Greens Mart mwj4vql1	{"city": "Ahmedabad", "phone": "9876543210"}	APPROVED	2026-11-16 10:41:42.41	2026-11-16 10:41:42.446	admin@rasoiiq.in	\N
 \.
 
 
@@ -1838,6 +1979,12 @@ cmwj3a1zj001ul3i4br0kr67v	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItZ
 cmwj3a2ku001wl3i4fb0vlmx3	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItdGVtcC1yZXZva2UiLCJlbWFpbCI6ImRlbW9AcmFzb2lpcS5pbiIsImZ1bGxOYW1lIjoiUG9vamEgU2hhcm1hIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJoaC1zaGFybWEtZmFtaWx5IiwianRpIjoiMTc5NDgyMzAxMDk0Mi16azM2ejJlIiwiaWF0IjoxNzk0ODIzMDEwLCJleHAiOjE3OTU0Mjc4MTB9.3VZYc3rd0Fvwvr_xHe61rwYEieUMAUysMh87H8g7-nc	User logout	2026-11-16 09:56:50.955	2026-11-23 09:56:50
 cmwj3evw80000l3g0k6q75lot	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItZGVtby0xIiwiZW1haWwiOiJkZW1vQHJhc29paXEuaW4iLCJmdWxsTmFtZSI6IlBvb2phIFNoYXJtYSIsInJvbGUiOiJDVVNUT01FUiIsImhvdXNlaG9sZElkIjoiaGgtc2hhcm1hLWZhbWlseSIsImp0aSI6IjE3OTQ4MjMyMzU1NDgtazUyM3dtaSIsImlhdCI6MTc5NDgyMzIzNSwiZXhwIjoxNzk1NDI4MDM1fQ.bJhRMFaLPG885ynu3RAXm_v6YfoO_nILlj-kYR-e-pc	User logout	2026-11-16 10:00:35.572	2026-11-23 10:00:35
 cmwj3eww50002l3g0y97u7lk1	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItdGVtcC1yZXZva2UiLCJlbWFpbCI6ImRlbW9AcmFzb2lpcS5pbiIsImZ1bGxOYW1lIjoiUG9vamEgU2hhcm1hIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJoaC1zaGFybWEtZmFtaWx5IiwianRpIjoiMTc5NDgyMzIzNjgzMy0wMm1ma3AwIiwiaWF0IjoxNzk0ODIzMjM2LCJleHAiOjE3OTU0MjgwMzZ9.IzVQeTpdZW6nkedADK_iD40_KVjgKbC2R-u47uwZRzI	User logout	2026-11-16 10:00:36.864	2026-11-23 10:00:36
+cmwj3f5ov001sl3g0dov0l84l	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqM2Yxam0wMDA0bDNnMGlsYnp6YW5hIiwiaWQiOiJjbXdqM2Yxam0wMDA0bDNnMGlsYnp6YW5hIiwiZW1haWwiOiJwaWxvdC51c2VyLm13ajNmMHlzQHRlc3RyYXNvaS5pbiIsImZ1bGxOYW1lIjoiVml2ZWsgSm9zaGkiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgyMzI0NjEwMC02NzNjOTg1YjM5Y2EzYTllYjM5MjkwMzQwNDZiYmNiYiIsImlhdCI6MTc5NDgyMzI0NiwiZXhwIjoxNzk0ODI0MTQ2LCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.sl3vR6FSFv8GtlBH6pFALrlHDlgDoHCjCjdcOP8l4F4	User logout	2026-11-16 10:00:48.267	2026-11-16 10:15:46
+cmwj4vm5g000tl3rc9c17lrfv	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItZGVtby0xIiwiZW1haWwiOiJkZW1vQHJhc29paXEuaW4iLCJmdWxsTmFtZSI6IlBvb2phIFNoYXJtYSIsInJvbGUiOiJDVVNUT01FUiIsImhvdXNlaG9sZElkIjoiaGgtc2hhcm1hLWZhbWlseSIsImp0aSI6IjE3OTQ4MjU2OTU3MDAtbjZjMnF3aSIsImlhdCI6MTc5NDgyNTY5NSwiZXhwIjoxNzk1NDMwNDk1fQ.pYsQdgRoXK8sh3YLnjF4ys79vYMcLXkRInKEZVB6_aA	User logout	2026-11-16 10:41:35.714	2026-11-23 10:41:35
+cmwj4vmqg000wl3rc337too7y	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItdGVtcC1yZXZva2UiLCJlbWFpbCI6ImRlbW9AcmFzb2lpcS5pbiIsImZ1bGxOYW1lIjoiUG9vamEgU2hhcm1hIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJoaC1zaGFybWEtZmFtaWx5IiwianRpIjoiMTc5NDgyNTY5NjQ1NS0zbWxlZmVlIiwiaWF0IjoxNzk0ODI1Njk2LCJleHAiOjE3OTU0MzA0OTZ9.jvcGlDQ7__e-5Yih9W0Y9JKdPJZPzAm3tKLAiYXCtvg	User logout	2026-11-16 10:41:36.471	2026-11-23 10:41:36
+cmwj4wmzr003gl3rc0q9ildpf	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqNHdqbzEwMDFzbDNyY2lxdWZjb2FwIiwiaWQiOiJjbXdqNHdqbzEwMDFzbDNyY2lxdWZjb2FwIiwiZW1haWwiOiJwaWxvdC51c2VyLm13ajR3amF4QHRlc3RyYXNvaS5pbiIsImZ1bGxOYW1lIjoiVml2ZWsgSm9zaGkiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgyNTc0MTUwNy0zYjYyYmM1MzVmZjM4ZjZlMmQ1NGYxZWJmNzlmYzZlNSIsImlhdCI6MTc5NDgyNTc0MSwiZXhwIjoxNzk0ODI2NjQxLCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.EF1agAQnyk0qZOIW_DYYKtceeUT2-HmAK54pn7tbO00	User logout	2026-11-16 10:42:23.46	2026-11-16 10:57:21
+cmwj4y7nu003jl3rcakytmusu	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItZGVtby0xIiwiZW1haWwiOiJkZW1vQHJhc29paXEuaW4iLCJmdWxsTmFtZSI6IlBvb2phIFNoYXJtYSIsInJvbGUiOiJDVVNUT01FUiIsImhvdXNlaG9sZElkIjoiaGgtc2hhcm1hLWZhbWlseSIsImp0aSI6IjE3OTQ4MjU4MTY4OTEtdmRlNjl1YiIsImlhdCI6MTc5NDgyNTgxNiwiZXhwIjoxNzk1NDMwNjE2fQ.GK0KXpyks5-pofyxDlPN8u-rYpHoaXGky8dMBRdU5SM	User logout	2026-11-16 10:43:36.905	2026-11-23 10:43:36
+cmwj4y8cn003ml3rcvhkptfx7	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItdGVtcC1yZXZva2UiLCJlbWFpbCI6ImRlbW9AcmFzb2lpcS5pbiIsImZ1bGxOYW1lIjoiUG9vamEgU2hhcm1hIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJoaC1zaGFybWEtZmFtaWx5IiwianRpIjoiMTc5NDgyNTgxNzc4Mi12d3NkYzAwIiwiaWF0IjoxNzk0ODI1ODE3LCJleHAiOjE3OTU0MzA2MTd9.pGYxfVmAEnaWOZLLWOcmy5RgjsqtXQWIHiV3I6mC9RQ	User logout	2026-11-16 10:43:37.797	2026-11-23 10:43:37
 \.
 
 
@@ -1866,14 +2013,37 @@ COPY public."StoreProduct" (id, "storeId", "productVariantId", "inStock", "stock
 
 
 --
+-- Data for Name: SystemSetting; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public."SystemSetting" (id, key, value, description, "updatedBy", "updatedAt", "createdAt") FROM stdin;
+cmwj4s5nv000vl32wy4z4k0ul	platform.registration_enabled	true	Enable/disable public customer registration	\N	2026-11-16 10:38:54.379	2026-11-16 10:38:54.379
+cmwj4s5o1000wl32wvbtgvja0	platform.maintenance_mode	false	Enable/disable platform maintenance downtime mode	\N	2026-11-16 10:38:54.386	2026-11-16 10:38:54.386
+cmwj4s5o6000xl32wnkyy0jlm	platform.max_members_per_household	10	Maximum family members allowed per household	\N	2026-11-16 10:38:54.39	2026-11-16 10:38:54.39
+cmwj4s5oa000yl32ww1uw6qho	platform.demo_orders_enabled	true	Permit simulated checkout and demo order generation	\N	2026-11-16 10:38:54.394	2026-11-16 10:38:54.394
+cmwj4s5oe000zl32wll9ja17r	ai.gemini_model	gemini-2.5-flash-lite	Active Google Gemini LLM model identifier	\N	2026-11-16 10:38:54.398	2026-11-16 10:38:54.398
+cmwj4s5oj0010l32wntsx9v9q	ai.secondary_provider	deterministic-offline	Fallback AI planning engine when primary quota is exhausted	\N	2026-11-16 10:38:54.403	2026-11-16 10:38:54.403
+cmwj4s5on0011l32wh1uxro1d	pricing.default_delivery_fee_inr	35	Quick-commerce delivery fee in INR	superadmin@rasoiiq.in	2026-11-16 10:41:42.938	2026-11-16 10:38:54.407
+\.
+
+
+--
 -- Data for Name: User; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."User" (id, email, "passwordHash", "fullName", "phoneNumber", role, "createdAt", "updatedAt", "emailVerifiedAt", "lastLoginAt", "normalizedEmail", status) FROM stdin;
-user-demo-1	demo@rasoiiq.in	$2b$10$demo_hash_rasoi_iq_2026	Pooja Sharma	+91 98765 43210	CUSTOMER	2026-11-16 06:15:04.98	2026-11-16 07:27:44.381	\N	\N		ACTIVE
-user-demo-patel	patel.family@rasoiiq.demo	$2b$10$demo_hash_rasoi_iq_2026	Rameshbhai Patel	+91 98250 11223	CUSTOMER	2026-11-16 06:15:05.055	2026-11-16 07:27:44.411	\N	\N		ACTIVE
-user-demo-mehta	mehta.family@rasoiiq.demo	$2b$10$demo_hash_rasoi_iq_2026	Kirit Mehta	+91 98980 44556	CUSTOMER	2026-11-16 06:15:05.091	2026-11-16 07:27:44.426	\N	\N		ACTIVE
-cmwj2fa4w0000l3s4x4q1jmst	admin@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$TfUYCY8ObBkFhXavknrTrA$M0D5ShbMC+KqI6phtRMy2I3B998moRxFpt8IgFf8Bqo	Platform Administrator	\N	ADMIN	2026-11-16 09:32:54.416	2026-11-16 09:56:21.817	2026-11-16 09:32:54.413	2026-11-16 09:56:21.814	admin@rasoiiq.in	ACTIVE
+COPY public."User" (id, email, "passwordHash", "fullName", "phoneNumber", role, "createdAt", "updatedAt", "emailVerifiedAt", "lastLoginAt", "normalizedEmail", status, "suspendedAt", "suspendedBy", "suspensionReason") FROM stdin;
+user-demo-1	demo@rasoiiq.in	$2b$10$demo_hash_rasoi_iq_2026	Pooja Sharma	+91 98765 43210	CUSTOMER	2026-11-16 06:15:04.98	2026-11-16 07:27:44.381	\N	\N		ACTIVE	\N	\N	\N
+user-demo-patel	patel.family@rasoiiq.demo	$2b$10$demo_hash_rasoi_iq_2026	Rameshbhai Patel	+91 98250 11223	CUSTOMER	2026-11-16 06:15:05.055	2026-11-16 07:27:44.411	\N	\N		ACTIVE	\N	\N	\N
+user-demo-mehta	mehta.family@rasoiiq.demo	$2b$10$demo_hash_rasoi_iq_2026	Kirit Mehta	+91 98980 44556	CUSTOMER	2026-11-16 06:15:05.091	2026-11-16 07:27:44.426	\N	\N		ACTIVE	\N	\N	\N
+cmwj4vqu8000zl3rcxghmhy5s	rogue.admin.mwj4vql1@test.in	$argon2id$v=19$m=65536,t=3,p=1$fPDF2KleQbw/OD1BTFgW9Q$bwsInSJk94UgCswrERPbFZmSwtHUMvCn7+x1ZQBkCHc	Rogue Admin Attempt	\N	RETAILER	2026-11-16 10:41:41.792	2026-11-16 10:41:42.452	\N	\N	rogue.admin.mwj4vql1@test.in	ACTIVE	\N	\N	\N
+cmwj4vrp1001kl3rcpspgngcx	ops.lead.mwj4vql1@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$w+j+U73JA17dNB8/1NDNPA$OCt4+5KK/EX9HcTZESeNLQ3D77eZISzlRZLBtFJprlI	Operations Lead	\N	SUPPORT	2026-11-16 10:41:42.901	2026-11-16 10:41:42.917	2026-11-16 10:41:42.9	\N	ops.lead.mwj4vql1@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwj4nyub0000l3ic1cbm4scv	superadmin@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$wDj/oOtWUls8fkoLoaqBJg$RbWn/vvrELtxlPT598OkshrIEXR1xSJrI9lyMlOxIN0	Super Administrator	\N	SUPER_ADMIN	2026-11-16 10:35:38.915	2026-11-16 10:35:38.915	2026-11-16 10:35:38.907	\N	superadmin@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwj4rt2s0000l32wbc1f7nfy	rogue.admin.mwj4rste@test.in	$argon2id$v=19$m=65536,t=3,p=1$GIvNKgcG+OAxb/nCPfWSUA$EMQi7/iEW1UVjQLo0YZaQf/GvbTxsBADTDobFS0x5lc	Rogue Admin Attempt	\N	CUSTOMER	2026-11-16 10:38:38.068	2026-11-16 10:38:38.068	\N	\N	rogue.admin.mwj4rste@test.in	PENDING_VERIFICATION	\N	\N	\N
+cmwj4s4se0005l32w7q19yt5l	rogue.admin.mwj4s4j1@test.in	$argon2id$v=19$m=65536,t=3,p=1$ZLsazWsmfTdmlJNKXzCU9g$PkEKpBk85+kdohKNh6TcRbYzZ6S7JeoPsocNiPP259w	Rogue Admin Attempt	\N	RETAILER	2026-11-16 10:38:53.247	2026-11-16 10:38:53.798	\N	\N	rogue.admin.mwj4s4j1@test.in	ACTIVE	\N	\N	\N
+cmwj4s5ml000ql32wsc99mofs	ops.lead.mwj4s4j1@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$NRaWRIuLShNmNNzR3aS8Sw$hux9pWr5qbO4rIxABqNhYlgHz5X6klzwfBBgW9D2MrU	Operations Lead	\N	SUPPORT	2026-11-16 10:38:54.334	2026-11-16 10:38:54.357	2026-11-16 10:38:54.329	\N	ops.lead.mwj4s4j1@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwj4tzu40000l3rcqmpkfu8l	rogue.admin.mwj4tzkq@test.in	$argon2id$v=19$m=65536,t=3,p=1$Hjtjeeqs3VgJLoLEdfOL2g$M1eA8HxuRmdihCTZtgcdvSzclXovr2mbfW9BgzpIVyk	Rogue Admin Attempt	\N	RETAILER	2026-11-16 10:40:20.141	2026-11-16 10:40:20.719	\N	\N	rogue.admin.mwj4tzkq@test.in	ACTIVE	\N	\N	\N
+cmwj4u0q5000ll3rc65255uth	ops.lead.mwj4tzkq@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$jjUTYYkPjoHjq0K+IKijeA$4hvyu8bxMAQFw5u62Zx0vQl4DMHffgTQ5YMs31DgM60	Operations Lead	\N	SUPPORT	2026-11-16 10:40:21.294	2026-11-16 10:40:21.319	2026-11-16 10:40:21.288	\N	ops.lead.mwj4tzkq@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwj2fa4w0000l3s4x4q1jmst	admin@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$TfUYCY8ObBkFhXavknrTrA$M0D5ShbMC+KqI6phtRMy2I3B998moRxFpt8IgFf8Bqo	Platform Administrator	\N	ADMIN	2026-11-16 09:32:54.416	2026-11-16 10:42:23.385	2026-11-16 09:32:54.413	2026-11-16 10:42:23.383	admin@rasoiiq.in	ACTIVE	\N	\N	\N
 \.
 
 
@@ -2110,6 +2280,14 @@ ALTER TABLE ONLY public."Store"
 
 
 --
+-- Name: SystemSetting SystemSetting_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."SystemSetting"
+    ADD CONSTRAINT "SystemSetting_pkey" PRIMARY KEY (id);
+
+
+--
 -- Name: User User_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -2290,6 +2468,13 @@ CREATE UNIQUE INDEX "RevokedToken_token_key" ON public."RevokedToken" USING btre
 --
 
 CREATE UNIQUE INDEX "Session_token_key" ON public."Session" USING btree (token);
+
+
+--
+-- Name: SystemSetting_key_key; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "SystemSetting_key_key" ON public."SystemSetting" USING btree (key);
 
 
 --
@@ -2567,5 +2752,5 @@ ALTER TABLE ONLY public."Store"
 -- PostgreSQL database dump complete
 --
 
-\unrestrict LXlqxRLRgw1bMNGTUvE8x7IbxqsY5qPbfgwfBjomICOzbx7oxfc8U4rE5xW8N3a
+\unrestrict zwjGqbfjXZCaYUMT3fSnKJOZQZlcjnbsKV6JDSXlLl71FJM06SxczabECmM1xSD
 

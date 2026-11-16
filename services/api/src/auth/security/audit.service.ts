@@ -20,7 +20,22 @@ export type AuditAction =
   | 'HOUSEHOLD_MEMBER_REMOVED'
   | 'RETAILER_APPLICATION_SUBMITTED'
   | 'RETAILER_APPLICATION_REVIEWED'
-  | 'ADMIN_BOOTSTRAP';
+  | 'RETAILER_APPROVED'
+  | 'RETAILER_REJECTED'
+  | 'RETAILER_SUSPENDED'
+  | 'USER_SUSPENDED'
+  | 'USER_REACTIVATED'
+  | 'SESSIONS_REVOKED'
+  | 'HOUSEHOLD_INSPECTED'
+  | 'ORDER_STATUS_CHANGED'
+  | 'RECIPE_CREATED'
+  | 'RECIPE_MODIFIED'
+  | 'RECIPE_ARCHIVED'
+  | 'STAFF_CREATED'
+  | 'STAFF_ROLE_CHANGED'
+  | 'SETTINGS_UPDATED'
+  | 'ADMIN_BOOTSTRAP'
+  | (string & {});
 
 @Injectable()
 export class AuditService {
@@ -39,13 +54,43 @@ export class AuditService {
   }): Promise<void> {
     try {
       if (this.store.isPrismaConnected) {
+        let validUserId: string | null = null;
+        if (params.userId) {
+          const userExists = await this.store.prisma.user.findUnique({
+            where: { id: params.userId },
+            select: { id: true }
+          });
+          if (userExists) {
+            validUserId = userExists.id;
+          } else {
+            // Check if userId was passed as email
+            const userByEmail = await this.store.prisma.user.findFirst({
+              where: {
+                OR: [
+                  { email: params.userId.toLowerCase() },
+                  { normalizedEmail: params.userId.toLowerCase() }
+                ]
+              },
+              select: { id: true }
+            });
+            if (userByEmail) {
+              validUserId = userByEmail.id;
+            }
+          }
+        }
+
+        const metadata = {
+          ...(params.metadata || {}),
+          actorId: params.userId || 'system'
+        };
+
         await this.store.prisma.auditLog.create({
           data: {
             action: params.action,
-            userId: params.userId,
+            userId: validUserId,
             entityType: params.entityType,
             entityId: params.entityId,
-            metadata: params.metadata || {},
+            metadata,
             ipAddress: params.ipAddress,
             userAgent: params.userAgent
           }

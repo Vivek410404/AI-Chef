@@ -11,6 +11,9 @@ enum Role {
   CUSTOMER
   RETAILER
   ADMIN
+  SUPER_ADMIN
+  OPERATIONS
+  SUPPORT
 }
 
 enum UserStatus {
@@ -57,6 +60,9 @@ model User {
   phoneNumber      String?
   role             Role                     @default(CUSTOMER)
   status           UserStatus               @default(ACTIVE)
+  suspensionReason String?
+  suspendedAt      DateTime?
+  suspendedBy      String?
   emailVerifiedAt  DateTime?
   lastLoginAt      DateTime?
   createdAt        DateTime                 @default(now())
@@ -219,6 +225,7 @@ model RetailerApplication {
   submittedAt        DateTime                  @default(now())
   reviewedAt         DateTime?
   reviewedBy         String?
+  rejectionReason    String?
 
   @@index([userId])
 }
@@ -276,6 +283,9 @@ model Recipe {
   jainAlternativeNotes String?
   rating               Float              @default(4.8)
   ratingCount          Int                @default(120)
+  isArchived           Boolean            @default(false)
+  archivedAt           DateTime?
+  archivedBy           String?
   createdAt            DateTime           @default(now())
   ingredients          RecipeIngredient[]
   steps                RecipeStep[]
@@ -348,6 +358,9 @@ model Retailer {
   freeDeliveryThresholdInr Float    @default(500)
   minOrderValueInr         Float    @default(99)
   rating                   Float    @default(4.7)
+  status                   String   @default("ACTIVE")
+  suspendedReason          String?
+  suspendedAt              DateTime?
   stores                   Store[]
   baskets                  Basket[]
 }
@@ -435,8 +448,13 @@ model Order {
   status          String      @default("PLACED") // PLACED, PACKED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED
   totalAmountInr  Float
   deliveryFeeInr  Float
-  deliveryAddress String
-  createdAt       DateTime    @default(now())
+  deliveryAddress   String
+  isDemoOrder       Boolean     @default(true)
+  substitutionNotes String?
+  fulfillmentNotes  String?
+  statusReason      String?
+  updatedBy         String?
+  createdAt         DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   items           OrderItem[]
   payment         Payment?
@@ -471,4 +489,14 @@ model Feedback {
   comment   String?
   category  String   @default("GENERAL")
   createdAt DateTime @default(now())
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedBy   String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
 }

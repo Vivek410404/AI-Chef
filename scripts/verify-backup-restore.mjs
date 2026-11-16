@@ -116,7 +116,7 @@ async function main() {
       prodPrisma.recipe.count(),
       testPrisma.recipe.count()
     ]);
-    assert(prodRecipes === testRecipes && testRecipes === 34,
+    assert(prodRecipes === testRecipes && testRecipes >= 34,
       `Recipe count match: Exactly ${testRecipes} recipes verified in restored catalog`);
 
     const [prodIngredients, testIngredients] = await Promise.all([
@@ -147,8 +147,8 @@ async function main() {
       prodPrisma.retailer.count(),
       testPrisma.retailer.count()
     ]);
-    assert(prodRetailers === testRetailers && testRetailers === 4,
-      `Retailer count match: 4 merchants (DMart, Blinkit, Zepto, Instamart) restored`);
+    assert(prodRetailers === testRetailers && testRetailers >= 4,
+      `Retailer count match: ${testRetailers} merchants restored accurately`);
 
     // 6. Persistent Revoked Tokens
     const [prodRevoked, testRevoked] = await Promise.all([

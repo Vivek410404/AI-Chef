@@ -383,5 +383,192 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(promptData)
     });
+  },
+
+  // Admin Platform Management
+  admin: {
+    async getOverview() {
+      return fetchJson<any>('/admin/overview');
+    },
+
+    async getTrends(days = 14) {
+      return fetchJson<any>(`/admin/trends?days=${days}`);
+    },
+
+    async getUsers(params?: { page?: number; limit?: number; q?: string; role?: string; status?: string }) {
+      const query = new URLSearchParams();
+      if (params?.page) query.set('page', String(params.page));
+      if (params?.limit) query.set('limit', String(params.limit));
+      if (params?.q) query.set('q', params.q);
+      if (params?.role) query.set('role', params.role);
+      if (params?.status) query.set('status', params.status);
+      return fetchJson<any>(`/admin/users?${query.toString()}`);
+    },
+
+    async getUserById(id: string) {
+      return fetchJson<any>(`/admin/users/${id}`);
+    },
+
+    async updateUserStatus(id: string, status: 'ACTIVE' | 'SUSPENDED', reason?: string) {
+      return fetchJson<any>(`/admin/users/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, reason })
+      });
+    },
+
+    async revokeUserSessions(id: string, reason?: string) {
+      return fetchJson<any>(`/admin/users/${id}/revoke-sessions`, {
+        method: 'POST',
+        body: JSON.stringify({ reason })
+      });
+    },
+
+    async resendUserVerification(id: string) {
+      return fetchJson<any>(`/admin/users/${id}/resend-verification`, {
+        method: 'POST'
+      });
+    },
+
+    async getHouseholds(params?: { page?: number; limit?: number; q?: string; dietaryPreference?: string }) {
+      const query = new URLSearchParams();
+      if (params?.page) query.set('page', String(params.page));
+      if (params?.limit) query.set('limit', String(params.limit));
+      if (params?.q) query.set('q', params.q);
+      if (params?.dietaryPreference) query.set('dietaryPreference', params.dietaryPreference);
+      return fetchJson<any>(`/admin/households?${query.toString()}`);
+    },
+
+    async getHouseholdById(id: string) {
+      return fetchJson<any>(`/admin/households/${id}`);
+    },
+
+    async getRetailerApplications(params?: { status?: string; page?: number; limit?: number }) {
+      const query = new URLSearchParams();
+      if (params?.status) query.set('status', params.status);
+      if (params?.page) query.set('page', String(params.page));
+      if (params?.limit) query.set('limit', String(params.limit));
+      return fetchJson<any>(`/admin/retailers/applications?${query.toString()}`);
+    },
+
+    async reviewRetailerApplication(id: string, status: 'APPROVED' | 'REJECTED', rejectionReason?: string) {
+      return fetchJson<any>(`/admin/retailers/applications/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, rejectionReason })
+      });
+    },
+
+    async getRetailers() {
+      return fetchJson<any>('/admin/retailers');
+    },
+
+    async updateRetailerStatus(id: string, status: 'ACTIVE' | 'SUSPENDED', reason?: string) {
+      return fetchJson<any>(`/admin/retailers/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, reason })
+      });
+    },
+
+    async getOrders(params?: { page?: number; limit?: number; status?: string; q?: string; startDate?: string; endDate?: string }) {
+      const query = new URLSearchParams();
+      if (params?.page) query.set('page', String(params.page));
+      if (params?.limit) query.set('limit', String(params.limit));
+      if (params?.status) query.set('status', params.status);
+      if (params?.q) query.set('q', params.q);
+      if (params?.startDate) query.set('startDate', params.startDate);
+      if (params?.endDate) query.set('endDate', params.endDate);
+      return fetchJson<any>(`/admin/orders?${query.toString()}`);
+    },
+
+    async getOrderById(id: string) {
+      return fetchJson<any>(`/admin/orders/${id}`);
+    },
+
+    async updateOrderStatus(id: string, status: string, options?: { statusReason?: string; substitutionNotes?: string; fulfillmentNotes?: string }) {
+      return fetchJson<any>(`/admin/orders/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, ...options })
+      });
+    },
+
+    async getRecipes(params?: { page?: number; limit?: number; q?: string; cuisine?: string; dietaryTag?: string; isArchived?: boolean }) {
+      const query = new URLSearchParams();
+      if (params?.page) query.set('page', String(params.page));
+      if (params?.limit) query.set('limit', String(params.limit));
+      if (params?.q) query.set('q', params.q);
+      if (params?.cuisine) query.set('cuisine', params.cuisine);
+      if (params?.dietaryTag) query.set('dietaryTag', params.dietaryTag);
+      if (params?.isArchived !== undefined) query.set('isArchived', String(params.isArchived));
+      return fetchJson<any>(`/admin/recipes?${query.toString()}`);
+    },
+
+    async getRecipeById(id: string) {
+      return fetchJson<any>(`/admin/recipes/${id}`);
+    },
+
+    async createRecipe(recipeData: any) {
+      return fetchJson<any>('/admin/recipes', {
+        method: 'POST',
+        body: JSON.stringify(recipeData)
+      });
+    },
+
+    async updateRecipe(id: string, recipeData: any) {
+      return fetchJson<any>(`/admin/recipes/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(recipeData)
+      });
+    },
+
+    async archiveRecipe(id: string, isArchived: boolean) {
+      return fetchJson<any>(`/admin/recipes/${id}/archive`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isArchived })
+      });
+    },
+
+    async getAuditLogs(params?: { page?: number; limit?: number; action?: string; userId?: string; q?: string; startDate?: string; endDate?: string }) {
+      const query = new URLSearchParams();
+      if (params?.page) query.set('page', String(params.page));
+      if (params?.limit) query.set('limit', String(params.limit));
+      if (params?.action) query.set('action', params.action);
+      if (params?.userId) query.set('userId', params.userId);
+      if (params?.q) query.set('q', params.q);
+      if (params?.startDate) query.set('startDate', params.startDate);
+      if (params?.endDate) query.set('endDate', params.endDate);
+      return fetchJson<any>(`/admin/audit-logs?${query.toString()}`);
+    },
+
+    async getStaffList() {
+      return fetchJson<any>('/admin/staff');
+    },
+
+    async createStaffMember(staffData: { email: string; fullName: string; role: string; password: string }) {
+      return fetchJson<any>('/admin/staff', {
+        method: 'POST',
+        body: JSON.stringify(staffData)
+      });
+    },
+
+    async updateStaffRole(id: string, role: string) {
+      return fetchJson<any>(`/admin/staff/${id}/role`, {
+        method: 'PATCH',
+        body: JSON.stringify({ role })
+      });
+    },
+
+    async getSettings() {
+      return fetchJson<any>('/admin/settings');
+    },
+
+    async updateSetting(key: string, value: string, description?: string) {
+      return fetchJson<any>('/admin/settings', {
+        method: 'PATCH',
+        body: JSON.stringify({ key, value, description })
+      });
+    },
+
+    async getSystemHealth() {
+      return fetchJson<any>('/admin/health');
+    }
   }
 };

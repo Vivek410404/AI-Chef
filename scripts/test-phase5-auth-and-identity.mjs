@@ -26,7 +26,10 @@ try {
 const dbUrl = process.env.DATABASE_URL || `postgresql://postgres:postgres@${host}:5432/rasoi_iq?schema=public`;
 const prisma = new PrismaClient({ datasources: { db: { url: dbUrl } } });
 
-const API_BASE = process.env.API_URL || 'http://localhost:4000/api';
+let API_BASE = process.env.API_URL || 'http://localhost:4000/api';
+if (!API_BASE.endsWith('/api')) {
+  API_BASE = `${API_BASE}/api`;
+}
 
 let totalAssertions = 0;
 let passedAssertions = 0;

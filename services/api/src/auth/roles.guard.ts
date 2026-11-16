@@ -34,7 +34,26 @@ export class RolesGuard implements CanActivate {
     request.user = user;
 
     const userRole = (user.role || 'CUSTOMER').toUpperCase();
-    const hasRole = requiredRoles.map(r => r.toUpperCase()).includes(userRole);
+    const reqRolesUpper = requiredRoles.map(r => r.toUpperCase());
+
+    let hasRole = reqRolesUpper.includes(userRole);
+    if (!hasRole) {
+      if (userRole === 'SUPER_ADMIN') {
+        // SUPER_ADMIN possesses all operational, admin and support capabilities
+        hasRole = true;
+      } else if (userRole === 'ADMIN') {
+        // ADMIN possesses OPERATIONS, SUPPORT and general ADMIN capabilities, but not SUPER_ADMIN
+        const nonSuperAdminRoles = reqRolesUpper.filter(r => r !== 'SUPER_ADMIN');
+        if (nonSuperAdminRoles.some(r => ['OPERATIONS', 'SUPPORT', 'ADMIN'].includes(r))) {
+          hasRole = true;
+        }
+      } else if (userRole === 'OPERATIONS') {
+        // OPERATIONS can access OPERATIONS and SUPPORT routes
+        if (reqRolesUpper.includes('SUPPORT')) {
+          hasRole = true;
+        }
+      }
+    }
 
     if (!hasRole) {
       throw new ForbiddenException(

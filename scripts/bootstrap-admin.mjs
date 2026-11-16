@@ -44,6 +44,7 @@ async function bootstrap() {
   const email = (args.email || process.env.ADMIN_BOOTSTRAP_EMAIL || 'admin@rasoiiq.in').toLowerCase().trim();
   const password = args.password || process.env.ADMIN_BOOTSTRAP_PASSWORD || 'RasoiAdminSecretPassphrase@2026';
   const fullName = args.name || args.fullName || 'Platform Administrator';
+  const role = (args.role || process.env.ADMIN_BOOTSTRAP_ROLE || 'ADMIN').toUpperCase();
   const force = Boolean(args.force);
 
   console.log('========================================================================');
@@ -61,8 +62,8 @@ async function bootstrap() {
     }
   });
 
-  if (existing && existing.role === 'ADMIN' && !force) {
-    console.log(`ℹ️  Administrator account for "${email}" already exists with role ADMIN.`);
+  if (existing && existing.role === role && !force) {
+    console.log(`ℹ️  Administrator account for "${email}" already exists with role ${role}.`);
     console.log('   Pass --force to reset the password of this existing administrator.');
     await prisma.$disconnect();
     return;
@@ -81,14 +82,14 @@ async function bootstrap() {
     adminUser = await prisma.user.update({
       where: { id: existing.id },
       data: {
-        role: 'ADMIN',
+        role,
         status: 'ACTIVE',
         emailVerifiedAt: existing.emailVerifiedAt || new Date(),
         passwordHash,
         fullName
       }
     });
-    console.log(`✅ Existing user "${email}" elevated to platform ADMIN.`);
+    console.log(`✅ Existing user "${email}" elevated to platform ${role}.`);
   } else {
     adminUser = await prisma.user.create({
       data: {
@@ -96,12 +97,12 @@ async function bootstrap() {
         normalizedEmail: email,
         fullName,
         passwordHash,
-        role: 'ADMIN',
+        role,
         status: 'ACTIVE',
         emailVerifiedAt: new Date()
       }
     });
-    console.log(`✅ New platform administrator created for "${email}".`);
+    console.log(`✅ New platform administrator created for "${email}" with role ${role}.`);
   }
 
   // Record audit log entry
@@ -111,7 +112,7 @@ async function bootstrap() {
       userId: adminUser.id,
       entityType: 'User',
       entityId: adminUser.id,
-      metadata: { email, role: 'ADMIN', source: 'CLI' }
+      metadata: { email, role, source: 'CLI' }
     }
   });
 

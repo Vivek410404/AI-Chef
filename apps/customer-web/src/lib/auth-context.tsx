@@ -8,7 +8,7 @@ interface User {
   email: string;
   fullName: string;
   phone?: string;
-  role: 'CUSTOMER' | 'RETAILER' | 'ADMIN';
+  role: 'CUSTOMER' | 'RETAILER' | 'ADMIN' | 'SUPER_ADMIN' | 'OPERATIONS' | 'SUPPORT';
   status: 'PENDING_VERIFICATION' | 'ACTIVE' | 'SUSPENDED';
   householdId?: string;
   retailerId?: string;

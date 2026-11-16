@@ -222,8 +222,8 @@ export class AuthController {
    */
   @Post('demo-session')
   async createDemoSession(
-    @Query('role') queryRole?: 'CUSTOMER' | 'RETAILER' | 'ADMIN',
-    @Body() body?: { role?: 'CUSTOMER' | 'RETAILER' | 'ADMIN'; userId?: string; householdId?: string; retailerId?: string }
+    @Query('role') queryRole?: 'CUSTOMER' | 'RETAILER' | 'ADMIN' | 'SUPER_ADMIN' | 'OPERATIONS' | 'SUPPORT',
+    @Body() body?: { role?: 'CUSTOMER' | 'RETAILER' | 'ADMIN' | 'SUPER_ADMIN' | 'OPERATIONS' | 'SUPPORT'; userId?: string; householdId?: string; retailerId?: string; email?: string; secret?: string }
   ) {
     const role = queryRole || body?.role || 'CUSTOMER';
     return this.authService.createDemoSession(role, body);
