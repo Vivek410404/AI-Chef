@@ -37,11 +37,32 @@ export type AuditAction =
   | 'ADMIN_BOOTSTRAP'
   | (string & {});
 
-function sanitizeMetadata(obj: any): any {
-  if (!obj || typeof obj !== 'object') return obj;
-  if (Array.isArray(obj)) return obj.map(sanitizeMetadata);
+function sanitizeMetadata(obj: any, depth = 0): any {
+  if (depth > 8) return '[TRUNCATED_MAX_DEPTH]';
+  if (!obj || typeof obj !== 'object') {
+    if (typeof obj === 'string') {
+      if (/eyJ[a-zA-Z0-9_-]{10,}\.eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}/.test(obj)) {
+        return '[REDACTED_JWT_TOKEN]';
+      }
+      if (/bearer\s+[a-zA-Z0-9._-]+/i.test(obj)) {
+        return '[REDACTED_BEARER_TOKEN]';
+      }
+      if (obj.length > 2000) {
+        return obj.slice(0, 2000) + '...[TRUNCATED]';
+      }
+    }
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    if (obj.length > 50) {
+      return obj.slice(0, 50).map(item => sanitizeMetadata(item, depth + 1)).concat(['[TRUNCATED_ARRAY]']);
+    }
+    return obj.map(item => sanitizeMetadata(item, depth + 1));
+  }
+
   const sanitized: Record<string, any> = {};
-  for (const [key, value] of Object.entries(obj)) {
+  const entries = Object.entries(obj).slice(0, 100);
+  for (const [key, value] of entries) {
     const lower = key.toLowerCase();
     if (
       lower.includes('password') ||
@@ -51,11 +72,25 @@ function sanitizeMetadata(obj: any): any {
       lower.includes('authorization') ||
       lower.includes('cookie') ||
       lower.includes('creditcard') ||
-      lower.includes('cvv')
+      lower.includes('cvv') ||
+      lower.includes('apikey') ||
+      lower.includes('api_key') ||
+      lower.includes('hash') ||
+      lower.includes('privatekey')
     ) {
       sanitized[key] = '[REDACTED]';
     } else if (value && typeof value === 'object') {
-      sanitized[key] = sanitizeMetadata(value);
+      sanitized[key] = sanitizeMetadata(value, depth + 1);
+    } else if (typeof value === 'string') {
+      if (/eyJ[a-zA-Z0-9_-]{10,}\.eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}/.test(value)) {
+        sanitized[key] = '[REDACTED_JWT_TOKEN]';
+      } else if (/bearer\s+[a-zA-Z0-9._-]+/i.test(value)) {
+        sanitized[key] = '[REDACTED_BEARER_TOKEN]';
+      } else if (value.length > 2000) {
+        sanitized[key] = value.slice(0, 2000) + '...[TRUNCATED]';
+      } else {
+        sanitized[key] = value;
+      }
     } else {
       sanitized[key] = value;
     }

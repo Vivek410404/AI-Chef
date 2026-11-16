@@ -923,6 +923,9 @@ export class AuthService implements OnModuleInit {
         }
       } catch (dbCheckErr: any) {
         if (dbCheckErr instanceof UnauthorizedException) throw dbCheckErr;
+        if (process.env.REQUIRE_DATABASE === 'true') {
+          throw new UnauthorizedException('Authentication verification failed due to database unavailability.');
+        }
       }
     }
 
@@ -962,6 +965,9 @@ export class AuthService implements OnModuleInit {
           }
         } catch (dbErr: any) {
           if (dbErr instanceof UnauthorizedException) throw dbErr;
+          if (process.env.REQUIRE_DATABASE === 'true') {
+            throw new UnauthorizedException('Authentication verification failed due to database unavailability.');
+          }
         }
       }
 

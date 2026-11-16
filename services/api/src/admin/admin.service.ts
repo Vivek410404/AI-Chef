@@ -650,6 +650,11 @@ export class AdminService {
           'Support personnel must provide a valid customer support reason (header "x-support-reason" or query "reason", min 5 characters) to inspect household data.'
         );
       }
+      if (supportReason.length > 500) {
+        throw new BadRequestException(
+          'Support reason cannot exceed 500 characters.'
+        );
+      }
     }
 
     if (!this.store.isPrismaConnected) {
@@ -785,48 +790,66 @@ export class AdminService {
       throw new ForbiddenException('Staff members are strictly prohibited from reviewing or approving their own retailer application.');
     }
 
+    if (app.applicationStatus !== 'PENDING') {
+      throw new BadRequestException(
+        `Application has already been reviewed (current status: "${app.applicationStatus}"). Duplicate review is rejected.`
+      );
+    }
+
+    if (app.user && app.user.status === 'SUSPENDED') {
+      throw new BadRequestException('Cannot approve retailer application for a suspended user account.');
+    }
+
     if (dto.status === 'REJECTED' && !dto.rejectionReason) {
       throw new BadRequestException('Rejection reason is required when rejecting a retailer application.');
     }
 
-    const updated = await this.store.prisma.retailerApplication.update({
-      where: { id },
-      data: {
-        applicationStatus: dto.status,
-        rejectionReason: dto.status === 'REJECTED' ? dto.rejectionReason : null,
-        reviewedAt: new Date(),
-        reviewedBy: adminUser.email || adminUser.id
+    const slug = app.businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+    const updated = await this.store.prisma.$transaction(async (tx: any) => {
+      const appUpdate = await tx.retailerApplication.update({
+        where: { id },
+        data: {
+          applicationStatus: dto.status,
+          rejectionReason: dto.status === 'REJECTED' ? dto.rejectionReason : null,
+          reviewedAt: new Date(),
+          reviewedBy: adminUser.email || adminUser.id
+        }
+      });
+
+      if (dto.status === 'APPROVED') {
+        // Elevate applicant user role to RETAILER
+        await tx.user.update({
+          where: { id: app.userId },
+          data: { role: 'RETAILER' }
+        });
+
+        // Ensure a Retailer entity exists for this merchant
+        const existingRetailer = await tx.retailer.findFirst({
+          where: { OR: [{ slug }, { name: app.businessName }] }
+        });
+
+        if (!existingRetailer) {
+          await tx.retailer.create({
+            data: {
+              id: `ret-${slug}`,
+              name: app.businessName,
+              slug,
+              logoUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80',
+              deliveryTimeEstimate: '30-45 mins',
+              deliveryFeeInr: 29,
+              freeDeliveryThresholdInr: 500,
+              minOrderValueInr: 99,
+              status: 'ACTIVE'
+            }
+          });
+        }
       }
+
+      return appUpdate;
     });
 
     if (dto.status === 'APPROVED') {
-      // Elevate applicant user role to RETAILER
-      await this.store.prisma.user.update({
-        where: { id: app.userId },
-        data: { role: 'RETAILER' }
-      });
-
-      // Ensure a Retailer entity exists for this merchant
-      const slug = app.businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      const existingRetailer = await this.store.prisma.retailer.findFirst({
-        where: { OR: [{ slug }, { name: app.businessName }] }
-      });
-
-      if (!existingRetailer) {
-        await this.store.prisma.retailer.create({
-          data: {
-            id: `ret-${slug}`,
-            name: app.businessName,
-            slug,
-            logoUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80',
-            deliveryTimeEstimate: '30-45 mins',
-            deliveryFeeInr: 29,
-            freeDeliveryThresholdInr: 500,
-            minOrderValueInr: 99,
-            status: 'ACTIVE'
-          }
-        });
-      }
 
       await this.auditService.log({
         action: 'RETAILER_APPROVED',

@@ -42,6 +42,9 @@ export class HouseholdController {
       if (user.role === 'RETAILER') {
         throw new ForbiddenException('Access denied. Retailers cannot access customer household information.');
       }
+      if (user.role === 'SUPPORT' || user.role === 'OPERATIONS') {
+        throw new ForbiddenException(`Access denied. Internal staff role "${user.role}" cannot access household directly through customer endpoints.`);
+      }
       if (user.role === 'CUSTOMER') {
         if (targetId && targetId !== 'me') {
           if (user.householdId && user.householdId === targetId) {
