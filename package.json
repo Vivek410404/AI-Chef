@@ -1,0 +1,37 @@
+{
+  "name": "food-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RasoiIQ - India-First Intelligent Meal Planning & Grocery Marketplace",
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:all",
+    "dev:all": "concurrently \"npm run dev --workspace=services/api\" \"npm run dev --workspace=apps/customer-web\"",
+    "dev:web": "npm run dev --workspace=apps/customer-web",
+    "dev:api": "npm run dev --workspace=services/api",
+    "build": "npm run build --workspaces",
+    "db:generate": "npm run generate --workspace=packages/database",
+    "db:push": "npm run push --workspace=packages/database",
+    "db:seed": "npm run seed --workspace=packages/database",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "clean": "npm run clean --workspaces --if-present",
+    "test": "node scripts/test-smart-basket.mjs && node scripts/test-ai-generation.mjs && node scripts/test-nutrition-engine.mjs",
+    "test:smart-basket": "node scripts/test-smart-basket.mjs",
+    "test:ai": "node scripts/test-ai-generation.mjs",
+    "test:nutrition": "node scripts/test-nutrition-engine.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "puppeteer": "^25.17.0",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

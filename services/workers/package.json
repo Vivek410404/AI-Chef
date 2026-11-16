@@ -1,0 +1,9 @@
+{
+  "name": "@rasoi/workers-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RasoiIQ Background worker service",
+  "scripts": {
+    "start": "echo 'Workers ready for BullMQ & Redis queues'"
+  }
+}

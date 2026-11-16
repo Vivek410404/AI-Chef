@@ -1,0 +1,9 @@
+{
+  "name": "@rasoi/admin-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RasoiIQ Super Admin Dashboard",
+  "scripts": {
+    "start": "echo 'Super admin portal available inside customer-web Partner View mode'"
+  }
+}

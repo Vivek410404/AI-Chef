@@ -1,0 +1,9 @@
+{
+  "name": "@rasoi/retailer-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RasoiIQ Retailer Partner Dashboard",
+  "scripts": {
+    "start": "echo 'Retailer portal available inside customer-web Partner View mode'"
+  }
+}

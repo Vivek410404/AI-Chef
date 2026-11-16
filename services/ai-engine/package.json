@@ -1,0 +1,9 @@
+{
+  "name": "@rasoi/ai-engine-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RasoiIQ AI recommendation service (integrated within services/api)",
+  "scripts": {
+    "start": "echo 'AI Engine active inside services/api/ai'"
+  }
+}

@@ -1,0 +1,331 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  CUSTOMER
+  RETAILER
+  ADMIN
+}
+
+enum SpiceTolerance {
+  MILD
+  MEDIUM
+  SPICY
+  DESI_TEEKHA
+}
+
+enum DietaryType {
+  VEGETARIAN
+  NON_VEGETARIAN
+  JAIN
+  VEGAN
+  EGGETARIAN
+}
+
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  passwordHash  String
+  fullName      String
+  phoneNumber   String?
+  role          Role        @default(CUSTOMER)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  households    Household[]
+  sessions      Session[]
+  addresses     Address[]
+  orders        Order[]
+  feedbacks     Feedback[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+}
+
+model Address {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label        String   // "Home", "Office", "Parents"
+  flatBuilding String
+  street       String
+  landmark     String?
+  city         String
+  state        String
+  pincode      String
+  latitude     Float?
+  longitude    Float?
+  isDefault    Boolean  @default(false)
+}
+
+model Household {
+  id                String            @id @default(cuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name              String
+  spiceTolerance    SpiceTolerance    @default(MEDIUM)
+  weeklyBudgetInr   Float             @default(3000)
+  cookingFrequency  String            @default("Daily Fresh")
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  members           HouseholdMember[]
+  pantryItems       PantryItem[]
+  mealPlans         MealPlan[]
+  baskets           Basket[]
+}
+
+model HouseholdMember {
+  id                 String       @id @default(cuid())
+  householdId        String
+  household          Household    @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  name               String
+  ageGroup           String       @default("adult")
+  dietaryPreference  DietaryType  @default(VEGETARIAN)
+  allergies          String[]     @default([])
+  dislikedIngredients String[]    @default([])
+  createdAt          DateTime     @default(now())
+}
+
+model Ingredient {
+  id                String             @id @default(cuid())
+  name              String             @unique
+  hindiName         String?
+  category          String
+  standardUnit      String
+  shelfLifeDays     Int?
+  isJainPermissible Boolean            @default(true)
+  recipeIngredients RecipeIngredient[]
+  pantryItems       PantryItem[]
+  productVariants   ProductVariant[]
+}
+
+model Recipe {
+  id                  String             @id @default(cuid())
+  title               String
+  slug                String             @unique
+  description         String
+  cuisine             String
+  dietaryTags         String[]
+  mealTypes           String[]
+  prepTimeMinutes     Int
+  cookTimeMinutes     Int
+  defaultServings     Int                @default(4)
+  difficulty          String             @default("Medium")
+  caloriesPerServing  Float
+  proteinGrams        Float
+  carbsGrams          Float
+  fatGrams            Float
+  fiberGrams          Float
+  imageUrl            String
+  estimatedCostInr    Float
+  isJainFriendly      Boolean            @default(false)
+  jainAlternativeNotes String?
+  rating              Float              @default(4.8)
+  ratingCount         Int                @default(120)
+  createdAt           DateTime           @default(now())
+  ingredients         RecipeIngredient[]
+  steps               RecipeStep[]
+  mealPlanItems       MealPlanItem[]
+}
+
+model RecipeIngredient {
+  id           String     @id @default(cuid())
+  recipeId     String
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  quantity     Float
+  unit         String
+  notes        String?
+}
+
+model RecipeStep {
+  id              String   @id @default(cuid())
+  recipeId        String
+  recipe          Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  stepNumber      Int
+  instruction     String
+  tip             String?
+  durationMinutes Int?
+}
+
+model MealPlan {
+  id            String         @id @default(cuid())
+  householdId   String
+  household     Household      @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  weekStartDate DateTime
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  items         MealPlanItem[]
+}
+
+model MealPlanItem {
+  id           String    @id @default(cuid())
+  mealPlanId   String
+  mealPlan     MealPlan  @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  dayOfWeek    String    // monday, tuesday, etc.
+  mealCategory String    // breakfast, lunch, dinner, snack
+  recipeId     String
+  recipe       Recipe    @relation(fields: [recipeId], references: [id])
+  servings     Int       @default(4)
+  notes        String?
+}
+
+model PantryItem {
+  id                 String     @id @default(cuid())
+  householdId        String
+  household          Household  @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  ingredientId       String
+  ingredient         Ingredient @relation(fields: [ingredientId], references: [id])
+  currentQuantity    Float
+  unit               String
+  isLowStock         Boolean    @default(false)
+  lowStockThreshold  Float?
+  updatedAt          DateTime   @updatedAt
+}
+
+model Retailer {
+  id                        String         @id @default(cuid())
+  name                      String         @unique
+  slug                      String         @unique
+  logoUrl                   String
+  deliveryTimeEstimate      String
+  deliveryFeeInr            Float          @default(29)
+  freeDeliveryThresholdInr  Float          @default(500)
+  minOrderValueInr          Float          @default(99)
+  rating                    Float          @default(4.7)
+  stores                    Store[]
+  baskets                   Basket[]
+}
+
+model Store {
+  id            String         @id @default(cuid())
+  retailerId    String
+  retailer      Retailer       @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  name          String
+  city          String
+  pincode       String
+  storeProducts StoreProduct[]
+}
+
+model Product {
+  id          String           @id @default(cuid())
+  brand       String
+  title       String
+  category    String
+  imageUrl    String
+  description String?
+  variants    ProductVariant[]
+}
+
+model ProductVariant {
+  id             String         @id @default(cuid())
+  productId      String
+  product        Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  ingredientId   String         // Decoupled link to culinary ingredient
+  ingredient     Ingredient     @relation(fields: [ingredientId], references: [id])
+  sku            String         @unique
+  brand          String
+  title          String
+  packQuantity   Float
+  packUnit       String
+  mrpInr         Float
+  sellingPriceInr Float
+  imageUrl       String
+  storeProducts  StoreProduct[]
+  basketItems    BasketItem[]
+  orderItems     OrderItem[]
+}
+
+model StoreProduct {
+  id               String         @id @default(cuid())
+  storeId          String
+  store            Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  productVariantId String
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  inStock          Boolean        @default(true)
+  stockCount       Int            @default(50)
+  localPriceInr    Float
+}
+
+model Basket {
+  id                 String       @id @default(cuid())
+  householdId        String
+  household          Household    @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  selectedRetailerId String
+  retailer           Retailer     @relation(fields: [selectedRetailerId], references: [id])
+  subtotalInr        Float        @default(0)
+  deliveryFeeInr     Float        @default(0)
+  totalInr           Float        @default(0)
+  items              BasketItem[]
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+}
+
+model BasketItem {
+  id                    String         @id @default(cuid())
+  basketId              String
+  basket                Basket         @relation(fields: [basketId], references: [id], onDelete: Cascade)
+  productVariantId      String
+  productVariant        ProductVariant @relation(fields: [productVariantId], references: [id])
+  quantityPacks         Int            @default(1)
+  isSelectedForPurchase Boolean        @default(true)
+  availableAtHome       Boolean        @default(false)
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  retailerName    String
+  status          String      @default("PLACED") // PLACED, PACKED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED
+  totalAmountInr  Float
+  deliveryFeeInr  Float
+  deliveryAddress String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  items           OrderItem[]
+  payment         Payment?
+}
+
+model OrderItem {
+  id               String         @id @default(cuid())
+  orderId          String
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productVariantId String
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
+  quantityPacks    Int
+  unitPriceInr     Float
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amountInr     Float
+  status        String   @default("SUCCESS") // PENDING, SUCCESS, FAILED
+  paymentMethod String   @default("UPI") // UPI, CARD, NETBANKING, COD
+  transactionId String   @unique
+  createdAt     DateTime @default(now())
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  category  String   @default("GENERAL")
+  createdAt DateTime @default(now())
+}
