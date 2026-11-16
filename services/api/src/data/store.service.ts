@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { execSync } from 'child_process';
+import { PrismaClient } from '@prisma/client';
 import {
   SEED_INGREDIENTS,
   SEED_RECIPES,
@@ -8,8 +9,7 @@ import {
   SEED_DEMO_HOUSEHOLD,
   SEED_PATEL_HOUSEHOLD,
   SEED_MEHTA_HOUSEHOLD,
-  SEED_PANTRY_ITEMS,
-  PrismaClient
+  SEED_PANTRY_ITEMS
 } from '@rasoi/database';
 import {
   Recipe,
@@ -43,7 +43,7 @@ function resolveDatabaseUrl(): string {
 @Injectable()
 export class StoreService implements OnModuleInit {
   private readonly logger = new Logger(StoreService.name);
-  public prisma: PrismaClient;
+  public prisma: PrismaClient & { retailerApplication?: any; [key: string]: any };
   public isPrismaConnected = false;
 
   // In-memory robust store fallback

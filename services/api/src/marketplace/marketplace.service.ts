@@ -240,13 +240,14 @@ export class MarketplaceService {
     }
 
     if (this.store.isPrismaConnected) {
-      const existing = await this.store.prisma.retailerApplication.findFirst({
+      const prisma = this.store.prisma as any;
+      const existing = await prisma.retailerApplication.findFirst({
         where: { userId, applicationStatus: 'PENDING' }
       });
       if (existing) {
         throw new BadRequestException('You already have a pending retailer application under review.');
       }
-      const app = await this.store.prisma.retailerApplication.create({
+      const app = await prisma.retailerApplication.create({
         data: {
           userId,
           businessName: data.businessName.trim(),
@@ -261,7 +262,8 @@ export class MarketplaceService {
 
   async getRetailerApplicationStatus(userId: string) {
     if (this.store.isPrismaConnected) {
-      const app = await this.store.prisma.retailerApplication.findFirst({
+      const prisma = this.store.prisma as any;
+      const app = await prisma.retailerApplication.findFirst({
         where: { userId },
         orderBy: { submittedAt: 'desc' }
       });
@@ -272,7 +274,8 @@ export class MarketplaceService {
 
   async getRetailerApplications() {
     if (this.store.isPrismaConnected) {
-      return this.store.prisma.retailerApplication.findMany({
+      const prisma = this.store.prisma as any;
+      return prisma.retailerApplication.findMany({
         include: { user: true },
         orderBy: { submittedAt: 'desc' }
       });
@@ -282,12 +285,13 @@ export class MarketplaceService {
 
   async reviewRetailerApplication(id: string, status: 'APPROVED' | 'REJECTED', reviewedBy: string) {
     if (this.store.isPrismaConnected) {
-      const app = await this.store.prisma.retailerApplication.findUnique({
+      const prisma = this.store.prisma as any;
+      const app = await prisma.retailerApplication.findUnique({
         where: { id }
       });
       if (!app) throw new NotFoundException('Retailer application not found');
 
-      const updated = await this.store.prisma.retailerApplication.update({
+      const updated = await prisma.retailerApplication.update({
         where: { id },
         data: {
           applicationStatus: status as any,
