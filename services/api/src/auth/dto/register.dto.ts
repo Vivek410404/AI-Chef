@@ -4,5 +4,7 @@ export class RegisterDto {
   password!: string;
   confirmPassword!: string;
   phoneNumber?: string;
+  phone?: string;
   acceptTerms!: boolean;
+  acceptedTerms?: boolean;
 }

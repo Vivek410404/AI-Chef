@@ -70,7 +70,8 @@ export class AuthService implements OnModuleInit {
   async register(dto: RegisterDto, clientIp = '127.0.0.1') {
     this.rateLimiter.check(`register:${clientIp}`, 10, 60000);
 
-    if (!dto.acceptTerms) {
+    const hasAcceptedTerms = dto.acceptTerms === true || dto.acceptedTerms === true;
+    if (!hasAcceptedTerms) {
       throw new BadRequestException('You must accept the Terms of Service and Privacy Policy to register.');
     }
 
@@ -107,13 +108,14 @@ export class AuthService implements OnModuleInit {
       }
 
       const passwordHash = await this.passwordService.hash(dto.password);
+      const phoneNumber = (dto.phoneNumber || dto.phone)?.trim() || null;
       const user = await this.store.prisma.user.create({
         data: {
           email: normalizedEmail,
           normalizedEmail,
           fullName: dto.fullName.trim(),
           passwordHash,
-          phoneNumber: dto.phoneNumber?.trim() || null,
+          phoneNumber,
           role: 'CUSTOMER',
           status: 'PENDING_VERIFICATION',
           emailVerifiedAt: null
