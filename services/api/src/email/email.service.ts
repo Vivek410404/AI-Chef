@@ -94,40 +94,39 @@ export class EmailService {
       try {
         const port = Number(process.env.SMTP_PORT) || 587;
         const secure = port === 465;
+        const cleanUser = process.env.SMTP_USER.trim();
+        const cleanPass = process.env.SMTP_PASS.trim().replace(/\s+/g, '');
+        const cleanHost = process.env.SMTP_HOST.trim();
+
         const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
+          host: cleanHost,
           port,
           secure,
           auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
+            user: cleanUser,
+            pass: cleanPass
           }
         });
 
         await transporter.sendMail({
-          from: process.env.SMTP_FROM || `"RasoiIQ" <${process.env.SMTP_USER}>`,
+          from: process.env.SMTP_FROM || `"RasoiIQ" <${cleanUser}>`,
           to: payload.to,
           subject: payload.subject,
           text: payload.text,
           html: payload.html || payload.text.replace(/\n/g, '<br/>')
         });
 
-        this.logger.log(`[EmailService] Outbound email dispatched via SMTP to ${payload.to} (Subject: "${payload.subject}")`);
-        return true;
+        this.logger.log(`[EmailService] Real email successfully sent via SMTP to ${payload.to} (Subject: "${payload.subject}")`);
       } catch (err: any) {
-        this.logger.error(`[EmailService] SMTP delivery failed to ${payload.to}: ${err.message}. Falling back to dev inbox.`);
-        EmailService.devInbox.unshift(emailRecord);
-        return false;
+        this.logger.error(`[EmailService] SMTP delivery failed to ${payload.to}: ${err.message}. Retaining in dev inbox.`);
       }
     }
 
-    // In local development / non-production mode without SMTP, capture in development inbox
+    // Always retain in development inbox for instant on-screen verification backup
     EmailService.devInbox.unshift(emailRecord);
-    // Keep only last 50 emails
     if (EmailService.devInbox.length > 50) {
       EmailService.devInbox.pop();
     }
-    this.logger.log(`[EmailService] Captured ${payload.type} email for ${payload.to} (dev preview available)`);
     if (payload.link) {
       this.logger.log(`[EmailService] Verification/Action Link: ${payload.link}`);
     }
