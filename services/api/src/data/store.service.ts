@@ -685,29 +685,31 @@ export class StoreService implements OnModuleInit {
   public async persistMealPlanBatch(householdId: string, items: MealPlanItem[]) {
     if (!this.isPrismaConnected) return;
     try {
-      let mp = await this.prisma.mealPlan.findFirst({ where: { householdId } });
-      if (!mp) {
-        mp = await this.prisma.mealPlan.create({
-          data: {
-            id: `mp-${householdId}`,
-            householdId,
-            weekStartDate: new Date()
-          }
-        });
-      }
-      await this.prisma.mealPlanItem.deleteMany({ where: { mealPlanId: mp.id } });
-      if (items.length > 0) {
-        await this.prisma.mealPlanItem.createMany({
-          data: items.map(item => ({
-            id: item.id,
-            mealPlanId: mp.id,
-            dayOfWeek: item.dayOfWeek,
-            mealCategory: item.mealCategory,
-            recipeId: item.recipeId,
-            servings: item.servings
-          }))
-        });
-      }
+      await this.prisma.$transaction(async (tx) => {
+        let mp = await tx.mealPlan.findFirst({ where: { householdId } });
+        if (!mp) {
+          mp = await tx.mealPlan.create({
+            data: {
+              id: `mp-${householdId}`,
+              householdId,
+              weekStartDate: new Date()
+            }
+          });
+        }
+        await tx.mealPlanItem.deleteMany({ where: { mealPlanId: mp.id } });
+        if (items.length > 0) {
+          await tx.mealPlanItem.createMany({
+            data: items.map(item => ({
+              id: item.id,
+              mealPlanId: mp.id,
+              dayOfWeek: item.dayOfWeek,
+              mealCategory: item.mealCategory,
+              recipeId: item.recipeId,
+              servings: item.servings
+            }))
+          });
+        }
+      }, { maxWait: 15000, timeout: 20000 });
     } catch (e: any) {
       this.logger.warn(`Failed to batch persist meal plan in PostgreSQL: ${e.message}`);
     }

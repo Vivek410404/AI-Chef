@@ -12,7 +12,8 @@ const suites = [
   { name: 'test-e2e-customer-journey.mjs', category: 'E2E Customer Journey' },
   { name: 'test-rbac-and-security.mjs', category: 'RBAC, Security & Idempotency' },
   { name: 'test-phase4-pilot-foundation.mjs', category: 'Phase 4 Pilot Foundation' },
-  { name: 'test-phase41-postgres-and-pilot.mjs', category: 'Phase 4.1 PostgreSQL & Pilot Security' }
+  { name: 'test-phase41-postgres-and-pilot.mjs', category: 'Phase 4.1 PostgreSQL & Pilot Security' },
+  { name: 'test-phase42-safety-and-recipes.mjs', category: 'Phase 4.2 Safety, Recipe Integrity & Provenance' }
 ];
 
 console.log('========================================================================');

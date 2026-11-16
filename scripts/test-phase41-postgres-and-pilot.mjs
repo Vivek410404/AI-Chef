@@ -479,7 +479,7 @@ async function runPhase41Tests() {
     pass('Audited "Crispy Methi Na Gota": fresh fenugreek, coarse besan, Dakor style, 230 kcal, 7.8g protein');
 
     // Audit 6: Bajra No Rotlo
-    const rotlo = recipes.find(r => r.id === 'recipe-bajra-no-rotlo');
+    const rotlo = recipes.find(r => r.id === 'recipe-bajra-no-rotlo-vegan') || recipes.find(r => r.id === 'recipe-bajra-no-rotlo');
     assert.ok(rotlo, 'Kathiyawadi Bajra No Rotlo must exist');
     assert.strictEqual(rotlo.cuisine, 'Kathiyawadi');
     const bajraIng = rotlo.ingredients.find(i => i.ingredientId === 'ing-bajra-flour' || i.name?.toLowerCase().includes('bajra'));

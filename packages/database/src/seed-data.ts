@@ -206,7 +206,7 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { ingredientId: 'ing-peanuts', quantity: 30, unit: 'g', notes: 'raw peanuts boiled with dal' },
       { ingredientId: 'ing-jaggery', quantity: 25, unit: 'g', notes: 'grated organic jaggery' },
       { ingredientId: 'ing-lemon', quantity: 1, unit: 'piece', notes: 'freshly squeezed' },
-      { ingredientId: 'ing-ginger', quantity: 15, unit: 'g', notes: 'grated' },
+      { ingredientId: 'ing-hing', quantity: 2, unit: 'g', notes: 'pure asafoetida for authentic Jain tadka' },
       { ingredientId: 'ing-green-chilli', quantity: 10, unit: 'g', notes: 'slit lengthwise' },
       { ingredientId: 'ing-ghee', quantity: 20, unit: 'g', notes: 'for royal Gujarati tadka' },
       { ingredientId: 'ing-mustard-seeds', quantity: 5, unit: 'g' },
@@ -218,7 +218,7 @@ export const SEED_RECIPES: SeedRecipe[] = [
     ],
     steps: [
       { stepNumber: 1, instruction: 'Pressure cook toor dal with peanuts, chopped tomato, turmeric, and 3 cups of water for 4 whistles.', durationMinutes: 10 },
-      { stepNumber: 2, instruction: 'Blend cooked dal with a hand churner (mathani) to silky consistency. Add jaggery, lemon juice, grated ginger, and slit chillies.', durationMinutes: 4 },
+      { stepNumber: 2, instruction: 'Blend cooked dal with a hand churner (mathani) to silky consistency. Add jaggery, lemon juice, hing, and slit chillies.', durationMinutes: 4 },
       { stepNumber: 3, instruction: 'Bring dal to a rolling boil on medium flame for 6-8 minutes so the flavors marry.', durationMinutes: 8 },
       { stepNumber: 4, instruction: 'Prepare the vaghar (tadka): heat pure cow ghee in a tadka pan. Add mustard seeds, cumin seeds, and curry leaves. Let crackle and immediately pour into the boiling dal.', durationMinutes: 3 },
       { stepNumber: 5, instruction: 'Garnish with freshly chopped coriander leaves. Enjoy with steamed basmati rice and thepla.', durationMinutes: 2 }
@@ -716,13 +716,13 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { ingredientId: 'ing-sambar-powder', quantity: 15, unit: 'g' },
       { ingredientId: 'ing-mustard-seeds', quantity: 5, unit: 'g' },
       { ingredientId: 'ing-curry-leaves', quantity: 1, unit: 'bunch' },
-      { ingredientId: 'ing-ghee', quantity: 15, unit: 'g' },
+      { ingredientId: 'ing-oil', quantity: 15, unit: 'ml', notes: 'cold-pressed sesame or sunflower oil for authentic tiffin tadka' },
       { ingredientId: 'ing-salt', quantity: 8, unit: 'g' }
     ],
     steps: [
       { stepNumber: 1, instruction: 'Pour batter into greased idli molds and steam on high for 10 minutes.', durationMinutes: 10 },
       { stepNumber: 2, instruction: 'Boil toor dal with tomatoes and sambar powder. Simmer for 8 minutes.', durationMinutes: 8 },
-      { stepNumber: 3, instruction: 'Temper with mustard seeds, curry leaves, and ghee. Serve steaming hot with idlis.', durationMinutes: 3 }
+      { stepNumber: 3, instruction: 'Temper with mustard seeds, curry leaves, and oil. Serve steaming hot with idlis.', durationMinutes: 3 }
     ]
   },
   {
@@ -731,7 +731,7 @@ export const SEED_RECIPES: SeedRecipe[] = [
     slug: 'rava-upma',
     description: 'Classic South Indian roasted semolina breakfast tempered with mustard, crunchy roasted peanuts, ginger, and curry leaves.',
     cuisine: 'South Indian',
-    dietaryTags: ['Pure Vegetarian', 'Vegetarian', 'Jain Friendly', 'Kid-Friendly'],
+    dietaryTags: ['Pure Vegetarian', 'Vegetarian', 'Kid-Friendly'],
     mealTypes: ['breakfast', 'snack'],
     prepTimeMinutes: 10,
     cookTimeMinutes: 12,
@@ -746,7 +746,7 @@ export const SEED_RECIPES: SeedRecipe[] = [
     sodiumMg: 330,
     imageUrl: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80',
     estimatedCostInr: 60,
-    isJainFriendly: true,
+    isJainFriendly: false,
     ingredients: [
       { ingredientId: 'ing-rava', quantity: 200, unit: 'g', notes: 'roasted golden sooji' },
       { ingredientId: 'ing-peanuts', quantity: 30, unit: 'g' },
@@ -1187,7 +1187,7 @@ export const SEED_RECIPES: SeedRecipe[] = [
     slug: 'traditional-kathiyawadi-bajra-no-rotlo',
     description: 'Thick, wholesome gluten-free flatbread hand-patted from pearl millet flour and roasted on a clay tava, slathered with pure desi ghee.',
     cuisine: 'Kathiyawadi',
-    dietaryTags: ['Pure Vegetarian', 'Vegetarian', 'Vegan', 'Gluten-Free', 'Jain Friendly'],
+    dietaryTags: ['Pure Vegetarian', 'Vegetarian', 'Gluten-Free', 'Jain Friendly'],
     mealTypes: ['lunch', 'dinner'],
     prepTimeMinutes: 10,
     cookTimeMinutes: 15,
@@ -1214,6 +1214,42 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { stepNumber: 2, instruction: 'Hand-pat portions between palms or on a flat surface using light dry flour into 6-inch thick round rotlas.', durationMinutes: 3 },
       { stepNumber: 3, instruction: 'Transfer gently onto a hot earthen or cast-iron tava. Sprinkle a few drops of water on top surface.', durationMinutes: 3 },
       { stepNumber: 4, instruction: 'Flip and roast both sides over open flame until puffed and crisp. Top generously with desi ghee.', durationMinutes: 4 }
+    ]
+  },
+  {
+    id: 'recipe-bajra-no-rotlo-vegan',
+    title: 'Kathiyawadi Bajra no Rotlo (Vegan / Til Oil)',
+    slug: 'kathiyawadi-bajra-no-rotlo-vegan',
+    description: 'Authentic rustic Gujarati pearl millet flatbread hand-patted and roasted over fire, brushed with cold-pressed sesame oil (til tel) for a 100% plant-based, gluten-free traditional meal.',
+    cuisine: 'Kathiyawadi',
+    dietaryTags: ['Pure Vegetarian', 'Vegetarian', 'Vegan', 'Gluten-Free', 'Jain Friendly'],
+    mealTypes: ['lunch', 'dinner'],
+    prepTimeMinutes: 10,
+    cookTimeMinutes: 15,
+    defaultServings: 4,
+    difficulty: 'Medium',
+    proteinSource: 'mixed-veg',
+    caloriesPerServing: 190,
+    proteinGrams: 5.8,
+    carbsGrams: 34.2,
+    fatGrams: 4.0,
+    fiberGrams: 6.0,
+    sugarGrams: 0.0,
+    sodiumMg: 160,
+    imageUrl: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80',
+    estimatedCostInr: 55,
+    isJainFriendly: true,
+    ingredients: [
+      { ingredientId: 'ing-bajra-flour', quantity: 350, unit: 'g', notes: 'fresh stone-ground pearl millet flour' },
+      { ingredientId: 'ing-salt', quantity: 6, unit: 'g' },
+      { ingredientId: 'ing-oil', quantity: 20, unit: 'ml', notes: 'cold-pressed sesame or sunflower oil for brushing' },
+      { ingredientId: 'ing-sesame-seeds', quantity: 10, unit: 'g', notes: 'white sesame seeds pressed into crust' }
+    ],
+    steps: [
+      { stepNumber: 1, instruction: 'Knead bajra flour with warm water and salt in small batches using palm heel pressure until smooth and elastic.', durationMinutes: 5 },
+      { stepNumber: 2, instruction: 'Hand-pat portions between wet palms into 6-inch thick round rotlas, pressing sesame seeds onto the outer surface.', durationMinutes: 3 },
+      { stepNumber: 3, instruction: 'Gently transfer onto a hot earthen lodhi or cast iron tava. Brush top lightly with water to prevent cracking.', durationMinutes: 3 },
+      { stepNumber: 4, instruction: 'Roast both sides over direct flame until puffed and crisp. Generously brush with cold-pressed sesame oil and serve hot with Baingan Bharta or Ringna Olo.', durationMinutes: 4 }
     ]
   },
   {
@@ -1263,6 +1299,52 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { stepNumber: 3, instruction: 'In a heavy pot, heat oil with ajwain and hing. Add surti papdi and tuver lilva; sauté for 3 minutes.', durationMinutes: 5 },
       { stepNumber: 4, instruction: 'Layer cubed yam, potatoes, stuffed baby eggplants, and muthiya on top. Add masala mixture and half cup warm water.', durationMinutes: 5 },
       { stepNumber: 5, instruction: 'Cover tightly and slow-cook on low flame until vegetables are buttery tender. Gently toss and serve with hot Puris.', durationMinutes: 20 }
+    ]
+  },
+  {
+    id: 'recipe-surati-undhiyu-jain',
+    title: 'Authentic Jain Surati Undhiyu (Kacha Kela & Papdi)',
+    slug: 'authentic-jain-surati-undhiyu',
+    description: 'Revered Jain Gujarati winter banquet preparation slow-cooked strictly without root vegetables, onions, or garlic, using fresh Surti papdi, tuver lilva, raw green plantain (kacha kela), and steamed methi muthiya.',
+    cuisine: 'Gujarati',
+    dietaryTags: ['Pure Vegetarian', 'Vegetarian', 'Jain Friendly'],
+    mealTypes: ['lunch', 'dinner'],
+    prepTimeMinutes: 30,
+    cookTimeMinutes: 35,
+    defaultServings: 4,
+    difficulty: 'Advanced',
+    proteinSource: 'dal',
+    caloriesPerServing: 350,
+    proteinGrams: 10.8,
+    carbsGrams: 46.2,
+    fatGrams: 14.5,
+    fiberGrams: 11.0,
+    sugarGrams: 6.5,
+    sodiumMg: 360,
+    imageUrl: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80',
+    estimatedCostInr: 175,
+    isJainFriendly: true,
+    ingredients: [
+      { ingredientId: 'ing-surti-papdi', quantity: 250, unit: 'g', notes: 'fresh Surti flat beans stringed' },
+      { ingredientId: 'ing-tuver-lilva', quantity: 150, unit: 'g', notes: 'fresh green pigeon peas' },
+      { ingredientId: 'ing-raw-banana', quantity: 250, unit: 'g', notes: 'firm kacha kela cubed (replacing kand and potatoes)' },
+      { ingredientId: 'ing-fenugreek', quantity: 100, unit: 'g', notes: 'fresh methi leaves for muthiya' },
+      { ingredientId: 'ing-besan', quantity: 80, unit: 'g', notes: 'gram flour for muthiya binding' },
+      { ingredientId: 'ing-sesame-seeds', quantity: 20, unit: 'g' },
+      { ingredientId: 'ing-oil', quantity: 45, unit: 'ml' },
+      { ingredientId: 'ing-green-chilli', quantity: 15, unit: 'g' },
+      { ingredientId: 'ing-hing', quantity: 3, unit: 'g', notes: 'pure asafoetida replacing ginger and garlic' },
+      { ingredientId: 'ing-jaggery', quantity: 20, unit: 'g' },
+      { ingredientId: 'ing-salt', quantity: 12, unit: 'g' },
+      { ingredientId: 'ing-ajwain', quantity: 5, unit: 'g' },
+      { ingredientId: 'ing-coriander', quantity: 1, unit: 'bunch' }
+    ],
+    steps: [
+      { stepNumber: 1, instruction: 'Prepare Jain methi muthiya combining chopped methi, besan, ajwain, green chilli, hing, salt, and 1 tbsp oil. Shape into small oval dumplings and steam for 10 minutes.', durationMinutes: 10 },
+      { stepNumber: 2, instruction: 'Make green spice stuffing by crushing sesame seeds, green chillies, coriander, salt, hing, and jaggery.', durationMinutes: 5 },
+      { stepNumber: 3, instruction: 'Heat oil in a heavy pot with ajwain and hing. Add Surti papdi, tuver lilva, and cubed raw plantain (kacha kela).', durationMinutes: 5 },
+      { stepNumber: 4, instruction: 'Layer the steamed methi muthiya over vegetables. Sprinkle remaining green masala paste and 1/2 cup warm water.', durationMinutes: 5 },
+      { stepNumber: 5, instruction: 'Cover tightly with a rimmed plate filled with water (dum cooking) and simmer on low heat for 20 minutes until plantain is tender and aromatic. Serve with puri or rotlo.', durationMinutes: 20 }
     ]
   },
   {
@@ -1361,7 +1443,7 @@ export const SEED_RECIPES: SeedRecipe[] = [
     slug: 'kathiyawadi-vaghireli-khichdi',
     description: 'Comforting spicy tempered rice and split yellow moong dal infused with whole spices, tomatoes, curry leaves, and a generous dollop of ghee.',
     cuisine: 'Kathiyawadi',
-    dietaryTags: ['Pure Vegetarian', 'Vegetarian', 'Vegan', 'Gluten-Free', 'Jain Friendly'],
+    dietaryTags: ['Pure Vegetarian', 'Vegetarian', 'Gluten-Free', 'Jain Friendly'],
     mealTypes: ['dinner'],
     prepTimeMinutes: 10,
     cookTimeMinutes: 20,

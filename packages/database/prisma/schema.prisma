@@ -53,6 +53,14 @@ model Session {
   createdAt    DateTime @default(now())
 }
 
+model RevokedToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  reason    String?  @default("LOGOUT")
+  revokedAt DateTime @default(now())
+  expiresAt DateTime
+}
+
 model Address {
   id           String   @id @default(cuid())
   userId       String

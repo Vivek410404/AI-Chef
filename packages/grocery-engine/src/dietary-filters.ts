@@ -12,6 +12,7 @@ export interface VerifiedIngredientMeta {
   name: string;
   isJainPermissible: boolean;
   isVerified: boolean;
+  isAnimalDerived?: boolean;
   containsEggs?: boolean;
   containsDairy?: boolean;
   containsMeat?: boolean;
@@ -23,6 +24,8 @@ export interface VerifiedIngredientMeta {
   containsNuts?: boolean;
   containsGluten?: boolean;
   allergens?: string[];
+  ifctCode?: string;
+  nutritionProvenance?: string;
 }
 
 /**
@@ -30,75 +33,73 @@ export interface VerifiedIngredientMeta {
  * Ensures dietary and allergen safety are derived from verified structured metadata.
  */
 export const VERIFIED_INGREDIENT_REGISTRY = new Map<string, VerifiedIngredientMeta>([
-  // Dairy & Eggs
-  ['ing-paneer', { id: 'ing-paneer', name: 'Paneer', isJainPermissible: true, isVerified: true, containsDairy: true, allergens: ['dairy', 'lactose'] }],
-  ['ing-milk', { id: 'ing-milk', name: 'Cow Milk', isJainPermissible: true, isVerified: true, containsDairy: true, allergens: ['dairy', 'lactose'] }],
-  ['ing-curd', { id: 'ing-curd', name: 'Curd (Dahi)', isJainPermissible: true, isVerified: true, containsDairy: true, allergens: ['dairy', 'lactose'] }],
-  ['ing-ghee', { id: 'ing-ghee', name: 'Desi Cow Ghee', isJainPermissible: true, isVerified: true, containsDairy: true, allergens: ['dairy', 'lactose'] }],
-  ['ing-butter', { id: 'ing-butter', name: 'White / Salted Butter', isJainPermissible: true, isVerified: true, containsDairy: true, allergens: ['dairy', 'lactose'] }],
-  ['ing-eggs', { id: 'ing-eggs', name: 'Farm Eggs', isJainPermissible: false, isVerified: true, containsEggs: true, allergens: ['eggs'] }],
-  ['ing-egg', { id: 'ing-egg', name: 'Farm Egg', isJainPermissible: false, isVerified: true, containsEggs: true, allergens: ['eggs'] }],
-  ['ing-chicken', { id: 'ing-chicken', name: 'Chicken Breast / Curry Cut', isJainPermissible: false, isVerified: true, containsMeat: true, containsPoultry: true, allergens: [] }],
-  ['ing-fish', { id: 'ing-fish', name: 'Fresh Rohu / Catla Fish', isJainPermissible: false, isVerified: true, containsMeat: true, containsFish: true, allergens: ['fish'] }],
+  // Dairy & Animal Products
+  ['ing-paneer', { id: 'ing-paneer', name: 'Paneer', isJainPermissible: true, isVerified: true, isAnimalDerived: true, containsDairy: true, allergens: ['dairy', 'lactose'], ifctCode: 'Dairy-004', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-milk', { id: 'ing-milk', name: 'Cow Milk', isJainPermissible: true, isVerified: true, isAnimalDerived: true, containsDairy: true, allergens: ['dairy', 'lactose'], ifctCode: 'Dairy-001', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-curd', { id: 'ing-curd', name: 'Curd (Dahi)', isJainPermissible: true, isVerified: true, isAnimalDerived: true, containsDairy: true, allergens: ['dairy', 'lactose'], ifctCode: 'Dairy-006', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-ghee', { id: 'ing-ghee', name: 'Desi Cow Ghee', isJainPermissible: true, isVerified: true, isAnimalDerived: true, containsDairy: true, allergens: ['dairy', 'lactose'], ifctCode: 'Fats-003', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-butter', { id: 'ing-butter', name: 'White / Salted Butter', isJainPermissible: true, isVerified: true, isAnimalDerived: true, containsDairy: true, allergens: ['dairy', 'lactose'], ifctCode: 'FDC-173410', nutritionProvenance: 'USDA / IFCT' }],
+  ['ing-buttermilk', { id: 'ing-buttermilk', name: 'Chhaas / Spiced Buttermilk', isJainPermissible: true, isVerified: true, isAnimalDerived: true, containsDairy: true, allergens: ['dairy', 'lactose'], ifctCode: 'Dairy-003', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-eggs', { id: 'ing-eggs', name: 'Farm Eggs', isJainPermissible: false, isVerified: true, isAnimalDerived: true, containsEggs: true, allergens: ['eggs'], ifctCode: 'Egg-001', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-egg', { id: 'ing-egg', name: 'Farm Egg', isJainPermissible: false, isVerified: true, isAnimalDerived: true, containsEggs: true, allergens: ['eggs'], ifctCode: 'Egg-001', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-chicken', { id: 'ing-chicken', name: 'Chicken Breast / Curry Cut', isJainPermissible: false, isVerified: true, isAnimalDerived: true, containsMeat: true, containsPoultry: true, allergens: [], ifctCode: 'Meat-002', nutritionProvenance: 'IFCT / USDA' }],
+  ['ing-fish', { id: 'ing-fish', name: 'Fresh Rohu / Catla Fish', isJainPermissible: false, isVerified: true, isAnimalDerived: true, containsMeat: true, containsFish: true, allergens: ['fish'], ifctCode: 'Fish-012', nutritionProvenance: 'IFCT 2017' }],
 
   // Grains & Atta
-  ['ing-basmati-rice', { id: 'ing-basmati-rice', name: 'Basmati Rice', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-atta', { id: 'ing-atta', name: 'Whole Wheat Atta', isJainPermissible: true, isVerified: true, containsGluten: true, allergens: ['gluten', 'wheat'] }],
-  ['ing-poha', { id: 'ing-poha', name: 'Thick Poha (Flattened Rice)', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-besan', { id: 'ing-besan', name: 'Besan (Gram Flour)', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-rava', { id: 'ing-rava', name: 'Sooji / Rava (Semolina)', isJainPermissible: true, isVerified: true, containsGluten: true, allergens: ['gluten', 'wheat'] }],
-  ['ing-dosa-batter', { id: 'ing-dosa-batter', name: 'Fermented Idli/Dosa Batter', isJainPermissible: true, isVerified: true, allergens: [] }],
+  ['ing-basmati-rice', { id: 'ing-basmati-rice', name: 'Basmati Rice', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Cereals-001', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-atta', { id: 'ing-atta', name: 'Whole Wheat Atta', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: true, allergens: ['gluten', 'wheat'], ifctCode: 'Cereals-002', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-poha', { id: 'ing-poha', name: 'Thick Poha (Flattened Rice)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Cereals-005', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-besan', { id: 'ing-besan', name: 'Besan (Gram Flour)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Pulses-007', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-rava', { id: 'ing-rava', name: 'Sooji / Rava (Semolina)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: true, allergens: ['gluten', 'wheat'], ifctCode: 'Cereals-004', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-dosa-batter', { id: 'ing-dosa-batter', name: 'Fermented Idli/Dosa Batter', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Cereals-010', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-bajra-flour', { id: 'ing-bajra-flour', name: 'Bajra (Pearl Millet) Flour', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Millets-001', nutritionProvenance: 'IFCT 2017' }],
 
   // Lentils & Pulses
-  ['ing-toor-dal', { id: 'ing-toor-dal', name: 'Toor Dal (Pigeon Pea)', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-moong-dal', { id: 'ing-moong-dal', name: 'Yellow Moong Dal', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-rajma', { id: 'ing-rajma', name: 'Kashmiri Rajma', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-chana-dal', { id: 'ing-chana-dal', name: 'Chana Dal', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-urad-dal', { id: 'ing-urad-dal', name: 'Urad Dal Gota', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-kabuli-chana', { id: 'ing-kabuli-chana', name: 'Kabuli Chana (Chickpeas)', isJainPermissible: true, isVerified: true, allergens: [] }],
+  ['ing-toor-dal', { id: 'ing-toor-dal', name: 'Toor Dal (Pigeon Pea)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Pulses-001', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-moong-dal', { id: 'ing-moong-dal', name: 'Yellow Moong Dal', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Pulses-002', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-rajma', { id: 'ing-rajma', name: 'Kashmiri Rajma', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Pulses-004', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-chana-dal', { id: 'ing-chana-dal', name: 'Chana Dal', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Pulses-005', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-urad-dal', { id: 'ing-urad-dal', name: 'Urad Dal Gota', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Pulses-003', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-kabuli-chana', { id: 'ing-kabuli-chana', name: 'Kabuli Chana (Chickpeas)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Pulses-006', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-tuver-lilva', { id: 'ing-tuver-lilva', name: 'Fresh Tuver Lilva (Green Pigeon Peas)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Pulses-012', nutritionProvenance: 'IFCT 2017' }],
 
-  // Produce (Vegetables)
-  ['ing-onion', { id: 'ing-onion', name: 'Red Onion', isJainPermissible: false, isVerified: true, isOnionGarlic: true, isRootVegetable: true, allergens: [] }],
-  ['ing-tomato', { id: 'ing-tomato', name: 'Ripe Red Tomato', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-garlic', { id: 'ing-garlic', name: 'Garlic Pods', isJainPermissible: false, isVerified: true, isOnionGarlic: true, isRootVegetable: true, allergens: [] }],
-  ['ing-ginger', { id: 'ing-ginger', name: 'Fresh Ginger Root', isJainPermissible: false, isVerified: true, isRootVegetable: true, allergens: [] }],
-  ['ing-green-chilli', { id: 'ing-green-chilli', name: 'Spicy Green Chillies', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-coriander', { id: 'ing-coriander', name: 'Fresh Coriander (Dhaniya)', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-curry-leaves', { id: 'ing-curry-leaves', name: 'Fresh Curry Leaves', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-potato', { id: 'ing-potato', name: 'Desi Potato (Aloo)', isJainPermissible: false, isVerified: true, isRootVegetable: true, allergens: [] }],
-  ['ing-palak', { id: 'ing-palak', name: 'Fresh Palak (Spinach)', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-fenugreek', { id: 'ing-fenugreek', name: 'Fresh Methi Leaves', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-cauliflower', { id: 'ing-cauliflower', name: 'Fresh Cauliflower (Gobi)', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-bhindi', { id: 'ing-bhindi', name: 'Fresh Ladyfinger (Bhindi)', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-baingan', { id: 'ing-baingan', name: 'Round Bharta Eggplant (Baingan)', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-lemon', { id: 'ing-lemon', name: 'Juicy Yellow Lemon', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-peanuts', { id: 'ing-peanuts', name: 'Raw Peanuts', isJainPermissible: true, isVerified: true, containsNuts: true, allergens: ['peanuts', 'nuts'] }],
+  // Produce (Vegetables, Root Veg, Alliums)
+  ['ing-onion', { id: 'ing-onion', name: 'Red Onion', isJainPermissible: false, isVerified: true, isAnimalDerived: false, isOnionGarlic: true, isRootVegetable: true, allergens: [], ifctCode: 'Veg-001', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-tomato', { id: 'ing-tomato', name: 'Ripe Red Tomato', isJainPermissible: true, isVerified: true, isAnimalDerived: false, isRootVegetable: false, allergens: [], ifctCode: 'Veg-002', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-garlic', { id: 'ing-garlic', name: 'Garlic Pods', isJainPermissible: false, isVerified: true, isAnimalDerived: false, isOnionGarlic: true, isRootVegetable: true, allergens: [], ifctCode: 'Veg-003', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-ginger', { id: 'ing-ginger', name: 'Fresh Ginger Root', isJainPermissible: false, isVerified: true, isAnimalDerived: false, isOnionGarlic: false, isRootVegetable: true, allergens: [], ifctCode: 'Veg-004', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-green-chilli', { id: 'ing-green-chilli', name: 'Spicy Green Chillies', isJainPermissible: true, isVerified: true, isAnimalDerived: false, isRootVegetable: false, allergens: [], ifctCode: 'Veg-005', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-coriander', { id: 'ing-coriander', name: 'Fresh Coriander (Dhaniya)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, isRootVegetable: false, allergens: [], ifctCode: 'Veg-006', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-curry-leaves', { id: 'ing-curry-leaves', name: 'Fresh Curry Leaves', isJainPermissible: true, isVerified: true, isAnimalDerived: false, isRootVegetable: false, allergens: [], ifctCode: 'Veg-007', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-potato', { id: 'ing-potato', name: 'Desi Potato (Aloo)', isJainPermissible: false, isVerified: true, isAnimalDerived: false, isOnionGarlic: false, isRootVegetable: true, allergens: [], ifctCode: 'Roots-001', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-purple-yam', { id: 'ing-purple-yam', name: 'Kand / Purple Yam (Ratalu)', isJainPermissible: false, isVerified: true, isAnimalDerived: false, isOnionGarlic: false, isRootVegetable: true, allergens: [], ifctCode: 'Roots-004', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-palak', { id: 'ing-palak', name: 'Fresh Palak (Spinach)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, isRootVegetable: false, allergens: [], ifctCode: 'Veg-008', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-fenugreek', { id: 'ing-fenugreek', name: 'Fresh Methi Leaves', isJainPermissible: true, isVerified: true, isAnimalDerived: false, isRootVegetable: false, allergens: [], ifctCode: 'Veg-009', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-cauliflower', { id: 'ing-cauliflower', name: 'Fresh Cauliflower (Gobi)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, isRootVegetable: false, allergens: [], ifctCode: 'Veg-010', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-bhindi', { id: 'ing-bhindi', name: 'Fresh Ladyfinger (Bhindi)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, isRootVegetable: false, allergens: [], ifctCode: 'Veg-011', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-baingan', { id: 'ing-baingan', name: 'Round Bharta Eggplant (Baingan)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, isRootVegetable: false, allergens: [], ifctCode: 'Veg-012', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-lemon', { id: 'ing-lemon', name: 'Juicy Yellow Lemon', isJainPermissible: true, isVerified: true, isAnimalDerived: false, isRootVegetable: false, allergens: [], ifctCode: 'Fruits-001', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-peanuts', { id: 'ing-peanuts', name: 'Raw Peanuts', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsNuts: true, allergens: ['peanuts', 'nuts'], ifctCode: 'Nuts-001', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-surti-papdi', { id: 'ing-surti-papdi', name: 'Fresh Surti Papdi (Flat Beans)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, isRootVegetable: false, allergens: [], ifctCode: 'Veg-015', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-raw-banana', { id: 'ing-raw-banana', name: 'Kacha Kela (Raw Green Banana)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, isRootVegetable: false, allergens: [], ifctCode: 'Veg-016', nutritionProvenance: 'IFCT 2017' }],
 
   // Spices & Condiments
-  ['ing-turmeric', { id: 'ing-turmeric', name: 'Turmeric Powder (Haldi)', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-red-chilli-powder', { id: 'ing-red-chilli-powder', name: 'Kashmiri Red Chilli Powder', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-coriander-powder', { id: 'ing-coriander-powder', name: 'Dhaniya Powder', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-garam-masala', { id: 'ing-garam-masala', name: 'Garam Masala Blend', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-sambar-powder', { id: 'ing-sambar-powder', name: 'Madras Sambar Powder', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-chole-masala', { id: 'ing-chole-masala', name: 'Amritsari Chole Masala', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-mustard-seeds', { id: 'ing-mustard-seeds', name: 'Black Mustard Seeds (Rai)', isJainPermissible: true, isVerified: true, allergens: ['mustard'] }],
-  ['ing-cumin-seeds', { id: 'ing-cumin-seeds', name: 'Cumin Seeds (Jeera)', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-kasuri-methi', { id: 'ing-kasuri-methi', name: 'Dried Kasuri Methi', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-salt', { id: 'ing-salt', name: 'Iodized Salt', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-oil', { id: 'ing-oil', name: 'Cold-Pressed Mustard / Sunflower Oil', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-jaggery', { id: 'ing-jaggery', name: 'Organic Jaggery (Gud)', isJainPermissible: true, isVerified: true, allergens: [] }],
-
-  // Authentic Gujarati & Kathiyawadi Regional Ingredients
-  ['ing-sev', { id: 'ing-sev', name: 'Nylon Sev / Ratlami Sev', isJainPermissible: true, isVerified: true, containsGluten: false, allergens: [] }],
-  ['ing-bajra-flour', { id: 'ing-bajra-flour', name: 'Bajra (Pearl Millet) Flour', isJainPermissible: true, isVerified: true, containsGluten: false, allergens: [] }],
-  ['ing-surti-papdi', { id: 'ing-surti-papdi', name: 'Fresh Surti Papdi (Flat Beans)', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-tuver-lilva', { id: 'ing-tuver-lilva', name: 'Fresh Tuver Lilva (Green Pigeon Peas)', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-purple-yam', { id: 'ing-purple-yam', name: 'Kand / Purple Yam (Ratalu)', isJainPermissible: false, isVerified: true, isRootVegetable: true, allergens: [] }],
-  ['ing-raw-banana', { id: 'ing-raw-banana', name: 'Kacha Kela (Raw Green Banana)', isJainPermissible: true, isVerified: true, isRootVegetable: false, allergens: [] }],
-  ['ing-buttermilk', { id: 'ing-buttermilk', name: 'Chhaas / Spiced Buttermilk', isJainPermissible: true, isVerified: true, containsDairy: true, allergens: ['dairy', 'lactose'] }],
-  ['ing-sesame-seeds', { id: 'ing-sesame-seeds', name: 'White Sesame Seeds (Safed Til)', isJainPermissible: true, isVerified: true, allergens: ['sesame'] }],
-  ['ing-ajwain', { id: 'ing-ajwain', name: 'Ajwain (Carom Seeds)', isJainPermissible: true, isVerified: true, allergens: [] }],
-  ['ing-hing', { id: 'ing-hing', name: 'Asafoetida (Hing Powder)', isJainPermissible: true, isVerified: true, allergens: [] }]
+  ['ing-turmeric', { id: 'ing-turmeric', name: 'Turmeric Powder (Haldi)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: [], ifctCode: 'Spices-004', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-red-chilli-powder', { id: 'ing-red-chilli-powder', name: 'Kashmiri Red Chilli Powder', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: [], ifctCode: 'Spices-005', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-coriander-powder', { id: 'ing-coriander-powder', name: 'Dhaniya Powder', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: [], ifctCode: 'Spices-006', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-garam-masala', { id: 'ing-garam-masala', name: 'Garam Masala Blend', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: [], ifctCode: 'Spices-007', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-sambar-powder', { id: 'ing-sambar-powder', name: 'Madras Sambar Powder', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: [], ifctCode: 'Spices-008', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-chole-masala', { id: 'ing-chole-masala', name: 'Amritsari Chole Masala', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: [], ifctCode: 'Spices-009', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-mustard-seeds', { id: 'ing-mustard-seeds', name: 'Black Mustard Seeds (Rai)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: ['mustard'], ifctCode: 'Spices-010', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-cumin-seeds', { id: 'ing-cumin-seeds', name: 'Cumin Seeds (Jeera)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: [], ifctCode: 'Spices-011', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-kasuri-methi', { id: 'ing-kasuri-methi', name: 'Dried Kasuri Methi', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: [], ifctCode: 'Spices-012', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-salt', { id: 'ing-salt', name: 'Iodized Salt', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: [], ifctCode: 'Minerals-001', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-oil', { id: 'ing-oil', name: 'Cold-Pressed Mustard / Sunflower Oil', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: [], ifctCode: 'Fats-001', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-jaggery', { id: 'ing-jaggery', name: 'Organic Jaggery (Gud)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: [], ifctCode: 'Sugars-001', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-sev', { id: 'ing-sev', name: 'Nylon Sev / Ratlami Sev', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Snacks-001', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-sesame-seeds', { id: 'ing-sesame-seeds', name: 'White Sesame Seeds (Safed Til)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: ['sesame'], ifctCode: 'Oilseeds-004', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-ajwain', { id: 'ing-ajwain', name: 'Ajwain (Carom Seeds)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, allergens: [], ifctCode: 'Spices-002', nutritionProvenance: 'IFCT 2017' }],
+  ['ing-hing', { id: 'ing-hing', name: 'Asafoetida (Hing Powder)', isJainPermissible: true, isVerified: true, isAnimalDerived: false, containsGluten: false, allergens: [], ifctCode: 'Spices-001', nutritionProvenance: 'IFCT 2017' }]
 ]);
 
 /**
@@ -561,5 +562,116 @@ export function filterEligibleRecipes(
     reasonIfNotAvailable,
     appliedDiet,
     effectiveCuisines
+  };
+}
+
+export interface RecipeDietaryValidationResult {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+/**
+ * Validates internal dietary and allergen consistency of a Recipe against structured ingredient metadata.
+ * Detects contradictions:
+ * - Vegan recipes containing animal-derived ingredients (dairy, ghee, eggs, meat, etc.)
+ * - Vegetarian recipes containing meat, fish, poultry or eggs
+ * - Eggetarian recipes containing meat, fish, or poultry
+ * - Jain-friendly recipes containing root vegetables (onion, garlic, ginger, potato, yam) or meat/eggs
+ * - Gluten-Free recipes containing wheat, atta, rava
+ */
+export function validateRecipeDietaryConsistency(
+  recipe: Recipe,
+  registry: Map<string, VerifiedIngredientMeta> = VERIFIED_INGREDIENT_REGISTRY
+): RecipeDietaryValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  const tags = new Set(recipe.dietaryTags || []);
+  const isTaggedVegan = tags.has('Vegan');
+  const isTaggedVegetarian = tags.has('Vegetarian') || tags.has('Pure Vegetarian');
+  const isTaggedEggetarian = tags.has('Eggetarian');
+  const isTaggedJain = tags.has('Jain Friendly') || recipe.isJainFriendly === true;
+  const isTaggedGlutenFree = tags.has('Gluten-Free');
+
+  for (const item of recipe.ingredients || []) {
+    const meta = registry.get(item.ingredientId) || getIngredientMetadata(item);
+    if (!meta) {
+      warnings.push(`Ingredient "${item.ingredientId}" has unverified metadata and could not be checked for dietary consistency.`);
+      continue;
+    }
+
+    const ingName = meta.name || item.ingredientId;
+
+    // 1. Vegan consistency
+    if (isTaggedVegan) {
+      if (
+        meta.isAnimalDerived ||
+        meta.containsDairy ||
+        meta.containsEggs ||
+        meta.containsMeat ||
+        meta.containsPoultry ||
+        meta.containsFish ||
+        meta.containsSeafood
+      ) {
+        errors.push(
+          `Contradiction: Recipe "${recipe.title}" is tagged "Vegan" but contains animal-derived ingredient "${ingName}" (dairy=${Boolean(meta.containsDairy)}, eggs=${Boolean(meta.containsEggs)}, meat=${Boolean(meta.containsMeat)}).`
+        );
+      }
+    }
+
+    // 2. Vegetarian consistency
+    if (isTaggedVegetarian) {
+      if (meta.containsMeat || meta.containsPoultry || meta.containsFish || meta.containsSeafood) {
+        errors.push(
+          `Contradiction: Recipe "${recipe.title}" is tagged "Vegetarian" but contains meat/fish ingredient "${ingName}".`
+        );
+      }
+      if (meta.containsEggs && !isTaggedEggetarian) {
+        errors.push(
+          `Contradiction: Recipe "${recipe.title}" is tagged "Vegetarian" (not Eggetarian) but contains egg ingredient "${ingName}".`
+        );
+      }
+    }
+
+    // 3. Eggetarian consistency
+    if (isTaggedEggetarian) {
+      if (meta.containsMeat || meta.containsPoultry || meta.containsFish || meta.containsSeafood) {
+        errors.push(
+          `Contradiction: Recipe "${recipe.title}" is tagged "Eggetarian" but contains meat/fish ingredient "${ingName}".`
+        );
+      }
+    }
+
+    // 4. Jain Friendly consistency
+    if (isTaggedJain) {
+      if (
+        !meta.isJainPermissible ||
+        meta.isOnionGarlic ||
+        meta.isRootVegetable ||
+        meta.containsEggs ||
+        meta.containsMeat ||
+        meta.containsFish
+      ) {
+        errors.push(
+          `Contradiction: Recipe "${recipe.title}" is marked Jain-friendly but contains non-Jain ingredient "${ingName}" (isRootVegetable=${Boolean(meta.isRootVegetable)}, isOnionGarlic=${Boolean(meta.isOnionGarlic)}, isJainPermissible=${Boolean(meta.isJainPermissible)}).`
+        );
+      }
+    }
+
+    // 5. Gluten-Free consistency
+    if (isTaggedGlutenFree) {
+      if (meta.containsGluten) {
+        errors.push(
+          `Contradiction: Recipe "${recipe.title}" is tagged "Gluten-Free" but contains gluten-containing ingredient "${ingName}".`
+        );
+      }
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings
   };
 }

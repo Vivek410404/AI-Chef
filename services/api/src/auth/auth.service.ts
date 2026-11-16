@@ -1,19 +1,58 @@
-import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ForbiddenException, OnModuleInit, Logger } from '@nestjs/common';
 import { StoreService } from '../data/store.service';
 import * as jwt from 'jsonwebtoken';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
+  private readonly logger = new Logger(AuthService.name);
   private readonly jwtSecret = process.env.JWT_SECRET || 'rasoi_iq_default_dev_secret_2026';
 
   constructor(private readonly store: StoreService) {}
 
   private static readonly revokedTokens = new Set<string>();
 
+  async onModuleInit() {
+    await this.loadRevokedTokensFromDatabase();
+  }
+
+  async loadRevokedTokensFromDatabase() {
+    if (!this.store.isPrismaConnected) return;
+    try {
+      const allRevoked = await this.store.prisma.revokedToken.findMany();
+      const now = new Date();
+      const activeRevoked = allRevoked.filter(item => !item.expiresAt || item.expiresAt > now);
+      for (const item of activeRevoked) {
+        AuthService.revokedTokens.add(item.token);
+      }
+      this.logger.log(`Loaded ${activeRevoked.length} persistent revoked tokens from PostgreSQL.`);
+    } catch (e: any) {
+      this.logger.warn(`Failed to preload revoked tokens from database: ${e.message}`);
+    }
+  }
+
   async logout(authHeader?: string) {
     if (authHeader) {
       const cleanToken = authHeader.replace(/^Bearer\s+/i, '').trim();
       AuthService.revokedTokens.add(cleanToken);
+
+      if (this.store.isPrismaConnected) {
+        try {
+          const decoded: any = jwt.decode(cleanToken);
+          const expiresAt = decoded?.exp ? new Date(decoded.exp * 1000) : null;
+          await this.store.prisma.revokedToken.upsert({
+            where: { token: cleanToken },
+            create: {
+              token: cleanToken,
+              reason: 'User logout',
+              revokedAt: new Date(),
+              expiresAt
+            },
+            update: {}
+          });
+        } catch (dbErr: any) {
+          this.logger.warn(`Failed to persist revoked token to PostgreSQL: ${dbErr.message}`);
+        }
+      }
     }
     return { success: true, message: 'Logged out successfully. Token revoked.' };
   }
@@ -101,6 +140,19 @@ export class AuthService {
     const cleanToken = token.replace(/^Bearer\s+/i, '').trim();
     if (AuthService.revokedTokens.has(cleanToken)) {
       throw new UnauthorizedException('Token has been revoked. Please sign in again.');
+    }
+    if (this.store.isPrismaConnected) {
+      try {
+        const found = await this.store.prisma.revokedToken.findUnique({
+          where: { token: cleanToken }
+        });
+        if (found) {
+          AuthService.revokedTokens.add(cleanToken);
+          throw new UnauthorizedException('Token has been revoked. Please sign in again.');
+        }
+      } catch (dbCheckErr: any) {
+        if (dbCheckErr instanceof UnauthorizedException) throw dbCheckErr;
+      }
     }
     try {
       const decoded: any = jwt.verify(cleanToken, this.jwtSecret);

@@ -268,7 +268,7 @@ async function run() {
   }
 
   // Verify Jain suitability of Bajra Rotlo and Kadhi
-  const rotlo = recipes.find(r => r.id === 'recipe-bajra-no-rotlo');
+  const rotlo = recipes.find(r => r.id === 'recipe-bajra-no-rotlo-vegan') || recipes.find(r => r.id === 'recipe-bajra-no-rotlo');
   assert(rotlo?.dietaryTags?.includes('Jain Friendly') && rotlo?.dietaryTags?.includes('Vegan'), 'Bajra No Rotlo is marked strictly Jain-suitable and Vegan');
 
   const undhiyu = recipes.find(r => r.id === 'recipe-surati-undhiyu');
