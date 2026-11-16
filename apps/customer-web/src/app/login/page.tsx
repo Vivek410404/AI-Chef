@@ -20,6 +20,7 @@ function LoginForm() {
   const [isSuspended, setIsSuspended] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [devVerificationLink, setDevVerificationLink] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [justLoggedOut, setJustLoggedOut] = useState(false);
 
@@ -59,8 +60,18 @@ function LoginForm() {
         setIsSuspended(true);
         setError('Your account has been suspended by platform administration. Access is restricted.');
       } else if (cleanMsg.toLowerCase().includes('verify') || cleanMsg.toLowerCase().includes('verification')) {
-        setUnverifiedEmail(email.trim());
-        setError('Email address has not been verified. Please check your inbox or resend the link.');
+        const unverified = email.trim();
+        setUnverifiedEmail(unverified);
+        setError('Email address has not been verified. In local development, emails are captured in the local inbox.');
+        // Attempt to fetch local dev link
+        fetch(`/api/dev/emails?email=${encodeURIComponent(unverified)}`)
+          .then(r => r.json())
+          .then(data => {
+            if (data && data[0]?.link) {
+              setDevVerificationLink(data[0].link);
+            }
+          })
+          .catch(() => {});
       } else if (cleanMsg.toLowerCase().includes('credentials') || rawMsg.includes('401')) {
         setError('Invalid email or password. Please verify your credentials and try again.');
       } else {
@@ -75,7 +86,15 @@ function LoginForm() {
     if (!unverifiedEmail) return;
     try {
       await api.resendVerification(unverifiedEmail);
-      setResendStatus('Verification link resent. Please check your email inbox.');
+      setResendStatus('Verification link generated.');
+      fetch(`/api/dev/emails?email=${encodeURIComponent(unverifiedEmail)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data && data[0]?.link) {
+            setDevVerificationLink(data[0].link);
+          }
+        })
+        .catch(() => {});
     } catch {
       setResendStatus('Failed to resend verification link. Please try again.');
     }
@@ -144,6 +163,20 @@ function LoginForm() {
                 )}
                 {resendStatus && (
                   <p className="mt-1 text-xs text-forest-700 font-semibold">{resendStatus}</p>
+                )}
+                {devVerificationLink && (
+                  <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900">
+                    <p className="font-bold mb-1">🛠️ Local Development Verification Link:</p>
+                    <p className="text-stone-600 mb-2">
+                      Because local dev has no external SMTP configured, emails are captured locally.
+                    </p>
+                    <a
+                      href={devVerificationLink}
+                      className="inline-flex items-center gap-1 font-bold text-forest-800 bg-amber-200/80 hover:bg-amber-300 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      Click here to verify {unverifiedEmail} now &rarr;
+                    </a>
+                  </div>
                 )}
               </div>
             </div>

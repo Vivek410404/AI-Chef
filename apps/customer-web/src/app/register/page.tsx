@@ -57,6 +57,15 @@ export default function RegisterPage() {
       if (res?.emailPreviewUrl) {
         setEmailPreviewUrl(res.emailPreviewUrl);
       }
+      // Also fetch direct dev link from dev emails endpoint
+      fetch(`/api/dev/emails?email=${encodeURIComponent(email.trim().toLowerCase())}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data && data[0]?.link) {
+            setEmailPreviewUrl(data[0].link);
+          }
+        })
+        .catch(() => {});
     } catch (err: any) {
       setError(err.message?.replace(/^API \d+:\s*/, '') || 'Registration failed');
     } finally {
@@ -97,16 +106,22 @@ export default function RegisterPage() {
               </p>
 
               {emailPreviewUrl && (
-                <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900">
-                  <span className="font-bold">Development Mode:</span> View the verification link in the{' '}
-                  <a
-                    href="http://localhost:4000/api/dev/emails"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline font-bold text-forest-800 hover:text-forest-900"
-                  >
-                    Local Dev Mail Inbox
-                  </a>
+                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 text-left space-y-2">
+                  <p className="font-bold text-sm text-forest-950 flex items-center gap-1.5">
+                    <span>🛠️ Local Development Mode</span>
+                  </p>
+                  <p className="text-stone-600">
+                    Because this environment operates locally with ₹0 budget, outgoing emails are captured locally instead of sending to real inboxes.
+                  </p>
+                  <div className="pt-1">
+                    <a
+                      href={emailPreviewUrl}
+                      className="inline-flex items-center gap-1.5 font-bold text-white bg-forest-700 hover:bg-forest-800 px-4 py-2 rounded-xl transition-all shadow-sm"
+                    >
+                      <span>Verify Account Instantly</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </a>
+                  </div>
                 </div>
               )}
 
