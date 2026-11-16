@@ -744,6 +744,35 @@ export default function HomePage() {
     }
   };
 
+  const handleSwitchHousehold = async (targetHouseholdId: string) => {
+    try {
+      const email = targetHouseholdId === 'hh-patel-family'
+        ? 'ramesh@patel.in'
+        : targetHouseholdId === 'hh-mehta-family'
+        ? 'kirit@mehta.in'
+        : 'pooja@sharma.in';
+      await api.login(email);
+      const [recs, plan, hh, pnt, ords] = await Promise.all([
+        api.getRecipes(),
+        api.getCurrentPlan(),
+        api.getHousehold(),
+        api.getPantry(),
+        api.getOrders().catch(() => [])
+      ]);
+      setRecipes(recs);
+      setMealPlanItems(plan);
+      setHousehold(hh);
+      setPantryItems(pnt);
+      setOrders(ords || []);
+      const bkt = await api.getBasket();
+      setBasket(bkt);
+      const reqs = await api.getRequirements();
+      setRequirements(reqs);
+    } catch (e: any) {
+      console.error('Failed to switch household session:', e);
+    }
+  };
+
   const basketCount = basket ? basket.items.filter(i => i.isSelectedForPurchase).length : 0;
 
   return (
@@ -755,6 +784,7 @@ export default function HomePage() {
         setActiveTab={changeTab}
         onOpenAiPlanner={() => setIsAiModalOpen(true)}
         onOpenHousehold={() => setIsHouseholdModalOpen(true)}
+        onSwitchHousehold={handleSwitchHousehold}
         basketCount={basketCount}
         household={household}
       />

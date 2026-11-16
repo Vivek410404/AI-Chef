@@ -13,7 +13,9 @@ const suites = [
   { name: 'test-rbac-and-security.mjs', category: 'RBAC, Security & Idempotency' },
   { name: 'test-phase4-pilot-foundation.mjs', category: 'Phase 4 Pilot Foundation' },
   { name: 'test-phase41-postgres-and-pilot.mjs', category: 'Phase 4.1 PostgreSQL & Pilot Security' },
-  { name: 'test-phase42-safety-and-recipes.mjs', category: 'Phase 4.2 Safety, Recipe Integrity & Provenance' }
+  { name: 'test-phase42-safety-and-recipes.mjs', category: 'Phase 4.2 Safety, Recipe Integrity & Provenance' },
+  { name: 'test-phase43-household-simulation.mjs', category: 'Phase 4.3 Multi-Household Simulation & IDOR' },
+  { name: 'verify-backup-restore.mjs', category: 'Phase 4.3 Database Backup & Restored Parity' }
 ];
 
 console.log('========================================================================');

@@ -57,9 +57,8 @@ export function MaharajDigestModal({
     async function loadSummary() {
       setIsLoading(true);
       try {
-        const res = await fetch(`http://localhost:4000/api/meal-plans/maharaj-summary?day=${targetDay}&householdId=${household?.id || 'hh-sharma-family'}`);
-        if (res.ok) {
-          const data = await res.json();
+        const data = await api.getMaharajSummary(targetDay, household?.id || 'hh-sharma-family');
+        if (data) {
           setSummary(data);
         } else {
           // Compute fallback locally from planItems

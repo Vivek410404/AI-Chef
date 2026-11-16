@@ -110,7 +110,8 @@ export class AuthService implements OnModuleInit {
       fullName: role === 'ADMIN' ? 'Platform Administrator' : role === 'RETAILER' ? 'Retail Partner Manager' : fullName,
       role,
       householdId,
-      retailerId
+      retailerId,
+      jti: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
     };
 
     const token = jwt.sign(user, this.jwtSecret, { expiresIn: '7d' });
@@ -121,14 +122,27 @@ export class AuthService implements OnModuleInit {
     };
   }
 
-  async login(email: string, _pass: string) {
-    if (email === 'demo@rasoiiq.in' || email === 'pooja@sharma.in') {
-      return this.createDemoSession();
+  async login(email: string, _pass?: string) {
+    const cleanEmail = (email || 'demo@rasoiiq.in').toLowerCase().trim();
+    if (cleanEmail === 'demo@rasoiiq.in' || cleanEmail.includes('sharma') || cleanEmail === 'pooja@sharma.in') {
+      return this.createDemoSession('CUSTOMER', { email: cleanEmail, householdId: 'hh-sharma-family', userId: 'user-demo-1' });
+    }
+    if (cleanEmail.includes('patel') || cleanEmail === 'ramesh@patel.in') {
+      return this.createDemoSession('CUSTOMER', { email: cleanEmail, householdId: 'hh-patel-family', userId: 'user-demo-patel' });
+    }
+    if (cleanEmail.includes('mehta') || cleanEmail === 'kirit@mehta.in') {
+      return this.createDemoSession('CUSTOMER', { email: cleanEmail, householdId: 'hh-mehta-family', userId: 'user-demo-mehta' });
+    }
+    if (cleanEmail.includes('admin')) {
+      return this.createDemoSession('ADMIN', { email: cleanEmail });
+    }
+    if (cleanEmail.includes('blinkit') || cleanEmail.includes('retailer')) {
+      return this.createDemoSession('RETAILER', { email: cleanEmail });
     }
     const user = {
       id: `user-${Date.now()}`,
-      email,
-      fullName: email.split('@')[0],
+      email: cleanEmail,
+      fullName: cleanEmail.split('@')[0],
       role: 'CUSTOMER',
       householdId: 'hh-sharma-family'
     };

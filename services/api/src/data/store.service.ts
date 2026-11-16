@@ -74,15 +74,29 @@ export class StoreService implements OnModuleInit {
       return;
     }
 
-    try {
-      await this.prisma.$connect();
-      this.isPrismaConnected = true;
-      this.logger.log(' Connected to PostgreSQL database via Prisma.');
-      await this.syncFromDatabase();
-    } catch (err: any) {
+    let connected = false;
+    let lastErr: any = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await this.prisma.$connect();
+        this.isPrismaConnected = true;
+        this.logger.log(' Connected to PostgreSQL database via Prisma.');
+        await this.syncFromDatabase();
+        connected = true;
+        break;
+      } catch (err: any) {
+        lastErr = err;
+        if (attempt < 3) {
+          this.logger.warn(`Prisma connect attempt ${attempt} failed (${err.message}). Retrying in 1s...`);
+          await new Promise(r => setTimeout(r, 1000));
+        }
+      }
+    }
+
+    if (!connected) {
       this.isPrismaConnected = false;
       if (isExplicitPostgres) {
-        const errorMsg = `CRITICAL: PostgreSQL is required by configuration (STORAGE_MODE=${storageMode}, REQUIRE_DATABASE=${process.env.REQUIRE_DATABASE}), but connection failed: ${err.message}. Startup halted.`;
+        const errorMsg = `CRITICAL: PostgreSQL is required by configuration (STORAGE_MODE=${storageMode}, REQUIRE_DATABASE=${process.env.REQUIRE_DATABASE}), but connection failed: ${lastErr?.message}. Startup halted.`;
         this.logger.error(errorMsg);
         throw new Error(errorMsg);
       }

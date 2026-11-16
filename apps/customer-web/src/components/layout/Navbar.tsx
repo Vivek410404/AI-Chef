@@ -9,6 +9,7 @@ interface NavbarProps {
   setActiveTab: (tab: 'landing' | 'dashboard' | 'planner' | 'recipes' | 'basket' | 'pantry' | 'retailer-admin') => void;
   onOpenAiPlanner: () => void;
   onOpenHousehold: () => void;
+  onSwitchHousehold?: (householdId: string) => void;
   basketCount: number;
   household?: Household | null;
 }
@@ -18,6 +19,7 @@ export function Navbar({
   setActiveTab,
   onOpenAiPlanner,
   onOpenHousehold,
+  onSwitchHousehold,
   basketCount,
   household
 }: NavbarProps) {
@@ -126,17 +128,60 @@ export function Navbar({
             <span className="sm:hidden">AI Chef</span>
           </button>
 
-          {/* Household Profile Button */}
-          <button
-            onClick={onOpenHousehold}
-            className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 rounded-xl bg-surface border border-cream-300 text-stone-700 hover:border-forest-500 transition-colors"
-            title="Configure Family Preferences"
-          >
-            <Users className="w-4 h-4 text-forest-700" />
-            <span className="text-xs font-semibold hidden lg:inline">
-              {household?.name || 'Sharma Family'} ({household?.members?.length || 4})
-            </span>
-          </button>
+          {/* Household Profile Button & Pilot Switcher */}
+          <div className="relative group">
+            <button
+              onClick={onOpenHousehold}
+              className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 rounded-xl bg-surface border border-cream-300 text-stone-700 hover:border-forest-500 transition-colors"
+              title="Configure Family Preferences"
+            >
+              <Users className="w-4 h-4 text-forest-700" />
+              <span className="text-xs font-semibold hidden lg:inline">
+                {household?.name || 'Sharma Family'} ({household?.members?.length || 4})
+              </span>
+            </button>
+            {onSwitchHousehold && (
+              <div className="hidden group-hover:block absolute right-0 top-full mt-1 w-64 bg-surface rounded-2xl shadow-elevated border border-cream-300 p-2 z-50">
+                <p className="text-[10px] uppercase font-bold text-stone-500 px-2 py-1 tracking-wider">Pilot Household Accounts</p>
+                <button
+                  onClick={() => onSwitchHousehold('hh-sharma-family')}
+                  className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors ${
+                    household?.id === 'hh-sharma-family' ? 'bg-forest-50 text-forest-900 font-bold border border-forest-200' : 'hover:bg-cream-100 text-stone-700'
+                  }`}
+                >
+                  <div>
+                    <p className="font-semibold">Sharma Family</p>
+                    <p className="text-[10px] text-stone-500">North Indian • Peanut Alert</p>
+                  </div>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">Veg</span>
+                </button>
+                <button
+                  onClick={() => onSwitchHousehold('hh-patel-family')}
+                  className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors mt-1 ${
+                    household?.id === 'hh-patel-family' ? 'bg-forest-50 text-forest-900 font-bold border border-forest-200' : 'hover:bg-cream-100 text-stone-700'
+                  }`}
+                >
+                  <div>
+                    <p className="font-semibold">Patel Family</p>
+                    <p className="text-[10px] text-stone-500">Gujarati • Kathiyawadi</p>
+                  </div>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">Jain</span>
+                </button>
+                <button
+                  onClick={() => onSwitchHousehold('hh-mehta-family')}
+                  className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors mt-1 ${
+                    household?.id === 'hh-mehta-family' ? 'bg-forest-50 text-forest-900 font-bold border border-forest-200' : 'hover:bg-cream-100 text-stone-700'
+                  }`}
+                >
+                  <div>
+                    <p className="font-semibold">Mehta Family</p>
+                    <p className="text-[10px] text-stone-500">Mumbai • Strict Zero Root</p>
+                  </div>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Strict Jain</span>
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Partner & Admin Switcher */}
           <button

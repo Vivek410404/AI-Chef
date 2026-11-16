@@ -9,6 +9,7 @@ import { GroceryModule } from './grocery/grocery.module';
 import { PantryModule } from './pantry/pantry.module';
 import { MarketplaceModule } from './marketplace/marketplace.module';
 import { AiModule } from './ai/ai.module';
+import { HealthModule } from './health/health.module';
 
 @Global()
 @Module({
@@ -31,7 +32,8 @@ export class StoreModule {}
     GroceryModule,
     PantryModule,
     MarketplaceModule,
-    AiModule
+    AiModule,
+    HealthModule
   ]
 })
 export class AppModule {}

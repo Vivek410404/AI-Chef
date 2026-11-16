@@ -13,15 +13,30 @@ import {
   MealCategory
 } from '@rasoi/shared-types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (typeof window !== 'undefined') {
+    // When accessed from LAN IP or second device, use relative /api proxy
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return '/api';
+    }
+  }
+  return 'http://localhost:4000/api';
+}
 
 async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}${endpoint}`;
   try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('rasoi_auth_token') : null;
+    const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
     const res = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        ...authHeaders,
         ...(options?.headers || {})
       }
     });
@@ -40,8 +55,50 @@ async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T>
 
 export const api = {
   // Auth
-  async getDemoSession() {
-    return fetchJson<{ token: string; user: any }>('/auth/demo-session', { method: 'POST' });
+  async getDemoSession(role: 'CUSTOMER' | 'RETAILER' | 'ADMIN' = 'CUSTOMER', body?: any) {
+    const res = await fetchJson<{ token: string; user: any }>('/auth/demo-session', {
+      method: 'POST',
+      body: JSON.stringify({ role, ...(body || {}) })
+    });
+    if (res?.token && typeof window !== 'undefined') {
+      localStorage.setItem('rasoi_auth_token', res.token);
+    }
+    return res;
+  },
+
+  async login(email: string, password?: string) {
+    const res = await fetchJson<{ token: string; user: any }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+    if (res?.token && typeof window !== 'undefined') {
+      localStorage.setItem('rasoi_auth_token', res.token);
+    }
+    return res;
+  },
+
+  async logout() {
+    try {
+      await fetchJson<{ success: boolean }>('/auth/logout', { method: 'POST' });
+    } catch {
+      // Ignore network failure on logout
+    } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('rasoi_auth_token');
+      }
+    }
+  },
+
+  getAuthToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('rasoi_auth_token');
+    }
+    return null;
+  },
+
+  // Health
+  async getHealth() {
+    return fetchJson<any>('/health');
   },
 
   // Household
@@ -107,6 +164,11 @@ export const api = {
     return fetchJson<{ success: boolean }>('/meal-plans/clear', {
       method: 'POST'
     });
+  },
+
+  async getMaharajSummary(day: DayOfWeek = 'monday', householdId?: string): Promise<any> {
+    const query = new URLSearchParams({ day, ...(householdId ? { householdId } : {}) });
+    return fetchJson<any>(`/meal-plans/maharaj-summary?${query.toString()}`);
   },
 
   // Grocery & Basket
