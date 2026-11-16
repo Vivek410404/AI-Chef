@@ -64,7 +64,7 @@ export class AuditService {
             validUserId = userExists.id;
           } else {
             // Check if userId was passed as email
-            const userByEmail = await this.store.prisma.user.findFirst({
+            const userByEmail = await (this.store.prisma.user as any).findFirst({
               where: {
                 OR: [
                   { email: params.userId.toLowerCase() },
