@@ -1525,7 +1525,7 @@ export class AdminService {
 
     const email = dto.email.toLowerCase().trim();
     const existing = await this.store.prisma.user.findFirst({
-      where: { OR: [{ email }, { normalizedEmail: email }] }
+      where: ({ OR: [{ email }, { normalizedEmail: email }] } as any)
     });
 
     if (existing) {
@@ -1536,7 +1536,7 @@ export class AdminService {
     const passwordHash = await this.passwordService.hash(dto.password);
 
     const user = await this.store.prisma.user.create({
-      data: {
+      data: ({
         email,
         normalizedEmail: email,
         fullName: dto.fullName.trim(),
@@ -1544,7 +1544,7 @@ export class AdminService {
         status: 'ACTIVE',
         passwordHash,
         emailVerifiedAt: new Date()
-      },
+      } as any),
       select: {
         id: true,
         email: true,

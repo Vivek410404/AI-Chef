@@ -90,12 +90,12 @@ export class AuthService implements OnModuleInit {
 
     if (this.store.isPrismaConnected) {
       const existing = await this.store.prisma.user.findFirst({
-        where: {
+        where: ({
           OR: [
             { email: normalizedEmail },
             { normalizedEmail: normalizedEmail }
           ]
-        }
+        } as any)
       });
 
       // Prevent email enumeration: return consistent public message if already registered
@@ -110,7 +110,7 @@ export class AuthService implements OnModuleInit {
       const passwordHash = await this.passwordService.hash(dto.password);
       const phoneNumber = (dto.phoneNumber || dto.phone)?.trim() || null;
       const user = await this.store.prisma.user.create({
-        data: {
+        data: ({
           email: normalizedEmail,
           normalizedEmail,
           fullName: dto.fullName.trim(),
@@ -119,7 +119,7 @@ export class AuthService implements OnModuleInit {
           role: 'CUSTOMER',
           status: 'PENDING_VERIFICATION',
           emailVerifiedAt: null
-        }
+        } as any)
       });
 
       const rawToken = this.tokenService.generateRandomToken(32);
@@ -223,9 +223,9 @@ export class AuthService implements OnModuleInit {
 
     if (this.store.isPrismaConnected && normalizedEmail) {
       const user = await this.store.prisma.user.findFirst({
-        where: {
+        where: ({
           OR: [{ email: normalizedEmail }, { normalizedEmail }]
-        }
+        } as any)
       });
 
       if (user && user.status === 'PENDING_VERIFICATION') {
@@ -283,9 +283,9 @@ export class AuthService implements OnModuleInit {
 
     if (this.store.isPrismaConnected) {
       const user = await this.store.prisma.user.findFirst({
-        where: {
+        where: ({
           OR: [{ email: cleanEmail }, { normalizedEmail: cleanEmail }]
-        },
+        } as any),
         include: {
           householdMembers: {
             include: { household: true }
@@ -571,9 +571,9 @@ export class AuthService implements OnModuleInit {
 
     if (this.store.isPrismaConnected && normalizedEmail) {
       const user = await this.store.prisma.user.findFirst({
-        where: {
+        where: ({
           OR: [{ email: normalizedEmail }, { normalizedEmail }]
-        }
+        } as any)
       });
 
       if (user && user.status !== 'DELETED') {
@@ -864,12 +864,12 @@ export class AuthService implements OnModuleInit {
     if (this.store.isPrismaConnected && !options?.userId) {
       try {
         const existingDbUser = await this.store.prisma.user.findFirst({
-          where: {
+          where: ({
             OR: [
               { email: email.toLowerCase() },
               { normalizedEmail: email.toLowerCase() }
             ]
-          }
+          } as any)
         });
         if (existingDbUser) {
           defaultUserId = existingDbUser.id;
