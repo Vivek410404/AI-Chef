@@ -90,7 +90,7 @@ export class GeminiProvider implements IAiPlannerProvider {
     }
 
     const daysCount = prompt.daysCount || 7;
-    const servings = prompt.servingsPerMeal || 4;
+    const servings = prompt.servingsPerMeal || (prompt.members?.length || 1);
     const dietaryRestrictions = prompt.dietaryRestrictions || [];
     const isJain = dietaryRestrictions.includes('Jain Friendly') ||
       prompt.prompt?.toLowerCase().includes('jain');

@@ -90,6 +90,7 @@ export class MealPlansService {
 
   async applyAiPlan(householdId: string, aiMeals: AISuggestedMeal[]): Promise<MealPlanItem[]> {
     const newItems: MealPlanItem[] = [];
+    const defaultServings = this.store.households.get(householdId)?.members?.length || 1;
 
     for (const suggested of aiMeals) {
       const rec = this.store.recipes.find(r => r.id === suggested.recipeId);
@@ -102,7 +103,7 @@ export class MealPlansService {
         mealCategory: suggested.mealCategory,
         recipeId: rec.id,
         recipe: rec,
-        servings: suggested.servings || 4,
+        servings: suggested.servings || defaultServings,
         notes: suggested.reason
       };
       newItems.push(item);

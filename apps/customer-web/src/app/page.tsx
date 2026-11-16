@@ -393,7 +393,7 @@ export default function HomePage() {
           mealCategory: m.mealCategory,
           recipeId: r.id,
           recipe: r,
-          servings: m.servings || 4,
+          servings: m.servings || household?.members?.length || 1,
           notes: m.reason
         };
       });
@@ -893,6 +893,7 @@ export default function HomePage() {
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
         onApplyPlan={handleApplyAiPlan}
+        household={household}
       />
 
       <HouseholdModal

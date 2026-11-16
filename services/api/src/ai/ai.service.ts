@@ -32,9 +32,11 @@ export class AiService {
     // Combine recent recipe IDs to avoid immediate repeats
     const combinedRecent = Array.from(new Set([...activeRecipeIds, ...trimmedHistory]));
     
+    const defaultServings = prompt.servingsPerMeal || household?.members?.length || (household as any)?.size || 1;
     // Enrich prompt with household defaults (Default: Vegetarian + All Indian) and member restrictions
     const enrichedPrompt: AIPlanGenerationPrompt = {
       ...prompt,
+      servingsPerMeal: defaultServings,
       dietaryPreference: prompt.dietaryPreference || household?.dietaryPreference || 'VEGETARIAN',
       cuisinePreference: prompt.cuisinePreference || household?.cuisinePreference || 'ALL_INDIAN',
       cuisinePreferences: prompt.cuisinePreferences?.length

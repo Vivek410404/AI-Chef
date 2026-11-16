@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Sparkles, X, Check, Loader2, ShieldCheck, Flame, Clock, IndianRupee, Compass, UtensilsCrossed } from 'lucide-react';
-import { AIPlanGenerationResponse, DietaryPreference } from '@rasoi/shared-types';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, X, Check, Loader2, ShieldCheck, Flame, Clock, IndianRupee, Compass, UtensilsCrossed, Users, Minus, Plus } from 'lucide-react';
+import { AIPlanGenerationResponse, DietaryPreference, Household } from '@rasoi/shared-types';
 import { api } from '@/lib/api';
 import { formatInr } from '@/lib/utils';
 
@@ -10,6 +10,7 @@ interface AiPlannerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onApplyPlan: (response: AIPlanGenerationResponse) => void;
+  household?: Household | null;
 }
 
 const SAMPLE_PROMPTS = [
@@ -36,9 +37,10 @@ const CUISINE_OPTIONS = [
   { id: 'Central Indian', label: 'Central Indian', desc: 'Malwi & Bundelkhandi' }
 ];
 
-export function AiPlannerModal({ isOpen, onClose, onApplyPlan }: AiPlannerModalProps) {
+export function AiPlannerModal({ isOpen, onClose, onApplyPlan, household }: AiPlannerModalProps) {
   const [prompt, setPrompt] = useState('');
-  // Defaults: Vegetarian and All Indian Cuisines
+  const defaultServings = household?.members?.length || (household as any)?.size || 1;
+  const [servings, setServings] = useState<number>(defaultServings);
   const [dietaryPreference, setDietaryPreference] = useState<DietaryPreference>('VEGETARIAN');
   const [cuisinePreference, setCuisinePreference] = useState<string>('ALL_INDIAN');
   const [proteinFocus, setProteinFocus] = useState<'standard' | 'high-protein' | 'fiber-rich'>('standard');
@@ -46,22 +48,37 @@ export function AiPlannerModal({ isOpen, onClose, onApplyPlan }: AiPlannerModalP
   const [result, setResult] = useState<AIPlanGenerationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (household) {
+      if (household.members?.length) {
+        setServings(household.members.length);
+      }
+      if (household.dietaryPreference) {
+        setDietaryPreference(household.dietaryPreference as any);
+      }
+      if (household.cuisinePreference) {
+        setCuisinePreference(household.cuisinePreference);
+      }
+    }
+  }, [household, isOpen]);
+
   if (!isOpen) return null;
 
   const handleGenerate = async (customPrompt?: string) => {
-    const textToUse = customPrompt || prompt || `Weekly Indian meal plan matching ${dietaryPreference} and ${cuisinePreference}`;
+    const textToUse = customPrompt || prompt || `Weekly Indian meal plan matching ${dietaryPreference} and ${cuisinePreference} for ${servings} ${servings === 1 ? 'person' : 'people'}`;
     setIsLoading(true);
     setError(null);
     try {
       const data = await api.generateAiPlan({
         prompt: textToUse,
+        householdId: household?.id,
         daysCount: 7,
-        servingsPerMeal: 4,
+        servingsPerMeal: servings,
         dietaryPreference,
         cuisinePreference,
         cuisinePreferences: [cuisinePreference],
         proteinPreference: proteinFocus === 'high-protein' ? 'high-protein' : 'standard',
-        targetDailyProteinGrams: proteinFocus === 'high-protein' ? 75 : 60
+        targetDailyProteinGrams: proteinFocus === 'high-protein' ? (servings * 20) : (servings * 15)
       });
       setResult(data);
     } catch (err: any) {
@@ -99,6 +116,44 @@ export function AiPlannerModal({ isOpen, onClose, onApplyPlan }: AiPlannerModalP
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Servings & Household Size Selector */}
+        <div className="bg-cream-50/80 p-4 rounded-2xl border border-cream-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <label className="text-xs font-bold text-forest-900 flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-forest-700" />
+              <span>Servings Per Meal:</span>
+            </label>
+            <p className="text-[11px] text-stone-500">
+              {household?.members?.length
+                ? `Matched to ${household.name || 'your household'} (${household.members.length} member${household.members.length > 1 ? 's' : ''})`
+                : 'Plan meals tailored to your exact household size'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 bg-surface p-1.5 rounded-xl border border-cream-300 shadow-sm">
+            <button
+              type="button"
+              disabled={servings <= 1}
+              onClick={() => setServings(prev => Math.max(1, prev - 1))}
+              className="w-8 h-8 rounded-lg bg-cream-100 hover:bg-cream-200 text-stone-700 font-bold flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Decrease servings"
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </button>
+            <span className="w-20 text-center text-sm font-extrabold text-forest-950">
+              {servings} {servings === 1 ? 'Person' : 'People'}
+            </span>
+            <button
+              type="button"
+              disabled={servings >= 12}
+              onClick={() => setServings(prev => Math.min(12, prev + 1))}
+              className="w-8 h-8 rounded-lg bg-cream-100 hover:bg-cream-200 text-stone-700 font-bold flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Increase servings"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
         {/* Dietary Mode Selector */}

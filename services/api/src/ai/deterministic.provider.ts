@@ -50,7 +50,7 @@ export class DeterministicProvider implements IAiPlannerProvider {
     availableRecipes: Recipe[]
   ): Promise<AIPlanGenerationResponse> {
     const daysCount = prompt.daysCount || 7;
-    const servings = prompt.servingsPerMeal || 4;
+    const servings = prompt.servingsPerMeal || (prompt.members?.length || 1);
     const days: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].slice(
       0,
       daysCount
