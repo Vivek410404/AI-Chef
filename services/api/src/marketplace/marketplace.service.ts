@@ -124,7 +124,8 @@ export class MarketplaceService {
 
   async getOrders(currentUser?: any) {
     if (currentUser && currentUser.role === 'CUSTOMER') {
-      const userHouseholdId = currentUser.householdId || 'hh-sharma-family';
+      const userHouseholdId = currentUser.householdId;
+      if (!userHouseholdId) return [];
       return this.orders.filter(
         o => o.householdId === userHouseholdId || (o.userId === currentUser.id && !o.householdId)
       );
@@ -143,8 +144,8 @@ export class MarketplaceService {
     }
 
     if (currentUser && currentUser.role === 'CUSTOMER') {
-      const userHouseholdId = currentUser.householdId || 'hh-sharma-family';
-      if (order.householdId && order.householdId !== userHouseholdId) {
+      const userHouseholdId = currentUser.householdId;
+      if (!userHouseholdId || (order.householdId && order.householdId !== userHouseholdId)) {
         throw new ForbiddenException(`Access denied. Customer is not authorized to access orders of household "${order.householdId}".`);
       }
     }

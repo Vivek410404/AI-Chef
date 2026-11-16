@@ -30,7 +30,20 @@ export class GroceryController {
           }
           throw new ForbiddenException(`Access denied. Customer is not authorized to access household "${requestedHouseholdId}".`);
         }
-        return user.householdId || 'hh-sharma-family';
+        if (user.householdId) {
+          return user.householdId;
+        }
+        if (this.authService.store.isPrismaConnected) {
+          const userMem = await this.authService.store.prisma.householdMember.findFirst({
+            where: { userId: user.id || user.sub }
+          }) || await this.authService.store.prisma.household.findFirst({
+            where: { userId: user.id || user.sub }
+          });
+          if (userMem) {
+            return (userMem as any).householdId || userMem.id;
+          }
+        }
+        return `hh-${user.id || user.sub}`;
       }
       if (user.role === 'ADMIN') {
         return requestedHouseholdId || user.householdId || 'hh-sharma-family';

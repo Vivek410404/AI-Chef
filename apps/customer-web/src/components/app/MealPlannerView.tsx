@@ -144,7 +144,7 @@ export function MealPlannerView({
               onClick={onOpenHousehold}
               className="text-xs font-semibold text-stone-600 hover:text-forest-800 underline decoration-cream-400"
             >
-              • {household?.name || 'Sharma Family'} ({household?.members.length || 4} Members)
+              {household?.name ? `• ${household.name} (${household?.members?.length || 1} Members)` : ''}
             </button>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-forest-900 tracking-tight">

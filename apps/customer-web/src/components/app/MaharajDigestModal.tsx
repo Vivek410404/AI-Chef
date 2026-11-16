@@ -57,7 +57,7 @@ export function MaharajDigestModal({
     async function loadSummary() {
       setIsLoading(true);
       try {
-        const data = await api.getMaharajSummary(targetDay, household?.id || 'hh-sharma-family');
+        const data = await api.getMaharajSummary(targetDay, household?.id || 'my-household');
         if (data) {
           setSummary(data);
         } else {
@@ -114,8 +114,8 @@ export function MaharajDigestModal({
       });
 
       setSummary({
-        householdId: household?.id || 'hh-sharma-family',
-        householdName: household?.name || 'Sharma Family',
+        householdId: household?.id || 'my-household',
+        householdName: household?.name || 'My Kitchen',
         targetDay,
         totalServings: totalServings || 4,
         plannedMeals: dayMeals.map(m => ({
@@ -281,7 +281,7 @@ export function MaharajDigestModal({
             <div className="flex items-center gap-6 text-xs text-stone-600">
               <div className="flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-forest-700" />
-                <span><strong>{summary?.householdName || 'Sharma Family'}</strong> ({summary?.totalServings || 4} Servings)</span>
+                <span><strong>{summary?.householdName || 'My Kitchen'}</strong> ({summary?.totalServings || 2} Servings)</span>
               </div>
             </div>
           </div>

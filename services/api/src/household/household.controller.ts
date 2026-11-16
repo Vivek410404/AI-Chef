@@ -46,18 +46,37 @@ export class HouseholdController {
         throw new ForbiddenException(`Access denied. Internal staff role "${user.role}" cannot access household directly through customer endpoints.`);
       }
       if (user.role === 'CUSTOMER') {
+        const userId = user.id || user.sub;
         if (targetId && targetId !== 'me') {
           if (user.householdId && user.householdId === targetId) {
             return targetId;
           }
           // Verify if user is actually a member of targetId
-          const hasMembership = await this.householdService.getUserHouseholdRole(user.id || user.sub, targetId);
+          const hasMembership = await this.householdService.getUserHouseholdRole(userId, targetId);
           if (!hasMembership) {
             throw new ForbiddenException(`Access denied. Customer is not authorized to access household "${targetId}".`);
           }
           return targetId;
         }
-        return user.householdId || 'hh-sharma-family';
+
+        if (user.householdId) {
+          return user.householdId;
+        }
+
+        const userHouseholds = await this.householdService.getUserHouseholds(userId);
+        if (userHouseholds && userHouseholds.length > 0) {
+          return userHouseholds[0].id;
+        }
+
+        const newHh = await this.householdService.createHousehold({
+          name: `${user.fullName?.split(' ')[0] || 'My'}'s Kitchen`,
+          userId,
+          userFullName: user.fullName || 'Household Owner',
+          dietaryPreference: 'VEGETARIAN',
+          spiceTolerance: 'Medium',
+          weeklyBudgetInr: 3500
+        });
+        return newHh.id;
       }
       if (user.role === 'ADMIN') {
         return (targetId && targetId !== 'me') ? targetId : (user.householdId || 'hh-sharma-family');

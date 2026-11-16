@@ -113,14 +113,14 @@ export function CustomerDashboardView({
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-black text-forest-900 tracking-tight">
-            Namaste, {household?.name || 'Sharma Family'}! 👋
+            Namaste, {household?.name || 'Your Kitchen'}! 👋
           </h1>
           <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
             Welcome to your family food-tech companion. Plan meals with Gemini 3.5 Flash-Lite, track IFCT nutrition, and order smart grocery baskets across Blinkit, Zepto, DMart Ready, and BigBasket.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-stone-500 font-medium">
-            <span>Members: <strong className="text-forest-900">{household?.members.length || 4} People</strong></span>
+            <span>Members: <strong className="text-forest-900">{household?.members?.length || 1} {household?.members?.length === 1 ? 'Person' : 'People'}</strong></span>
             <span>•</span>
             <span>Weekly Budget: <strong className="text-forest-900">{formatInr(household?.weeklyBudgetInr || 3500)}</strong></span>
             <span>•</span>

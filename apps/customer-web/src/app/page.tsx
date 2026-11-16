@@ -284,7 +284,7 @@ export default function HomePage() {
       );
       setBasket({
         id: 'basket-local',
-        householdId: household?.id || 'hh-sharma-family',
+        householdId: household?.id || 'my-household',
         selectedRetailerId: basket?.selectedRetailerId || SEED_RETAILERS[0].id,
         items: bResult.items,
         subtotalInr: bResult.subtotalInr,
@@ -650,7 +650,7 @@ export default function HomePage() {
         };
         updated.push({
           id: `pantry-${Date.now()}`,
-          householdId: household?.id || 'hh-sharma-family',
+          householdId: household?.id || 'my-household',
           ingredientId,
           ingredient: ing as any,
           currentQuantity: quantity,

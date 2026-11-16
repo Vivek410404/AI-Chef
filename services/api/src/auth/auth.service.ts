@@ -126,6 +126,34 @@ export class AuthService implements OnModuleInit {
       const tokenHash = this.tokenService.hashToken(rawToken);
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 mins
 
+      // Auto-provision personal kitchen household for new customer
+      const kitchenName = `${dto.fullName.trim().split(' ')[0]}'s Kitchen`;
+      const newHousehold = await this.store.prisma.household.create({
+        data: {
+          userId: user.id,
+          name: kitchenName,
+          dietaryPreference: 'VEGETARIAN',
+          spiceTolerance: 'MEDIUM',
+          weeklyBudgetInr: 3500,
+          size: 2,
+          country: 'India',
+          state: 'Gujarat',
+          city: 'Ahmedabad'
+        }
+      });
+
+      await this.store.prisma.householdMember.create({
+        data: {
+          householdId: newHousehold.id,
+          userId: user.id,
+          name: dto.fullName.trim(),
+          role: 'OWNER',
+          status: 'ACTIVE',
+          dietaryPreference: 'VEGETARIAN',
+          ageGroup: 'adult'
+        }
+      });
+
       await this.store.prisma.emailVerificationToken.create({
         data: {
           userId: user.id,
@@ -323,6 +351,34 @@ export class AuthService implements OnModuleInit {
         householdRole = primary.role as any;
       } else if (user.households && user.households.length > 0) {
         householdId = user.households[0].id;
+        householdRole = 'OWNER';
+      } else if (user.role === 'CUSTOMER') {
+        const kitchenName = `${user.fullName?.trim().split(' ')[0] || 'My'}'s Kitchen`;
+        const newHh = await this.store.prisma.household.create({
+          data: {
+            userId: user.id,
+            name: kitchenName,
+            dietaryPreference: 'VEGETARIAN',
+            spiceTolerance: 'MEDIUM',
+            weeklyBudgetInr: 3500,
+            size: 2,
+            country: 'India',
+            state: 'Gujarat',
+            city: 'Ahmedabad'
+          }
+        });
+        await this.store.prisma.householdMember.create({
+          data: {
+            householdId: newHh.id,
+            userId: user.id,
+            name: user.fullName || 'Household Owner',
+            role: 'OWNER',
+            status: 'ACTIVE',
+            dietaryPreference: 'VEGETARIAN',
+            ageGroup: 'adult'
+          }
+        });
+        householdId = newHh.id;
         householdRole = 'OWNER';
       }
 
