@@ -209,17 +209,49 @@ export class MarketplaceService {
   }
 
   async getRetailerInventory(retailerId: string, currentUser?: any) {
-    const retailer = this.store.retailers.find(
+    let retailer: any = this.store.retailers.find(
       r => r.id === retailerId || r.slug === retailerId || r.id === retailerId.replace('retailer-', 'ret-')
     );
+
+    if (!retailer && this.store.isPrismaConnected) {
+      retailer = await this.store.prisma.retailer.findFirst({
+        where: {
+          OR: [
+            { id: retailerId },
+            { slug: retailerId },
+            { name: { equals: retailerId, mode: 'insensitive' } }
+          ]
+        }
+      });
+    }
+
     if (!retailer) {
       throw new NotFoundException(`Retailer ${retailerId} not found`);
     }
 
     // Retailer A vs Retailer B resource isolation
     if (currentUser && currentUser.role === 'RETAILER') {
-      const userRetailerId = currentUser.retailerId || 'ret-blinkit';
-      if (userRetailerId !== retailer.id && userRetailerId !== retailer.slug) {
+      let userRetailerId = currentUser.retailerId;
+      if (!userRetailerId && this.store.isPrismaConnected && (currentUser.id || currentUser.sub)) {
+        try {
+          const app = await (this.store.prisma as any).retailerApplication.findFirst({
+            where: { userId: currentUser.id || currentUser.sub, applicationStatus: 'APPROVED' }
+          });
+          if (app) {
+            userRetailerId = app.businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+          }
+        } catch {}
+      }
+      userRetailerId = userRetailerId || 'ret-blinkit';
+
+      const isMatch =
+        userRetailerId === retailer.id ||
+        userRetailerId === retailer.slug ||
+        userRetailerId === retailer.id.replace('retailer-', 'ret-') ||
+        retailer.slug.includes(userRetailerId) ||
+        userRetailerId.includes(retailer.slug);
+
+      if (!isMatch) {
         throw new ForbiddenException(
           `Access denied. Retailer "${userRetailerId}" is not authorized to inspect "${retailer.id}" inventory.`
         );
@@ -290,6 +322,10 @@ export class MarketplaceService {
         where: { id }
       });
       if (!app) throw new NotFoundException('Retailer application not found');
+
+      if (app.userId === reviewedBy) {
+        throw new ForbiddenException('Staff members are strictly prohibited from reviewing or approving their own retailer application.');
+      }
 
       const updated = await prisma.retailerApplication.update({
         where: { id },

@@ -110,8 +110,13 @@ export class AdminController {
 
   @Get('households/:id')
   @Roles('SUPER_ADMIN', 'ADMIN', 'OPERATIONS', 'SUPPORT')
-  async getHouseholdById(@Param('id') id: string, @Req() req: any) {
-    return this.adminService.getHouseholdById(id, req.user);
+  async getHouseholdById(
+    @Param('id') id: string,
+    @Query('reason') supportReasonQuery: string,
+    @Req() req: any
+  ) {
+    const reason = req.headers['x-support-reason'] || supportReasonQuery;
+    return this.adminService.getHouseholdById(id, req.user, reason);
   }
 
   /**

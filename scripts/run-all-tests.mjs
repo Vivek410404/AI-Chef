@@ -17,7 +17,8 @@ const suites = [
   { name: 'test-phase43-household-simulation.mjs', category: 'Phase 4.3 Multi-Household Simulation & IDOR' },
   { name: 'verify-backup-restore.mjs', category: 'Phase 4.3 Database Backup & Restored Parity' },
   { name: 'test-phase5-auth-and-identity.mjs', category: 'Phase 5.0 Authentication, Identity & Multi-Tenant' },
-  { name: 'test-phase51-admin-console.mjs', category: 'Phase 5.1 Admin Console & Platform Management' }
+  { name: 'test-phase51-admin-console.mjs', category: 'Phase 5.1 Admin Console & Platform Management' },
+  { name: 'test-phase52-security-integrity.mjs', category: 'Phase 5.2 Security Hardening & Operational Integrity' }
 ];
 
 console.log('========================================================================');

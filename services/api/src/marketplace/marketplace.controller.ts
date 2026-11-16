@@ -100,8 +100,24 @@ export class MarketplaceController {
     @Req() req: any
   ) {
     if (req.user.role === 'RETAILER') {
-      const userRetailerId = req.user.retailerId || 'ret-blinkit';
-      if (userRetailerId !== id && userRetailerId !== id.replace('retailer-', 'ret-')) {
+      let userRetailerId = req.user.retailerId;
+      if (!userRetailerId && req.user.id) {
+        try {
+          const app = await (this.marketplaceService as any).getRetailerApplicationStatus(req.user.id);
+          if (app && app.businessName) {
+            userRetailerId = app.businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+          }
+        } catch {}
+      }
+      userRetailerId = userRetailerId || 'ret-custom-merchant';
+
+      const isMatch =
+        userRetailerId === id ||
+        userRetailerId === id.replace('retailer-', 'ret-') ||
+        id.includes(userRetailerId) ||
+        userRetailerId.includes(id);
+
+      if (!isMatch) {
         throw new ForbiddenException(
           `Access denied. Retailer "${userRetailerId}" is not authorized to modify inventory for "${id}".`
         );

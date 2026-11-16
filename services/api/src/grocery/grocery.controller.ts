@@ -18,7 +18,16 @@ export class GroceryController {
         throw new ForbiddenException('Access denied. Retailers cannot access household grocery baskets.');
       }
       if (user.role === 'CUSTOMER') {
-        if (requestedHouseholdId && requestedHouseholdId !== user.householdId) {
+        if (requestedHouseholdId) {
+          if (requestedHouseholdId === user.householdId) {
+            return requestedHouseholdId;
+          }
+          if (this.authService.store.isPrismaConnected) {
+            const member = await this.authService.store.prisma.householdMember.findFirst({
+              where: { householdId: requestedHouseholdId, userId: user.id || user.sub }
+            });
+            if (member) return requestedHouseholdId;
+          }
           throw new ForbiddenException(`Access denied. Customer is not authorized to access household "${requestedHouseholdId}".`);
         }
         return user.householdId || 'hh-sharma-family';
