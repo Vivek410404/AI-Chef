@@ -643,14 +643,22 @@ export class AdminService {
     };
   }
 
-  async getHouseholdById(id: string, adminUser?: any) {
+  async getHouseholdById(id: string, adminUser?: any, supportReason?: string) {
+    if (adminUser?.role === 'SUPPORT') {
+      if (!supportReason || supportReason.trim().length < 5) {
+        throw new BadRequestException(
+          'Support personnel must provide a valid customer support reason (header "x-support-reason" or query "reason", min 5 characters) to inspect household data.'
+        );
+      }
+    }
+
     if (!this.store.isPrismaConnected) {
       const hh = this.store.households.get(id);
       if (!hh) throw new NotFoundException(`Household "${id}" not found.`);
       return hh;
     }
 
-    const household = await this.store.prisma.household.findUnique({
+    const household: any = await this.store.prisma.household.findUnique({
       where: { id },
       include: {
         user: {
@@ -676,12 +684,27 @@ export class AdminService {
 
     if (adminUser) {
       await this.auditService.log({
-        action: 'HOUSEHOLD_INSPECTED',
+        action: adminUser.role === 'SUPPORT' ? 'SUPPORT_HOUSEHOLD_INSPECTED' : 'HOUSEHOLD_INSPECTED',
         userId: adminUser.id || adminUser.sub,
         entityType: 'Household',
         entityId: id,
-        metadata: { householdName: household.name }
+        metadata: {
+          householdName: household.name,
+          actorRole: adminUser.role,
+          supportReason: supportReason || 'Administrative inspection',
+          accessedAt: new Date().toISOString()
+        }
       });
+    }
+
+    // Mask sensitive contact details for support personnel to preserve household privacy
+    if (adminUser?.role === 'SUPPORT' && household.user) {
+      household.user = {
+        ...household.user,
+        phoneNumber: household.user.phoneNumber
+          ? '***-***-' + household.user.phoneNumber.slice(-4)
+          : null
+      };
     }
 
     return household;
@@ -750,6 +773,16 @@ export class AdminService {
 
     if (!app) {
       throw new NotFoundException(`Application with ID "${id}" not found.`);
+    }
+
+    // Protection: Staff cannot approve their own retailer application
+    const isSelfReview =
+      (adminUser.id && app.userId === adminUser.id) ||
+      (adminUser.sub && app.userId === adminUser.sub) ||
+      (adminUser.email && app.user?.email && adminUser.email.toLowerCase() === app.user.email.toLowerCase());
+
+    if (isSelfReview) {
+      throw new ForbiddenException('Staff members are strictly prohibited from reviewing or approving their own retailer application.');
     }
 
     if (dto.status === 'REJECTED' && !dto.rejectionReason) {
@@ -1525,7 +1558,12 @@ export class AdminService {
     }
 
     // Protection: Cannot demote or change own role
-    if (adminUser.id === id || adminUser.sub === id) {
+    const isSelfEdit =
+      adminUser.id === id ||
+      adminUser.sub === id ||
+      (adminUser.email && targetUser.email && adminUser.email.toLowerCase() === targetUser.email.toLowerCase());
+
+    if (isSelfEdit) {
       throw new BadRequestException('Administrators cannot change their own administrative role.');
     }
 

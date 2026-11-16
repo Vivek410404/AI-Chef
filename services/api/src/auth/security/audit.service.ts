@@ -37,6 +37,32 @@ export type AuditAction =
   | 'ADMIN_BOOTSTRAP'
   | (string & {});
 
+function sanitizeMetadata(obj: any): any {
+  if (!obj || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeMetadata);
+  const sanitized: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const lower = key.toLowerCase();
+    if (
+      lower.includes('password') ||
+      lower.includes('token') ||
+      lower.includes('secret') ||
+      lower.includes('credential') ||
+      lower.includes('authorization') ||
+      lower.includes('cookie') ||
+      lower.includes('creditcard') ||
+      lower.includes('cvv')
+    ) {
+      sanitized[key] = '[REDACTED]';
+    } else if (value && typeof value === 'object') {
+      sanitized[key] = sanitizeMetadata(value);
+    } else {
+      sanitized[key] = value;
+    }
+  }
+  return sanitized;
+}
+
 @Injectable()
 export class AuditService {
   private readonly logger = new Logger(AuditService.name);
@@ -79,8 +105,9 @@ export class AuditService {
           }
         }
 
+        const sanitizedMeta = sanitizeMetadata(params.metadata || {});
         const metadata = {
-          ...(params.metadata || {}),
+          ...sanitizedMeta,
           actorId: params.userId || 'system'
         };
 

@@ -25,7 +25,7 @@ export class AuthService implements OnModuleInit {
   private static readonly revokedTokens = new Set<string>();
 
   constructor(
-    private readonly store: StoreService,
+    public readonly store: StoreService,
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
     private readonly rateLimiter: RateLimiterService,
@@ -935,6 +935,36 @@ export class AuthService implements OnModuleInit {
       if (!['CUSTOMER', 'RETAILER', 'ADMIN', 'SUPER_ADMIN', 'OPERATIONS', 'SUPPORT'].includes(normalizedRole)) {
         throw new UnauthorizedException(`Invalid role claim "${decoded.role}" in token`);
       }
+
+      // Authoritative database check: immediately reject suspended or deleted users
+      const targetUserId = decoded.sub || decoded.id;
+      if (this.store.isPrismaConnected && targetUserId) {
+        try {
+          const dbUser = await this.store.prisma.user.findUnique({
+            where: { id: targetUserId },
+            select: { id: true, status: true, role: true, email: true }
+          });
+          if (dbUser) {
+            if (dbUser.status === 'SUSPENDED') {
+              throw new UnauthorizedException('Account has been suspended. Access denied.');
+            }
+            if (dbUser.status === 'DELETED') {
+              throw new UnauthorizedException('Account has been deactivated.');
+            }
+            return {
+              ...decoded,
+              id: dbUser.id,
+              sub: dbUser.id,
+              role: dbUser.role || normalizedRole,
+              status: dbUser.status,
+              email: dbUser.email || decoded.email
+            };
+          }
+        } catch (dbErr: any) {
+          if (dbErr instanceof UnauthorizedException) throw dbErr;
+        }
+      }
+
       return { ...decoded, role: normalizedRole };
     } catch (err: any) {
       if (err?.name === 'TokenExpiredError') {
