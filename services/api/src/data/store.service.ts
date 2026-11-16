@@ -594,13 +594,16 @@ export class StoreService implements OnModuleInit {
   public async persistHouseholdUpdate(id: string, updates: Partial<Household>) {
     if (!this.isPrismaConnected) return;
     try {
+      const dataToUpdate: any = {};
+      if (updates.name !== undefined) dataToUpdate.name = updates.name;
+      if (updates.weeklyBudgetInr !== undefined) dataToUpdate.weeklyBudgetInr = updates.weeklyBudgetInr;
+      if (updates.cookingFrequency !== undefined) dataToUpdate.cookingFrequency = updates.cookingFrequency;
+      if (updates.dietaryPreference !== undefined) dataToUpdate.dietaryPreference = String(updates.dietaryPreference).toUpperCase();
+      if (updates.cuisinePreference !== undefined) dataToUpdate.cuisinePreference = updates.cuisinePreference;
+
       await this.prisma.household.update({
         where: { id },
-        data: {
-          name: updates.name,
-          weeklyBudgetInr: updates.weeklyBudgetInr,
-          cookingFrequency: updates.cookingFrequency
-        }
+        data: dataToUpdate
       });
     } catch (e: any) {
       this.logger.warn(`Failed to persist household update to PostgreSQL: ${e.message}`);

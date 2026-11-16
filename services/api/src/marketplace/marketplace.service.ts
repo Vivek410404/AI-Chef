@@ -233,4 +233,78 @@ export class MarketplaceService {
       disclosure: 'SAMPLE CATALOG DATA'
     };
   }
+
+  async applyForRetailer(userId: string, data: { businessName: string; contactInformation: any }) {
+    if (!data.businessName || data.businessName.trim().length < 2) {
+      throw new BadRequestException('Business name is required');
+    }
+
+    if (this.store.isPrismaConnected) {
+      const existing = await this.store.prisma.retailerApplication.findFirst({
+        where: { userId, applicationStatus: 'PENDING' }
+      });
+      if (existing) {
+        throw new BadRequestException('You already have a pending retailer application under review.');
+      }
+      const app = await this.store.prisma.retailerApplication.create({
+        data: {
+          userId,
+          businessName: data.businessName.trim(),
+          contactInformation: data.contactInformation || {},
+          applicationStatus: 'PENDING'
+        }
+      });
+      return app;
+    }
+    return { id: `app-${Date.now()}`, userId, businessName: data.businessName, applicationStatus: 'PENDING' };
+  }
+
+  async getRetailerApplicationStatus(userId: string) {
+    if (this.store.isPrismaConnected) {
+      const app = await this.store.prisma.retailerApplication.findFirst({
+        where: { userId },
+        orderBy: { submittedAt: 'desc' }
+      });
+      return app || { applicationStatus: 'NONE' };
+    }
+    return { applicationStatus: 'NONE' };
+  }
+
+  async getRetailerApplications() {
+    if (this.store.isPrismaConnected) {
+      return this.store.prisma.retailerApplication.findMany({
+        include: { user: true },
+        orderBy: { submittedAt: 'desc' }
+      });
+    }
+    return [];
+  }
+
+  async reviewRetailerApplication(id: string, status: 'APPROVED' | 'REJECTED', reviewedBy: string) {
+    if (this.store.isPrismaConnected) {
+      const app = await this.store.prisma.retailerApplication.findUnique({
+        where: { id }
+      });
+      if (!app) throw new NotFoundException('Retailer application not found');
+
+      const updated = await this.store.prisma.retailerApplication.update({
+        where: { id },
+        data: {
+          applicationStatus: status as any,
+          reviewedAt: new Date(),
+          reviewedBy
+        }
+      });
+
+      if (status === 'APPROVED') {
+        await this.store.prisma.user.update({
+          where: { id: app.userId },
+          data: { role: 'RETAILER' }
+        });
+      }
+
+      return updated;
+    }
+    return { id, applicationStatus: status, reviewedBy };
+  }
 }

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 7d3zvk8aaadanGh5gD64EGKkpphppxKDcwN7FRqaXrlBy8UxYjbZ0za6JzcBLV8
+\restrict LXlqxRLRgw1bMNGTUvE8x7IbxqsY5qPbfgwfBjomICOzbx7oxfc8U4rE5xW8N3a
 
 -- Dumped from database version 18.6 (Ubuntu 18.6-0ubuntu0.26.04.1)
 -- Dumped by pg_dump version 18.6 (Ubuntu 18.6-0ubuntu0.26.04.1)
@@ -35,6 +35,33 @@ CREATE TYPE public."DietaryType" AS ENUM (
 ALTER TYPE public."DietaryType" OWNER TO postgres;
 
 --
+-- Name: HouseholdRole; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public."HouseholdRole" AS ENUM (
+    'OWNER',
+    'MEMBER',
+    'COOK'
+);
+
+
+ALTER TYPE public."HouseholdRole" OWNER TO postgres;
+
+--
+-- Name: RetailerApplicationStatus; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public."RetailerApplicationStatus" AS ENUM (
+    'PENDING',
+    'APPROVED',
+    'REJECTED',
+    'SUSPENDED'
+);
+
+
+ALTER TYPE public."RetailerApplicationStatus" OWNER TO postgres;
+
+--
 -- Name: Role; Type: TYPE; Schema: public; Owner: postgres
 --
 
@@ -61,6 +88,20 @@ CREATE TYPE public."SpiceTolerance" AS ENUM (
 
 ALTER TYPE public."SpiceTolerance" OWNER TO postgres;
 
+--
+-- Name: UserStatus; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public."UserStatus" AS ENUM (
+    'PENDING_VERIFICATION',
+    'ACTIVE',
+    'SUSPENDED',
+    'DELETED'
+);
+
+
+ALTER TYPE public."UserStatus" OWNER TO postgres;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -86,6 +127,25 @@ CREATE TABLE public."Address" (
 
 
 ALTER TABLE public."Address" OWNER TO postgres;
+
+--
+-- Name: AuditLog; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public."AuditLog" (
+    id text NOT NULL,
+    "userId" text,
+    action text NOT NULL,
+    "entityType" text,
+    "entityId" text,
+    metadata jsonb,
+    "ipAddress" text,
+    "userAgent" text,
+    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+ALTER TABLE public."AuditLog" OWNER TO postgres;
 
 --
 -- Name: Basket; Type: TABLE; Schema: public; Owner: postgres
@@ -122,6 +182,22 @@ CREATE TABLE public."BasketItem" (
 ALTER TABLE public."BasketItem" OWNER TO postgres;
 
 --
+-- Name: EmailVerificationToken; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public."EmailVerificationToken" (
+    id text NOT NULL,
+    "userId" text NOT NULL,
+    "tokenHash" text NOT NULL,
+    "expiresAt" timestamp(3) without time zone NOT NULL,
+    "consumedAt" timestamp(3) without time zone,
+    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+ALTER TABLE public."EmailVerificationToken" OWNER TO postgres;
+
+--
 -- Name: Feedback; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -149,11 +225,38 @@ CREATE TABLE public."Household" (
     "weeklyBudgetInr" double precision DEFAULT 3000 NOT NULL,
     "cookingFrequency" text DEFAULT 'Daily Fresh'::text NOT NULL,
     "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "updatedAt" timestamp(3) without time zone NOT NULL
+    "updatedAt" timestamp(3) without time zone NOT NULL,
+    city text DEFAULT 'Ahmedabad'::text NOT NULL,
+    country text DEFAULT 'India'::text NOT NULL,
+    "cuisinePreference" text DEFAULT 'ALL_INDIAN'::text NOT NULL,
+    "dietaryPreference" public."DietaryType" DEFAULT 'VEGETARIAN'::public."DietaryType" NOT NULL,
+    locality text,
+    size integer DEFAULT 4 NOT NULL,
+    state text DEFAULT 'Gujarat'::text NOT NULL
 );
 
 
 ALTER TABLE public."Household" OWNER TO postgres;
+
+--
+-- Name: HouseholdInvitation; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public."HouseholdInvitation" (
+    id text NOT NULL,
+    "householdId" text NOT NULL,
+    "invitedEmail" text NOT NULL,
+    "invitedByUserId" text NOT NULL,
+    "tokenHash" text NOT NULL,
+    role public."HouseholdRole" DEFAULT 'MEMBER'::public."HouseholdRole" NOT NULL,
+    "expiresAt" timestamp(3) without time zone NOT NULL,
+    "acceptedAt" timestamp(3) without time zone,
+    "revokedAt" timestamp(3) without time zone,
+    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+ALTER TABLE public."HouseholdInvitation" OWNER TO postgres;
 
 --
 -- Name: HouseholdMember; Type: TABLE; Schema: public; Owner: postgres
@@ -167,7 +270,11 @@ CREATE TABLE public."HouseholdMember" (
     "dietaryPreference" public."DietaryType" DEFAULT 'VEGETARIAN'::public."DietaryType" NOT NULL,
     allergies text[] DEFAULT ARRAY[]::text[],
     "dislikedIngredients" text[] DEFAULT ARRAY[]::text[],
-    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "joinedAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    role public."HouseholdRole" DEFAULT 'MEMBER'::public."HouseholdRole" NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    "userId" text
 );
 
 
@@ -273,6 +380,22 @@ CREATE TABLE public."PantryItem" (
 
 
 ALTER TABLE public."PantryItem" OWNER TO postgres;
+
+--
+-- Name: PasswordResetToken; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public."PasswordResetToken" (
+    id text NOT NULL,
+    "userId" text NOT NULL,
+    "tokenHash" text NOT NULL,
+    "expiresAt" timestamp(3) without time zone NOT NULL,
+    "consumedAt" timestamp(3) without time zone,
+    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+ALTER TABLE public."PasswordResetToken" OWNER TO postgres;
 
 --
 -- Name: Payment; Type: TABLE; Schema: public; Owner: postgres
@@ -394,6 +517,26 @@ CREATE TABLE public."RecipeStep" (
 ALTER TABLE public."RecipeStep" OWNER TO postgres;
 
 --
+-- Name: RefreshSession; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public."RefreshSession" (
+    id text NOT NULL,
+    "userId" text NOT NULL,
+    "tokenHash" text NOT NULL,
+    "tokenFamilyId" text NOT NULL,
+    "deviceName" text,
+    "userAgent" text,
+    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "lastUsedAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "expiresAt" timestamp(3) without time zone NOT NULL,
+    "revokedAt" timestamp(3) without time zone
+);
+
+
+ALTER TABLE public."RefreshSession" OWNER TO postgres;
+
+--
 -- Name: Retailer; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -411,6 +554,24 @@ CREATE TABLE public."Retailer" (
 
 
 ALTER TABLE public."Retailer" OWNER TO postgres;
+
+--
+-- Name: RetailerApplication; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public."RetailerApplication" (
+    id text NOT NULL,
+    "userId" text NOT NULL,
+    "businessName" text NOT NULL,
+    "contactInformation" jsonb NOT NULL,
+    "applicationStatus" public."RetailerApplicationStatus" DEFAULT 'PENDING'::public."RetailerApplicationStatus" NOT NULL,
+    "submittedAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "reviewedAt" timestamp(3) without time zone,
+    "reviewedBy" text
+);
+
+
+ALTER TABLE public."RetailerApplication" OWNER TO postgres;
 
 --
 -- Name: RevokedToken; Type: TABLE; Schema: public; Owner: postgres
@@ -485,7 +646,11 @@ CREATE TABLE public."User" (
     "phoneNumber" text,
     role public."Role" DEFAULT 'CUSTOMER'::public."Role" NOT NULL,
     "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "updatedAt" timestamp(3) without time zone NOT NULL
+    "updatedAt" timestamp(3) without time zone NOT NULL,
+    "emailVerifiedAt" timestamp(3) without time zone,
+    "lastLoginAt" timestamp(3) without time zone,
+    "normalizedEmail" text DEFAULT ''::text NOT NULL,
+    status public."UserStatus" DEFAULT 'ACTIVE'::public."UserStatus" NOT NULL
 );
 
 
@@ -496,6 +661,58 @@ ALTER TABLE public."User" OWNER TO postgres;
 --
 
 COPY public."Address" (id, "userId", label, "flatBuilding", street, landmark, city, state, pincode, latitude, longitude, "isDefault") FROM stdin;
+\.
+
+
+--
+-- Data for Name: AuditLog; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public."AuditLog" (id, "userId", action, "entityType", "entityId", metadata, "ipAddress", "userAgent", "createdAt") FROM stdin;
+cmwj2fa550002l3s464kocjcw	cmwj2fa4w0000l3s4x4q1jmst	ADMIN_BOOTSTRAP	User	cmwj2fa4w0000l3s4x4q1jmst	{"role": "ADMIN", "email": "admin@rasoiiq.in", "source": "CLI"}	\N	\N	2026-11-16 09:32:54.425
+cmwj33fok001nl33k4nnujlfn	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{}	::1	node	2026-11-16 09:51:41.349
+cmwj33fqj001pl33ku00roxwz	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 09:51:41.42
+cmwj33f0h0017l33koaahx5vj	\N	REGISTER	User	cmwj33f060013l33k4h6pos88	{}	::1	\N	2026-11-16 09:51:40.481
+cmwj33f170019l33kjgabojnz	\N	EMAIL_VERIFIED	User	cmwj33f060013l33k4h6pos88	{}	::1	\N	2026-11-16 09:51:40.508
+cmwj33fb0001dl33krh4rdvg2	\N	LOGIN_SUCCESS	\N	\N	{}	::1	node	2026-11-16 09:51:40.86
+cmwj33fbx001hl33kr8pctdwj	\N	HOUSEHOLD_INVITATION_ACCEPTED	Household	cmwj33eom000ul33ko9vkiapb	{"role": "MEMBER"}	\N	\N	2026-11-16 09:51:40.893
+cmwj33d3y0004l33k3e5hyebv	\N	REGISTER	User	cmwj33d3h0000l33k7g1c2aik	{}	::1	\N	2026-11-16 09:51:38.015
+cmwj33d7z0006l33kpydlzgfy	\N	EMAIL_VERIFIED	User	cmwj33d3h0000l33k7g1c2aik	{}	::1	\N	2026-11-16 09:51:38.159
+cmwj33dho0008l33kj1bo2p4f	\N	LOGIN_FAILURE	\N	\N	{}	::1	\N	2026-11-16 09:51:38.509
+cmwj33drj000cl33k2m9wtanm	\N	LOGIN_SUCCESS	\N	\N	{}	::1	node	2026-11-16 09:51:38.863
+cmwj33dt8000gl33kuc7gyxtl	\N	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"tokenFamilyId": "fam_c4ab31bb-8bf9-43fc-8e2e-9d19b3cddaf4"}	::1	\N	2026-11-16 09:51:38.924
+cmwj33du7000kl33k3s0kadhf	\N	PASSWORD_RESET_REQUESTED	\N	\N	{}	::1	\N	2026-11-16 09:51:38.96
+cmwj33e3x000ml33ktzr509r4	\N	PASSWORD_RESET_COMPLETED	\N	\N	{}	::1	\N	2026-11-16 09:51:39.309
+cmwj33edu000ol33kvbtt9ja8	\N	LOGIN_FAILURE	\N	\N	{}	::1	\N	2026-11-16 09:51:39.667
+cmwj33eo1000sl33km4k4jnvf	\N	LOGIN_SUCCESS	\N	\N	{}	::1	node	2026-11-16 09:51:40.034
+cmwj33ep4000yl33kj0til14x	\N	HOUSEHOLD_CREATED	Household	cmwj33eom000ul33ko9vkiapb	{"name": "Joshi Family Kitchen"}	\N	\N	2026-11-16 09:51:40.072
+cmwj33eqd0012l33k9oxjfxdr	\N	HOUSEHOLD_INVITATION_SENT	HouseholdInvitation	cmwj33eq80010l33k8runjyrc	{"role": "MEMBER", "invitedEmail": "invited.family.mwj33co8@testrasoi.in"}	\N	\N	2026-11-16 09:51:40.118
+cmwj34f8q001rl33k35eiy6uv	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 09:52:27.435
+cmwj34ku2001sl33ksi3iqkdf	\N	LOGIN_FAILURE	\N	\N	{"email": "pilot.user.mwj34kmh@testrasoi.in"}	::1	\N	2026-11-16 09:52:34.682
+cmwj38fdb0001l3i4s5jsnaus	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 09:55:34.223
+cmwj38qf50003l3i47ecmcpdh	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 09:55:48.546
+cmwj39g3h001rl3i4caiqyqqa	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{}	::1	node	2026-11-16 09:56:21.822
+cmwj39g5c001tl3i41q1i2qhg	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 09:56:21.888
+cmwj39fct001bl3i4i2li0zav	\N	REGISTER	User	cmwj39fch0017l3i4vr9d0z02	{}	::1	\N	2026-11-16 09:56:20.861
+cmwj39fdl001dl3i4fsxdkzqm	\N	EMAIL_VERIFIED	User	cmwj39fch0017l3i4vr9d0z02	{}	::1	\N	2026-11-16 09:56:20.889
+cmwj39fof001hl3i41o09cj4l	\N	LOGIN_SUCCESS	\N	\N	{}	::1	node	2026-11-16 09:56:21.279
+cmwj39fph001ll3i4byqcfkdl	\N	HOUSEHOLD_INVITATION_ACCEPTED	Household	cmwj39eye000yl3i4thgo6x4p	{"role": "MEMBER"}	\N	\N	2026-11-16 09:56:21.317
+cmwj39d9v0008l3i4fkbon8as	\N	REGISTER	User	cmwj39d990004l3i4dfatr72j	{}	::1	\N	2026-11-16 09:56:18.164
+cmwj39dea000al3i4kb0bgvg4	\N	EMAIL_VERIFIED	User	cmwj39d990004l3i4dfatr72j	{}	::1	\N	2026-11-16 09:56:18.322
+cmwj39dpf000cl3i49iqm1jyr	\N	LOGIN_FAILURE	\N	\N	{}	::1	\N	2026-11-16 09:56:18.724
+cmwj39e0b000gl3i4kq0994xe	\N	LOGIN_SUCCESS	\N	\N	{}	::1	node	2026-11-16 09:56:19.116
+cmwj39e22000kl3i4c2yplt0t	\N	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"tokenFamilyId": "fam_e5815562-637a-4fa9-8d8c-c08776fdf781"}	::1	\N	2026-11-16 09:56:19.178
+cmwj39e31000ol3i4r5029o44	\N	PASSWORD_RESET_REQUESTED	\N	\N	{}	::1	\N	2026-11-16 09:56:19.214
+cmwj39ed1000ql3i4poepmhpu	\N	PASSWORD_RESET_COMPLETED	\N	\N	{}	::1	\N	2026-11-16 09:56:19.573
+cmwj39en7000sl3i46j4yyvjf	\N	LOGIN_FAILURE	\N	\N	{}	::1	\N	2026-11-16 09:56:19.94
+cmwj39exr000wl3i4lvkd0tda	\N	LOGIN_SUCCESS	\N	\N	{}	::1	node	2026-11-16 09:56:20.32
+cmwj39eyw0012l3i488p22724	\N	HOUSEHOLD_CREATED	Household	cmwj39eye000yl3i4thgo6x4p	{"name": "Joshi Family Kitchen"}	\N	\N	2026-11-16 09:56:20.36
+cmwj39f100016l3i43otq46ab	\N	HOUSEHOLD_INVITATION_SENT	HouseholdInvitation	cmwj39f0j0014l3i4ml88yoto	{"role": "MEMBER", "invitedEmail": "invited.family.mwj39csx@testrasoi.in"}	\N	\N	2026-11-16 09:56:20.436
+cmwj3a205001vl3i4wgv72hxa	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 09:56:50.213
+cmwj3a2l3001xl3i4buqdh8w6	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 09:56:50.967
+cmwj3a5pp001yl3i4podm1yeq	\N	LOGIN_FAILURE	\N	\N	{"email": "pilot.user.mwj3a5jf@testrasoi.in"}	::1	\N	2026-11-16 09:56:55.021
+cmwj3evwq0001l3g0mlkdnof4	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 10:00:35.594
+cmwj3ewwl0003l3g0rf8gmfb4	\N	LOGOUT	\N	\N	{}	::1	\N	2026-11-16 10:00:36.885
 \.
 
 
@@ -516,6 +733,14 @@ COPY public."BasketItem" (id, "basketId", "productVariantId", "quantityPacks", "
 
 
 --
+-- Data for Name: EmailVerificationToken; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public."EmailVerificationToken" (id, "userId", "tokenHash", "expiresAt", "consumedAt", "createdAt") FROM stdin;
+\.
+
+
+--
 -- Data for Name: Feedback; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -527,10 +752,18 @@ COPY public."Feedback" (id, "userId", rating, comment, category, "createdAt") FR
 -- Data for Name: Household; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."Household" (id, "userId", name, "spiceTolerance", "weeklyBudgetInr", "cookingFrequency", "createdAt", "updatedAt") FROM stdin;
-hh-patel-family	user-demo-patel	Patel Family	MEDIUM	4000	Daily Fresh	2026-11-16 06:15:05.059	2026-11-16 07:27:44.414
-hh-mehta-family	user-demo-mehta	Mehta Family	MEDIUM	4500	Daily Fresh	2026-11-16 06:15:05.095	2026-11-16 07:27:44.43
-hh-sharma-family	user-demo-1	Sharma Family	MEDIUM	4500	Daily Fresh	2026-11-16 06:15:04.99	2026-11-16 08:42:51.4
+COPY public."Household" (id, "userId", name, "spiceTolerance", "weeklyBudgetInr", "cookingFrequency", "createdAt", "updatedAt", city, country, "cuisinePreference", "dietaryPreference", locality, size, state) FROM stdin;
+hh-mehta-family	user-demo-mehta	Mehta Family	MEDIUM	4500	Daily Fresh	2026-11-16 06:15:05.095	2026-11-16 07:27:44.43	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+hh-patel-family	user-demo-patel	Patel Family	MEDIUM	99999	Daily Fresh	2026-11-16 06:15:05.059	2026-11-16 10:00:31.218	Ahmedabad	India	ALL_INDIAN	JAIN	\N	4	Gujarat
+hh-sharma-family	user-demo-1	Sharma Family	MEDIUM	4500	Daily Fresh	2026-11-16 06:15:04.99	2026-11-16 10:00:35.74	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+\.
+
+
+--
+-- Data for Name: HouseholdInvitation; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public."HouseholdInvitation" (id, "householdId", "invitedEmail", "invitedByUserId", "tokenHash", role, "expiresAt", "acceptedAt", "revokedAt", "createdAt") FROM stdin;
 \.
 
 
@@ -538,17 +771,17 @@ hh-sharma-family	user-demo-1	Sharma Family	MEDIUM	4500	Daily Fresh	2026-11-16 06
 -- Data for Name: HouseholdMember; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."HouseholdMember" (id, "householdId", name, "ageGroup", "dietaryPreference", allergies, "dislikedIngredients", "createdAt") FROM stdin;
-mem-1	hh-sharma-family	Pooja	adult	VEGETARIAN	{Peanuts}	{"Bitter Gourd"}	2026-11-16 06:15:04.99
-mem-2	hh-sharma-family	Ramesh (Father-in-law)	senior	JAIN	{}	{Onion,Garlic}	2026-11-16 06:15:04.99
-mem-3	hh-sharma-family	Rohan (Husband)	adult	EGGETARIAN	{}	{}	2026-11-16 06:15:04.99
-mem-4	hh-sharma-family	Aarav (Son)	child	VEGETARIAN	{}	{"Spicy Food"}	2026-11-16 06:15:04.99
-mem-patel-1	hh-patel-family	Rameshbhai Patel	senior	JAIN	{}	{Onion,Garlic,Potato,Carrot}	2026-11-16 06:15:05.059
-mem-patel-2	hh-patel-family	Bhavnaben Patel	adult	JAIN	{}	{"Root Vegetables"}	2026-11-16 06:15:05.059
-mem-patel-3	hh-patel-family	Dev Patel	child	JAIN	{}	{"Bitter Gourd"}	2026-11-16 06:15:05.059
-mem-mehta-1	hh-mehta-family	Kirit Mehta	adult	JAIN	{}	{}	2026-11-16 06:15:05.095
-mem-mehta-2	hh-mehta-family	Hetal Mehta	adult	JAIN	{Peanuts}	{}	2026-11-16 06:15:05.095
-mem-mehta-3	hh-mehta-family	Niyati Mehta	child	JAIN	{}	{Karela}	2026-11-16 06:15:05.095
+COPY public."HouseholdMember" (id, "householdId", name, "ageGroup", "dietaryPreference", allergies, "dislikedIngredients", "createdAt", "joinedAt", role, status, "userId") FROM stdin;
+mem-1	hh-sharma-family	Pooja	adult	VEGETARIAN	{Peanuts}	{"Bitter Gourd"}	2026-11-16 06:15:04.99	2026-11-16 09:32:42.433	MEMBER	ACTIVE	\N
+mem-2	hh-sharma-family	Ramesh (Father-in-law)	senior	JAIN	{}	{Onion,Garlic}	2026-11-16 06:15:04.99	2026-11-16 09:32:42.433	MEMBER	ACTIVE	\N
+mem-3	hh-sharma-family	Rohan (Husband)	adult	EGGETARIAN	{}	{}	2026-11-16 06:15:04.99	2026-11-16 09:32:42.433	MEMBER	ACTIVE	\N
+mem-4	hh-sharma-family	Aarav (Son)	child	VEGETARIAN	{}	{"Spicy Food"}	2026-11-16 06:15:04.99	2026-11-16 09:32:42.433	MEMBER	ACTIVE	\N
+mem-patel-1	hh-patel-family	Rameshbhai Patel	senior	JAIN	{}	{Onion,Garlic,Potato,Carrot}	2026-11-16 06:15:05.059	2026-11-16 09:32:42.433	MEMBER	ACTIVE	\N
+mem-patel-2	hh-patel-family	Bhavnaben Patel	adult	JAIN	{}	{"Root Vegetables"}	2026-11-16 06:15:05.059	2026-11-16 09:32:42.433	MEMBER	ACTIVE	\N
+mem-patel-3	hh-patel-family	Dev Patel	child	JAIN	{}	{"Bitter Gourd"}	2026-11-16 06:15:05.059	2026-11-16 09:32:42.433	MEMBER	ACTIVE	\N
+mem-mehta-1	hh-mehta-family	Kirit Mehta	adult	JAIN	{}	{}	2026-11-16 06:15:05.095	2026-11-16 09:32:42.433	MEMBER	ACTIVE	\N
+mem-mehta-2	hh-mehta-family	Hetal Mehta	adult	JAIN	{Peanuts}	{}	2026-11-16 06:15:05.095	2026-11-16 09:32:42.433	MEMBER	ACTIVE	\N
+mem-mehta-3	hh-mehta-family	Niyati Mehta	child	JAIN	{}	{Karela}	2026-11-16 06:15:05.095	2026-11-16 09:32:42.433	MEMBER	ACTIVE	\N
 \.
 
 
@@ -631,27 +864,27 @@ mp-hh-sharma-family	hh-sharma-family	2026-11-16 06:46:00.145	2026-11-16 06:46:00
 --
 
 COPY public."MealPlanItem" (id, "mealPlanId", "dayOfWeek", "mealCategory", "recipeId", servings, notes) FROM stdin;
-plan-item-1794818567214-tfvfo	mp-hh-sharma-family	monday	breakfast	recipe-idli-sambar	4	\N
-plan-item-1794818567214-pf8y2	mp-hh-sharma-family	monday	lunch	recipe-rajma-chawal	4	\N
-plan-item-1794818567214-jezpi	mp-hh-sharma-family	monday	dinner	recipe-palak-paneer	4	\N
-plan-item-1794818567214-45fi9	mp-hh-sharma-family	tuesday	breakfast	recipe-kanda-poha	4	\N
-plan-item-1794818567214-qsdh3	mp-hh-sharma-family	tuesday	lunch	recipe-bengali-cholar-dal	4	\N
-plan-item-1794818567214-ut2ku	mp-hh-sharma-family	tuesday	dinner	recipe-aloo-gobi	4	\N
-plan-item-1794818567214-eo56m	mp-hh-sharma-family	wednesday	breakfast	recipe-methi-thepla	4	\N
-plan-item-1794818567214-bnbh9	mp-hh-sharma-family	wednesday	dinner	recipe-moong-dal-khichdi	4	\N
-plan-item-1794818567214-ka43a	mp-hh-sharma-family	thursday	breakfast	recipe-rava-upma	4	\N
-plan-item-1794818567214-8o6ep	mp-hh-sharma-family	thursday	lunch	recipe-paneer-butter-masala	4	\N
-plan-item-1794818567214-yamhy	mp-hh-sharma-family	thursday	dinner	recipe-bhindi-masala	4	\N
-plan-item-1794818567214-zmmjh	mp-hh-sharma-family	friday	breakfast	recipe-khaman-dhokla	4	\N
-plan-item-1794818567214-6kb9n	mp-hh-sharma-family	friday	lunch	recipe-sambhar-rice	4	\N
-plan-item-1794818567214-nzbl1	mp-hh-sharma-family	friday	dinner	recipe-sev-tameta-nu-shaak	4	\N
-plan-item-1794818567214-2lkeo	mp-hh-sharma-family	saturday	breakfast	recipe-masala-dosa	4	\N
-plan-item-1794818567214-ypdjw	mp-hh-sharma-family	saturday	lunch	recipe-baingan-bharta	4	\N
-plan-item-1794818567214-fzfy9	mp-hh-sharma-family	saturday	dinner	recipe-gujarati-dal-dhokli	4	\N
-plan-item-1794818567214-2sn91	mp-hh-sharma-family	sunday	breakfast	recipe-methi-na-gota	4	\N
-plan-item-1794818567214-e7urz	mp-hh-sharma-family	sunday	lunch	recipe-surati-undhiyu	4	\N
-plan-item-1794818567214-rz6ky	mp-hh-sharma-family	sunday	dinner	recipe-dal-tadka	4	\N
-plan-item-1794818567214-jjzsa	mp-hh-sharma-family	wednesday	lunch	recipe-paneer-butter-masala	4	\N
+plan-item-1794823230126-43j98	mp-hh-sharma-family	monday	breakfast	recipe-kanda-poha	4	\N
+plan-item-1794823230126-969if	mp-hh-sharma-family	monday	lunch	recipe-gujarati-khatti-meethi-dal	4	\N
+plan-item-1794823230126-o7ovk	mp-hh-sharma-family	monday	dinner	recipe-paneer-butter-masala	4	\N
+plan-item-1794823230126-cfm5u	mp-hh-sharma-family	tuesday	breakfast	recipe-rava-upma	4	\N
+plan-item-1794823230126-u1drw	mp-hh-sharma-family	tuesday	lunch	recipe-rajma-chawal	4	\N
+plan-item-1794823230126-u44h6	mp-hh-sharma-family	tuesday	dinner	recipe-amritsari-chole	4	\N
+plan-item-1794823230126-saduk	mp-hh-sharma-family	wednesday	breakfast	recipe-masala-dosa	4	\N
+plan-item-1794823230126-e0kz5	mp-hh-sharma-family	wednesday	dinner	recipe-baingan-bharta	4	\N
+plan-item-1794823230126-3joc2	mp-hh-sharma-family	thursday	breakfast	recipe-idli-sambar	4	\N
+plan-item-1794823230126-bijs6	mp-hh-sharma-family	thursday	lunch	recipe-sev-tameta-nu-shaak	4	\N
+plan-item-1794823230126-ezqhd	mp-hh-sharma-family	thursday	dinner	recipe-bajra-no-rotlo	4	\N
+plan-item-1794823230126-jh3ij	mp-hh-sharma-family	friday	breakfast	recipe-gujarati-handvo	4	\N
+plan-item-1794823230126-7v74b	mp-hh-sharma-family	friday	lunch	recipe-ringna-no-olo	4	\N
+plan-item-1794823230126-5eif1	mp-hh-sharma-family	friday	dinner	recipe-bajra-no-rotlo-vegan	4	\N
+plan-item-1794823230126-qkf7y	mp-hh-sharma-family	saturday	breakfast	recipe-khaman-dhokla	4	\N
+plan-item-1794823230126-yua33	mp-hh-sharma-family	saturday	lunch	recipe-surati-undhiyu-jain	4	\N
+plan-item-1794823230126-fadcx	mp-hh-sharma-family	saturday	dinner	recipe-palak-paneer	4	\N
+plan-item-1794823230126-lfoj6	mp-hh-sharma-family	sunday	breakfast	recipe-methi-na-gota	4	\N
+plan-item-1794823230126-6i2sj	mp-hh-sharma-family	sunday	lunch	recipe-surati-undhiyu	4	\N
+plan-item-1794823230126-eau74	mp-hh-sharma-family	sunday	dinner	recipe-gujarati-kadhi	4	\N
+plan-item-1794823230126-dezfn	mp-hh-sharma-family	wednesday	lunch	recipe-paneer-butter-masala	4	\N
 \.
 
 
@@ -784,6 +1017,60 @@ ord-1794818571364	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shival
 ord-1794818571375	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 08:42:51.378	2026-11-16 08:42:51.378
 ord-1794818572170	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:42:52.172	2026-11-16 08:42:52.172
 ord-1794818572579	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:42:52.582	2026-11-16 08:42:52.582
+ord-1794822041138	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822031100)	2026-11-16 09:40:41.139	2026-11-16 09:40:41.139
+ord-1794822041797	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822031100)	2026-11-16 09:40:41.799	2026-11-16 09:40:41.799
+ord-1794822041810	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822031100)	2026-11-16 09:40:41.812	2026-11-16 09:40:41.812
+ord-1794822041822	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822031100)	2026-11-16 09:40:41.824	2026-11-16 09:40:41.824
+ord-1794822678759	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794822678756)	2026-11-16 09:51:18.761	2026-11-16 09:51:18.761
+ord-1794822678778	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822678756)	2026-11-16 09:51:18.781	2026-11-16 09:51:18.781
+ord-1794822678800	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822678756)	2026-11-16 09:51:18.802	2026-11-16 09:51:18.802
+ord-1794822678810	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822678756)	2026-11-16 09:51:18.812	2026-11-16 09:51:18.812
+ord-1794822678820	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822678756)	2026-11-16 09:51:18.823	2026-11-16 09:51:18.823
+ord-1794822740009	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2689	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 09:52:20.014	2026-11-16 09:52:20.014
+ord-1794822741933	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2333	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 09:52:21.938	2026-11-16 09:52:21.938
+ord-1794822742958	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794822742955)	2026-11-16 09:52:22.963	2026-11-16 09:52:22.963
+ord-1794822742988	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822742955)	2026-11-16 09:52:22.992	2026-11-16 09:52:22.992
+ord-1794822743020	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822742955)	2026-11-16 09:52:23.025	2026-11-16 09:52:23.025
+ord-1794822743037	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822742955)	2026-11-16 09:52:23.041	2026-11-16 09:52:23.041
+ord-1794822743054	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822742955)	2026-11-16 09:52:23.058	2026-11-16 09:52:23.058
+ord-1794822743811	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:52:23.816	2026-11-16 09:52:23.816
+ord-1794822745019	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:52:25.023	2026-11-16 09:52:25.023
+ord-1794822747527	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:52:27.531	2026-11-16 09:52:27.531
+ord-1794822747540	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:52:27.544	2026-11-16 09:52:27.544
+ord-1794822748460	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:52:28.464	2026-11-16 09:52:28.464
+ord-1794822748988	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:52:28.992	2026-11-16 09:52:28.992
+ord-1794822915943	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:55:15.947	2026-11-16 09:55:15.947
+ord-1794822931859	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:55:31.862	2026-11-16 09:55:31.862
+ord-1794822934281	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:55:34.284	2026-11-16 09:55:34.284
+ord-1794822934290	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:55:34.293	2026-11-16 09:55:34.293
+ord-1794822948567	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:55:48.571	2026-11-16 09:55:48.571
+ord-1794822958891	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:55:58.894	2026-11-16 09:55:58.894
+ord-1794823004627	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2372	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 09:56:44.631	2026-11-16 09:56:44.631
+ord-1794823005755	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794823005753)	2026-11-16 09:56:45.758	2026-11-16 09:56:45.758
+ord-1794823005766	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794823005753)	2026-11-16 09:56:45.769	2026-11-16 09:56:45.769
+ord-1794823005785	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794823005753)	2026-11-16 09:56:45.788	2026-11-16 09:56:45.788
+ord-1794823005793	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794823005753)	2026-11-16 09:56:45.796	2026-11-16 09:56:45.796
+ord-1794823005800	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794823005753)	2026-11-16 09:56:45.803	2026-11-16 09:56:45.803
+ord-1794823006121	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:56:46.124	2026-11-16 09:56:46.124
+ord-1794823007828	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:56:47.831	2026-11-16 09:56:47.831
+ord-1794823010273	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:56:50.276	2026-11-16 09:56:50.276
+ord-1794823010285	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:56:50.288	2026-11-16 09:56:50.288
+ord-1794823010988	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:56:50.992	2026-11-16 09:56:50.992
+ord-1794823011360	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:56:51.363	2026-11-16 09:56:51.363
+ord-1794823210498	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2350	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:00:10.503	2026-11-16 10:00:10.503
+ord-1794823229199	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2350	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 10:00:29.203	2026-11-16 10:00:29.203
+ord-1794823230317	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2505	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:00:30.323	2026-11-16 10:00:30.323
+ord-1794823231293	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794823231286)	2026-11-16 10:00:31.301	2026-11-16 10:00:31.301
+ord-1794823231322	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794823231286)	2026-11-16 10:00:31.327	2026-11-16 10:00:31.327
+ord-1794823231353	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794823231286)	2026-11-16 10:00:31.357	2026-11-16 10:00:31.357
+ord-1794823231370	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794823231286)	2026-11-16 10:00:31.374	2026-11-16 10:00:31.374
+ord-1794823231385	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794823231286)	2026-11-16 10:00:31.39	2026-11-16 10:00:31.39
+ord-1794823231891	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 10:00:31.895	2026-11-16 10:00:31.895
+ord-1794823233090	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:00:33.094	2026-11-16 10:00:33.094
+ord-1794823235686	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:00:35.691	2026-11-16 10:00:35.691
+ord-1794823235701	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 10:00:35.706	2026-11-16 10:00:35.706
+ord-1794823236933	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 10:00:36.938	2026-11-16 10:00:36.938
+ord-1794823237743	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 10:00:37.748	2026-11-16 10:00:37.748
 \.
 
 
@@ -815,9 +1102,17 @@ cmwivcvpu00efl3q4g85o0or9	hh-mehta-family	ing-bajra-flour	2000	g	f	\N	2026-11-16
 cmwivcvpz00ehl3q4aybn4ci6	hh-mehta-family	ing-ghee	1000	g	f	\N	2026-11-16 06:15:05.111
 cmwivcvq300ejl3q4lq5iioe7	hh-mehta-family	ing-green-chilli	250	g	f	\N	2026-11-16 06:15:05.115
 cmwivcvq800ell3q411ejwkrd	hh-mehta-family	ing-mustard-seeds	200	g	f	\N	2026-11-16 06:15:05.121
-cmwivcvo000e1l3q4teh4nxo1	hh-sharma-family	ing-mustard-seeds	200	g	f	\N	2026-11-16 08:42:49.005
-pantry-1794817781894	hh-patel-family	ing-bajra-flour	2000	g	f	\N	2026-11-16 08:42:52.489
-pantry-1794817791932	hh-mehta-family	ing-raw-banana	1500	g	f	\N	2026-11-16 08:42:52.506
+cmwivcvo000e1l3q4teh4nxo1	hh-sharma-family	ing-mustard-seeds	200	g	f	\N	2026-11-16 10:00:33.076
+pantry-1794817781894	hh-patel-family	ing-bajra-flour	2000	g	f	\N	2026-11-16 10:00:37.613
+pantry-1794817791932	hh-mehta-family	ing-raw-banana	1500	g	f	\N	2026-11-16 10:00:37.638
+\.
+
+
+--
+-- Data for Name: PasswordResetToken; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public."PasswordResetToken" (id, "userId", "tokenHash", "expiresAt", "consumedAt", "createdAt") FROM stdin;
 \.
 
 
@@ -1485,6 +1780,16 @@ cmwixyb3i00c2l3bsfere0ea4	recipe-surati-undhiyu-jain	5	Cover tightly with a rimm
 
 
 --
+-- Data for Name: RefreshSession; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public."RefreshSession" (id, "userId", "tokenHash", "tokenFamilyId", "deviceName", "userAgent", "createdAt", "lastUsedAt", "expiresAt", "revokedAt") FROM stdin;
+cmwj33fo9001ll33ksqrhin9z	cmwj2fa4w0000l3s4x4q1jmst	0a88bbe62b2c90df8f962c27be5c70fcb4a051c46edad5d2ea8b7ccd4916a70b	fam_3cb50e83-6c00-48e2-8dc5-0bfbdd57ff44	Web Browser	node	2026-11-16 09:51:41.337	2026-11-16 09:51:41.337	2026-11-23 09:51:41.333	\N
+cmwj39g35001pl3i4ovfyws6j	cmwj2fa4w0000l3s4x4q1jmst	129292068ce1b8f6f847aee1daa4627fae8a354f4935271aa282f1b922cc664b	fam_7b702b3b-b3a3-4316-b512-1b4ade491bbc	Web Browser	node	2026-11-16 09:56:21.809	2026-11-16 09:56:21.809	2026-11-23 09:56:21.806	\N
+\.
+
+
+--
 -- Data for Name: Retailer; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -1493,6 +1798,14 @@ ret-blinkit	Blinkit	blinkit	https://images.unsplash.com/photo-1583258292688-d021
 ret-zepto	Zepto	zepto	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	10 mins	29	499	99	4.9
 ret-dmart	DMart Ready	dmart-ready	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=200&q=80	Tomorrow Morning	49	1000	500	4.7
 ret-bigbasket	BigBasket	bigbasket	https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=200&q=80	Same Day (2-4 hrs)	35	600	200	4.6
+\.
+
+
+--
+-- Data for Name: RetailerApplication; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public."RetailerApplication" (id, "userId", "businessName", "contactInformation", "applicationStatus", "submittedAt", "reviewedAt", "reviewedBy") FROM stdin;
 \.
 
 
@@ -1516,6 +1829,15 @@ cmwj0hksd0002l37w8272h6gr	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItZ
 cmwj0ir3z0003l37wpy4jos7g	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItdGVtcC1yZXZva2UiLCJlbWFpbCI6ImRlbW9AcmFzb2lpcS5pbiIsImZ1bGxOYW1lIjoiUG9vamEgU2hhcm1hIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJoaC1zaGFybWEtZmFtaWx5IiwiaWF0IjoxNzk0ODE4Mzc3LCJleHAiOjE3OTU0MjMxNzd9.62o310BAjoXN6AHF9-lznAf0-5BltXRf60F2D-EHEJQ	User logout	2026-11-16 08:39:37.147	2026-11-23 08:39:37
 cmwj0mwwu0000l3csgpufdd4e	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItZGVtby0xIiwiZW1haWwiOiJkZW1vQHJhc29paXEuaW4iLCJmdWxsTmFtZSI6IlBvb2phIFNoYXJtYSIsInJvbGUiOiJDVVNUT01FUiIsImhvdXNlaG9sZElkIjoiaGgtc2hhcm1hLWZhbWlseSIsImp0aSI6IjE3OTQ4MTg1NzEyODMtYmJ4a3RyNSIsImlhdCI6MTc5NDgxODU3MSwiZXhwIjoxNzk1NDIzMzcxfQ.6oXr-QYQRo0EEoPrXGx8Up5uQt5PsaJqMEKGsufG9cY	User logout	2026-11-16 08:42:51.292	2026-11-23 08:42:51
 cmwj0mxkb0001l3csixnovsyi	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItdGVtcC1yZXZva2UiLCJlbWFpbCI6ImRlbW9AcmFzb2lpcS5pbiIsImZ1bGxOYW1lIjoiUG9vamEgU2hhcm1hIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJoaC1zaGFybWEtZmFtaWx5IiwianRpIjoiMTc5NDgxODU3MjEyNy11eWNiNTNpIiwiaWF0IjoxNzk0ODE4NTcyLCJleHAiOjE3OTU0MjMzNzJ9.7OZg0TRFaOYchd-QzLiOoAIqKRYj-lmZnDXZQoOHs8A	User logout	2026-11-16 08:42:52.137	2026-11-23 08:42:52
+cmwj33fq2001ol33khcaugc1k	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqMzNkM2gwMDAwbDMzazdnMWMyYWlrIiwiaWQiOiJjbXdqMzNkM2gwMDAwbDMzazdnMWMyYWlrIiwiZW1haWwiOiJwaWxvdC51c2VyLm13ajMzY284QHRlc3RyYXNvaS5pbiIsImZ1bGxOYW1lIjoiVml2ZWsgSm9zaGkiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgyMjcwMDAxNy01YmQ4ZmZhYWYyNWZiY2VhZjI4NzczZWM4MzY5MzJmZCIsImlhdCI6MTc5NDgyMjcwMCwiZXhwIjoxNzk0ODIzNjAwLCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.ujQ4qWkTn2l3AEXstGKO2c4iBNKuUrdsPn3guxONQJ4	User logout	2026-11-16 09:51:41.4	2026-11-16 10:06:40
+cmwj34f8e001ql33kk3vtgk9m	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItZGVtby0xIiwiZW1haWwiOiJkZW1vQHJhc29paXEuaW4iLCJmdWxsTmFtZSI6IlBvb2phIFNoYXJtYSIsInJvbGUiOiJDVVNUT01FUiIsImhvdXNlaG9sZElkIjoiaGgtc2hhcm1hLWZhbWlseSIsImp0aSI6IjE3OTQ4MjI3NDc0MDAtbjV5ZnB1ayIsImlhdCI6MTc5NDgyMjc0NywiZXhwIjoxNzk1NDI3NTQ3fQ.As5hNkGFgXf9pWWZnp6rsPKuXl6-mpcMvDL2XRq4BAk	User logout	2026-11-16 09:52:27.418	2026-11-23 09:52:27
+cmwj38fcz0000l3i4xmyyzcbw	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItZGVtby0xIiwiZW1haWwiOiJkZW1vQHJhc29paXEuaW4iLCJmdWxsTmFtZSI6IlBvb2phIFNoYXJtYSIsInJvbGUiOiJDVVNUT01FUiIsImhvdXNlaG9sZElkIjoiaGgtc2hhcm1hLWZhbWlseSIsImp0aSI6IjE3OTQ4MjI5MzQxOTMtNDk3Nmc3NCIsImlhdCI6MTc5NDgyMjkzNCwiZXhwIjoxNzk1NDI3NzM0fQ.fLkruq9W-hQV78Rgzrskh-2CFJJEc7be8_5jrPYz9qQ	User logout	2026-11-16 09:55:34.208	2026-11-23 09:55:34
+cmwj38qex0002l3i4pzl1cy3o	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItdGVtcC1yZXZva2UiLCJlbWFpbCI6ImRlbW9AcmFzb2lpcS5pbiIsImZ1bGxOYW1lIjoiUG9vamEgU2hhcm1hIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJoaC1zaGFybWEtZmFtaWx5IiwianRpIjoiMTc5NDgyMjk0ODUyMi1hOXgzenYwIiwiaWF0IjoxNzk0ODIyOTQ4LCJleHAiOjE3OTU0Mjc3NDh9.IMJxFoULf8egNUkfJbXoQGlhmo-hN6Sp5ha6vqgYqUE	User logout	2026-11-16 09:55:48.534	2026-11-23 09:55:48
+cmwj39g4x001sl3i42mylbw53	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqMzlkOTkwMDA0bDNpNGRmYXRyNzJqIiwiaWQiOiJjbXdqMzlkOTkwMDA0bDNpNGRmYXRyNzJqIiwiZW1haWwiOiJwaWxvdC51c2VyLm13ajM5Y3N4QHRlc3RyYXNvaS5pbiIsImZ1bGxOYW1lIjoiVml2ZWsgSm9zaGkiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgyMjk4MDMwNC03MTFiNDhjODIyMmRlM2I3NTgxNjQ1YzZhYTkwMjI5ZiIsImlhdCI6MTc5NDgyMjk4MCwiZXhwIjoxNzk0ODIzODgwLCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.qCy90WWTt-ZPkhRKQ7eUMqk7mu05Nh0mE1PbyzQnHhk	User logout	2026-11-16 09:56:21.87	2026-11-16 10:11:20
+cmwj3a1zj001ul3i4br0kr67v	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItZGVtby0xIiwiZW1haWwiOiJkZW1vQHJhc29paXEuaW4iLCJmdWxsTmFtZSI6IlBvb2phIFNoYXJtYSIsInJvbGUiOiJDVVNUT01FUiIsImhvdXNlaG9sZElkIjoiaGgtc2hhcm1hLWZhbWlseSIsImp0aSI6IjE3OTQ4MjMwMTAxNjcteHBwaXM3ZCIsImlhdCI6MTc5NDgyMzAxMCwiZXhwIjoxNzk1NDI3ODEwfQ.-qIS9ziBdzG47VDBIWCvA9U6Ov13pqgQWk63i1mj65g	User logout	2026-11-16 09:56:50.188	2026-11-23 09:56:50
+cmwj3a2ku001wl3i4fb0vlmx3	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItdGVtcC1yZXZva2UiLCJlbWFpbCI6ImRlbW9AcmFzb2lpcS5pbiIsImZ1bGxOYW1lIjoiUG9vamEgU2hhcm1hIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJoaC1zaGFybWEtZmFtaWx5IiwianRpIjoiMTc5NDgyMzAxMDk0Mi16azM2ejJlIiwiaWF0IjoxNzk0ODIzMDEwLCJleHAiOjE3OTU0Mjc4MTB9.3VZYc3rd0Fvwvr_xHe61rwYEieUMAUysMh87H8g7-nc	User logout	2026-11-16 09:56:50.955	2026-11-23 09:56:50
+cmwj3evw80000l3g0k6q75lot	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItZGVtby0xIiwiZW1haWwiOiJkZW1vQHJhc29paXEuaW4iLCJmdWxsTmFtZSI6IlBvb2phIFNoYXJtYSIsInJvbGUiOiJDVVNUT01FUiIsImhvdXNlaG9sZElkIjoiaGgtc2hhcm1hLWZhbWlseSIsImp0aSI6IjE3OTQ4MjMyMzU1NDgtazUyM3dtaSIsImlhdCI6MTc5NDgyMzIzNSwiZXhwIjoxNzk1NDI4MDM1fQ.bJhRMFaLPG885ynu3RAXm_v6YfoO_nILlj-kYR-e-pc	User logout	2026-11-16 10:00:35.572	2026-11-23 10:00:35
+cmwj3eww50002l3g0y97u7lk1	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItdGVtcC1yZXZva2UiLCJlbWFpbCI6ImRlbW9AcmFzb2lpcS5pbiIsImZ1bGxOYW1lIjoiUG9vamEgU2hhcm1hIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJoaC1zaGFybWEtZmFtaWx5IiwianRpIjoiMTc5NDgyMzIzNjgzMy0wMm1ma3AwIiwiaWF0IjoxNzk0ODIzMjM2LCJleHAiOjE3OTU0MjgwMzZ9.IzVQeTpdZW6nkedADK_iD40_KVjgKbC2R-u47uwZRzI	User logout	2026-11-16 10:00:36.864	2026-11-23 10:00:36
 \.
 
 
@@ -1547,10 +1869,11 @@ COPY public."StoreProduct" (id, "storeId", "productVariantId", "inStock", "stock
 -- Data for Name: User; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."User" (id, email, "passwordHash", "fullName", "phoneNumber", role, "createdAt", "updatedAt") FROM stdin;
-user-demo-1	demo@rasoiiq.in	$2b$10$demo_hash_rasoi_iq_2026	Pooja Sharma	+91 98765 43210	CUSTOMER	2026-11-16 06:15:04.98	2026-11-16 07:27:44.381
-user-demo-patel	patel.family@rasoiiq.demo	$2b$10$demo_hash_rasoi_iq_2026	Rameshbhai Patel	+91 98250 11223	CUSTOMER	2026-11-16 06:15:05.055	2026-11-16 07:27:44.411
-user-demo-mehta	mehta.family@rasoiiq.demo	$2b$10$demo_hash_rasoi_iq_2026	Kirit Mehta	+91 98980 44556	CUSTOMER	2026-11-16 06:15:05.091	2026-11-16 07:27:44.426
+COPY public."User" (id, email, "passwordHash", "fullName", "phoneNumber", role, "createdAt", "updatedAt", "emailVerifiedAt", "lastLoginAt", "normalizedEmail", status) FROM stdin;
+user-demo-1	demo@rasoiiq.in	$2b$10$demo_hash_rasoi_iq_2026	Pooja Sharma	+91 98765 43210	CUSTOMER	2026-11-16 06:15:04.98	2026-11-16 07:27:44.381	\N	\N		ACTIVE
+user-demo-patel	patel.family@rasoiiq.demo	$2b$10$demo_hash_rasoi_iq_2026	Rameshbhai Patel	+91 98250 11223	CUSTOMER	2026-11-16 06:15:05.055	2026-11-16 07:27:44.411	\N	\N		ACTIVE
+user-demo-mehta	mehta.family@rasoiiq.demo	$2b$10$demo_hash_rasoi_iq_2026	Kirit Mehta	+91 98980 44556	CUSTOMER	2026-11-16 06:15:05.091	2026-11-16 07:27:44.426	\N	\N		ACTIVE
+cmwj2fa4w0000l3s4x4q1jmst	admin@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$TfUYCY8ObBkFhXavknrTrA$M0D5ShbMC+KqI6phtRMy2I3B998moRxFpt8IgFf8Bqo	Platform Administrator	\N	ADMIN	2026-11-16 09:32:54.416	2026-11-16 09:56:21.817	2026-11-16 09:32:54.413	2026-11-16 09:56:21.814	admin@rasoiiq.in	ACTIVE
 \.
 
 
@@ -1560,6 +1883,14 @@ user-demo-mehta	mehta.family@rasoiiq.demo	$2b$10$demo_hash_rasoi_iq_2026	Kirit M
 
 ALTER TABLE ONLY public."Address"
     ADD CONSTRAINT "Address_pkey" PRIMARY KEY (id);
+
+
+--
+-- Name: AuditLog AuditLog_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."AuditLog"
+    ADD CONSTRAINT "AuditLog_pkey" PRIMARY KEY (id);
 
 
 --
@@ -1579,11 +1910,27 @@ ALTER TABLE ONLY public."Basket"
 
 
 --
+-- Name: EmailVerificationToken EmailVerificationToken_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."EmailVerificationToken"
+    ADD CONSTRAINT "EmailVerificationToken_pkey" PRIMARY KEY (id);
+
+
+--
 -- Name: Feedback Feedback_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public."Feedback"
     ADD CONSTRAINT "Feedback_pkey" PRIMARY KEY (id);
+
+
+--
+-- Name: HouseholdInvitation HouseholdInvitation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."HouseholdInvitation"
+    ADD CONSTRAINT "HouseholdInvitation_pkey" PRIMARY KEY (id);
 
 
 --
@@ -1651,6 +1998,14 @@ ALTER TABLE ONLY public."PantryItem"
 
 
 --
+-- Name: PasswordResetToken PasswordResetToken_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."PasswordResetToken"
+    ADD CONSTRAINT "PasswordResetToken_pkey" PRIMARY KEY (id);
+
+
+--
 -- Name: Payment Payment_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1696,6 +2051,22 @@ ALTER TABLE ONLY public."RecipeStep"
 
 ALTER TABLE ONLY public."Recipe"
     ADD CONSTRAINT "Recipe_pkey" PRIMARY KEY (id);
+
+
+--
+-- Name: RefreshSession RefreshSession_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."RefreshSession"
+    ADD CONSTRAINT "RefreshSession_pkey" PRIMARY KEY (id);
+
+
+--
+-- Name: RetailerApplication RetailerApplication_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."RetailerApplication"
+    ADD CONSTRAINT "RetailerApplication_pkey" PRIMARY KEY (id);
 
 
 --
@@ -1747,10 +2118,94 @@ ALTER TABLE ONLY public."User"
 
 
 --
+-- Name: AuditLog_action_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "AuditLog_action_idx" ON public."AuditLog" USING btree (action);
+
+
+--
+-- Name: AuditLog_createdAt_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "AuditLog_createdAt_idx" ON public."AuditLog" USING btree ("createdAt");
+
+
+--
+-- Name: AuditLog_userId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "AuditLog_userId_idx" ON public."AuditLog" USING btree ("userId");
+
+
+--
+-- Name: EmailVerificationToken_tokenHash_key; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "EmailVerificationToken_tokenHash_key" ON public."EmailVerificationToken" USING btree ("tokenHash");
+
+
+--
+-- Name: EmailVerificationToken_userId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "EmailVerificationToken_userId_idx" ON public."EmailVerificationToken" USING btree ("userId");
+
+
+--
+-- Name: HouseholdInvitation_householdId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "HouseholdInvitation_householdId_idx" ON public."HouseholdInvitation" USING btree ("householdId");
+
+
+--
+-- Name: HouseholdInvitation_invitedEmail_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "HouseholdInvitation_invitedEmail_idx" ON public."HouseholdInvitation" USING btree ("invitedEmail");
+
+
+--
+-- Name: HouseholdInvitation_tokenHash_key; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "HouseholdInvitation_tokenHash_key" ON public."HouseholdInvitation" USING btree ("tokenHash");
+
+
+--
+-- Name: HouseholdMember_householdId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "HouseholdMember_householdId_idx" ON public."HouseholdMember" USING btree ("householdId");
+
+
+--
+-- Name: HouseholdMember_userId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "HouseholdMember_userId_idx" ON public."HouseholdMember" USING btree ("userId");
+
+
+--
 -- Name: Ingredient_name_key; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE UNIQUE INDEX "Ingredient_name_key" ON public."Ingredient" USING btree (name);
+
+
+--
+-- Name: PasswordResetToken_tokenHash_key; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "PasswordResetToken_tokenHash_key" ON public."PasswordResetToken" USING btree ("tokenHash");
+
+
+--
+-- Name: PasswordResetToken_userId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "PasswordResetToken_userId_idx" ON public."PasswordResetToken" USING btree ("userId");
 
 
 --
@@ -1779,6 +2234,34 @@ CREATE UNIQUE INDEX "ProductVariant_sku_key" ON public."ProductVariant" USING bt
 --
 
 CREATE UNIQUE INDEX "Recipe_slug_key" ON public."Recipe" USING btree (slug);
+
+
+--
+-- Name: RefreshSession_tokenFamilyId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "RefreshSession_tokenFamilyId_idx" ON public."RefreshSession" USING btree ("tokenFamilyId");
+
+
+--
+-- Name: RefreshSession_tokenHash_key; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "RefreshSession_tokenHash_key" ON public."RefreshSession" USING btree ("tokenHash");
+
+
+--
+-- Name: RefreshSession_userId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "RefreshSession_userId_idx" ON public."RefreshSession" USING btree ("userId");
+
+
+--
+-- Name: RetailerApplication_userId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "RetailerApplication_userId_idx" ON public."RetailerApplication" USING btree ("userId");
 
 
 --
@@ -1825,6 +2308,14 @@ ALTER TABLE ONLY public."Address"
 
 
 --
+-- Name: AuditLog AuditLog_userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."AuditLog"
+    ADD CONSTRAINT "AuditLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES public."User"(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
 -- Name: BasketItem BasketItem_basketId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1857,6 +2348,14 @@ ALTER TABLE ONLY public."Basket"
 
 
 --
+-- Name: EmailVerificationToken EmailVerificationToken_userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."EmailVerificationToken"
+    ADD CONSTRAINT "EmailVerificationToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES public."User"(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: Feedback Feedback_userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1865,11 +2364,27 @@ ALTER TABLE ONLY public."Feedback"
 
 
 --
+-- Name: HouseholdInvitation HouseholdInvitation_householdId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."HouseholdInvitation"
+    ADD CONSTRAINT "HouseholdInvitation_householdId_fkey" FOREIGN KEY ("householdId") REFERENCES public."Household"(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: HouseholdMember HouseholdMember_householdId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public."HouseholdMember"
     ADD CONSTRAINT "HouseholdMember_householdId_fkey" FOREIGN KEY ("householdId") REFERENCES public."Household"(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: HouseholdMember HouseholdMember_userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."HouseholdMember"
+    ADD CONSTRAINT "HouseholdMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES public."User"(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
@@ -1945,6 +2460,14 @@ ALTER TABLE ONLY public."PantryItem"
 
 
 --
+-- Name: PasswordResetToken PasswordResetToken_userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."PasswordResetToken"
+    ADD CONSTRAINT "PasswordResetToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES public."User"(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: Payment Payment_orderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1993,6 +2516,22 @@ ALTER TABLE ONLY public."RecipeStep"
 
 
 --
+-- Name: RefreshSession RefreshSession_userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."RefreshSession"
+    ADD CONSTRAINT "RefreshSession_userId_fkey" FOREIGN KEY ("userId") REFERENCES public."User"(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: RetailerApplication RetailerApplication_userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."RetailerApplication"
+    ADD CONSTRAINT "RetailerApplication_userId_fkey" FOREIGN KEY ("userId") REFERENCES public."User"(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: Session Session_userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -2028,5 +2567,5 @@ ALTER TABLE ONLY public."Store"
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 7d3zvk8aaadanGh5gD64EGKkpphppxKDcwN7FRqaXrlBy8UxYjbZ0za6JzcBLV8
+\unrestrict LXlqxRLRgw1bMNGTUvE8x7IbxqsY5qPbfgwfBjomICOzbx7oxfc8U4rE5xW8N3a
 

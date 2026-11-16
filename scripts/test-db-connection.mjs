@@ -8,7 +8,6 @@ try {
 } catch {}
 
 const DATABASE_URL = process.env.DATABASE_URL || `postgresql://postgres:postgres@${host}:5432/rasoi_iq?schema=public`;
-console.log('Connecting with DATABASE_URL:', DATABASE_URL);
 
 const prisma = new PrismaClient({
   datasources: { db: { url: DATABASE_URL } }
@@ -17,9 +16,10 @@ const prisma = new PrismaClient({
 async function main() {
   try {
     await prisma.$connect();
-    console.log(`✓ Prisma successfully connected to PostgreSQL on ${host}:5432!`);
-    const tables = await prisma.$queryRawUnsafe("SELECT tablename FROM pg_tables WHERE schemaname = 'public';");
-    console.log('✓ Query executed successfully. Existing public tables count:', tables.length);
+    const count = await prisma.household.count();
+    const households = await prisma.household.findMany({ select: { id: true, name: true } });
+    console.log(`Household count: ${count}`);
+    console.log('Households in DB:', JSON.stringify(households, null, 2));
     await prisma.$disconnect();
     process.exit(0);
   } catch (err) {

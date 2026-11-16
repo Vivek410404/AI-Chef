@@ -55,6 +55,79 @@ async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T>
 
 export const api = {
   // Auth
+  async register(data: {
+    fullName: string;
+    email: string;
+    phone?: string;
+    password: string;
+    confirmPassword?: string;
+    acceptTerms: boolean;
+  }) {
+    return fetchJson<{ success: boolean; message: string; emailPreviewUrl?: string }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async verifyEmail(token: string) {
+    const res = await fetchJson<{ success: boolean; message: string; token?: string; user?: any }>('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ token })
+    });
+    if (res?.token && typeof window !== 'undefined') {
+      localStorage.setItem('rasoi_auth_token', res.token);
+    }
+    return res;
+  },
+
+  async resendVerification(email: string) {
+    return fetchJson<{ success: boolean; message: string }>('/auth/resend-verification', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  },
+
+  async forgotPassword(email: string) {
+    return fetchJson<{ success: boolean; message: string; emailPreviewUrl?: string }>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  },
+
+  async resetPassword(token: string, newPassword: string, confirmPassword?: string) {
+    return fetchJson<{ success: boolean; message: string }>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, newPassword, confirmPassword })
+    });
+  },
+
+  async changePassword(currentPassword: string, newPassword: string, confirmPassword?: string) {
+    return fetchJson<{ success: boolean; message: string }>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+    });
+  },
+
+  async getMe() {
+    return fetchJson<{ user: any; memberships: any[] }>('/auth/me');
+  },
+
+  async getSessions() {
+    return fetchJson<{ sessions: any[] }>('/auth/sessions');
+  },
+
+  async revokeSession(sessionId: string) {
+    return fetchJson<{ success: boolean; message: string }>(`/auth/sessions/${sessionId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async logoutAll() {
+    return fetchJson<{ success: boolean; message: string }>('/auth/logout-all', {
+      method: 'POST'
+    });
+  },
+
   async getDemoSession(role: 'CUSTOMER' | 'RETAILER' | 'ADMIN' = 'CUSTOMER', body?: any) {
     const res = await fetchJson<{ token: string; user: any }>('/auth/demo-session', {
       method: 'POST',
@@ -67,7 +140,7 @@ export const api = {
   },
 
   async login(email: string, password?: string) {
-    const res = await fetchJson<{ token: string; user: any }>('/auth/login', {
+    const res = await fetchJson<{ token: string; user: any; refreshToken?: string }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password })
     });
@@ -94,6 +167,74 @@ export const api = {
       return localStorage.getItem('rasoi_auth_token');
     }
     return null;
+  },
+
+  // Households (Multi-Tenant & Invitations)
+  async createHousehold(data: {
+    name: string;
+    country?: string;
+    state?: string;
+    city?: string;
+    locality?: string;
+    size?: number;
+    dietaryPreference?: string;
+    cuisinePreference?: string;
+    weeklyBudgetInr?: number;
+  }): Promise<Household> {
+    return fetchJson<Household>('/households', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async getMyHouseholds(): Promise<Household[]> {
+    return fetchJson<Household[]>('/households/my');
+  },
+
+  async createInvitation(householdId: string, invitedEmail: string, role: 'MEMBER' | 'COOK' = 'MEMBER') {
+    return fetchJson<{ success: boolean; invitation: any; emailPreviewUrl?: string }>(`/households/${householdId}/invitations`, {
+      method: 'POST',
+      body: JSON.stringify({ invitedEmail, role })
+    });
+  },
+
+  async getInvitations(householdId: string) {
+    return fetchJson<{ invitations: any[] }>(`/households/${householdId}/invitations`);
+  },
+
+  async revokeInvitation(householdId: string, invitationId: string) {
+    return fetchJson<{ success: boolean }>(`/households/${householdId}/invitations/${invitationId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async validateInvitation(token: string) {
+    return fetchJson<{ valid: boolean; householdName: string; role: string; invitedEmail: string }>(`/households/invitations/validate?token=${encodeURIComponent(token)}`);
+  },
+
+  async acceptInvitation(token: string) {
+    return fetchJson<{ success: boolean; message: string; household: Household }>('/households/invitations/accept', {
+      method: 'POST',
+      body: JSON.stringify({ token })
+    });
+  },
+
+  // Retailer Application
+  async applyRetailer(data: {
+    businessName: string;
+    contactName: string;
+    contactPhone: string;
+    operatingCities: string[];
+    catalogSizeEstimate?: number;
+  }) {
+    return fetchJson<{ success: boolean; message: string; application: any }>('/marketplace/retailer/apply', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async getRetailerApplicationStatus() {
+    return fetchJson<{ hasApplication: boolean; application?: any }>('/marketplace/retailer/application/status');
   },
 
   // Health

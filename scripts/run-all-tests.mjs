@@ -15,7 +15,8 @@ const suites = [
   { name: 'test-phase41-postgres-and-pilot.mjs', category: 'Phase 4.1 PostgreSQL & Pilot Security' },
   { name: 'test-phase42-safety-and-recipes.mjs', category: 'Phase 4.2 Safety, Recipe Integrity & Provenance' },
   { name: 'test-phase43-household-simulation.mjs', category: 'Phase 4.3 Multi-Household Simulation & IDOR' },
-  { name: 'verify-backup-restore.mjs', category: 'Phase 4.3 Database Backup & Restored Parity' }
+  { name: 'verify-backup-restore.mjs', category: 'Phase 4.3 Database Backup & Restored Parity' },
+  { name: 'test-phase5-auth-and-identity.mjs', category: 'Phase 5.0 Authentication, Identity & Multi-Tenant' }
 ];
 
 console.log('========================================================================');

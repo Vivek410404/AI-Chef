@@ -23,12 +23,13 @@ export class RolesGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
     const authHeader = request.headers['authorization'];
+    const cookieToken = request.cookies?.rasoi_access_token;
 
-    if (!authHeader) {
+    if (!authHeader && !cookieToken) {
       throw new UnauthorizedException('Authentication token required for protected administrative routes');
     }
 
-    const token = authHeader.replace(/^Bearer\s+/i, '');
+    const token = authHeader ? authHeader.replace(/^Bearer\s+/i, '') : cookieToken;
     const user: any = await this.authService.verifyToken(token);
     request.user = user;
 

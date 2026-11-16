@@ -109,4 +109,48 @@ export class MarketplaceController {
     }
     return this.marketplaceService.updateRetailerProduct(id, variantId, body);
   }
+
+  @Post('retailer/apply')
+  async applyRetailer(
+    @Body() body: { businessName: string; contactInformation?: any },
+    @Headers('authorization') authHeader: string
+  ) {
+    if (!authHeader) {
+      throw new ForbiddenException('Authentication required to submit retailer application');
+    }
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    const user: any = await this.authService.verifyToken(token);
+    return this.marketplaceService.applyForRetailer(user.id || user.sub, {
+      businessName: body.businessName,
+      contactInformation: body.contactInformation || {}
+    });
+  }
+
+  @Get('retailer/application/status')
+  async getRetailerApplicationStatus(@Headers('authorization') authHeader: string) {
+    if (!authHeader) {
+      throw new ForbiddenException('Authentication required');
+    }
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    const user: any = await this.authService.verifyToken(token);
+    return this.marketplaceService.getRetailerApplicationStatus(user.id || user.sub);
+  }
+
+  @Get('admin/retailer-applications')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  async getRetailerApplications() {
+    return this.marketplaceService.getRetailerApplications();
+  }
+
+  @Post('admin/retailer-applications/:id/review')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  async reviewRetailerApplication(
+    @Param('id') id: string,
+    @Body() body: { status: 'APPROVED' | 'REJECTED' },
+    @Req() req: any
+  ) {
+    return this.marketplaceService.reviewRetailerApplication(id, body.status, req.user?.id || req.user?.sub || 'admin');
+  }
 }

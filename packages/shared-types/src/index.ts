@@ -256,6 +256,9 @@ export interface HouseholdMember {
   allergies: string[]; // e.g. ["Peanuts", "Lactose", "Gluten", "Mustard"]
   dislikedIngredients: string[];
   nutritionGoals?: HouseholdNutritionGoals;
+  role?: 'OWNER' | 'MEMBER' | 'COOK';
+  userId?: string;
+  status?: string;
 }
 
 export interface Household {
