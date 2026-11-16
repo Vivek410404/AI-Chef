@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as nodemailer from 'nodemailer';
 
 export interface CapturedEmail {
   id: string;
@@ -88,20 +89,48 @@ export class EmailService {
       ...payload
     };
 
-    // In local development / non-production mode, capture in development inbox
-    if (!this.isProduction() || !process.env.SMTP_HOST) {
-      EmailService.devInbox.unshift(emailRecord);
-      // Keep only last 50 emails
-      if (EmailService.devInbox.length > 50) {
-        EmailService.devInbox.pop();
+    // If SMTP is configured in .env, send real transactional email
+    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      try {
+        const port = Number(process.env.SMTP_PORT) || 587;
+        const secure = port === 465;
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port,
+          secure,
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+          }
+        });
+
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || `"RasoiIQ" <${process.env.SMTP_USER}>`,
+          to: payload.to,
+          subject: payload.subject,
+          text: payload.text,
+          html: payload.html || payload.text.replace(/\n/g, '<br/>')
+        });
+
+        this.logger.log(`[EmailService] Outbound email dispatched via SMTP to ${payload.to} (Subject: "${payload.subject}")`);
+        return true;
+      } catch (err: any) {
+        this.logger.error(`[EmailService] SMTP delivery failed to ${payload.to}: ${err.message}. Falling back to dev inbox.`);
+        EmailService.devInbox.unshift(emailRecord);
+        return false;
       }
-      this.logger.log(`[EmailService] Captured ${payload.type} email for ${payload.to} (dev preview available)`);
-      return true;
     }
 
-    // In production with SMTP configured
-    // Note: Secrets or tokens are NEVER printed in application logs
-    this.logger.log(`[EmailService] Outbound email dispatched via SMTP to ${payload.to} (Subject: "${payload.subject}")`);
+    // In local development / non-production mode without SMTP, capture in development inbox
+    EmailService.devInbox.unshift(emailRecord);
+    // Keep only last 50 emails
+    if (EmailService.devInbox.length > 50) {
+      EmailService.devInbox.pop();
+    }
+    this.logger.log(`[EmailService] Captured ${payload.type} email for ${payload.to} (dev preview available)`);
+    if (payload.link) {
+      this.logger.log(`[EmailService] Verification/Action Link: ${payload.link}`);
+    }
     return true;
   }
 

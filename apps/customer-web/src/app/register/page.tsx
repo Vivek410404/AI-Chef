@@ -140,7 +140,19 @@ export default function RegisterPage() {
               {error && (
                 <div className="p-4 rounded-2xl bg-red-50 border border-red-200 flex items-start gap-3 text-red-800 text-sm">
                   <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                  <p className="font-medium">{error}</p>
+                  <div className="flex-1">
+                    <p className="font-medium">{error}</p>
+                    {error.toLowerCase().includes('already exists') && (
+                      <div className="mt-2">
+                        <Link
+                          href="/login"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-forest-800 hover:text-forest-950 underline"
+                        >
+                          Sign in to your existing account &rarr;
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

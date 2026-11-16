@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   BadRequestException,
   NotFoundException,
+  ConflictException,
   OnModuleInit,
   Logger
 } from '@nestjs/common';
@@ -98,13 +99,9 @@ export class AuthService implements OnModuleInit {
         } as any)
       });
 
-      // Prevent email enumeration: return consistent public message if already registered
       if (existing) {
         this.logger.log(`Registration attempted for already registered email: ${normalizedEmail}`);
-        return {
-          success: true,
-          message: 'Registration request received. Please check your email for the verification link.'
-        };
+        throw new ConflictException('An account with this email address already exists. Please log in or reset your password.');
       }
 
       const passwordHash = await this.passwordService.hash(dto.password);
