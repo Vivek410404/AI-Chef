@@ -219,16 +219,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!isStaff) {
     return (
       <div className="min-h-screen glass-admin-bg text-stone-100 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-        {/* Ambient floating glowing light spheres */}
+        {/* Ambient glowing colorful desktop backdrop */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-          <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-emerald-500/15 rounded-full blur-[140px]" />
-          <div className="absolute top-1/3 -right-32 w-[550px] h-[550px] bg-teal-500/12 rounded-full blur-[150px]" />
-          <div className="absolute -bottom-32 left-1/4 w-[450px] h-[450px] bg-amber-500/10 rounded-full blur-[140px]" />
+          {/* Top-left emerald nebula */}
+          <div className="absolute -top-24 -left-24 w-[600px] h-[600px] bg-gradient-to-br from-emerald-500/30 to-teal-500/20 rounded-full blur-[130px] animate-pulse" style={{ animationDuration: '8s' }} />
+          {/* Top-right indigo aurora */}
+          <div className="absolute -top-24 -right-24 w-[650px] h-[650px] bg-gradient-to-bl from-indigo-500/25 to-purple-500/20 rounded-full blur-[140px]" />
+          {/* Center orb directly behind the frosted glass card */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-emerald-500/20 via-teal-400/15 to-cyan-500/20 rounded-full blur-[120px]" />
+          {/* Bottom ambient sunset flare */}
+          <div className="absolute -bottom-32 left-1/3 w-[550px] h-[550px] bg-gradient-to-t from-amber-500/15 to-orange-500/10 rounded-full blur-[140px]" />
         </div>
 
-        <div className="max-w-md w-full glass-admin-card rounded-3xl p-8 sm:p-10 shadow-2xl relative z-10 border border-white/[0.12] overflow-hidden backdrop-blur-3xl">
+        <div className="max-w-md w-full glass-admin-card rounded-3xl p-8 sm:p-10 shadow-2xl relative z-10 border border-white/[0.18] overflow-hidden backdrop-blur-3xl">
           {/* Top specular reflection accent */}
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent" />
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-48 h-48 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none" />
 
           {!mfaSessionId ? (
             /* Stage 1: Administrator Credentials Entry */
@@ -432,8 +438,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen glass-admin-bg text-stone-100 flex flex-col md:flex-row relative selection:bg-emerald-500/30 selection:text-emerald-200">
       {/* Ambient background glows for admin dashboard */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-0 left-64 w-[600px] h-[600px] bg-emerald-500/8 rounded-full blur-[160px]" />
-        <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-teal-500/6 rounded-full blur-[180px]" />
+        <div className="absolute -top-32 left-64 w-[750px] h-[750px] bg-gradient-to-br from-emerald-500/18 to-teal-500/12 rounded-full blur-[160px]" />
+        <div className="absolute top-1/3 -right-24 w-[650px] h-[650px] bg-gradient-to-bl from-indigo-500/16 to-purple-500/12 rounded-full blur-[170px]" />
+        <div className="absolute -bottom-32 left-1/3 w-[650px] h-[650px] bg-gradient-to-t from-amber-500/12 to-emerald-500/10 rounded-full blur-[160px]" />
       </div>
 
       {/* Sidebar Navigation (Glass) */}
