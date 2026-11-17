@@ -29,7 +29,7 @@ export class GroceryController {
               });
               if (member) return requestedHouseholdId;
             }
-            return requestedHouseholdId;
+            throw new ForbiddenException(`Access denied. You are not an authorized member of household "${requestedHouseholdId}".`);
           }
           if (user.householdId) {
             return user.householdId;
@@ -49,7 +49,11 @@ export class GroceryController {
         if (user.role === 'ADMIN') {
           return requestedHouseholdId || user.householdId || 'hh-sharma-family';
         }
-      } catch {}
+      } catch (err: any) {
+        if (err instanceof ForbiddenException) {
+          throw err;
+        }
+      }
     }
     return requestedHouseholdId || 'hh-sharma-family';
   }

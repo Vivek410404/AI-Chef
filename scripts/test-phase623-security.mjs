@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 /**
  * Phase 6.2.3 Security, Authorization & Idempotency Audit Test Suite
  * Comprehensive verification of:

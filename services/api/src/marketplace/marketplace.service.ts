@@ -527,13 +527,40 @@ export class MarketplaceService {
     if (this.store.isPrismaConnected) {
       try {
         await this.store.prisma.$transaction(async (tx) => {
+          // Row-level exclusive lock to serialize concurrent transitions on this order
+          const lockedOrders: any[] = await tx.$queryRawUnsafe(
+            `SELECT * FROM "Order" WHERE id = $1 FOR UPDATE`,
+            order.id
+          );
+          const latestOrder = lockedOrders[0];
+          if (!latestOrder) {
+            throw new NotFoundException(`Order with ID "${order.id}" not found.`);
+          }
+
+          const latestCanonical = MarketplaceService.CANONICAL_MAP[(latestOrder.status || '').toUpperCase().trim()] || 'ORDER_CONFIRMED';
+
+          // Idempotent duplicate check under transaction
+          if (latestCanonical === targetCanonical) {
+            return;
+          }
+
+          // Verify transition validity from the freshly committed status
+          const legalNext = MarketplaceService.CANONICAL_TRANSITIONS[latestCanonical] || [];
+          if (!legalNext.includes(targetCanonical)) {
+            throw new BadRequestException(
+              `Concurrent transition conflict: Order was already updated to "${latestCanonical}". Legal transitions from "${latestCanonical}" are: ${
+                legalNext.length > 0 ? legalNext.join(', ') : 'None (Order is in terminal state)'
+              }`
+            );
+          }
+
           await tx.order.update({
             where: { id: order.id },
             data: {
               status: targetCanonical,
               statusReason: reason,
-              substitutionNotes: dto.substitutionNotes || (order.substitutionNotes ?? null),
-              fulfillmentNotes: dto.fulfillmentNotes || (order.fulfillmentNotes ?? null),
+              substitutionNotes: dto.substitutionNotes || (latestOrder.substitutionNotes ?? null),
+              fulfillmentNotes: dto.fulfillmentNotes || (latestOrder.fulfillmentNotes ?? null),
               updatedBy
             }
           });
@@ -541,7 +568,7 @@ export class MarketplaceService {
           await tx.orderStatusHistory.create({
             data: {
               orderId: order.id,
-              fromStatus: currentCanonical,
+              fromStatus: latestCanonical,
               toStatus: targetCanonical,
               reason,
               changedBy: updatedBy
@@ -549,6 +576,9 @@ export class MarketplaceService {
           });
         });
       } catch (err: any) {
+        if (err instanceof BadRequestException || err instanceof NotFoundException) {
+          throw err;
+        }
         throw new BadRequestException(`Failed to persist order transition in database: ${err.message}`);
       }
     }

@@ -495,7 +495,7 @@ model OrderItem {
 model OrderStatusHistory {
   id         String   @id @default(cuid())
   orderId    String
-  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
   fromStatus String?
   toStatus   String
   reason     String?

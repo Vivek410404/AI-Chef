@@ -37,13 +37,10 @@ CREATE TABLE IF NOT EXISTS "OrderStatusHistory" (
 CREATE INDEX IF NOT EXISTS "OrderStatusHistory_orderId_idx" ON "OrderStatusHistory"("orderId");
 CREATE INDEX IF NOT EXISTS "OrderStatusHistory_createdAt_idx" ON "OrderStatusHistory"("createdAt");
 
--- 5. Foreign Key Constraint with Cascade Delete
+-- 5. Foreign Key Constraint with Restrictive Delete (Audit Immutability Protection)
 DO $$
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'OrderStatusHistory_orderId_fkey'
-    ) THEN
-        ALTER TABLE "OrderStatusHistory" ADD CONSTRAINT "OrderStatusHistory_orderId_fkey" 
-        FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-    END IF;
+    ALTER TABLE "OrderStatusHistory" DROP CONSTRAINT IF EXISTS "OrderStatusHistory_orderId_fkey";
+    ALTER TABLE "OrderStatusHistory" ADD CONSTRAINT "OrderStatusHistory_orderId_fkey" 
+        FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 END $$;

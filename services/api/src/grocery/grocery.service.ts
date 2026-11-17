@@ -771,27 +771,6 @@ export class GroceryService {
     });
     const scopedIdempotencyKey = options.idempotencyKey ? `${householdId}:${options.idempotencyKey}` : null;
 
-    if (scopedIdempotencyKey) {
-      const cached = this.reorderIdempotencyRecords.get(scopedIdempotencyKey);
-      if (cached) {
-        if (Date.now() - cached.timestamp < 300000) {
-          if (cached.fingerprint !== requestFingerprint) {
-            throw new ConflictException({
-              statusCode: 409,
-              error: 'IDEMPOTENCY_CONFLICT',
-              message: `Idempotency key "${options.idempotencyKey}" was previously used with a different request payload. Reusing an idempotency key with conflicting parameters is prohibited.`
-            });
-          }
-          return {
-            ...cached.response,
-            isIdempotentReplay: true
-          };
-        } else {
-          this.reorderIdempotencyRecords.delete(scopedIdempotencyKey);
-        }
-      }
-    }
-
     // Mutex: Serial execution per household to eliminate race conditions
     while (this.householdReorderLocks.get(householdId)) {
       await new Promise(r => setTimeout(r, 20));
@@ -799,6 +778,27 @@ export class GroceryService {
     this.householdReorderLocks.set(householdId, true);
 
     try {
+      // Phase 6.2.4 (Workstream D): Recheck idempotency cache while holding the household mutex
+      if (scopedIdempotencyKey) {
+        const cached = this.reorderIdempotencyRecords.get(scopedIdempotencyKey);
+        if (cached) {
+          if (Date.now() - cached.timestamp < 300000) {
+            if (cached.fingerprint !== requestFingerprint) {
+              throw new ConflictException({
+                statusCode: 409,
+                error: 'IDEMPOTENCY_CONFLICT',
+                message: `Idempotency key "${options.idempotencyKey}" was previously used with a different request payload. Reusing an idempotency key with conflicting parameters is prohibited.`
+              });
+            }
+            return {
+              ...cached.response,
+              isIdempotentReplay: true
+            };
+          } else {
+            this.reorderIdempotencyRecords.delete(scopedIdempotencyKey);
+          }
+        }
+      }
       // 1. Fetch order
       let order: any = this.store.orders.find(o => o.id === options.orderId || o.orderNumber === options.orderId);
       if (!order && this.store.isPrismaConnected) {

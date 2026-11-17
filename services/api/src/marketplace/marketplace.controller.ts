@@ -90,7 +90,7 @@ export class MarketplaceController {
       } catch {}
     }
 
-    // Phase 6.2.3: Secure Server-Side System Worker Verification
+    // Phase 6.2.4: Secure Server-Side System Worker Verification
     if (internalWorkerKey) {
       const isValidWorker = this.authService.verifyInternalWorker(internalWorkerKey);
       if (!isValidWorker) {
@@ -101,12 +101,15 @@ export class MarketplaceController {
           'Privilege escalation blocked: Authenticated customer and retailer sessions cannot assume SYSTEM_WORKER authority.'
         );
       }
-      currentUser = {
-        id: 'system-worker',
-        email: 'system-worker@internal.rasoiiq.in',
-        role: 'SYSTEM_WORKER',
-        isSystemWorker: true
-      };
+      // Phase 6.2.4: Admin continues to act as ADMIN rather than silently changing identity to SYSTEM_WORKER
+      if (!currentUser || currentUser.role !== 'ADMIN') {
+        currentUser = {
+          id: 'system-worker',
+          email: 'system-worker@internal.rasoiiq.in',
+          role: 'SYSTEM_WORKER',
+          isSystemWorker: true
+        };
+      }
     }
 
     return this.marketplaceService.updateOrderStatus(id, body, currentUser);

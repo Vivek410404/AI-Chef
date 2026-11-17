@@ -50,6 +50,18 @@ export class AuthService implements OnModuleInit {
 
   async onModuleInit() {
     await this.loadRevokedTokensFromDatabase();
+    this.validateWorkerConfiguration();
+  }
+
+  private validateWorkerConfiguration() {
+    const secret = process.env.INTERNAL_WORKER_SECRET;
+    if (!secret || secret.trim().length === 0) {
+      this.logger.warn('⚠️ [SECURITY AUDIT] INTERNAL_WORKER_SECRET is not configured. Internal worker authentication will fail closed.');
+    } else if (secret.trim().length < 32) {
+      this.logger.warn('⚠️ [SECURITY AUDIT] INTERNAL_WORKER_SECRET is shorter than 32 characters. A cryptographically strong secret is recommended.');
+    } else {
+      this.logger.log('🛡️ [SECURITY AUDIT] INTERNAL_WORKER_SECRET is configured with valid length (>= 32 chars).');
+    }
   }
 
   async loadRevokedTokensFromDatabase() {
@@ -1397,13 +1409,18 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
-   * Phase 6.2.3: Secure Server-Side System Worker Verification
+   * Phase 6.2.4: Secure Server-Side System Worker Verification (Zero Fallback)
    * Authenticates internal background workers using constant-time secret comparison.
    * Completely immune to client-side header spoofing.
+   * Fails closed if INTERNAL_WORKER_SECRET is missing, empty, or whitespace.
    */
   verifyInternalWorker(workerKey?: string): boolean {
     if (!workerKey || typeof workerKey !== 'string') return false;
-    const internalSecret = process.env.INTERNAL_WORKER_SECRET || 'rasoi_internal_sys_worker_secret_2026_x7a9';
+    const internalSecret = process.env.INTERNAL_WORKER_SECRET;
+    if (!internalSecret || typeof internalSecret !== 'string' || internalSecret.trim().length === 0) {
+      this.logger.error('CRITICAL: INTERNAL_WORKER_SECRET is not configured or empty. System worker authentication failed closed.');
+      return false;
+    }
     try {
       const keyBuffer = Buffer.from(workerKey.trim());
       const secretBuffer = Buffer.from(internalSecret.trim());
