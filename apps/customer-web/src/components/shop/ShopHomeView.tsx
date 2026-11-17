@@ -28,7 +28,8 @@ import {
   SprayCan,
   ChevronLeft,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  AlertCircle
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { ImageWithFallback } from '@/components/ui/ImageWithFallback';
@@ -111,17 +112,26 @@ export function ShopHomeView({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // 1. Fetch Categories
+  const [lowStockPantryItems, setLowStockPantryItems] = useState<any[]>([]);
+
+  // 1. Fetch Categories & Pantry Restock Alerts
   useEffect(() => {
-    async function loadCats() {
+    async function loadInitialData() {
       try {
-        const cats = await api.getGroceryCategories();
+        const [cats, pantry] = await Promise.all([
+          api.getGroceryCategories().catch(() => []),
+          api.getPantry().catch(() => [])
+        ]);
         if (Array.isArray(cats)) setCategories(cats);
+        if (Array.isArray(pantry)) {
+          const low = pantry.filter(p => p.isLowStock || (p.currentQuantity && p.currentQuantity <= 500));
+          setLowStockPantryItems(low);
+        }
       } catch (err) {
-        console.error('Failed to load grocery categories:', err);
+        console.error('Failed to load initial shop data:', err);
       }
     }
-    loadCats();
+    loadInitialData();
   }, []);
 
   // 2. Fetch Basket Quantities to keep UI buttons in sync
@@ -503,6 +513,36 @@ export function ShopHomeView({
             })}
           </div>
         </div>
+
+        {/* 2.5 Kitchen Pantry Low-Stock Restock Bar */}
+        {lowStockPantryItems.length > 0 && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-amber-50 border border-amber-200 shadow-soft flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs sm:text-sm font-bold text-stone-900">
+                  Kitchen Pantry Low-Stock Alert ({lowStockPantryItems.length} items)
+                </h4>
+                <p className="text-xs text-stone-600 mt-0.5">
+                  Running low on: <strong className="text-forest-900">{lowStockPantryItems.map(p => p.ingredient?.name || p.ingredientId).slice(0, 3).join(', ')}</strong>. Keep your household essentials stocked.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setSelectedCategory('all');
+                const term = lowStockPantryItems[0]?.ingredient?.name || 'Dal';
+                setSearchTerm(term);
+                setSearchQuery(term);
+              }}
+              className="self-start sm:self-auto px-4 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs shadow-soft transition-all"
+            >
+              Find Restock Options
+            </button>
+          </div>
+        )}
 
         {/* 3. 14 Categories Navigation Carousel / Grid */}
         <div>

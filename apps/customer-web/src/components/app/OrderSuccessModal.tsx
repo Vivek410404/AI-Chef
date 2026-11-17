@@ -1,7 +1,19 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { CheckCircle2, Clock, MapPin, ShoppingBag, X, ShieldCheck, Tag, Check } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import {
+  CheckCircle2,
+  Clock,
+  MapPin,
+  ShoppingBag,
+  X,
+  ShieldCheck,
+  Tag,
+  Check,
+  Truck,
+  PackageCheck,
+  Store
+} from 'lucide-react';
 import { formatInr } from '@/lib/utils';
 
 interface OrderSuccessModalProps {
@@ -12,15 +24,26 @@ interface OrderSuccessModalProps {
 }
 
 export function OrderSuccessModal({ isOpen, onClose, onReturnToDashboard, orderData }: OrderSuccessModalProps) {
+  const [deliveryStage, setDeliveryStage] = useState(1); // 1: Confirmed, 2: Packing, 3: Out for delivery
+
   useEffect(() => {
     if (!isOpen) return;
+
+    // Simulate real-time dark store progression
+    setDeliveryStage(1);
+    const timer1 = setTimeout(() => setDeliveryStage(2), 2500);
+    const timer2 = setTimeout(() => setDeliveryStage(3), 8000);
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+
     return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = prevOverflow;
     };
@@ -45,7 +68,6 @@ export function OrderSuccessModal({ isOpen, onClose, onReturnToDashboard, orderD
         onClick={(e) => e.stopPropagation()}
         className="bg-surface rounded-3xl w-full max-w-lg max-h-[92vh] overflow-y-auto no-scrollbar border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-5 text-center relative"
       >
-        
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -69,6 +91,40 @@ export function OrderSuccessModal({ isOpen, onClose, onReturnToDashboard, orderD
           <p className="text-xs text-stone-500">
             Order Reference: <strong className="text-forest-900">{orderData.orderNumber || orderData.id}</strong>
           </p>
+        </div>
+
+        {/* Live Delivery Status Tracker */}
+        <div className="p-4 rounded-2xl bg-white border border-cream-300 shadow-soft text-left space-y-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-forest-900 flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-emerald-600 animate-pulse" />
+              <span>
+                {deliveryStage === 1 && 'Order Confirmed & Sent to Dark Store'}
+                {deliveryStage === 2 && 'Packing Items at Hub'}
+                {deliveryStage === 3 && 'Rider Assigned & On the Way'}
+              </span>
+            </span>
+            <span className="text-[11px] font-bold text-stone-500 font-mono">
+              ETA: ~{orderData.deliveryTimeEstimate || '10-15 mins'}
+            </span>
+          </div>
+
+          {/* Stepper Bar */}
+          <div className="w-full bg-cream-200 h-2 rounded-full overflow-hidden">
+            <div
+              className="bg-emerald-500 h-full rounded-full transition-all duration-700 ease-out"
+              style={{
+                width: deliveryStage === 1 ? '25%' : deliveryStage === 2 ? '55%' : '80%'
+              }}
+            />
+          </div>
+
+          {/* Step Labels */}
+          <div className="grid grid-cols-3 text-center text-[10px] font-bold text-stone-500">
+            <span className={deliveryStage >= 1 ? 'text-emerald-700' : ''}>1. Confirmed</span>
+            <span className={deliveryStage >= 2 ? 'text-emerald-700' : ''}>2. Packing</span>
+            <span className={deliveryStage >= 3 ? 'text-emerald-700' : ''}>3. On the Way</span>
+          </div>
         </div>
 
         {/* Order Details Card */}
