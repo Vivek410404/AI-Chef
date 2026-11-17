@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { StoreService } from '../data/store.service';
 import { Retailer, ProductVariant } from '@rasoi/shared-types';
+import { evaluateInventoryAvailability } from '../grocery/grocery.service';
 
 @Injectable()
 export class MarketplaceService {
@@ -73,6 +74,49 @@ export class MarketplaceService {
 
     if (isDuplicate) {
       throw new BadRequestException('Duplicate order submission detected. Please wait a moment before resubmitting.');
+    }
+
+    // Phase 6.2.2: Strict Fail-Closed Inventory Verification during Checkout
+    const unverifiedOrUnavailableItems: any[] = [];
+    for (const item of orderData.items) {
+      const vId = item.productVariantId || item.variantId || item.id;
+      let variant: any = null;
+      if (this.store.isPrismaConnected && vId) {
+        variant = await this.store.prisma.productVariant.findUnique({
+          where: { id: vId },
+          include: { product: true }
+        });
+      }
+      if (!variant && vId) {
+        variant = this.store.productVariants.find(v => v.id === vId);
+      }
+      if (!variant) {
+        unverifiedOrUnavailableItems.push({
+          productVariantId: vId || 'unknown',
+          productName: item.title || item.name || 'Unknown item',
+          status: 'UNKNOWN_AVAILABILITY',
+          reason: `Catalog record for variant "${vId}" could not be verified in store inventory.`
+        });
+      } else {
+        const avail = evaluateInventoryAvailability(variant, item.quantityPacks || item.quantity || 1);
+        if (!avail.isAvailable) {
+          unverifiedOrUnavailableItems.push({
+            productVariantId: variant.id,
+            productName: variant.title,
+            status: avail.status,
+            reason: avail.reason
+          });
+        }
+      }
+    }
+
+    if (unverifiedOrUnavailableItems.length > 0) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'UNAVAILABLE_ITEMS_IN_CHECKOUT',
+        message: `Checkout blocked: ${unverifiedOrUnavailableItems.length} item(s) in your basket are unavailable or cannot be verified.`,
+        unverifiedItems: unverifiedOrUnavailableItems
+      });
     }
 
     const subtotal = orderData.items.reduce(
@@ -380,16 +424,7 @@ export class MarketplaceService {
     currentUser?: any,
     isSimulationWorker = false
   ) {
-    // 1. Authorization checks: Customers strictly forbidden from self-transitioning orders
-    if (currentUser && currentUser.role === 'CUSTOMER') {
-      throw new ForbiddenException('Access denied. Customers are not authorized to advance order delivery status.');
-    }
-
-    if (!currentUser && !isSimulationWorker) {
-      throw new ForbiddenException('Authentication or simulation authority required to advance order status.');
-    }
-
-    // 2. Fetch order (from memory or DB)
+    // 1. Fetch order (from memory or DB)
     let order = this.orders.find(o => o.id === orderId || o.orderNumber === orderId);
     if (!order && this.store.isPrismaConnected) {
       const dbOrder = await this.store.prisma.order.findUnique({
@@ -405,17 +440,7 @@ export class MarketplaceService {
       throw new NotFoundException(`Order with ID "${orderId}" not found.`);
     }
 
-    // 3. Retailer isolation: Retailer can only update their own retailer orders
-    if (currentUser && currentUser.role === 'RETAILER') {
-      const userRetailerId = currentUser.retailerId || 'ret-blinkit';
-      if (order.retailerId && order.retailerId !== userRetailerId) {
-        throw new ForbiddenException(
-          `Access denied. Retailer "${userRetailerId}" is not authorized to modify status for "${order.retailerId}" order.`
-        );
-      }
-    }
-
-    // 4. Validate canonical state transition
+    // 2. Validate canonical state transition
     const rawTarget = (dto.status || '').toUpperCase().trim();
     const targetCanonical = MarketplaceService.CANONICAL_MAP[rawTarget];
     if (!targetCanonical) {
@@ -426,6 +451,43 @@ export class MarketplaceService {
 
     const rawCurrent = (order.status || 'ORDER_CONFIRMED').toUpperCase().trim();
     const currentCanonical = MarketplaceService.CANONICAL_MAP[rawCurrent] || 'ORDER_CONFIRMED';
+
+    // 3. Mandatory cancellation reason
+    if (targetCanonical === 'CANCELLED') {
+      if (!dto.statusReason || dto.statusReason.trim().length < 3) {
+        throw new BadRequestException('A cancellation reason of at least 3 characters is mandatory.');
+      }
+    }
+
+    // 4. Role-based authorization & cancellation window
+    if (currentUser && currentUser.role === 'CUSTOMER') {
+      if (targetCanonical !== 'CANCELLED') {
+        throw new ForbiddenException('Access denied. Customers are not authorized to advance order delivery status.');
+      }
+      const userHouseholdId = currentUser.householdId || currentUser.household_id;
+      if (userHouseholdId && order.householdId && order.householdId !== userHouseholdId) {
+        throw new ForbiddenException('Access denied. You can only cancel orders placed by your household.');
+      }
+      if (currentCanonical !== 'ORDER_CONFIRMED') {
+        throw new BadRequestException(
+          `Customer order cancellation is only permitted when the order is in ORDER_CONFIRMED status. Current status is "${currentCanonical}". Please contact customer support for assistance.`
+        );
+      }
+    } else if (currentUser && currentUser.role === 'RETAILER') {
+      const userRetailerId = currentUser.retailerId || 'ret-blinkit';
+      if (order.retailerId && order.retailerId !== userRetailerId) {
+        throw new ForbiddenException(
+          `Access denied. Retailer "${userRetailerId}" is not authorized to modify status for "${order.retailerId}" order.`
+        );
+      }
+      if (targetCanonical === 'CANCELLED' && currentCanonical !== 'ORDER_CONFIRMED' && currentCanonical !== 'HUB_PACKING') {
+        throw new BadRequestException(
+          `Retailers may only cancel orders in ORDER_CONFIRMED or HUB_PACKING status. Current status: "${currentCanonical}".`
+        );
+      }
+    } else if (!currentUser && !isSimulationWorker) {
+      throw new ForbiddenException('Authentication or simulation authority required to advance order status.');
+    }
 
     // Duplicate transition handling: Idempotent no-op
     if (currentCanonical === targetCanonical) {

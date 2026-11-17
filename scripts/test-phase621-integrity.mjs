@@ -454,12 +454,12 @@ async function main() {
       householdId: 'hh-patel-family',
       items: [
         {
-          productVariantId: 'var-amul-gold-1l',
-          productName: 'Amul Gold Milk',
-          brand: 'Amul',
-          packSize: '1L',
+          productVariantId: 'var-mother-paneer-200',
+          productName: 'Mother Dairy Classic Paneer',
+          brand: 'Mother Dairy',
+          packSize: '200g',
           quantityPacks: 2,
-          priceInr: 66
+          priceInr: 95
         }
       ]
     })

@@ -157,14 +157,16 @@ export class GroceryController {
 
   @Post('cart/reorder')
   async reorderBasket(
-    @Body() body: { orderId: string; targetRetailerId?: string; replaceCart?: boolean; householdId?: string },
-    @Headers('authorization') authHeader?: string
+    @Body() body: { orderId: string; targetRetailerId?: string; replaceCart?: boolean; householdId?: string; idempotencyKey?: string },
+    @Headers('authorization') authHeader?: string,
+    @Headers('idempotency-key') idempotencyHeader?: string
   ) {
     const householdId = await this.resolveHouseholdId(authHeader, body.householdId);
     return this.groceryService.reorderBasket(householdId, {
       orderId: body.orderId,
       targetRetailerId: body.targetRetailerId,
-      replaceCart: body.replaceCart
+      replaceCart: body.replaceCart,
+      idempotencyKey: idempotencyHeader || body.idempotencyKey
     });
   }
 
@@ -175,6 +177,30 @@ export class GroceryController {
   ) {
     const householdId = await this.resolveHouseholdId(authHeader, queryHouseholdId);
     return this.groceryService.getPantryRestockSuggestions(householdId);
+  }
+
+  @Post('pantry/evaluate')
+  async evaluatePantry(
+    @Body() body: { currentQuantity: any; currentUnit: string; thresholdQuantity?: any; thresholdUnit?: string; piecesPerPack?: number; densityKgPerL?: number }
+  ) {
+    return this.groceryService.evaluatePantryStockLevel(
+      body.currentQuantity,
+      body.currentUnit,
+      body.thresholdQuantity,
+      body.thresholdUnit,
+      body.piecesPerPack,
+      body.densityKgPerL
+    );
+  }
+
+  @Post('inventory/evaluate')
+  async evaluateInventory(
+    @Body() body: { variant: any; requestedQuantity?: number }
+  ) {
+    return this.groceryService.evaluateInventoryAvailability(
+      body.variant,
+      body.requestedQuantity
+    );
   }
 
   // ---------------------------------------------------------------------------

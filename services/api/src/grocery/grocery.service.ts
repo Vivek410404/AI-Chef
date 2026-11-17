@@ -112,6 +112,8 @@ export class GroceryService {
   private readonly logger = new Logger(GroceryService.name);
   private activeBasketItems: Map<string, BasketItem[]> = new Map();
   private selectedRetailers: Map<string, string> = new Map();
+  private readonly reorderIdempotencyRecords: Map<string, { response: any; timestamp: number }> = new Map();
+  private readonly householdReorderLocks: Map<string, boolean> = new Map();
 
   constructor(private readonly store: StoreService) {}
 
@@ -529,7 +531,15 @@ export class GroceryService {
     }
 
     if (!variant) {
-      throw new Error(`Product variant "${body.productVariantId}" not found.`);
+      throw new NotFoundException(`Product variant "${body.productVariantId}" not found.`);
+    }
+
+    // Phase 6.2.2: Strict Fail-Closed Inventory Availability Check
+    const avail = evaluateInventoryAvailability(variant, qty);
+    if (!avail.isAvailable) {
+      throw new BadRequestException(
+        `Cannot add "${variant.title}" to cart: ${avail.reason} (Status: ${avail.status})`
+      );
     }
 
     const currentRetailerId = this.selectedRetailers.get(householdId) || this.store.retailers[0]?.id || 'ret-blinkit';
@@ -747,200 +757,219 @@ export class GroceryService {
   // ---------------------------------------------------------------------------
   async reorderBasket(
     householdId = 'hh-sharma-family',
-    options: { orderId: string; targetRetailerId?: string; replaceCart?: boolean }
+    options: { orderId: string; targetRetailerId?: string; replaceCart?: boolean; idempotencyKey?: string }
   ) {
     if (!options.orderId) {
       throw new BadRequestException('orderId is required to reorder.');
     }
 
-    // 1. Fetch order
-    let order: any = this.store.orders.find(o => o.id === options.orderId || o.orderNumber === options.orderId);
-    if (!order && this.store.isPrismaConnected) {
-      const dbOrder = await this.store.prisma.order.findUnique({
-        where: { id: options.orderId },
-        include: { items: true }
-      });
-      if (dbOrder) {
-        order = {
-          ...dbOrder,
-          items: dbOrder.items.map(it => ({
-            productVariantId: it.productVariantId,
-            productName: it.productName,
-            brand: it.brand,
-            packSize: it.packSize,
-            quantity: it.quantityPacks,
-            priceInr: it.unitPriceInr
-          }))
+    // 0. Idempotency Check: Return identical result for duplicate idempotency key
+    if (options.idempotencyKey) {
+      const cached = this.reorderIdempotencyRecords.get(options.idempotencyKey);
+      if (cached && Date.now() - cached.timestamp < 300000) {
+        return {
+          ...cached.response,
+          isIdempotentReplay: true
         };
       }
     }
 
-    if (!order) {
-      throw new NotFoundException(`Order "${options.orderId}" not found.`);
+    // Mutex: Serial execution per household to eliminate race conditions
+    while (this.householdReorderLocks.get(householdId)) {
+      await new Promise(r => setTimeout(r, 20));
     }
+    this.householdReorderLocks.set(householdId, true);
 
-    // 2. Household isolation check
-    if (order.householdId && order.householdId !== householdId) {
-      throw new ForbiddenException(
-        `Household access violation: You cannot reorder orders belonging to household "${order.householdId}".`
-      );
-    }
-
-    if (!Array.isArray(order.items) || order.items.length === 0) {
-      throw new BadRequestException('This order contains no items to reorder.');
-    }
-
-    // 3. Resolve target retailer
-    let targetRetailer: any = null;
-    if (options.targetRetailerId) {
-      targetRetailer = this.store.retailers.find(
-        r => r.id === options.targetRetailerId || r.slug === options.targetRetailerId
-      );
-    }
-    if (!targetRetailer) {
-      const origRetailerName = order.retailerName || 'Blinkit';
-      targetRetailer = this.store.retailers.find(
-        r => r.id === order.retailerId || r.name.toLowerCase() === origRetailerName.toLowerCase()
-      ) || this.store.retailers[0];
-    }
-
-    // 4. Retailer conflict check against current active cart
-    const currentRetailerId = this.selectedRetailers.get(householdId) || this.store.retailers[0]?.id || 'ret-blinkit';
-    const currentRetailer = this.store.retailers.find(r => r.id === currentRetailerId) || this.store.retailers[0];
-    const existingActiveItems = (this.activeBasketItems.get(householdId) || []).filter(
-      i => i.isSelectedForPurchase && i.quantityPacks > 0
-    );
-
-    if (existingActiveItems.length > 0 && currentRetailerId !== targetRetailer.id && !options.replaceCart) {
-      return {
-        success: false,
-        requiresRetailerSwitch: true,
-        currentRetailer: currentRetailer.name,
-        currentRetailerId: currentRetailer.id,
-        targetRetailer: targetRetailer.name,
-        targetRetailerId: targetRetailer.id,
-        currentItemCount: existingActiveItems.length,
-        message: `Your shopping basket already contains ${existingActiveItems.length} items from ${currentRetailer.name}. Reordering from ${targetRetailer.name} requires switching retailers. Set replaceCart: true to proceed.`
-      };
-    }
-
-    if (options.replaceCart || existingActiveItems.length === 0) {
-      this.activeBasketItems.set(householdId, []);
-      this.selectedRetailers.set(householdId, targetRetailer.id);
-    }
-
-    // 5. Revalidate every item against current live catalog prices and stock availability
-    const addedItems: any[] = [];
-    const unavailableItems: any[] = [];
-    const retailerMultiplier = getRetailerMultiplier(targetRetailer.name);
-
-    for (const item of order.items) {
-      const requestedQty = Math.max(1, Number(item.quantity || item.quantityPacks || 1));
-      let variant: any = null;
-
-      // Identify variant by ID, ingredientId, or name
-      if (item.productVariantId || item.variantId) {
-        const vId = item.productVariantId || item.variantId;
-        if (this.store.isPrismaConnected) {
-          variant = await this.store.prisma.productVariant.findUnique({
-            where: { id: vId },
-            include: { product: true }
-          });
-        }
-        if (!variant) {
-          variant = this.store.productVariants.find(v => v.id === vId);
+    try {
+      // 1. Fetch order
+      let order: any = this.store.orders.find(o => o.id === options.orderId || o.orderNumber === options.orderId);
+      if (!order && this.store.isPrismaConnected) {
+        const dbOrder = await this.store.prisma.order.findUnique({
+          where: { id: options.orderId },
+          include: { items: true }
+        });
+        if (dbOrder) {
+          order = {
+            ...dbOrder,
+            items: dbOrder.items.map(it => ({
+              productVariantId: it.productVariantId,
+              productName: it.productName,
+              brand: it.brand,
+              packSize: it.packSize,
+              quantity: it.quantityPacks,
+              priceInr: it.unitPriceInr
+            }))
+          };
         }
       }
 
-      if (!variant && item.ingredientId) {
-        if (this.store.isPrismaConnected) {
-          variant = await this.store.prisma.productVariant.findFirst({
-            where: { ingredientId: item.ingredientId, inStock: true },
-            include: { product: true }
-          });
-        }
-        if (!variant) {
-          variant = this.store.productVariants.find(v => v.ingredientId === item.ingredientId && (v as any).inStock !== false);
-        }
+      if (!order) {
+        throw new NotFoundException(`Order "${options.orderId}" not found.`);
       }
 
-      if (!variant && item.productName) {
-        const lowerName = item.productName.toLowerCase();
-        variant = this.store.productVariants.find(
-          v => v.title.toLowerCase().includes(lowerName) || lowerName.includes(v.title.toLowerCase())
+      // 2. Household isolation check
+      if (order.householdId && order.householdId !== householdId) {
+        throw new ForbiddenException(
+          `Household access violation: You cannot reorder orders belonging to household "${order.householdId}".`
         );
       }
 
-      // Check availability: active status and inStock
-      if (!variant || (variant.product && variant.product.status === 'DISCONTINUED')) {
-        unavailableItems.push({
-          productName: item.productName || item.brand || 'Item',
-          brand: item.brand,
-          reason: 'DISCONTINUED_OR_NOT_FOUND',
-          historicalPriceInr: item.priceInr || item.unitPriceInr || 0
-        });
-        continue;
+      if (!Array.isArray(order.items) || order.items.length === 0) {
+        throw new BadRequestException('This order contains no items to reorder.');
       }
 
-      if ((variant as any).inStock === false) {
-        unavailableItems.push({
+      // 3. Resolve target retailer
+      let targetRetailer: any = null;
+      if (options.targetRetailerId) {
+        targetRetailer = this.store.retailers.find(
+          r => r.id === options.targetRetailerId || r.slug === options.targetRetailerId
+        );
+      }
+      if (!targetRetailer) {
+        const origRetailerName = order.retailerName || 'Blinkit';
+        targetRetailer = this.store.retailers.find(
+          r => r.id === order.retailerId || r.name.toLowerCase() === origRetailerName.toLowerCase()
+        ) || this.store.retailers[0];
+      }
+
+      // 4. Retailer conflict check against current active cart
+      const currentRetailerId = this.selectedRetailers.get(householdId) || this.store.retailers[0]?.id || 'ret-blinkit';
+      const currentRetailer = this.store.retailers.find(r => r.id === currentRetailerId) || this.store.retailers[0];
+      const existingActiveItems = (this.activeBasketItems.get(householdId) || []).filter(
+        i => i.isSelectedForPurchase && i.quantityPacks > 0
+      );
+
+      if (existingActiveItems.length > 0 && currentRetailerId !== targetRetailer.id && !options.replaceCart) {
+        return {
+          success: false,
+          requiresRetailerSwitch: true,
+          currentRetailer: currentRetailer.name,
+          currentRetailerId: currentRetailer.id,
+          targetRetailer: targetRetailer.name,
+          targetRetailerId: targetRetailer.id,
+          currentItemCount: existingActiveItems.length,
+          message: `Your shopping basket already contains ${existingActiveItems.length} items from ${currentRetailer.name}. Reordering from ${targetRetailer.name} requires switching retailers. Set replaceCart: true to proceed.`
+        };
+      }
+
+      if (options.replaceCart || existingActiveItems.length === 0) {
+        this.activeBasketItems.set(householdId, []);
+        this.selectedRetailers.set(householdId, targetRetailer.id);
+      }
+
+      // 5. Revalidate every item against current catalog prices and fail-closed availability
+      const addedItems: any[] = [];
+      const unavailableItems: any[] = [];
+      const retailerMultiplier = getRetailerMultiplier(targetRetailer.name);
+
+      for (const item of order.items) {
+        const requestedQty = Math.max(1, Number(item.quantity || item.quantityPacks || 1));
+        let variant: any = null;
+
+        // Identify variant by ID, ingredientId, or name
+        if (item.productVariantId || item.variantId) {
+          const vId = item.productVariantId || item.variantId;
+          if (this.store.isPrismaConnected) {
+            variant = await this.store.prisma.productVariant.findUnique({
+              where: { id: vId },
+              include: { product: true }
+            });
+          }
+          if (!variant) {
+            variant = this.store.productVariants.find(v => v.id === vId);
+          }
+        }
+
+        if (!variant && item.ingredientId) {
+          if (this.store.isPrismaConnected) {
+            variant = await this.store.prisma.productVariant.findFirst({
+              where: { ingredientId: item.ingredientId, inStock: true },
+              include: { product: true }
+            });
+          }
+          if (!variant) {
+            variant = this.store.productVariants.find(v => v.ingredientId === item.ingredientId && (v as any).inStock !== false);
+          }
+        }
+
+        if (!variant && item.productName) {
+          const lowerName = item.productName.toLowerCase();
+          variant = this.store.productVariants.find(
+            v => v.title.toLowerCase().includes(lowerName) || lowerName.includes(v.title.toLowerCase())
+          );
+        }
+
+        // Strict fail-closed inventory availability check
+        const avail = evaluateInventoryAvailability(variant, requestedQty);
+        if (!avail.isAvailable) {
+          unavailableItems.push({
+            productVariantId: variant?.id,
+            productName: variant?.title || item.productName || item.brand || 'Item',
+            brand: variant?.brand || item.brand,
+            status: avail.status,
+            reason: avail.reason,
+            historicalPriceInr: item.priceInr || item.unitPriceInr || 0
+          });
+          continue;
+        }
+
+        // Authoritative live price recalculation
+        const currentLivePriceInr = Math.round(variant.sellingPriceInr * retailerMultiplier);
+        const originalHistoricalPriceInr = Number(item.priceInr || item.unitPriceInr || 0);
+
+        // Add to cart
+        await this.addToCart(householdId, {
+          productVariantId: variant.id,
+          quantity: requestedQty,
+          retailerId: targetRetailer.id
+        });
+
+        addedItems.push({
           productVariantId: variant.id,
           productName: variant.title,
           brand: variant.brand,
-          reason: 'OUT_OF_STOCK',
-          historicalPriceInr: item.priceInr || item.unitPriceInr || 0
+          packSize: variant.packQuantity ? `${variant.packQuantity} ${variant.packUnit}` : 'Standard',
+          quantityPacks: requestedQty,
+          originalHistoricalPriceInr,
+          currentLivePriceInr,
+          priceDifferenceInr: currentLivePriceInr - originalHistoricalPriceInr,
+          priceChanged: originalHistoricalPriceInr > 0 && currentLivePriceInr !== originalHistoricalPriceInr,
+          totalItemPriceInr: currentLivePriceInr * requestedQty
         });
-        continue;
       }
 
-      // Authoritative live price recalculation
-      const currentLivePriceInr = Math.round(variant.sellingPriceInr * retailerMultiplier);
-      const originalHistoricalPriceInr = Number(item.priceInr || item.unitPriceInr || 0);
+      // 6. Recalculate basket totals server-side
+      const basket = await this.getBasket(householdId, targetRetailer.id);
 
-      // Add to cart
-      await this.addToCart(householdId, {
-        productVariantId: variant.id,
-        quantity: requestedQty,
-        retailerId: targetRetailer.id
-      });
+      const result = {
+        success: true,
+        originalOrderId: order.id,
+        targetRetailer: { id: targetRetailer.id, name: targetRetailer.name },
+        addedCount: addedItems.length,
+        unavailableCount: unavailableItems.length,
+        addedItems,
+        unavailableItems,
+        basketSummary: {
+          retailerName: (basket as any).retailer?.name || targetRetailer.name,
+          itemsCount: basket.items.length,
+          subtotalInr: basket.subtotalInr,
+          deliveryFeeInr: basket.deliveryFeeInr,
+          totalInr: basket.totalInr
+        },
+        summaryMessage: `Successfully loaded ${addedItems.length} items from Order #${order.id} into your basket at current live prices.${
+          unavailableItems.length > 0 ? ` ${unavailableItems.length} items are currently unavailable.` : ''
+        }`,
+        priceIntegrityNotice: 'Authoritative live retailer prices recalculated. Historical prices were not reused.'
+      };
 
-      addedItems.push({
-        productVariantId: variant.id,
-        productName: variant.title,
-        brand: variant.brand,
-        packSize: variant.packQuantity ? `${variant.packQuantity} ${variant.packUnit}` : 'Standard',
-        quantityPacks: requestedQty,
-        originalHistoricalPriceInr,
-        currentLivePriceInr,
-        priceDifferenceInr: currentLivePriceInr - originalHistoricalPriceInr,
-        priceChanged: originalHistoricalPriceInr > 0 && currentLivePriceInr !== originalHistoricalPriceInr,
-        totalItemPriceInr: currentLivePriceInr * requestedQty
-      });
+      if (options.idempotencyKey) {
+        this.reorderIdempotencyRecords.set(options.idempotencyKey, { response: result, timestamp: Date.now() });
+      }
+
+      return result;
+    } finally {
+      this.householdReorderLocks.delete(householdId);
     }
-
-    // 6. Recalculate basket totals server-side
-    const basket = await this.getBasket(householdId, targetRetailer.id);
-
-    return {
-      success: true,
-      originalOrderId: order.id,
-      targetRetailer: { id: targetRetailer.id, name: targetRetailer.name },
-      addedCount: addedItems.length,
-      unavailableCount: unavailableItems.length,
-      addedItems,
-      unavailableItems,
-      basketSummary: {
-        retailerName: (basket as any).retailer?.name || targetRetailer.name,
-        itemsCount: basket.items.length,
-        subtotalInr: basket.subtotalInr,
-        deliveryFeeInr: basket.deliveryFeeInr,
-        totalInr: basket.totalInr
-      },
-      summaryMessage: `Successfully loaded ${addedItems.length} items from Order #${order.id} into your basket at current live prices.${
-        unavailableItems.length > 0 ? ` ${unavailableItems.length} items are currently unavailable.` : ''
-      }`,
-      priceIntegrityNotice: 'Authoritative live retailer prices recalculated. Historical prices were not reused.'
-    };
   }
 
   // ---------------------------------------------------------------------------
@@ -1047,99 +1076,327 @@ export class GroceryService {
       methodology: 'Unit-normalized threshold comparison (strict incompatible dimension protection).'
     };
   }
+
+  evaluatePantryStockLevel(
+    currentQuantity: number | string | null | undefined,
+    currentUnit: string,
+    thresholdQuantity?: number | string | null,
+    thresholdUnit?: string,
+    piecesPerPack?: number | null,
+    densityKgPerL?: number | null
+  ) {
+    return evaluatePantryStockLevel(
+      currentQuantity,
+      currentUnit,
+      thresholdQuantity,
+      thresholdUnit,
+      false,
+      { piecesPerPack, densityGPerMl: densityKgPerL }
+    );
+  }
+
+  evaluateInventoryAvailability(
+    item: { inStock?: boolean | null | string; stockCount?: number | null; status?: string } | null | undefined,
+    requestedQuantity: number = 1
+  ) {
+    return evaluateInventoryAvailability(item, requestedQuantity);
+  }
 }
 
 // ---------------------------------------------------------------------------
 // Unit Normalization & Mathematical Comparison Helpers
 // ---------------------------------------------------------------------------
-interface NormalizedUnitQuantity {
-  dimension: 'WEIGHT' | 'VOLUME' | 'COUNT' | 'UNKNOWN';
+export interface NormalizedUnitQuantity {
+  dimension: 'WEIGHT' | 'VOLUME' | 'COUNT' | 'PACK' | 'UNKNOWN' | 'MALFORMED';
   value: number;
   baseUnit: string;
+  isPackUnit?: boolean;
+  error?: string;
 }
 
-export function normalizeUnitQuantity(quantity: number, unit: string): NormalizedUnitQuantity {
+export function normalizeUnitQuantity(
+  quantity: number | string | null | undefined,
+  unit: string,
+  options?: { piecesPerPack?: number | null }
+): NormalizedUnitQuantity {
+  if (quantity === null || quantity === undefined || quantity === '') {
+    return { dimension: 'MALFORMED', value: NaN, baseUnit: '', error: 'Quantity is missing or null' };
+  }
+  const numQty = Number(quantity);
+  if (isNaN(numQty) || !isFinite(numQty)) {
+    return { dimension: 'MALFORMED', value: NaN, baseUnit: '', error: `Quantity "${quantity}" is not a valid number` };
+  }
+
   const u = (unit || '').toLowerCase().trim();
+
+  // Weight conversions: kg <-> g
   if (['g', 'gram', 'grams', 'gm', 'gms'].includes(u)) {
-    return { dimension: 'WEIGHT', value: quantity, baseUnit: 'g' };
+    return { dimension: 'WEIGHT', value: numQty, baseUnit: 'g' };
   }
   if (['kg', 'kilogram', 'kilograms', 'kilo', 'kgs'].includes(u)) {
-    return { dimension: 'WEIGHT', value: quantity * 1000, baseUnit: 'g' };
+    return { dimension: 'WEIGHT', value: Math.round(numQty * 1000 * 10000) / 10000, baseUnit: 'g' };
   }
+
+  // Volume conversions: L <-> ml
   if (['ml', 'milliliter', 'millilitre', 'mls'].includes(u)) {
-    return { dimension: 'VOLUME', value: quantity, baseUnit: 'ml' };
+    return { dimension: 'VOLUME', value: numQty, baseUnit: 'ml' };
   }
   if (['l', 'liter', 'litre', 'liters', 'litres', 'ltr'].includes(u)) {
-    return { dimension: 'VOLUME', value: quantity * 1000, baseUnit: 'ml' };
+    return { dimension: 'VOLUME', value: Math.round(numQty * 1000 * 10000) / 10000, baseUnit: 'ml' };
   }
-  if (['pc', 'pcs', 'piece', 'pieces', 'bunch', 'bunches', 'pack', 'packet', 'packets', 'unit', 'units'].includes(u)) {
-    return { dimension: 'COUNT', value: quantity, baseUnit: 'pcs' };
+
+  // Discrete count: piece, pieces, pc, pcs
+  if (['pc', 'pcs', 'piece', 'pieces', 'unit', 'units'].includes(u)) {
+    return { dimension: 'COUNT', value: numQty, baseUnit: 'pcs' };
   }
-  return { dimension: 'UNKNOWN', value: quantity, baseUnit: u };
+
+  // Discrete pack/packet - DO NOT assume 1 pack = 1 pc!
+  if (['pack', 'packet', 'packs', 'packets'].includes(u)) {
+    if (options?.piecesPerPack && options.piecesPerPack > 0) {
+      return {
+        dimension: 'COUNT',
+        value: numQty * options.piecesPerPack,
+        baseUnit: 'pcs',
+        isPackUnit: true
+      };
+    }
+    return { dimension: 'PACK', value: numQty, baseUnit: 'pack', isPackUnit: true };
+  }
+
+  // Unknown unit
+  return { dimension: 'UNKNOWN', value: numQty, baseUnit: u };
+}
+
+export interface StockLevelEvaluationResult {
+  isLowStock: boolean;
+  reason: string;
+  stockStatus:
+    | 'ADEQUATE'
+    | 'LOW_STOCK'
+    | 'OUT_OF_STOCK'
+    | 'INCOMPATIBLE_UNITS'
+    | 'THRESHOLD_NOT_CONFIGURED'
+    | 'MALFORMED_QUANTITY'
+    | 'UNKNOWN_UNIT';
+  normalizedCurrent?: { value: number; unit: string; dimension: string };
+  normalizedThreshold?: { value: number; unit: string; dimension: string };
 }
 
 export function evaluatePantryStockLevel(
-  currentQuantity: number,
+  currentQuantity: number | string | null | undefined,
   unit: string,
-  threshold?: number | null,
+  threshold?: number | string | null,
   thresholdUnit?: string | null,
-  explicitLowStockFlag?: boolean
-): { isLowStock: boolean; reason: string; stockStatus: 'ADEQUATE' | 'LOW_STOCK' | 'OUT_OF_STOCK' | 'INCOMPATIBLE_UNITS' } {
-  // 1. Zero or negative inventory
-  if (currentQuantity <= 0) {
-    return { isLowStock: true, reason: 'Zero or negative inventory in pantry', stockStatus: 'OUT_OF_STOCK' };
-  }
-
-  // 2. Explicit flag set by household
-  if (explicitLowStockFlag === true) {
-    return { isLowStock: true, reason: 'Explicitly flagged as low stock by household', stockStatus: 'LOW_STOCK' };
-  }
-
-  // 3. Normalize current quantity
-  const normCurrent = normalizeUnitQuantity(currentQuantity, unit);
-
-  // 4. Threshold specified
-  if (threshold !== undefined && threshold !== null && threshold > 0) {
-    const tUnit = thresholdUnit || unit;
-    const normThreshold = normalizeUnitQuantity(threshold, tUnit);
-
-    // Strictly enforce incompatible dimensions check
-    if (normCurrent.dimension !== normThreshold.dimension || normCurrent.dimension === 'UNKNOWN') {
-      return {
-        isLowStock: explicitLowStockFlag || false,
-        reason: `Cannot compare incompatible units: current "${unit}" (${normCurrent.dimension}) vs threshold "${tUnit}" (${normThreshold.dimension})`,
-        stockStatus: 'INCOMPATIBLE_UNITS'
-      };
-    }
-
-    if (normCurrent.value <= normThreshold.value) {
-      return {
-        isLowStock: true,
-        reason: `Current stock (${currentQuantity} ${unit} = ${normCurrent.value} ${normCurrent.baseUnit}) is at or below threshold (${threshold} ${tUnit} = ${normThreshold.value} ${normThreshold.baseUnit})`,
-        stockStatus: 'LOW_STOCK'
-      };
-    } else {
-      return {
-        isLowStock: false,
-        reason: `Current stock (${currentQuantity} ${unit} = ${normCurrent.value} ${normCurrent.baseUnit}) is above threshold (${threshold} ${tUnit} = ${normThreshold.value} ${normThreshold.baseUnit})`,
-        stockStatus: 'ADEQUATE'
-      };
-    }
-  }
-
-  // 5. Default threshold fallbacks based on normalized base units
-  let defaultBase = 0;
-  if (normCurrent.dimension === 'WEIGHT') defaultBase = 250; // 250g
-  else if (normCurrent.dimension === 'VOLUME') defaultBase = 200; // 200ml
-  else if (normCurrent.dimension === 'COUNT') defaultBase = 2; // 2 pcs
-
-  if (defaultBase > 0 && normCurrent.value <= defaultBase) {
+  explicitLowStockFlag?: boolean,
+  options?: { piecesPerPack?: number | null; densityGPerMl?: number | null }
+): StockLevelEvaluationResult {
+  // 1. Missing or malformed quantity check
+  if (currentQuantity === null || currentQuantity === undefined || currentQuantity === '') {
     return {
-      isLowStock: true,
-      reason: `Current stock (${normCurrent.value} ${normCurrent.baseUnit}) is below default safety baseline (${defaultBase} ${normCurrent.baseUnit})`,
-      stockStatus: 'LOW_STOCK'
+      isLowStock: false,
+      reason: 'Pantry item quantity is missing or null',
+      stockStatus: 'MALFORMED_QUANTITY'
+    };
+  }
+  const numCurrent = Number(currentQuantity);
+  if (isNaN(numCurrent) || !isFinite(numCurrent)) {
+    return {
+      isLowStock: false,
+      reason: `Pantry item quantity "${currentQuantity}" is not a valid numeric quantity`,
+      stockStatus: 'MALFORMED_QUANTITY'
     };
   }
 
-  return { isLowStock: false, reason: 'Stock level is adequate', stockStatus: 'ADEQUATE' };
+  // 2. Zero or negative inventory check
+  if (numCurrent < 0) {
+    return {
+      isLowStock: false,
+      reason: `Negative pantry quantity "${numCurrent}" is physically invalid`,
+      stockStatus: 'MALFORMED_QUANTITY'
+    };
+  }
+
+  if (numCurrent === 0) {
+    return {
+      isLowStock: true,
+      reason: 'Zero inventory remaining in pantry',
+      stockStatus: 'OUT_OF_STOCK'
+    };
+  }
+
+  // 3. Normalize current quantity
+  const normCurrent = normalizeUnitQuantity(numCurrent, unit, options);
+  if (normCurrent.dimension === 'MALFORMED') {
+    return { isLowStock: false, reason: normCurrent.error || 'Malformed quantity', stockStatus: 'MALFORMED_QUANTITY' };
+  }
+  if (normCurrent.dimension === 'UNKNOWN') {
+    return {
+      isLowStock: false,
+      reason: `Unknown or unparseable pantry unit "${unit}"`,
+      stockStatus: 'UNKNOWN_UNIT'
+    };
+  }
+
+  // 4. Explicit low-stock flag set by household member
+  if (explicitLowStockFlag === true) {
+    return {
+      isLowStock: true,
+      reason: 'Explicitly flagged as low stock by household member',
+      stockStatus: 'LOW_STOCK',
+      normalizedCurrent: { value: normCurrent.value, unit: normCurrent.baseUnit, dimension: normCurrent.dimension }
+    };
+  }
+
+  // 5. Check if threshold is configured - DO NOT invent a baseline!
+  if (threshold === undefined || threshold === null || threshold === '' || isNaN(Number(threshold))) {
+    return {
+      isLowStock: false,
+      reason: 'No low-stock threshold configured for this pantry item',
+      stockStatus: 'THRESHOLD_NOT_CONFIGURED',
+      normalizedCurrent: { value: normCurrent.value, unit: normCurrent.baseUnit, dimension: normCurrent.dimension }
+    };
+  }
+
+  const numThreshold = Number(threshold);
+  if (numThreshold <= 0) {
+    return {
+      isLowStock: false,
+      reason: 'Threshold is zero or negative; automatic low-stock alerting disabled',
+      stockStatus: 'THRESHOLD_NOT_CONFIGURED'
+    };
+  }
+
+  const tUnit = thresholdUnit || unit;
+  const normThreshold = normalizeUnitQuantity(numThreshold, tUnit, options);
+  if (normThreshold.dimension === 'MALFORMED') {
+    return { isLowStock: false, reason: 'Threshold value is malformed', stockStatus: 'MALFORMED_QUANTITY' };
+  }
+  if (normThreshold.dimension === 'UNKNOWN') {
+    return { isLowStock: false, reason: `Unknown threshold unit "${tUnit}"`, stockStatus: 'UNKNOWN_UNIT' };
+  }
+
+  // 6. Pack-to-piece conversion check: Do NOT assume 1 pack = 1 pc!
+  if (
+    (normCurrent.dimension === 'PACK' && normThreshold.dimension === 'COUNT') ||
+    (normCurrent.dimension === 'COUNT' && normThreshold.dimension === 'PACK')
+  ) {
+    if (!options?.piecesPerPack) {
+      return {
+        isLowStock: false,
+        reason: 'Cannot convert pack to pieces without an explicit, reliable piecesPerPack definition',
+        stockStatus: 'INCOMPATIBLE_UNITS'
+      };
+    }
+  }
+
+  // 7. Strictly prevent volume-to-weight comparison without explicit density conversion
+  if (
+    (normCurrent.dimension === 'VOLUME' && normThreshold.dimension === 'WEIGHT') ||
+    (normCurrent.dimension === 'WEIGHT' && normThreshold.dimension === 'VOLUME')
+  ) {
+    if (!options?.densityGPerMl) {
+      return {
+        isLowStock: false,
+        reason: `Cannot convert volume (${unit}) into weight (${tUnit}) without a product-specific density conversion factor`,
+        stockStatus: 'INCOMPATIBLE_UNITS'
+      };
+    }
+  }
+
+  // 8. General dimension compatibility check
+  if (normCurrent.dimension !== normThreshold.dimension) {
+    return {
+      isLowStock: false,
+      reason: `Cannot compare incompatible dimensions: current "${unit}" (${normCurrent.dimension}) vs threshold "${tUnit}" (${normThreshold.dimension})`,
+      stockStatus: 'INCOMPATIBLE_UNITS'
+    };
+  }
+
+  // 9. Precision comparison in identical base units (4 decimal places rounding)
+  const currentVal = Math.round(normCurrent.value * 10000) / 10000;
+  const threshVal = Math.round(normThreshold.value * 10000) / 10000;
+
+  if (currentVal <= threshVal) {
+    return {
+      isLowStock: true,
+      reason: `Current stock (${numCurrent} ${unit} = ${currentVal} ${normCurrent.baseUnit}) is at or below threshold (${numThreshold} ${tUnit} = ${threshVal} ${normThreshold.baseUnit})`,
+      stockStatus: 'LOW_STOCK',
+      normalizedCurrent: { value: currentVal, unit: normCurrent.baseUnit, dimension: normCurrent.dimension },
+      normalizedThreshold: { value: threshVal, unit: normThreshold.baseUnit, dimension: normThreshold.dimension }
+    };
+  } else {
+    return {
+      isLowStock: false,
+      reason: `Current stock (${numCurrent} ${unit} = ${currentVal} ${normCurrent.baseUnit}) is above threshold (${numThreshold} ${tUnit} = ${threshVal} ${normThreshold.baseUnit})`,
+      stockStatus: 'ADEQUATE',
+      normalizedCurrent: { value: currentVal, unit: normCurrent.baseUnit, dimension: normCurrent.dimension },
+      normalizedThreshold: { value: threshVal, unit: normThreshold.baseUnit, dimension: normThreshold.dimension }
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6.2.2: Central Inventory Availability Evaluator (Fail-Closed)
+// ---------------------------------------------------------------------------
+export type InventoryAvailabilityStatus = 'AVAILABLE' | 'OUT_OF_STOCK' | 'UNKNOWN_AVAILABILITY' | 'DISCONTINUED';
+
+export function evaluateInventoryAvailability(
+  item: { inStock?: boolean | null | string; stockCount?: number | null; status?: string } | null | undefined,
+  requestedQuantity: number = 1
+): { isAvailable: boolean; status: InventoryAvailabilityStatus; reason: string } {
+  if (!item) {
+    return {
+      isAvailable: false,
+      status: 'UNKNOWN_AVAILABILITY',
+      reason: 'Catalog item or inventory record does not exist'
+    };
+  }
+
+  // 1. Explicit discontinued status
+  if (item.status === 'DISCONTINUED') {
+    return {
+      isAvailable: false,
+      status: 'DISCONTINUED',
+      reason: 'Product has been permanently discontinued from the merchant catalog'
+    };
+  }
+
+  // 2. Explicit out-of-stock boolean
+  if (item.inStock === false || item.inStock === 'false') {
+    return {
+      isAvailable: false,
+      status: 'OUT_OF_STOCK',
+      reason: 'Product is explicitly marked out of stock at fulfillment hub'
+    };
+  }
+
+  // 3. FAIL-CLOSED: Missing, null, or unknown inStock value is NOT assumed in-stock!
+  if (item.inStock !== true && item.inStock !== 'true') {
+    return {
+      isAvailable: false,
+      status: 'UNKNOWN_AVAILABILITY',
+      reason: `Inventory availability status is unverified (value: ${item.inStock ?? 'null/undefined'}). Fail-closed protection active.`
+    };
+  }
+
+  // 4. Stock count evaluation if maintained
+  if (typeof item.stockCount === 'number') {
+    if (item.stockCount <= 0) {
+      return {
+        isAvailable: false,
+        status: 'OUT_OF_STOCK',
+        reason: 'Zero units remaining in fulfillment dark store'
+      };
+    }
+    if (requestedQuantity > item.stockCount) {
+      return {
+        isAvailable: false,
+        status: 'OUT_OF_STOCK',
+        reason: `Requested ${requestedQuantity} units exceeds available stock of ${item.stockCount} units`
+      };
+    }
+  }
+
+  // 5. Fully verified available
+  return { isAvailable: true, status: 'AVAILABLE', reason: 'Verified in stock' };
 }

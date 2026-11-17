@@ -93,6 +93,23 @@ export class MarketplaceController {
     return this.marketplaceService.updateOrderStatus(id, body, currentUser, isSimWorker);
   }
 
+  @Post('orders/:id/cancel')
+  async cancelOrder(
+    @Param('id') id: string,
+    @Body() body: { reason?: string; statusReason?: string },
+    @Headers('authorization') authHeader?: string
+  ) {
+    let currentUser: any;
+    if (authHeader) {
+      try {
+        const token = authHeader.replace(/^Bearer\s+/i, '');
+        currentUser = await this.authService.verifyToken(token);
+      } catch {}
+    }
+    const statusReason = body.reason || body.statusReason || 'Customer requested order cancellation.';
+    return this.marketplaceService.updateOrderStatus(id, { status: 'CANCELLED', statusReason }, currentUser);
+  }
+
   @Get('orders/:id/history')
   async getOrderStatusHistory(
     @Param('id') id: string,
