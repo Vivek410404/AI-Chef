@@ -1,0 +1,3 @@
+EMAIL_A=smoketest_a_20261117204513@rasoidev.test
+EMAIL_B=smoketest_b_20261117204513@rasoidev.test
+TIMESTAMP=20261117204513

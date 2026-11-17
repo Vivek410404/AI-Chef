@@ -10,7 +10,7 @@ export class MarketplaceController {
   constructor(
     private readonly marketplaceService: MarketplaceService,
     private readonly authService: AuthService
-  ) {}
+  ) { }
 
   @Get('retailers')
   async getRetailers(): Promise<Retailer[]> {
@@ -38,7 +38,7 @@ export class MarketplaceController {
       try {
         const token = authHeader.replace(/^Bearer\s+/i, '');
         currentUser = await this.authService.verifyToken(token);
-      } catch {}
+      } catch { }
     }
     return this.marketplaceService.placeOrder({
       ...body,
@@ -55,7 +55,7 @@ export class MarketplaceController {
       try {
         const token = authHeader.replace(/^Bearer\s+/i, '');
         currentUser = await this.authService.verifyToken(token);
-      } catch {}
+      } catch { }
     }
     return this.marketplaceService.getOrders(currentUser);
   }
@@ -70,7 +70,7 @@ export class MarketplaceController {
       try {
         const token = authHeader.replace(/^Bearer\s+/i, '');
         currentUser = await this.authService.verifyToken(token);
-      } catch {}
+      } catch { }
     }
     return this.marketplaceService.getOrderById(id, currentUser);
   }
@@ -84,13 +84,12 @@ export class MarketplaceController {
   ) {
     let currentUser: any;
     if (authHeader) {
-      try {
-        const token = authHeader.replace(/^Bearer\s+/i, '');
-        currentUser = await this.authService.verifyToken(token);
-      } catch {}
+      const token = authHeader.replace(/^Bearer\s+/i, '');
+      currentUser = await this.authService.verifyToken(token);
     }
 
-    // Phase 6.2.4: Secure Server-Side System Worker Verification
+    // Phase 6.2.5: Secure Server-Side System Worker Verification & Role Purity
+    // Callers must present EITHER a valid worker key OR an authenticated ADMIN token.
     if (internalWorkerKey) {
       const isValidWorker = this.authService.verifyInternalWorker(internalWorkerKey);
       if (!isValidWorker) {
@@ -101,14 +100,35 @@ export class MarketplaceController {
           'Privilege escalation blocked: Authenticated customer and retailer sessions cannot assume SYSTEM_WORKER authority.'
         );
       }
-      // Phase 6.2.4: Admin continues to act as ADMIN rather than silently changing identity to SYSTEM_WORKER
-      if (!currentUser || currentUser.role !== 'ADMIN') {
+      if (currentUser && ['ADMIN', 'SUPER_ADMIN', 'OPERATIONS', 'SUPPORT'].includes(currentUser.role)) {
+        // ADMIN identity is preserved; do NOT mutate admin account into SYSTEM_WORKER
+      } else {
         currentUser = {
           id: 'system-worker',
           email: 'system-worker@internal.rasoiiq.in',
           role: 'SYSTEM_WORKER',
           isSystemWorker: true
         };
+      }
+    } else {
+      // No worker key: validate role permissions
+      if (!currentUser) {
+        throw new ForbiddenException('Authentication required to update order status.');
+      }
+      const rawTarget = (body?.status || '').toUpperCase().trim();
+      if (currentUser.role === 'CUSTOMER') {
+        if (rawTarget !== 'CANCELLED') {
+          throw new ForbiddenException('Access denied. Customers are not authorized to advance order delivery status.');
+        }
+      } else if (currentUser.role === 'RETAILER') {
+        if (rawTarget !== 'CANCELLED') {
+          throw new ForbiddenException('Access denied. Retailers cannot advance order delivery status without worker credentials.');
+        }
+      } else {
+        const allowedRoles = ['ADMIN', 'SUPER_ADMIN', 'OPERATIONS', 'SUPPORT'];
+        if (!allowedRoles.includes(currentUser.role)) {
+          throw new ForbiddenException(`Access denied. Role "${currentUser.role}" is not authorized for order status updates.`);
+        }
       }
     }
 
@@ -126,7 +146,7 @@ export class MarketplaceController {
       try {
         const token = authHeader.replace(/^Bearer\s+/i, '');
         currentUser = await this.authService.verifyToken(token);
-      } catch {}
+      } catch { }
     }
     const statusReason = body.reason || body.statusReason || 'Customer requested order cancellation.';
     return this.marketplaceService.updateOrderStatus(id, { status: 'CANCELLED', statusReason }, currentUser);
@@ -142,7 +162,7 @@ export class MarketplaceController {
       try {
         const token = authHeader.replace(/^Bearer\s+/i, '');
         currentUser = await this.authService.verifyToken(token);
-      } catch {}
+      } catch { }
     }
     return this.marketplaceService.getOrderStatusHistory(id, currentUser);
   }
@@ -179,7 +199,7 @@ export class MarketplaceController {
           if (app && app.businessName) {
             userRetailerId = app.businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
           }
-        } catch {}
+        } catch { }
       }
       userRetailerId = userRetailerId || 'ret-custom-merchant';
 

@@ -13,7 +13,7 @@ export class MarketplaceService {
   }
   private readonly idempotencyRecords: Map<string, { order: any; timestamp: number }> = new Map();
 
-  constructor(private readonly store: StoreService) {}
+  constructor(private readonly store: StoreService) { }
 
   async getRetailers(): Promise<Retailer[]> {
     return this.store.retailers;
@@ -287,7 +287,7 @@ export class MarketplaceService {
           if (app) {
             userRetailerId = app.businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
           }
-        } catch {}
+        } catch { }
       }
       userRetailerId = userRetailerId || 'ret-blinkit';
 
@@ -436,6 +436,9 @@ export class MarketplaceService {
       });
       if (dbOrder) {
         order = dbOrder;
+        if (!this.orders.find(o => o.id === order.id)) {
+          this.orders.unshift(order);
+        }
       }
     }
 
@@ -498,9 +501,9 @@ export class MarketplaceService {
     if (currentCanonical === targetCanonical) {
       const history = this.store.isPrismaConnected
         ? await this.store.prisma.orderStatusHistory.findMany({
-            where: { orderId: order.id },
-            orderBy: { createdAt: 'desc' }
-          })
+          where: { orderId: order.id },
+          orderBy: { createdAt: 'desc' }
+        })
         : [];
       return {
         success: true,
@@ -514,8 +517,7 @@ export class MarketplaceService {
     const legalNext = MarketplaceService.CANONICAL_TRANSITIONS[currentCanonical] || [];
     if (!legalNext.includes(targetCanonical)) {
       throw new BadRequestException(
-        `Illegal state transition from "${currentCanonical}" to "${targetCanonical}". Legal next transitions from "${currentCanonical}" are: ${
-          legalNext.length > 0 ? legalNext.join(', ') : 'None (Order is in terminal state)'
+        `Illegal state transition from "${currentCanonical}" to "${targetCanonical}". Legal next transitions from "${currentCanonical}" are: ${legalNext.length > 0 ? legalNext.join(', ') : 'None (Order is in terminal state)'
         }`
       );
     }
@@ -527,30 +529,28 @@ export class MarketplaceService {
     if (this.store.isPrismaConnected) {
       try {
         await this.store.prisma.$transaction(async (tx) => {
-          // Row-level exclusive lock to serialize concurrent transitions on this order
-          const lockedOrders: any[] = await tx.$queryRawUnsafe(
-            `SELECT * FROM "Order" WHERE id = $1 FOR UPDATE`,
+          // Phase 6.2.5: Concurrency Hardening with Row-Level Exclusive Lock (SELECT ... FOR UPDATE)
+          const lockedOrders: any = await tx.$queryRawUnsafe(
+            'SELECT id, status FROM "Order" WHERE id = $1 FOR UPDATE',
             order.id
           );
-          const latestOrder = lockedOrders[0];
-          if (!latestOrder) {
-            throw new NotFoundException(`Order with ID "${order.id}" not found.`);
+          if (!lockedOrders || lockedOrders.length === 0) {
+            throw new NotFoundException(`Order ${order.id} not found in database.`);
           }
+          const lockedOrder = lockedOrders[0];
+          const dbCurrentRaw = (lockedOrder.status || 'ORDER_CONFIRMED').toUpperCase().trim();
+          const dbCurrentCanonical = MarketplaceService.CANONICAL_MAP[dbCurrentRaw] || dbCurrentRaw;
 
-          const latestCanonical = MarketplaceService.CANONICAL_MAP[(latestOrder.status || '').toUpperCase().trim()] || 'ORDER_CONFIRMED';
-
-          // Idempotent duplicate check under transaction
-          if (latestCanonical === targetCanonical) {
+          // If another concurrent request already transitioned this order to targetCanonical:
+          if (dbCurrentCanonical === targetCanonical) {
             return;
           }
 
-          // Verify transition validity from the freshly committed status
-          const legalNext = MarketplaceService.CANONICAL_TRANSITIONS[latestCanonical] || [];
-          if (!legalNext.includes(targetCanonical)) {
+          // Validate legal state transition under exclusive row lock
+          const legalNextUnderLock = MarketplaceService.CANONICAL_TRANSITIONS[dbCurrentCanonical] || [];
+          if (!legalNextUnderLock.includes(targetCanonical)) {
             throw new BadRequestException(
-              `Concurrent transition conflict: Order was already updated to "${latestCanonical}". Legal transitions from "${latestCanonical}" are: ${
-                legalNext.length > 0 ? legalNext.join(', ') : 'None (Order is in terminal state)'
-              }`
+              `Illegal concurrent state transition: Order has already transitioned to "${dbCurrentCanonical}". Cannot jump to "${targetCanonical}".`
             );
           }
 
@@ -559,8 +559,8 @@ export class MarketplaceService {
             data: {
               status: targetCanonical,
               statusReason: reason,
-              substitutionNotes: dto.substitutionNotes || (latestOrder.substitutionNotes ?? null),
-              fulfillmentNotes: dto.fulfillmentNotes || (latestOrder.fulfillmentNotes ?? null),
+              substitutionNotes: dto.substitutionNotes || (order.substitutionNotes ?? null),
+              fulfillmentNotes: dto.fulfillmentNotes || (order.fulfillmentNotes ?? null),
               updatedBy
             }
           });
@@ -568,7 +568,7 @@ export class MarketplaceService {
           await tx.orderStatusHistory.create({
             data: {
               orderId: order.id,
-              fromStatus: latestCanonical,
+              fromStatus: dbCurrentCanonical,
               toStatus: targetCanonical,
               reason,
               changedBy: updatedBy
@@ -576,9 +576,7 @@ export class MarketplaceService {
           });
         });
       } catch (err: any) {
-        if (err instanceof BadRequestException || err instanceof NotFoundException) {
-          throw err;
-        }
+        if (err instanceof BadRequestException || err instanceof NotFoundException) throw err;
         throw new BadRequestException(`Failed to persist order transition in database: ${err.message}`);
       }
     }
@@ -593,9 +591,9 @@ export class MarketplaceService {
 
     const statusHistory = this.store.isPrismaConnected
       ? await this.store.prisma.orderStatusHistory.findMany({
-          where: { orderId: order.id },
-          orderBy: { createdAt: 'desc' }
-        })
+        where: { orderId: order.id },
+        orderBy: { createdAt: 'desc' }
+      })
       : [];
 
     return {

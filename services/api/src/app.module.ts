@@ -23,7 +23,7 @@ export class StoreModule {}
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env', '../../.env']
+      envFilePath: ['.env.local', '.env']
     }),
     StoreModule,
     AuthModule,

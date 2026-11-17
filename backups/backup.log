@@ -1,0 +1,6 @@
+[2026-11-16T12:45:13Z] [INFO] Starting RasoiIQ PostgreSQL custom-format backup...
+[2026-11-16T12:45:13Z] [INFO] Database: rasoi_iq | Host: 127.0.0.1:5432 | User: postgres
+[2026-11-16T12:45:14Z] [SUCCESS] Backup completed successfully: /mnt/d/Startup/backups/rasoi_iq_20261116_124513.dump (177503 bytes, permissions: 0600)
+[2026-11-16T12:49:44Z] [INFO] Starting RasoiIQ PostgreSQL custom-format backup...
+[2026-11-16T12:49:44Z] [INFO] Database: rasoi_iq | Host: 127.0.0.1:5432 | User: postgres
+[2026-11-16T12:49:45Z] [SUCCESS] Backup completed successfully: /mnt/d/Startup/backups/rasoi_iq_20261116_124944.dump (182101 bytes, permissions: 0600)

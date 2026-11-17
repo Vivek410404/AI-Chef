@@ -234,7 +234,7 @@ Opening Meal Rotation: Do NOT start Monday breakfast with any of the recently pl
           response = await this.fetchFn(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            signal: AbortSignal.timeout(10000),
+            signal: AbortSignal.timeout(20000),
             body: JSON.stringify({
               contents: [
                 {

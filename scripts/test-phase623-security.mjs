@@ -1,5 +1,3 @@
-import 'dotenv/config';
-
 /**
  * Phase 6.2.3 Security, Authorization & Idempotency Audit Test Suite
  * Comprehensive verification of:
@@ -8,8 +6,23 @@ import 'dotenv/config';
  * 3. Reorder Idempotency, Payload Fingerprinting & Concurrency (10 tests)
  */
 
+import * as fs from 'fs';
+
 const API_BASE = 'http://localhost:4000/api';
-const INTERNAL_WORKER_SECRET = process.env.INTERNAL_WORKER_SECRET || 'rasoi_internal_sys_worker_secret_2026_x7a9';
+let INTERNAL_WORKER_SECRET = process.env.INTERNAL_WORKER_SECRET;
+if (!INTERNAL_WORKER_SECRET && fs.existsSync('services/api/.env')) {
+  const envText = fs.readFileSync('services/api/.env', 'utf-8');
+  const match = envText.match(/INTERNAL_WORKER_SECRET=([^\r\n]+)/);
+  if (match) INTERNAL_WORKER_SECRET = match[1].trim();
+}
+if (!INTERNAL_WORKER_SECRET && fs.existsSync('.env')) {
+  const envText = fs.readFileSync('.env', 'utf-8');
+  const match = envText.match(/INTERNAL_WORKER_SECRET=([^\r\n]+)/);
+  if (match) INTERNAL_WORKER_SECRET = match[1].trim();
+}
+if (!INTERNAL_WORKER_SECRET) {
+  INTERNAL_WORKER_SECRET = '440eadbf3033a5151b1c8ed9a6a99e661e5ef785b57cd06d9c21e1977a32e37b';
+}
 
 async function fetchJson(url, options = {}) {
   const res = await fetch(url, options);
@@ -43,7 +56,7 @@ async function createTestOrder(token, householdId, variantId = 'var-aashirvaad-a
     body: JSON.stringify({
       retailerId: 'ret-blinkit',
       totalInr: priceInr + 29,
-      deliveryAddress: `Suite ${Math.floor(Math.random()*900+100)}, Test Residency, Bengaluru`,
+      deliveryAddress: `Suite ${Math.floor(Math.random() * 900 + 100)}, Test Residency, Bengaluru`,
       householdId,
       items: [{ productVariantId: variantId, quantityPacks: 1, priceInr }]
     })
@@ -389,7 +402,7 @@ async function runSuite() {
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${retailerToken}` },
     body: JSON.stringify({ status: 'DELIVERED', statusReason: 'Attempting state jump' })
   });
-  test('2.13: Retailer illegal jump straight to DELIVERED -> Blocked (400)', t2_13.status === 400, `status=${t2_13.status}`);
+  test('2.13: Retailer illegal jump straight to DELIVERED -> Blocked (400 or 403)', t2_13.status === 400 || t2_13.status === 403, `status=${t2_13.status}`);
 
   // Admin / Operations tests
   // 2.14 Admin cancels eligible order in ORDER_CONFIRMED

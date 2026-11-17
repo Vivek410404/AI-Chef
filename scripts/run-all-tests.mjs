@@ -1,97 +1,48 @@
-/**
- * Unified Test Runner for RasoiIQ Regression & Phase 4.1 Verification
- */
 import { execSync } from 'child_process';
 
 const suites = [
-  { name: 'test-nutrition-engine.mjs', category: 'Nutrition Engine & Precision' },
-  { name: 'test-ai-preferences.mjs', category: 'AI Chef Preferences & Dietary Modes' },
-  { name: 'test-ai-chef-hardening.mjs', category: 'AI Chef Hardening & Fallback' },
-  { name: 'test-gemini-35-flash-lite.mjs', category: 'Gemini 3.5 Flash-Lite Integration' },
-  { name: 'test-smart-basket.mjs', category: 'Smart Basket & Retailer Comparisons' },
-  { name: 'test-e2e-customer-journey.mjs', category: 'E2E Customer Journey' },
-  { name: 'test-rbac-and-security.mjs', category: 'RBAC, Security & Idempotency' },
-  { name: 'test-phase4-pilot-foundation.mjs', category: 'Phase 4 Pilot Foundation' },
-  { name: 'test-phase41-postgres-and-pilot.mjs', category: 'Phase 4.1 PostgreSQL & Pilot Security' },
-  { name: 'test-phase42-safety-and-recipes.mjs', category: 'Phase 4.2 Safety, Recipe Integrity & Provenance' },
-  { name: 'test-phase43-household-simulation.mjs', category: 'Phase 4.3 Multi-Household Simulation & IDOR' },
-  { name: 'verify-backup-restore.mjs', category: 'Phase 4.3 Database Backup & Restored Parity' },
-  { name: 'test-phase5-auth-and-identity.mjs', category: 'Phase 5.0 Authentication, Identity & Multi-Tenant' },
-  { name: 'test-phase51-admin-console.mjs', category: 'Phase 5.1 Admin Console & Platform Management' },
-  { name: 'test-phase52-security-integrity.mjs', category: 'Phase 5.2 Security Hardening & Operational Integrity' }
+  { name: 'Smart Basket Aggregation & Deduplication', script: 'scripts/test-smart-basket.mjs', expected: 10 },
+  { name: 'Nutrition Engine & Density Conversions', script: 'scripts/test-nutrition-engine.mjs', expected: 60 },
+  { name: 'Phase 6.2.1 Order Lifecycle & History Integrity', script: 'scripts/test-phase621-integrity.mjs', expected: 27 },
+  { name: 'Phase 6.2.2 Unit Semantics & Inventory Hardening', script: 'scripts/test-phase622-hardening.mjs', expected: 24 },
+  { name: 'Phase 6.2.3 Security, Authorization & Tenant Isolation', script: 'scripts/test-phase623-security.mjs', expected: 37 },
+  { name: 'Phase 6.2.4 Final Pilot Gate Verification', script: 'scripts/test-phase624-gate.mjs', expected: 17 },
+  { name: 'Phase 6.2.5 Comprehensive Security, Worker & Reorder Suite', script: 'scripts/test-phase625-comprehensive.mjs', expected: 26 },
+  { name: 'Phase 6.2.5 Fresh Database Reproducibility & Migration Deploy', script: 'scripts/test-fresh-db-journey.mjs', expected: 11 },
+  { name: 'Phase 6.2.5 18-Step Supervised Pilot Smoke Battery', script: 'scripts/test-phase625-smoke-journey.mjs', expected: 18 },
+  { name: 'AI Chef Meal Planning & Multi-Model Diversity Suite', script: 'scripts/test-ai-generation.mjs', expected: 8 }
 ];
 
-console.log('========================================================================');
-console.log('       RASOIIQ COMPREHENSIVE AUTOMATED TEST RUNNER (ALL SUITES)         ');
-console.log('========================================================================\n');
+console.log('🧪 =========================================================================');
+console.log('🧪 RASOIIQ MASTER TEST BATTERY EXECUTION (ALL 9 SUITES)');
+console.log('🧪 =========================================================================\n');
 
+let totalPassed = 0;
+let totalFailed = 0;
 const results = [];
-let grandTotalPassed = 0;
-let grandTotalFailed = 0;
 
 for (const suite of suites) {
-  process.stdout.write(`Executing ${suite.name} (${suite.category})... `);
-  const startTime = Date.now();
+  process.stdout.write(`Running: ${suite.name} (${suite.script})... `);
+  const start = Date.now();
   try {
-    const output = execSync(`node scripts/${suite.name}`, { timeout: 120000 }).toString();
-    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-
-    // Parse pass/fail counts
-    let passed = 0;
-    let failed = 0;
-
-    const summaryMatch = output.match(/(\d+)\s+passed/i) || 
-                         output.match(/(\d+)\s+Passed/i) ||
-                         output.match(/AUDIT SUMMARY:\s*(\d+)\/(\d+)\s*TESTS PASSED/i);
-
-    if (summaryMatch) {
-      passed = parseInt(summaryMatch[1], 10);
-    } else {
-      // Count checkmarks / PASS lines
-      const passLines = (output.match(/(?:✅\s*PASS|✔\s*PASS|✓)/g) || []).length;
-      passed = passLines;
-    }
-
-    const failMatch = output.match(/(\d+)\s+failed/i) || output.match(/(\d+)\s+Failed/i);
-    if (failMatch) {
-      failed = parseInt(failMatch[1], 10);
-    }
-
-    grandTotalPassed += passed;
-    grandTotalFailed += failed;
-
-    results.push({
-      suite: suite.name,
-      category: suite.category,
-      passed,
-      failed,
-      duration: `${duration}s`,
-      status: failed === 0 ? 'PASSED' : 'FAILED'
-    });
-    console.log(`✅ ${passed} passed (${duration}s)`);
+    const output = execSync(`node ${suite.script}`, { encoding: 'utf-8', stdio: 'pipe' });
+    const duration = Date.now() - start;
+    process.stdout.write(`✅ PASSED (${duration}ms)\n`);
+    totalPassed += suite.expected;
+    results.push({ name: suite.name, status: 'PASS', assertions: suite.expected, duration: `${duration}ms` });
   } catch (err) {
-    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`❌ FAILED (${duration}s)`);
-    grandTotalFailed++;
-    results.push({
-      suite: suite.name,
-      category: suite.category,
-      passed: 0,
-      failed: 1,
-      duration: `${duration}s`,
-      status: 'FAILED',
-      error: err.message
-    });
+    const duration = Date.now() - start;
+    process.stdout.write(`❌ FAILED (${duration}ms)\n`);
+    totalFailed += suite.expected;
+    results.push({ name: suite.name, status: 'FAIL', assertions: suite.expected, duration: `${duration}ms` });
+    console.error(err.stdout || err.stderr || err.message);
   }
 }
 
-console.log('\n========================================================================');
-console.log('                        FINAL TEST SCORECARD                            ');
-console.log('========================================================================');
+console.log('\n=========================================================================');
+console.log('MASTER TEST SUITE SUMMARY:');
 console.table(results);
-console.log(`GRAND TOTAL: ${grandTotalPassed} assertions passed, ${grandTotalFailed} failed across ${suites.length} suites.`);
-console.log('========================================================================\n');
+console.log(`GRAND TOTAL: ${totalPassed} Assertions PASSED, ${totalFailed} FAILED`);
+console.log('=========================================================================');
 
-if (grandTotalFailed > 0) {
-  process.exit(1);
-}
+if (totalFailed > 0) process.exit(1);

@@ -845,7 +845,10 @@ export function GroceryBasketView({
               </button>
             </div>
 
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto no-scrollbar pr-1">
+            <div
+              className="space-y-3 max-h-[60vh] overflow-y-auto no-scrollbar pr-1"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
               {substitutionCandidates.map((candidate) => {
                 const isCurrent = candidate.id === substitutingItem.productVariantId;
                 return (
@@ -915,6 +918,7 @@ export function GroceryBasketView({
         <div
           onClick={() => setIsAddressModalOpen(false)}
           className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           <div
             onClick={(e) => e.stopPropagation()}

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict yBn2guBsFSqjvYle2ifBWvEVAEaadXfxFhPn57stejON0aG9laIhVUHyW6VuMsI
+\restrict Ly5D0SR7ZIbUb4gRkc5npcMjShsCxF3hEUQIBSPLRU9teO3bTqiFMAcbdolpndl
 
 -- Dumped from database version 18.6 (Ubuntu 18.6-0ubuntu0.26.04.1)
 -- Dumped by pg_dump version 18.6 (Ubuntu 18.6-0ubuntu0.26.04.1)
@@ -818,6 +818,8 @@ cmwj5gq77004xl3086g6y3r7k	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_CREATED	Recipe	rec-17
 cmwj5gq8f004zl308mmnjz0su	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_ARCHIVED	Recipe	rec-1794826680717	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "isArchived": true}	\N	\N	2026-11-16 10:58:00.784
 cmwj68bkl000ul31wkrm5wvw4	\N	LOGIN_FAILURE	\N	\N	{"email": "superadmin@rasoi.internal", "actorId": "system"}	::1	\N	2026-11-16 11:19:28.149
 cmwj69hlk000zl31wktbpvg8b	cmwj69hkz000vl31wlw6uv5rv	REGISTER	User	cmwj69hkz000vl31wlw6uv5rv	{"actorId": "cmwj69hkz000vl31wlw6uv5rv"}	::1	\N	2026-11-16 11:20:22.617
+cmwj8jgsk001zl3o05zyduhv4	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 12:24:07.364
+cmwj8jh8f0022l3o04p0iljls	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 12:24:07.936
 cmwj4vm5t000vl3rcpjx5ya4w	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 10:41:35.729
 cmwj4vmqq000yl3rcdov52b4j	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 10:41:36.482
 cmwj4vquo0013l3rc2ncsvxgk	cmwj4vqu8000zl3rcxghmhy5s	REGISTER	User	cmwj4vqu8000zl3rcxghmhy5s	{"actorId": "cmwj4vqu8000zl3rcxghmhy5s"}	::1	\N	2026-11-16 10:41:41.808
@@ -1271,6 +1273,88 @@ cmwj7oquc006ql3jsj2wd32lx	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj7oqu3
 cmwj7or40006ul3js6titr636	cmwj7oqu3006ol3jscxsley7w	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7oqu3006ol3jscxsley7w"}	10.52.143.139	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:00:14.4
 cmwj7oren0071l3jsz32ui1e3	cmwj7ore8006xl3jslfdqmo7e	REGISTER	User	cmwj7ore8006xl3jslfdqmo7e	{"actorId": "cmwj7ore8006xl3jslfdqmo7e"}	10.52.59.44	\N	2026-11-16 12:00:14.783
 cmwj7orft0002l3eg4xu97dsj	\N	AUDIT_IMMUTABILITY_TEST	SecurityTest	test-sec-1	{"test": "initial value", "timestamp": "2026-11-16T12:00:14.823Z", "immutableCheck": true}	\N	\N	2026-11-16 12:00:14.825
+cmwj7rde7007cl3js3gvz4dz4	cmwj7rddt0078l3js99qnh5nu	REGISTER	User	cmwj7rddt0078l3js99qnh5nu	{"actorId": "cmwj7rddt0078l3js99qnh5nu"}	::1	\N	2026-11-16 12:02:16.591
+cmwj7rdh4007el3jscqankmse	cmwj7rddt0078l3js99qnh5nu	EMAIL_VERIFIED	User	cmwj7rddt0078l3js99qnh5nu	{"actorId": "cmwj7rddt0078l3js99qnh5nu"}	::1	\N	2026-11-16 12:02:16.696
+cmwj7rdo1007gl3jsnbnabj4j	cmwj7rddt0078l3js99qnh5nu	LOGIN_FAILURE	\N	\N	{"actorId": "cmwj7rddt0078l3js99qnh5nu"}	::1	\N	2026-11-16 12:02:16.945
+cmwj7rduc007kl3jsysdceqfe	cmwj7rddt0078l3js99qnh5nu	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7rddt0078l3js99qnh5nu"}	::1	node	2026-11-16 12:02:17.172
+cmwj7rdvk007ol3jsfkzs3kwx	cmwj7rddt0078l3js99qnh5nu	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"actorId": "cmwj7rddt0078l3js99qnh5nu", "tokenFamilyId": "[REDACTED]"}	::1	\N	2026-11-16 12:02:17.216
+cmwj7rdw6007sl3jsoibaii6w	cmwj7rddt0078l3js99qnh5nu	PASSWORD_RESET_REQUESTED	\N	\N	{"actorId": "cmwj7rddt0078l3js99qnh5nu"}	::1	\N	2026-11-16 12:02:17.238
+cmwj7re2c007ul3jsdi5h6sem	cmwj7rddt0078l3js99qnh5nu	PASSWORD_RESET_COMPLETED	\N	\N	{"actorId": "cmwj7rddt0078l3js99qnh5nu"}	::1	\N	2026-11-16 12:02:17.461
+cmwj7re8f007wl3jsrwbvub3d	cmwj7rddt0078l3js99qnh5nu	LOGIN_FAILURE	\N	\N	{"actorId": "cmwj7rddt0078l3js99qnh5nu"}	::1	\N	2026-11-16 12:02:17.679
+cmwj7rege0080l3jsp1yc9kto	cmwj7rddt0078l3js99qnh5nu	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7rddt0078l3js99qnh5nu"}	::1	node	2026-11-16 12:02:17.966
+cmwj7reh80086l3jsaee62nhk	cmwj7rddt0078l3js99qnh5nu	HOUSEHOLD_CREATED	Household	cmwj7regt0082l3jsqu4nwb2f	{"name": "Joshi Family Kitchen", "actorId": "cmwj7rddt0078l3js99qnh5nu"}	\N	\N	2026-11-16 12:02:17.996
+cmwj7reic008al3jsd3s18oti	cmwj7rddt0078l3js99qnh5nu	HOUSEHOLD_INVITATION_SENT	HouseholdInvitation	cmwj7rei30088l3jssurx7fus	{"role": "MEMBER", "actorId": "cmwj7rddt0078l3js99qnh5nu", "invitedEmail": "invited.family.mwj7rd4s@testrasoi.in"}	\N	\N	2026-11-16 12:02:18.036
+cmwj7resn008fl3js759jezyx	cmwj7res6008bl3jswnlr3isx	REGISTER	User	cmwj7res6008bl3jswnlr3isx	{"actorId": "cmwj7res6008bl3jswnlr3isx"}	::1	\N	2026-11-16 12:02:18.408
+cmwj7retl008hl3jsng7d07g7	cmwj7res6008bl3jswnlr3isx	EMAIL_VERIFIED	User	cmwj7res6008bl3jswnlr3isx	{"actorId": "cmwj7res6008bl3jswnlr3isx"}	::1	\N	2026-11-16 12:02:18.441
+cmwj7rf2d008ll3js56p11q3b	cmwj7res6008bl3jswnlr3isx	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7res6008bl3jswnlr3isx"}	::1	node	2026-11-16 12:02:18.757
+cmwj7rf2z008pl3js4ubh7igj	cmwj7res6008bl3jswnlr3isx	HOUSEHOLD_INVITATION_ACCEPTED	Household	cmwj7regt0082l3jsqu4nwb2f	{"role": "MEMBER", "actorId": "cmwj7res6008bl3jswnlr3isx"}	\N	\N	2026-11-16 12:02:18.779
+cmwj7rf9p008vl3jseiw12g0x	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-16 12:02:19.021
+cmwj7rfau008yl3jsl6mukyh4	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 12:02:19.062
+cmwj7rfy90093l3jsmzee5ur6	cmwj7rfxl008zl3jsgcrfbi1l	REGISTER	User	cmwj7rfxl008zl3jsgcrfbi1l	{"actorId": "cmwj7rfxl008zl3jsgcrfbi1l"}	::1	\N	2026-11-16 12:02:19.905
+cmwj7rg8k0095l3jsicdh8h8d	cmwj2fa4w0000l3s4x4q1jmst	USER_SUSPENDED	User	cmwj7rfxl008zl3jsgcrfbi1l	{"reason": "Investigating suspicious order activity", "actorId": "cmwj2fa4w0000l3s4x4q1jmst", "newStatus": "SUSPENDED", "targetEmail": "rogue.admin.mwj7rfps@test.in", "previousStatus": "PENDING_VERIFICATION"}	\N	\N	2026-11-16 12:02:20.276
+cmwj7rg9j0097l3js0b2ertqe	cmwj2fa4w0000l3s4x4q1jmst	USER_REACTIVATED	User	cmwj7rfxl008zl3jsgcrfbi1l	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "newStatus": "ACTIVE", "targetEmail": "rogue.admin.mwj7rfps@test.in", "previousStatus": "SUSPENDED"}	\N	\N	2026-11-16 12:02:20.311
+cmwj7rkfg00cpl3jsfntdy6kk	cmwj7rk9o00cbl3jss734waya	HOUSEHOLD_CREATED	Household	cmwj7rkf900cll3jsdshqfymk	{"name": "Merchant Family Household", "actorId": "cmwj7rk9o00cbl3jss734waya"}	\N	\N	2026-11-16 12:02:25.708
+cmwj7rgah0099l3jst48uarit	cmwj2fa4w0000l3s4x4q1jmst	RETAILER_APPROVED	RetailerApplication	cmwj7rg9n0003l3vsmwuzoszd	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "applicantId": "cmwj7rfxl008zl3jsgcrfbi1l", "businessName": "Fresh Greens Mart mwj7rfps", "applicantEmail": "rogue.admin.mwj7rfps@test.in"}	\N	\N	2026-11-16 12:02:20.346
+cmwj7rgb0009bl3jsehmwmw22	cmwj2fa4w0000l3s4x4q1jmst	RETAILER_SUSPENDED	Retailer	ret-fresh-greens-mart-mwj7rfps	{"reason": "Audit pending", "status": "SUSPENDED", "actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	\N	\N	2026-11-16 12:02:20.364
+cmwj7rgca009dl3jsqj49xm3a	\N	ORDER_STATUS_CHANGED	Order	ord-1794830533631	{"reason": "Out with delivery executive", "actorId": "user-ops-1", "newStatus": "DISPATCHED", "fulfillmentNotes": "Customer requested contactless delivery at doorstep"}	\N	\N	2026-11-16 12:02:20.41
+cmwj7rgdf009fl3jsdzxoja0v	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_CREATED	Recipe	rec-1794830540438	{"title": "Kathiyawadi Ringan No Olo mwj7rfps", "actorId": "cmwj2fa4w0000l3s4x4q1jmst", "cuisine": "Kathiyawadi"}	\N	\N	2026-11-16 12:02:20.452
+cmwj7rgdx009hl3jsj5doerxa	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_ARCHIVED	Recipe	rec-1794830540438	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "isArchived": true}	\N	\N	2026-11-16 12:02:20.469
+cmwj7rgeh009jl3jsahz3jier	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_ARCHIVED	Recipe	rec-1794830540438	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "isArchived": false}	\N	\N	2026-11-16 12:02:20.489
+cmwj7rgkl009ml3jsopwevvkf	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj7rgke009kl3js889zqrz9	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "staffEmail": "ops.lead.mwj7rfps@rasoiiq.in", "assignedRole": "OPERATIONS"}	\N	\N	2026-11-16 12:02:20.709
+cmwj7rgkw009ol3jsn9xlwprf	cmwj4nyub0000l3ic1cbm4scv	STAFF_ROLE_CHANGED	User	cmwj7rgke009kl3js889zqrz9	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "newRole": "SUPPORT", "previousRole": "OPERATIONS"}	\N	\N	2026-11-16 12:02:20.721
+cmwj7rglh009rl3jseo3cj1v8	cmwj4nyub0000l3ic1cbm4scv	SETTINGS_UPDATED	SystemSetting	cmwj4s5on0011l32wh1uxro1d	{"key": "pricing.default_delivery_fee_inr", "value": "35", "actorId": "cmwj4nyub0000l3ic1cbm4scv"}	\N	\N	2026-11-16 12:02:20.741
+cmwj7rh6s009wl3jsja1wa96k	cmwj7rh6j009sl3jsdq0tyh5s	REGISTER	User	cmwj7rh6j009sl3jsdq0tyh5s	{"actorId": "cmwj7rh6j009sl3jsdq0tyh5s"}	10.52.51.158	\N	2026-11-16 12:02:21.509
+cmwj7rhcp00a0l3jsuqakhpgg	cmwj7rh6j009sl3jsdq0tyh5s	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7rh6j009sl3jsdq0tyh5s"}	10.52.91.177	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:21.722
+cmwj7rhib00a3l3jsie76ok86	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj7rhi200a1l3jsmijqywhg	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "staffEmail": "supp-1794830541314@rasoi.internal", "assignedRole": "SUPPORT"}	\N	\N	2026-11-16 12:02:21.923
+cmwj7rhnt00a7l3jsiof2mobq	cmwj7rhi200a1l3jsmijqywhg	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7rhi200a1l3jsmijqywhg"}	10.52.144.107	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:22.122
+cmwj7rht400aal3jse6lxmoib	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj7rhsz00a8l3js4vrczhcz	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "staffEmail": "ops-1794830541314@rasoi.internal", "assignedRole": "OPERATIONS"}	\N	\N	2026-11-16 12:02:22.313
+cmwj7rhxy00ael3jszdj7w2sn	cmwj7rhsz00a8l3js4vrczhcz	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7rhsz00a8l3js4vrczhcz"}	10.52.73.153	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:22.487
+cmwj7ri2u00ahl3js5n6jdy4e	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj7ri2n00afl3jsqgk61fp0	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "staffEmail": "adm-1794830541314@rasoi.internal", "assignedRole": "ADMIN"}	\N	\N	2026-11-16 12:02:22.662
+cmwj7ri7w00all3jsmeh9ph3n	cmwj7ri2n00afl3jsqgk61fp0	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7ri2n00afl3jsqgk61fp0"}	10.52.108.2	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:22.845
+cmwj7rigf00aql3jssg0dmndp	cmwj7rig500aml3jssdan8w5b	REGISTER	User	cmwj7rig500aml3jssdan8w5b	{"actorId": "cmwj7rig500aml3jssdan8w5b"}	10.52.167.189	\N	2026-11-16 12:02:23.151
+cmwj7rin100aul3jshs9edqjs	cmwj7rig500aml3jssdan8w5b	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7rig500aml3jssdan8w5b"}	10.52.137.77	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:23.39
+cmwj7rinj00b0l3js31m9qto8	cmwj7rig500aml3jssdan8w5b	HOUSEHOLD_CREATED	Household	cmwj7rin900awl3jsbgcfu3mn	{"name": "Victim Household", "actorId": "cmwj7rig500aml3jssdan8w5b"}	\N	\N	2026-11-16 12:02:23.408
+cmwj7riod00b2l3jstpzx3y88	cmwj4nyub0000l3ic1cbm4scv	USER_SUSPENDED	User	cmwj7rig500aml3jssdan8w5b	{"reason": "Security violation test suspension", "actorId": "cmwj4nyub0000l3ic1cbm4scv", "newStatus": "SUSPENDED", "targetEmail": "victim-1794830542933@test.com", "previousStatus": "ACTIVE"}	\N	\N	2026-11-16 12:02:23.437
+cmwj7rips00b4l3jsc99vfsek	cmwj4nyub0000l3ic1cbm4scv	USER_REACTIVATED	User	cmwj7rig500aml3jssdan8w5b	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "newStatus": "ACTIVE", "targetEmail": "victim-1794830542933@test.com", "previousStatus": "SUSPENDED"}	\N	\N	2026-11-16 12:02:23.488
+cmwj7riv600b8l3jss7wbrug1	cmwj7rig500aml3jssdan8w5b	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7rig500aml3jssdan8w5b"}	10.52.117.6	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:23.683
+cmwj7rixj00bcl3jsz77qsnot	cmwj7rhi200a1l3jsmijqywhg	SUPPORT_HOUSEHOLD_INSPECTED	Household	hh-sharma-family	{"actorId": "cmwj7rhi200a1l3jsmijqywhg", "actorRole": "SUPPORT", "accessedAt": "2026-11-16T12:02:23.759Z", "householdName": "Sharma Family", "supportReason": "Investigating delivery delay for customer ticket #SUP-9941"}	\N	\N	2026-11-16 12:02:23.767
+cmwj7rj5g00bgl3jsol1qbg79	cmwj58zak0069l3rc3wksnuya	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj58zak0069l3rc3wksnuya"}	10.52.22.143	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:24.052
+cmwj7rjey00bll3jszijqvz8c	cmwj7rjei00bhl3jsrnts5en8	REGISTER	User	cmwj7rjei00bhl3jsrnts5en8	{"actorId": "cmwj7rjei00bhl3jsrnts5en8"}	10.52.26.72	\N	2026-11-16 12:02:24.394
+cmwj7rjlu00bpl3jsivols5wm	cmwj7rjei00bhl3jsrnts5en8	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7rjei00bhl3jsrnts5en8"}	10.52.34.126	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:24.642
+cmwj7rjme00bvl3jspurwzhkq	cmwj7rjei00bhl3jsrnts5en8	HOUSEHOLD_CREATED	Household	cmwj7rjm300brl3jspvdc8eyr	{"name": "Alpha Household", "actorId": "cmwj7rjei00bhl3jsrnts5en8"}	\N	\N	2026-11-16 12:02:24.662
+cmwj7rjs700c0l3jsr1ak8l4k	cmwj7rjrx00bwl3jszvkmrhbk	REGISTER	User	cmwj7rjrx00bwl3jszvkmrhbk	{"actorId": "cmwj7rjrx00bwl3jszvkmrhbk"}	10.52.103.50	\N	2026-11-16 12:02:24.871
+cmwj7rjxz00c4l3jsp5rjqb8f	cmwj7rjrx00bwl3jszvkmrhbk	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7rjrx00bwl3jszvkmrhbk"}	10.52.191.178	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:25.079
+cmwj7rjyl00cal3js00n4m4ie	cmwj7rjrx00bwl3jszvkmrhbk	HOUSEHOLD_CREATED	Household	cmwj7rjyb00c6l3jsb6nq12ym	{"name": "Beta Household", "actorId": "cmwj7rjrx00bwl3jszvkmrhbk"}	\N	\N	2026-11-16 12:02:25.101
+cmwj7rk9y00cfl3jsm1fhtri7	cmwj7rk9o00cbl3jss734waya	REGISTER	User	cmwj7rk9o00cbl3jss734waya	{"actorId": "cmwj7rk9o00cbl3jss734waya"}	10.52.198.3	\N	2026-11-16 12:02:25.51
+cmwj7rkf200cjl3jsrm4b5hxe	cmwj7rk9o00cbl3jss734waya	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7rk9o00cbl3jss734waya"}	10.52.72.58	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:25.695
+cmwj7rkgf00ctl3jsjfdgo2a6	cmwj4nyub0000l3ic1cbm4scv	RETAILER_APPROVED	RetailerApplication	cmwj7rkfp00crl3js8xtmyurl	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "applicantId": "cmwj7rk9o00cbl3jss734waya", "businessName": "Organic Greens 1794830545700", "applicantEmail": "merchant-cust-1794830545328@test.com"}	\N	\N	2026-11-16 12:02:25.743
+cmwj7rklx00cyl3jsevsx69tz	cmwj7rklp00cul3jspzl5jack	REGISTER	User	cmwj7rklp00cul3jspzl5jack	{"actorId": "cmwj7rklp00cul3jspzl5jack"}	10.52.67.104	\N	2026-11-16 12:02:25.942
+cmwj7rkr400d2l3jsokur6rtp	cmwj7rklp00cul3jspzl5jack	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7rklp00cul3jspzl5jack"}	10.52.171.55	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:26.129
+cmwj7rkrj00d8l3jsboe9p94d	cmwj7rklp00cul3jspzl5jack	HOUSEHOLD_CREATED	Household	cmwj7rkrc00d4l3js9nan98p0	{"name": "Pilot Household Alpha", "actorId": "cmwj7rklp00cul3jspzl5jack"}	\N	\N	2026-11-16 12:02:26.144
+cmwj7rks100dcl3js1ll6b2vy	cmwj7rklp00cul3jspzl5jack	HOUSEHOLD_INVITATION_SENT	HouseholdInvitation	cmwj7rkrw00dal3js5pb4bh1h	{"role": "MEMBER", "actorId": "cmwj7rklp00cul3jspzl5jack", "invitedEmail": "invited-1794830546133@pilot.com"}	\N	\N	2026-11-16 12:02:26.162
+cmwj7rkx700dhl3jsio8jvukw	cmwj7rkx000ddl3js2msk70ls	REGISTER	User	cmwj7rkx000ddl3js2msk70ls	{"actorId": "cmwj7rkx000ddl3js2msk70ls"}	10.52.167.73	\N	2026-11-16 12:02:26.348
+cmwj7rl2j00dll3jso6dm3shj	cmwj7rkx000ddl3js2msk70ls	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj7rkx000ddl3js2msk70ls"}	10.52.120.33	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:26.54
+cmwj7rl3600dpl3jsynamgx3d	cmwj7rkx000ddl3js2msk70ls	HOUSEHOLD_INVITATION_ACCEPTED	Household	cmwj7rkrc00d4l3js9nan98p0	{"role": "MEMBER", "actorId": "cmwj7rkx000ddl3js2msk70ls"}	\N	\N	2026-11-16 12:02:26.562
+cmwj7rl7i00dtl3js2gx8pzix	cmwj4nyub0000l3ic1cbm4scv	RETAILER_APPROVED	RetailerApplication	cmwj7rl6r00drl3jse5hyca4p	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "applicantId": "cmwj7rklp00cul3jspzl5jack", "businessName": "Pilot Store 1794830546671", "applicantEmail": "pilot-e2e-1794830545752@rasoi.pilot"}	\N	\N	2026-11-16 12:02:26.718
+cmwj7rl8a00dvl3jsyw9wptm6	cmwj4nyub0000l3ic1cbm4scv	USER_SUSPENDED	User	cmwj7rklp00cul3jspzl5jack	{"reason": "End-of-pilot verification suspension", "actorId": "cmwj4nyub0000l3ic1cbm4scv", "newStatus": "SUSPENDED", "targetEmail": "pilot-e2e-1794830545752@rasoi.pilot", "previousStatus": "ACTIVE"}	\N	\N	2026-11-16 12:02:26.747
+cmwj8g0uz0004l3o0j47ecned	cmwj8g0uk0000l3o0weyxl9zb	REGISTER	User	cmwj8g0uk0000l3o0weyxl9zb	{"actorId": "cmwj8g0uk0000l3o0weyxl9zb"}	10.52.4.9	\N	2026-11-16 12:21:26.747
+cmwj8g10m0008l3o0rvrf2ox8	cmwj8g0uk0000l3o0weyxl9zb	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8g0uk0000l3o0weyxl9zb"}	10.52.171.5	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:26.95
+cmwj8g11a000el3o0xyl6j5i7	cmwj8g0uk0000l3o0weyxl9zb	HOUSEHOLD_CREATED	Household	cmwj8g10z000al3o02k1568r0	{"name": "Suspension Test Household", "actorId": "cmwj8g0uk0000l3o0weyxl9zb"}	\N	\N	2026-11-16 12:21:26.974
+cmwj8g13b000gl3o0l8y5h9n7	cmwj4nyub0000l3ic1cbm4scv	USER_SUSPENDED	User	cmwj8g0uk0000l3o0weyxl9zb	{"reason": "Controlled audit suspension test", "actorId": "cmwj4nyub0000l3ic1cbm4scv", "newStatus": "SUSPENDED", "targetEmail": "cust-susp-1794831686519@pilot.com", "previousStatus": "ACTIVE"}	\N	\N	2026-11-16 12:21:27.047
+cmwj8g15r000il3o07d3wu5hv	cmwj4nyub0000l3ic1cbm4scv	USER_REACTIVATED	User	cmwj8g0uk0000l3o0weyxl9zb	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "newStatus": "ACTIVE", "targetEmail": "cust-susp-1794831686519@pilot.com", "previousStatus": "SUSPENDED"}	\N	\N	2026-11-16 12:21:27.136
+cmwj8g17t000kl3o0too57cz3	\N	SUPPORT_HOUSEHOLD_INSPECTED	Household	hh-sharma-family	{"actorId": "user-support-1", "actorRole": "SUPPORT", "accessedAt": "2026-11-16T12:21:27.201Z", "householdName": "Sharma Family", "supportReason": "Valid ticket #9901: pantry sync issue"}	\N	\N	2026-11-16 12:21:27.209
+cmwj8g1f8000pl3o06i3a4xp1	cmwj8g1ew000ll3o0s4ydlvql	REGISTER	User	cmwj8g1ew000ll3o0s4ydlvql	{"actorId": "cmwj8g1ew000ll3o0s4ydlvql"}	10.52.181.30	\N	2026-11-16 12:21:27.477
+cmwj8g1lu000tl3o0jbk5z9n4	cmwj8g1ew000ll3o0s4ydlvql	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8g1ew000ll3o0s4ydlvql"}	10.52.111.4	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:27.714
+cmwj8g1ng000xl3o0d5z4snkk	cmwj4nyub0000l3ic1cbm4scv	RETAILER_APPROVED	RetailerApplication	cmwj8g1mc000vl3o0ij8uw5ur	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "applicantId": "cmwj8g1ew000ll3o0s4ydlvql", "businessName": "Alpha Grocers 1794831687719", "applicantEmail": "reta-1794831687228@merchant.com"}	\N	\N	2026-11-16 12:21:27.772
+cmwj8g1to0012l3o0fzfx5xlv	cmwj8g1tf000yl3o0x8rjs5k7	REGISTER	User	cmwj8g1tf000yl3o0x8rjs5k7	{"actorId": "cmwj8g1tf000yl3o0x8rjs5k7"}	10.52.18.175	\N	2026-11-16 12:21:27.997
+cmwj8g1z80016l3o0znj6yesl	cmwj8g1tf000yl3o0x8rjs5k7	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8g1tf000yl3o0x8rjs5k7"}	10.52.51.10	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:28.196
+cmwj8g201001al3o08p16fv17	cmwj4nyub0000l3ic1cbm4scv	RETAILER_APPROVED	RetailerApplication	cmwj8g1zi0018l3o0wguruoe1	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "applicantId": "cmwj8g1tf000yl3o0x8rjs5k7", "businessName": "Beta Provisions 1794831688199", "applicantEmail": "retb-1794831687777@merchant.com"}	\N	\N	2026-11-16 12:21:28.226
+cmwj8g25q001el3o0ch4198mi	cmwj8g1ew000ll3o0s4ydlvql	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8g1ew000ll3o0s4ydlvql"}	10.52.151.1	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:28.43
+cmwj8g2cg001il3o04flix7q1	cmwj8g1tf000yl3o0x8rjs5k7	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8g1tf000yl3o0x8rjs5k7"}	10.52.183.121	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:28.672
+cmwj8g2iu001ll3o010646ft6	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj8g2io001jl3o0sy36ms5s	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "staffEmail": "selfreview-1794831688718@rasoi.internal", "assignedRole": "ADMIN"}	\N	\N	2026-11-16 12:21:28.902
+cmwj8g2ou001pl3o0tbhwxy57	cmwj8g2io001jl3o0sy36ms5s	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8g2io001jl3o0sy36ms5s"}	10.52.119.41	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:29.119
+cmwj8g2ys001wl3o077le57i8	cmwj8g2wk001sl3o0az4czbyk	REGISTER	User	cmwj8g2wk001sl3o0az4czbyk	{"actorId": "cmwj8g2wk001sl3o0az4czbyk"}	10.52.91.48	\N	2026-11-16 12:21:29.476
+cmwj8g2zz0002l3yk62q70etm	\N	AUDIT_IMMUTABILITY_TEST	SecurityTest	test-sec-1	{"test": "initial value", "timestamp": "2026-11-16T12:21:29.519Z", "immutableCheck": true}	\N	\N	2026-11-16 12:21:29.519
 \.
 
 
@@ -1360,6 +1444,20 @@ cmwj7n382003jl3js848vwt1o	cmwj7n37w003hl3jsck0kq2ij	3c7a04fd0c0e978d8bfdfd4a1992
 cmwj7op3x005sl3jsx4fz6app	cmwj7op3r005ql3jsb2wkt4j7	6d47b44f0ac5f348925cf95fdc321728a405b88829e37177bebce05e3fdd1128	2026-11-16 12:30:11.804	\N	2026-11-16 12:00:11.806
 cmwj7opop0065l3jsgwx9shos	cmwj7opoi0063l3jsb4gz7quy	6683b319dff49651e7053e4a4f0f85bd4b58cfaed88be985b60bc133454de8f4	2026-11-16 12:30:12.552	\N	2026-11-16 12:00:12.553
 cmwj7oreg006zl3jsl6o1ofeq	cmwj7ore8006xl3jslfdqmo7e	1d3e86739a7cf56293b826aa4fbde3ef95faeba4c600257ad24d0820770c3cec	2026-11-16 12:30:14.773	\N	2026-11-16 12:00:14.776
+cmwj7rddz007al3js74apykt5	cmwj7rddt0078l3js99qnh5nu	13051fa91dc6e35e6c5900cc8a6074e54693eab9fedf18aba8aa553b6ba85053	2026-11-16 12:32:16.582	2026-11-16 12:02:16.681	2026-11-16 12:02:16.583
+cmwj7rese008dl3js7zn8s92j	cmwj7res6008bl3jswnlr3isx	73ec6549097fd26c288f40568bc54831580ccc094b452e3ca48f440c521bb19e	2026-11-16 12:32:18.396	2026-11-16 12:02:18.425	2026-11-16 12:02:18.398
+cmwj7rfxw0091l3jsru3a9ncc	cmwj7rfxl008zl3jsgcrfbi1l	eb81d3120411400cc30a4b57423aa4e6110323176fe9f184e2e359e36da2c5f8	2026-11-16 12:32:19.89	\N	2026-11-16 12:02:19.892
+cmwj7rh6n009ul3jsjpfnreci	cmwj7rh6j009sl3jsdq0tyh5s	6bfa0612342134dd78710cb3b12c10da648d299fb9b7af546f62fcfabf340e85	2026-11-16 12:32:21.497	\N	2026-11-16 12:02:21.503
+cmwj7riga00aol3jsnbxi36fh	cmwj7rig500aml3jssdan8w5b	9d9dcbd1e082948d56954f272adfc8f703293e7afcc96f0d7fda73a251817d1a	2026-11-16 12:32:23.14	\N	2026-11-16 12:02:23.147
+cmwj7rjer00bjl3jsh2els0yg	cmwj7rjei00bhl3jsrnts5en8	9392f218f2d57d07364aae7229ef2cae07c4ece227ac6c41a7ac33662a4982b9	2026-11-16 12:32:24.38	\N	2026-11-16 12:02:24.387
+cmwj7rjs100byl3js4jec3n6r	cmwj7rjrx00bwl3jszvkmrhbk	5f1299d9b615551e6bc22aff5ede396e2ad707a9cf9b6a5749335faf45e5d8f4	2026-11-16 12:32:24.859	\N	2026-11-16 12:02:24.866
+cmwj7rk9t00cdl3jsz8ja27yq	cmwj7rk9o00cbl3jss734waya	54fc368070ce21f91cc234dce1d7d12be84dd0e3eca8227abd4915bd90e0e93f	2026-11-16 12:32:25.499	\N	2026-11-16 12:02:25.506
+cmwj7rklu00cwl3jsi5qp6nj2	cmwj7rklp00cul3jspzl5jack	ea9a5fb56d6fe4d02f2e2cd742630d671805692185de9e2fffc54cbf9470a5fa	2026-11-16 12:32:25.931	\N	2026-11-16 12:02:25.938
+cmwj7rkx400dfl3jsmc063m7e	cmwj7rkx000ddl3js2msk70ls	86226784ec66df61c1eb53ef4ae16b451a29829b643b1b16298bc55f1d1fa48c	2026-11-16 12:32:26.338	\N	2026-11-16 12:02:26.344
+cmwj8g0uq0002l3o0a1mnlh0s	cmwj8g0uk0000l3o0weyxl9zb	0fe03fadd17d277753717dacb0bd721caac4fbce53117cb00cc14952d55df22d	2026-11-16 12:51:26.735	\N	2026-11-16 12:21:26.738
+cmwj8g1f3000nl3o0izn2wu6j	cmwj8g1ew000ll3o0s4ydlvql	db2fd51df2fc5359e8be4d59dc576a6d864bb013174ddd7f5210afbbd8ba3b59	2026-11-16 12:51:27.468	\N	2026-11-16 12:21:27.471
+cmwj8g1tk0010l3o0xkg2hp35	cmwj8g1tf000yl3o0x8rjs5k7	2b979593277c7beee27ed847747558448617c4cb06384c07b0de467967567201	2026-11-16 12:51:27.99	\N	2026-11-16 12:21:27.993
+cmwj8g2yk001ul3o0b4iugw8j	cmwj8g2wk001sl3o0az4czbyk	87591aba6327e84f11e995056d4098524504c43fe642c2de54abe8760cb83fa5	2026-11-16 12:51:29.465	\N	2026-11-16 12:21:29.468
 \.
 
 
@@ -1383,8 +1481,9 @@ cmwj6i6mb002el3y88fjm3pxz	cmwj6i69z0024l3y82xdd2a3j	Beta Household	MEDIUM	3500	D
 cmwj6i7mb002tl3y85wrix5oj	cmwj6i7ax002jl3y8cvctzzmw	Merchant Family Household	MEDIUM	3500	Daily Fresh	2026-11-16 11:27:09.587	2026-11-16 11:27:09.587	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
 cmwj6i8ct003cl3y81vk7pkjq	cmwj6i80g0032l3y87a4qyxrq	Pilot Household Alpha	MEDIUM	3500	Daily Fresh	2026-11-16 11:27:10.541	2026-11-16 11:27:11.413	Ahmedabad	India	ALL_INDIAN	JAIN	\N	4	Gujarat
 cmwj7ooo9005fl3jsxlnyeoax	cmwj7oodb0055l3js8v9wpnko	Suspension Test Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:00:11.241	2026-11-16 12:00:11.241	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
-hh-patel-family	user-demo-patel	Patel Family	MEDIUM	99999	Daily Fresh	2026-11-16 06:15:05.059	2026-11-16 12:02:09.362	Ahmedabad	India	ALL_INDIAN	JAIN	\N	4	Gujarat
-hh-sharma-family	user-demo-1	Sharma Family	MEDIUM	4500	Daily Fresh	2026-11-16 06:15:04.99	2026-11-16 12:02:12.749	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwj7rin900awl3jsbgcfu3mn	cmwj7rig500aml3jssdan8w5b	Victim Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:02:23.398	2026-11-16 12:02:23.398	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwj7rjm300brl3jspvdc8eyr	cmwj7rjei00bhl3jsrnts5en8	Alpha Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:02:24.652	2026-11-16 12:02:24.652	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+hh-patel-family	user-demo-patel	Patel Family	MEDIUM	99999	Daily Fresh	2026-11-16 06:15:05.059	2026-11-16 12:24:04.088	Ahmedabad	India	ALL_INDIAN	JAIN	\N	4	Gujarat
 cmwj6z99m00g9l3y8oc4q8m3o	cmwj6z8ya00fzl3y8xja0epch	Victim Household	MEDIUM	3500	Daily Fresh	2026-11-16 11:40:24.874	2026-11-16 11:40:24.874	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
 cmwj6zaox00h4l3y801ndmedm	cmwj6zabr00gul3y8iotaejmx	Alpha Household	MEDIUM	3500	Daily Fresh	2026-11-16 11:40:26.72	2026-11-16 11:40:26.72	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
 cmwj6ls5q007yl3y84th51utm	cmwj6lru7007ol3y8kcaeerkv	Victim Household	MEDIUM	3500	Daily Fresh	2026-11-16 11:29:56.174	2026-11-16 11:29:56.174	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
@@ -1409,6 +1508,11 @@ cmwj6zd1y00ihl3y8tizaztne	cmwj6zcpy00i7l3y8vp2u3gdx	Pilot Household Alpha	MEDIUM
 cmwj7lyz3000nl3jsd40ge37l	cmwj7lyng000dl3js8tqyxiym	Suspension Test Household	MEDIUM	3500	Daily Fresh	2026-11-16 11:58:04.623	2026-11-16 11:58:04.623	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
 cmwj7n0y10028l3jse6hvetdf	cmwj7n0n7001yl3jsz11tqw4e	Suspension Test Household	MEDIUM	3500	Daily Fresh	2026-11-16 11:58:53.834	2026-11-16 11:58:53.834	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
 cmwj7o6vs003wl3jsm45u62kw	cmwj7o6ko003ml3jsfxik77ut	Suspension Test Household	MEDIUM	3500	Daily Fresh	2026-11-16 11:59:48.184	2026-11-16 11:59:48.184	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwj7rjyb00c6l3jsb6nq12ym	cmwj7rjrx00bwl3jszvkmrhbk	Beta Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:02:25.091	2026-11-16 12:02:25.091	Ahmedabad	India	ALL_INDIAN	JAIN	\N	4	Gujarat
+cmwj7rkf900cll3jsdshqfymk	cmwj7rk9o00cbl3jss734waya	Merchant Family Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:02:25.702	2026-11-16 12:02:25.702	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwj7rkrc00d4l3js9nan98p0	cmwj7rklp00cul3jspzl5jack	Pilot Household Alpha	MEDIUM	3500	Daily Fresh	2026-11-16 12:02:26.136	2026-11-16 12:02:26.58	Ahmedabad	India	ALL_INDIAN	JAIN	\N	4	Gujarat
+cmwj8g10z000al3o02k1568r0	cmwj8g0uk0000l3o0weyxl9zb	Suspension Test Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:21:26.964	2026-11-16 12:21:26.964	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+hh-sharma-family	user-demo-1	Sharma Family	MEDIUM	4500	Daily Fresh	2026-11-16 06:15:04.99	2026-11-16 12:24:07.419	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
 \.
 
 
@@ -1421,6 +1525,7 @@ cmwj6fysp003il3rc7yoh17w1	cmwj6fyrf003cl3rc1n58062c	invited-1794828324807@pilot.
 cmwj6i8e6003il3y8cv930leq	cmwj6i8ct003cl3y81vk7pkjq	invited-1794828430554@pilot.com	cmwj6i80g0032l3y87a4qyxrq	a032f0c22cf4d431b27dd89d3a4d6b3e6a29e1110de3d6805797f941b0cf3a5b	MEMBER	2026-11-23 11:27:10.575	2026-11-16 11:27:11.35	\N	2026-11-16 11:27:10.59
 cmwj6xe7t00btl3y8vmh2smg4	cmwj6xe6k00bnl3y8iyefsg3n	invited-1794829137950@pilot.com	cmwj6xdtd00bdl3y825vovtmm	6d3d8b531c2a5e7af3e70cfeba28b4bc088898797d814bc806c59ed0becaf227	MEMBER	2026-11-23 11:38:57.975	2026-11-16 11:38:58.837	\N	2026-11-16 11:38:57.977
 cmwj6zd3100inl3y8r17uiyp5	cmwj6zd1y00ihl3y8tizaztne	invited-1794829229796@pilot.com	cmwj6zcpy00i7l3y8vp2u3gdx	833ebcd54cc003a64d5ebe5ac831cfb4a288b087ee54b10b3a524e11d88a09f1	MEMBER	2026-11-23 11:40:29.818	2026-11-16 11:40:30.634	\N	2026-11-16 11:40:29.822
+cmwj7rkrw00dal3js5pb4bh1h	cmwj7rkrc00d4l3js9nan98p0	invited-1794830546133@pilot.com	cmwj7rklp00cul3jspzl5jack	90e693ab857b921af3a52bb59a55b73ceb7567128c440e27b43fe2b65d2183d0	MEMBER	2026-11-23 12:02:26.15	2026-11-16 12:02:26.546	\N	2026-11-16 12:02:26.157
 \.
 
 
@@ -1473,6 +1578,13 @@ cmwj7lyz8000pl3jsgt2i21t3	cmwj7lyz3000nl3jsd40ge37l	Suspension Test Customer	adu
 cmwj7n0y6002al3jss2nnra43	cmwj7n0y10028l3jse6hvetdf	Suspension Test Customer	adult	VEGETARIAN	{}	{}	2026-11-16 11:58:53.838	2026-11-16 11:58:53.838	OWNER	ACTIVE	cmwj7n0n7001yl3jsz11tqw4e
 cmwj7o6vw003yl3jsju5g8bvx	cmwj7o6vs003wl3jsm45u62kw	Suspension Test Customer	adult	VEGETARIAN	{}	{}	2026-11-16 11:59:48.188	2026-11-16 11:59:48.188	OWNER	ACTIVE	cmwj7o6ko003ml3jsfxik77ut
 cmwj7oood005hl3jsh92lvoek	cmwj7ooo9005fl3jsxlnyeoax	Suspension Test Customer	adult	VEGETARIAN	{}	{}	2026-11-16 12:00:11.246	2026-11-16 12:00:11.246	OWNER	ACTIVE	cmwj7oodb0055l3js8v9wpnko
+cmwj7rinb00ayl3jsa4rh8bjz	cmwj7rin900awl3jsbgcfu3mn	Victim User	adult	VEGETARIAN	{}	{}	2026-11-16 12:02:23.4	2026-11-16 12:02:23.4	OWNER	ACTIVE	cmwj7rig500aml3jssdan8w5b
+cmwj7rjm600btl3jsfbz8556n	cmwj7rjm300brl3jspvdc8eyr	User One	adult	VEGETARIAN	{}	{}	2026-11-16 12:02:24.655	2026-11-16 12:02:24.655	OWNER	ACTIVE	cmwj7rjei00bhl3jsrnts5en8
+cmwj7rjyd00c8l3jsqyvygb8m	cmwj7rjyb00c6l3jsb6nq12ym	User Two	adult	JAIN	{}	{}	2026-11-16 12:02:25.094	2026-11-16 12:02:25.094	OWNER	ACTIVE	cmwj7rjrx00bwl3jszvkmrhbk
+cmwj7rkfb00cnl3jsleqer9am	cmwj7rkf900cll3jsdshqfymk	Merchant Customer	adult	VEGETARIAN	{}	{}	2026-11-16 12:02:25.703	2026-11-16 12:02:25.703	OWNER	ACTIVE	cmwj7rk9o00cbl3jss734waya
+cmwj7rkre00d6l3js6cn2zjjs	cmwj7rkrc00d4l3js9nan98p0	Pilot Lead	adult	VEGETARIAN	{}	{}	2026-11-16 12:02:26.138	2026-11-16 12:02:26.138	OWNER	ACTIVE	cmwj7rklp00cul3jspzl5jack
+cmwj7rl2x00dnl3jsxra01qpr	cmwj7rkrc00d4l3js9nan98p0	Aarav Patel	adult	VEGETARIAN	{}	{}	2026-11-16 12:02:26.553	2026-11-16 12:02:26.553	MEMBER	ACTIVE	cmwj7rkx000ddl3js2msk70ls
+cmwj8g112000cl3o0xj27a71k	cmwj8g10z000al3o02k1568r0	Suspension Test Customer	adult	VEGETARIAN	{}	{}	2026-11-16 12:21:26.966	2026-11-16 12:21:26.966	OWNER	ACTIVE	cmwj8g0uk0000l3o0weyxl9zb
 \.
 
 
@@ -1551,6 +1663,7 @@ mp-cmwj6fyrf003cl3rc1n58062c	cmwj6fyrf003cl3rc1n58062c	2026-11-16 11:25:25.718	2
 mp-cmwj6i8ct003cl3y81vk7pkjq	cmwj6i8ct003cl3y81vk7pkjq	2026-11-16 11:27:11.457	2026-11-16 11:27:11.471	2026-11-16 11:27:11.471
 mp-cmwj6xe6k00bnl3y8iyefsg3n	cmwj6xe6k00bnl3y8iyefsg3n	2026-11-16 11:38:58.924	2026-11-16 11:38:58.925	2026-11-16 11:38:58.925
 mp-cmwj6zd1y00ihl3y8tizaztne	cmwj6zd1y00ihl3y8tizaztne	2026-11-16 11:40:30.725	2026-11-16 11:40:30.728	2026-11-16 11:40:30.728
+mp-cmwj7rkrc00d4l3js9nan98p0	cmwj7rkrc00d4l3js9nan98p0	2026-11-16 12:02:26.609	2026-11-16 12:02:26.616	2026-11-16 12:02:26.616
 \.
 
 
@@ -1561,29 +1674,30 @@ mp-cmwj6zd1y00ihl3y8tizaztne	cmwj6zd1y00ihl3y8tizaztne	2026-11-16 11:40:30.725	2
 COPY public."MealPlanItem" (id, "mealPlanId", "dayOfWeek", "mealCategory", "recipeId", servings, notes) FROM stdin;
 plan-item-1794828325714-zb1b	mp-cmwj6fyrf003cl3rc1n58062c	Monday	Lunch	recipe-gujarati-khatti-meethi-dal	4	\N
 plan-item-1794828431452-67yv	mp-cmwj6i8ct003cl3y81vk7pkjq	Monday	Lunch	recipe-gujarati-khatti-meethi-dal	4	\N
+plan-item-1794831843639-koamo	mp-hh-sharma-family	monday	breakfast	recipe-kanda-poha	4	\N
+plan-item-1794831843639-nf4s9	mp-hh-sharma-family	monday	lunch	recipe-paneer-butter-masala	4	\N
+plan-item-1794831843639-no6fd	mp-hh-sharma-family	monday	dinner	recipe-gujarati-khatti-meethi-dal	4	\N
+plan-item-1794831843639-v3e5t	mp-hh-sharma-family	tuesday	breakfast	recipe-khaman-dhokla	4	\N
+plan-item-1794831843639-x37aj	mp-hh-sharma-family	tuesday	lunch	recipe-rajma-chawal	4	\N
+plan-item-1794831843639-9cuqo	mp-hh-sharma-family	tuesday	dinner	recipe-bhindi-masala	4	\N
+plan-item-1794831843639-1ut76	mp-hh-sharma-family	wednesday	breakfast	recipe-rava-upma	4	\N
+plan-item-1794831843639-dbgbc	mp-hh-sharma-family	wednesday	dinner	recipe-bengali-cholar-dal	4	\N
+plan-item-1794831843639-2n6su	mp-hh-sharma-family	thursday	breakfast	recipe-methi-thepla	4	\N
+plan-item-1794831843639-dyswl	mp-hh-sharma-family	thursday	lunch	recipe-amritsari-chole	4	\N
+plan-item-1794831843639-nnwst	mp-hh-sharma-family	thursday	dinner	recipe-aloo-gobi	4	\N
+plan-item-1794831843639-wd2ln	mp-hh-sharma-family	friday	breakfast	recipe-idli-sambar	4	\N
+plan-item-1794831843639-bl5yl	mp-hh-sharma-family	friday	lunch	recipe-sambhar-rice	4	\N
+plan-item-1794831843639-em8zs	mp-hh-sharma-family	friday	dinner	recipe-jain-paneer-bhurji	4	\N
+plan-item-1794831843639-190tg	mp-hh-sharma-family	saturday	breakfast	recipe-methi-na-gota	4	\N
+plan-item-1794831843639-x2657	mp-hh-sharma-family	saturday	lunch	recipe-surati-undhiyu	4	\N
+plan-item-1794831843639-ovyui	mp-hh-sharma-family	saturday	dinner	recipe-baingan-bharta	4	\N
+plan-item-1794831843639-8gnut	mp-hh-sharma-family	sunday	breakfast	recipe-masala-dosa	4	\N
+plan-item-1794831843639-7mopn	mp-hh-sharma-family	sunday	lunch	recipe-moong-dal-khichdi	4	\N
+plan-item-1794831843639-m0paf	mp-hh-sharma-family	sunday	dinner	recipe-dal-tadka	4	\N
+plan-item-1794831843639-uuio6	mp-hh-sharma-family	wednesday	lunch	recipe-paneer-butter-masala	4	\N
 plan-item-1794829138921-yssq	mp-cmwj6xe6k00bnl3y8iyefsg3n	Monday	Lunch	recipe-gujarati-khatti-meethi-dal	4	\N
 plan-item-1794829230722-7av3	mp-cmwj6zd1y00ihl3y8tizaztne	Monday	Lunch	recipe-gujarati-khatti-meethi-dal	4	\N
-plan-item-1794830528911-mm7ry	mp-hh-sharma-family	monday	breakfast	recipe-methi-thepla	4	\N
-plan-item-1794830528911-a988y	mp-hh-sharma-family	monday	lunch	recipe-rajma-chawal	4	\N
-plan-item-1794830528911-g0lr5	mp-hh-sharma-family	monday	dinner	recipe-palak-paneer	4	\N
-plan-item-1794830528911-ebdu8	mp-hh-sharma-family	tuesday	breakfast	recipe-idli-sambar	4	\N
-plan-item-1794830528911-b14ky	mp-hh-sharma-family	tuesday	lunch	recipe-amritsari-chole	4	\N
-plan-item-1794830528911-ntidq	mp-hh-sharma-family	tuesday	dinner	recipe-dal-tadka	4	\N
-plan-item-1794830528911-hu8mp	mp-hh-sharma-family	wednesday	breakfast	recipe-kanda-poha	4	\N
-plan-item-1794830528911-dor25	mp-hh-sharma-family	wednesday	dinner	recipe-aloo-gobi	4	\N
-plan-item-1794830528911-os5q1	mp-hh-sharma-family	thursday	breakfast	recipe-khaman-dhokla	4	\N
-plan-item-1794830528911-ykfz2	mp-hh-sharma-family	thursday	lunch	recipe-sambhar-rice	4	\N
-plan-item-1794830528911-s7une	mp-hh-sharma-family	thursday	dinner	recipe-bhindi-masala	4	\N
-plan-item-1794830528911-4otne	mp-hh-sharma-family	friday	breakfast	recipe-rava-upma	4	\N
-plan-item-1794830528911-5a82t	mp-hh-sharma-family	friday	lunch	recipe-gujarati-khatti-meethi-dal	4	\N
-plan-item-1794830528911-bsxv0	mp-hh-sharma-family	friday	dinner	recipe-baingan-bharta	4	\N
-plan-item-1794830528911-8lq6s	mp-hh-sharma-family	saturday	breakfast	recipe-gujarati-handvo	4	\N
-plan-item-1794830528911-fhsm5	mp-hh-sharma-family	saturday	lunch	recipe-paneer-butter-masala	4	\N
-plan-item-1794830528911-x5hni	mp-hh-sharma-family	saturday	dinner	recipe-ringna-no-olo	4	\N
-plan-item-1794830528911-n51np	mp-hh-sharma-family	sunday	breakfast	recipe-masala-dosa	4	\N
-plan-item-1794830528911-15ycd	mp-hh-sharma-family	sunday	lunch	recipe-surati-undhiyu	4	\N
-plan-item-1794830528911-w3lsf	mp-hh-sharma-family	sunday	dinner	recipe-moong-dal-khichdi	4	\N
-plan-item-1794830528911-h8xs6	mp-hh-sharma-family	wednesday	lunch	recipe-paneer-butter-masala	4	\N
+plan-item-1794830546607-nfw9	mp-cmwj7rkrc00d4l3js9nan98p0	Monday	Lunch	recipe-gujarati-khatti-meethi-dal	4	\N
 \.
 
 
@@ -1851,7 +1965,21 @@ ord-1794830530346	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik
 ord-1794830532714	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 12:02:12.716	2026-11-16 12:02:12.716	\N	t	\N	\N	\N
 ord-1794830532722	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 12:02:12.724	2026-11-16 12:02:12.724	\N	t	\N	\N	\N
 ord-1794830533345	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 12:02:13.346	2026-11-16 12:02:13.346	\N	t	\N	\N	\N
-ord-1794830533631	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 12:02:13.633	2026-11-16 12:02:13.633	\N	t	\N	\N	\N
+ord-1794830533631	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 12:02:13.633	2026-11-16 12:02:20.389	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in
+ord-1794830546658	cmwj7rklp00cul3jspzl5jack	Blinkit	DEMO ORDER CONFIRMED	240	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103	2026-11-16 12:02:26.665	2026-11-16 12:02:26.665	\N	t	\N	\N	\N
+ord-1794831828306	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2823	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 12:23:48.309	2026-11-16 12:23:48.309	\N	t	\N	\N	\N
+ord-1794831843727	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2438	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 12:24:03.73	2026-11-16 12:24:03.73	\N	t	\N	\N	\N
+ord-1794831844117	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794831844117)	2026-11-16 12:24:04.12	2026-11-16 12:24:04.12	\N	t	\N	\N	\N
+ord-1794831844128	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794831844117)	2026-11-16 12:24:04.131	2026-11-16 12:24:04.131	\N	t	\N	\N	\N
+ord-1794831844141	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794831844117)	2026-11-16 12:24:04.145	2026-11-16 12:24:04.145	\N	t	\N	\N	\N
+ord-1794831844149	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794831844117)	2026-11-16 12:24:04.152	2026-11-16 12:24:04.152	\N	t	\N	\N	\N
+ord-1794831844155	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794831844117)	2026-11-16 12:24:04.158	2026-11-16 12:24:04.158	\N	t	\N	\N	\N
+ord-1794831844437	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 12:24:04.44	2026-11-16 12:24:04.44	\N	t	\N	\N	\N
+ord-1794831845044	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 12:24:05.047	2026-11-16 12:24:05.047	\N	t	\N	\N	\N
+ord-1794831847389	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 12:24:07.392	2026-11-16 12:24:07.392	\N	t	\N	\N	\N
+ord-1794831847395	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 12:24:07.398	2026-11-16 12:24:07.398	\N	t	\N	\N	\N
+ord-1794831847947	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 12:24:07.95	2026-11-16 12:24:07.95	\N	t	\N	\N	\N
+ord-1794831848260	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 12:24:08.263	2026-11-16 12:24:08.263	\N	t	\N	\N	\N
 \.
 
 
@@ -1883,9 +2011,9 @@ cmwivcvpu00efl3q4g85o0or9	hh-mehta-family	ing-bajra-flour	2000	g	f	\N	2026-11-16
 cmwivcvpz00ehl3q4aybn4ci6	hh-mehta-family	ing-ghee	1000	g	f	\N	2026-11-16 06:15:05.111
 cmwivcvq300ejl3q4lq5iioe7	hh-mehta-family	ing-green-chilli	250	g	f	\N	2026-11-16 06:15:05.115
 cmwivcvq800ell3q411ejwkrd	hh-mehta-family	ing-mustard-seeds	200	g	f	\N	2026-11-16 06:15:05.121
-cmwivcvo000e1l3q4teh4nxo1	hh-sharma-family	ing-mustard-seeds	200	g	f	\N	2026-11-16 12:02:10.338
-pantry-1794817781894	hh-patel-family	ing-bajra-flour	2000	g	f	\N	2026-11-16 12:02:13.573
-pantry-1794817791932	hh-mehta-family	ing-raw-banana	1500	g	f	\N	2026-11-16 12:02:13.583
+cmwivcvo000e1l3q4teh4nxo1	hh-sharma-family	ing-mustard-seeds	200	g	f	\N	2026-11-16 12:24:05.034
+pantry-1794817781894	hh-patel-family	ing-bajra-flour	2000	g	f	\N	2026-11-16 12:24:08.194
+pantry-1794817791932	hh-mehta-family	ing-raw-banana	1500	g	f	\N	2026-11-16 12:24:08.204
 \.
 
 
@@ -1894,6 +2022,7 @@ pantry-1794817791932	hh-mehta-family	ing-raw-banana	1500	g	f	\N	2026-11-16 12:02
 --
 
 COPY public."PasswordResetToken" (id, "userId", "tokenHash", "expiresAt", "consumedAt", "createdAt") FROM stdin;
+cmwj7rdvy007ql3jsckvecwff	cmwj7rddt0078l3js99qnh5nu	f0218e57e27f935f7aa165392edba64e53c5bf49129bec3610077cbe6f594f83	2026-11-16 12:17:17.23	2026-11-16 12:02:17.451	2026-11-16 12:02:17.231
 \.
 
 
@@ -2063,6 +2192,7 @@ rec-1794826680717	Kathiyawadi Ringan No Olo mwj5gp68	kathiyawadi-ringan-no-olo-m
 rec-1794827423003	Kathiyawadi Ringan No Olo mwj5wm2p	kathiyawadi-ringan-no-olo-mwj5wm2p	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 11:10:23.007	\N	\N	f
 rec-1794828591141	Kathiyawadi Ringan No Olo mwj6lngd	kathiyawadi-ringan-no-olo-mwj6lngd	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 11:29:51.147	\N	\N	f
 rec-1794829219790	Kathiyawadi Ringan No Olo mwj6z4en	kathiyawadi-ringan-no-olo-mwj6z4en	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 11:40:19.794	\N	\N	f
+rec-1794830540438	Kathiyawadi Ringan No Olo mwj7rfps	kathiyawadi-ringan-no-olo-mwj7rfps	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 12:02:20.444	\N	\N	f
 \.
 
 
@@ -2575,8 +2705,15 @@ cmwixyb3i00c2l3bsfere0ea4	recipe-surati-undhiyu-jain	5	Cover tightly with a rimm
 --
 
 COPY public."RefreshSession" (id, "userId", "tokenHash", "tokenFamilyId", "deviceName", "userAgent", "createdAt", "lastUsedAt", "expiresAt", "revokedAt") FROM stdin;
+cmwj8g1li000rl3o0vhoyk068	cmwj8g1ew000ll3o0s4ydlvql	0a599a89c39ce080ae20e2ae101aa91eea4a7ff356b836857e67c95720e043ac	fam_1187fb93-a460-4e16-84b4-91ed36a689f9	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:27.702	2026-11-16 12:21:27.702	2026-11-23 12:21:27.699	\N
 cmwj4wmxe003dl3rc6qr63ovy	cmwj2fa4w0000l3s4x4q1jmst	c0a17ed8e682b39441f94c6c1640d7f33331f0352342e08c250a38caf16112b0	fam_517bf96d-7a50-4590-bc33-a419754b57bd	Web Browser	node	2026-11-16 10:42:23.378	2026-11-16 10:42:23.378	2026-11-23 10:42:23.375	\N
+cmwj8g1z00014l3o0mt0g2fdn	cmwj8g1tf000yl3o0x8rjs5k7	3dac0b7cc59e56c2dab76ff94d4b826317f89cd19b5fe98ffba22d35355788ac	fam_c69b52fe-aa56-41b2-a01e-6ab6ec601863	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:28.188	2026-11-16 12:21:28.188	2026-11-23 12:21:28.185	\N
 cmwj33fo9001ll33ksqrhin9z	cmwj2fa4w0000l3s4x4q1jmst	0a88bbe62b2c90df8f962c27be5c70fcb4a051c46edad5d2ea8b7ccd4916a70b	fam_3cb50e83-6c00-48e2-8dc5-0bfbdd57ff44	Web Browser	node	2026-11-16 09:51:41.337	2026-11-16 09:51:41.337	2026-11-23 09:51:41.333	\N
+cmwj7rf22008jl3js34xqgu3i	cmwj7res6008bl3jswnlr3isx	9612e31ee63f0d785887dd14c5c467b00a82bda0eb2379920951ec849f4e5666	fam_4ee86561-c357-486e-8ad0-03e6a080a06b	Web Browser	node	2026-11-16 12:02:18.746	2026-11-16 12:02:18.746	2026-11-23 12:02:18.745	\N
+cmwj7rf9g008tl3jss8dpvlp0	cmwj2fa4w0000l3s4x4q1jmst	ac3dbcd8cf26a56965e6c9ac1c43986cce1f9e55f272dcabd2ed84ca2bb6c9af	fam_5269ea5c-5a6f-418e-a483-38934cc272f3	Web Browser	node	2026-11-16 12:02:19.013	2026-11-16 12:02:19.013	2026-11-23 12:02:19.011	\N
+cmwj8g25f001cl3o04lgeecst	cmwj8g1ew000ll3o0s4ydlvql	7daf6a3491a79c86d39eb2011ec032ddad77f35834c4e7df72a8f90983786c77	fam_e02384cd-58c5-4f07-91cb-84d611ff8b13	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:28.419	2026-11-16 12:21:28.419	2026-11-23 12:21:28.416	\N
+cmwj8g2c2001gl3o0rren9bvf	cmwj8g1tf000yl3o0x8rjs5k7	0df2029a992b42019b24c118ed85f7dd90690ee735b4e567cdbaa1a61243c789	fam_e561ab65-61ec-4a27-958a-0da0456fc920	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:28.659	2026-11-16 12:21:28.659	2026-11-23 12:21:28.656	\N
+cmwj8g2oj001nl3o06lqgrvs9	cmwj8g2io001jl3o0sy36ms5s	74d50a99b4e334c9d6a9e2e7853cd7c7d9802173c7fac7d315e1321c475dba73	fam_6caec1e1-7059-4db6-99d3-e738930107f7	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:29.107	2026-11-16 12:21:29.107	2026-11-23 12:21:29.104	\N
 cmwj39g35001pl3i4ovfyws6j	cmwj2fa4w0000l3s4x4q1jmst	129292068ce1b8f6f847aee1daa4627fae8a354f4935271aa282f1b922cc664b	fam_7b702b3b-b3a3-4316-b512-1b4ade491bbc	Web Browser	node	2026-11-16 09:56:21.809	2026-11-16 09:56:21.809	2026-11-23 09:56:21.806	\N
 cmwj5goct004bl3084rv1bqjc	cmwj2fa4w0000l3s4x4q1jmst	c4f486f230c634f3870de30abc01aa6de0873a2d5cc043d3d8604e30dec3aeb1	fam_6b14449c-973c-47a0-815f-1f86bd8efd97	Web Browser	node	2026-11-16 10:57:58.349	2026-11-16 10:57:58.349	2026-11-23 10:57:58.343	\N
 cmwj3f5l3001pl3g0uor6vqmv	cmwj2fa4w0000l3s4x4q1jmst	c3a5f2fe76c4c273af09ce5b1337d48a56035979a30d4f8afff28968a5308b1d	fam_665c3cb8-668f-4db9-92bf-2f19ac483253	Web Browser	node	2026-11-16 10:00:48.135	2026-11-16 10:00:48.135	2026-11-23 10:00:48.132	\N
@@ -2622,16 +2759,20 @@ cmwj6lmgg005vl3y8x35ryd5p	cmwj2fa4w0000l3s4x4q1jmst	4871c778e2da5e3e1e9648d55d1b
 cmwj6lq8u0077l3y8s42c0mbq	cmwj6lpzg0073l3y8l9hrhx3m	fb06463bb2403e3c855bca8d881245e9bf7cc8aa72773b49b8a8bb7cc7fd89f4	fam_6e50ab28-b7c7-4841-bdf2-51641a6b65c0	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:29:53.694	2026-11-16 11:29:53.694	2026-11-23 11:29:53.688	\N
 cmwj6lqtc007el3y8se3if7z5	cmwj6lqjj007al3y8slbome7k	9f25d35a298342f08876f8fa4eddef478e66af99b8570825798bc35f2564376b	fam_17ff03fa-0888-4ba2-ad79-413b36fdc83e	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:29:54.432	2026-11-16 11:29:54.432	2026-11-23 11:29:54.427	\N
 cmwj6lrf4007ll3y8154i63pn	cmwj6lr4p007hl3y84mwsuw0j	3e0c5f82477ef6b3610edf1cd711518fe0bfc69aa218074a07c62bd3e9b680b7	fam_508dbc3c-2e57-425a-8b07-59d08bed2135	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:29:55.216	2026-11-16 11:29:55.216	2026-11-23 11:29:55.211	\N
+cmwj7rhce009yl3jsjd5vlrtx	cmwj7rh6j009sl3jsdq0tyh5s	16f21b0cfc3a8b9735f8d051a55705c7fd7a43f1b01053891feba7e48f386a4b	fam_4580dbed-1f6b-451e-b504-2b88a7daa156	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:21.698	2026-11-16 12:02:21.698	2026-11-23 12:02:21.691	\N
 cmwj6x7es008hl3y8pvyxo9nj	cmwj6x73q008bl3y80mv4nrrt	56e5390e903160f4059a82fb06ec47d54a0c8d07236cc776e27288ca1f910000	fam_351f2c83-4323-4a5d-b702-d22488cb2049	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:38:49.156	2026-11-16 11:38:49.156	2026-11-23 11:38:49.154	\N
 cmwj6x82w008ol3y8dlpgy7et	cmwj6x7qe008kl3y8a992cwtg	8ff196a2bc108856962794c0b71e1ad07391496ca099a27ab8bfbee9bfa59a16	fam_8b587a12-b31f-4d32-9cb6-22692ae2dbb2	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:38:50.025	2026-11-16 11:38:50.025	2026-11-23 11:38:50.023	\N
 cmwj6x8ow008vl3y8u5td6ek1	cmwj6x8dl008rl3y8skrrtrwr	0cbadb8cf65c3f0f19a3dc53dc6c63685d020171167b07146e21a8bce5cb35d2	fam_ceec0fa7-5b40-4f21-b770-6683ebd9c6be	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:38:50.817	2026-11-16 11:38:50.817	2026-11-23 11:38:50.815	\N
 cmwj6x9bg0092l3y8ujyxsi0i	cmwj6x908008yl3y8d6w9fi4s	f2458bc55acb7655a18a7f4cd4439715a3d0bf85b9b70757d544610dc3a39b60	fam_a4965f41-4dd7-4788-b288-6894199f6be8	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:38:51.628	2026-11-16 11:38:51.628	2026-11-23 11:38:51.626	\N
+cmwj7rhnl00a5l3jsc3zz0y7p	cmwj7rhi200a1l3jsmijqywhg	776367665d9e2ec12db7209f0067fbcb59c35c48fb1340e0c55b594a3948277a	fam_f67c4165-798b-4911-ab5b-a19f9921783f	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:22.113	2026-11-16 12:02:22.113	2026-11-23 12:02:22.106	\N
 cmwj6xals009pl3y8vafax5da	cmwj6x9tt0095l3y8z0swl428	3f473fa44e7b40979f5723224e0e022baf0ba00e4b4f20fc3e3521470588207c	fam_2cb01c73-a656-40e0-b809-9e3afd4fba42	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:38:53.296	2026-11-16 11:38:53.296	2026-11-23 11:38:53.294	\N
 cmwj6xaz5009xl3y8avohmo42	cmwj58zak0069l3rc3wksnuya	90352bc5fd5f7cb062012998109ea837af4a15134d332597e9de711fbe123cd2	fam_65a0849f-0d11-47bf-b14f-fcd155454457	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:38:53.778	2026-11-16 11:38:53.778	2026-11-23 11:38:53.776	\N
 cmwj6xbn100a6l3y8oodii6ki	cmwj6xbbf00a0l3y8gyrqt637	6249dcec991b8f251f2e62111d8364357ab7f759b47e27318eaccf29c9c7ad55	fam_38b2eb72-b1b7-47fe-ba07-cc251f322ece	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:38:54.638	2026-11-16 11:38:54.638	2026-11-23 11:38:54.636	\N
 cmwj6xc8q00all3y8a8l687rv	cmwj6xbyb00afl3y8paohnqpl	b616adfe9e6692469fda1bb16760752790a8f6eafea35556ea09cc7dabdca1ef	fam_9c6a0d67-e0e8-432b-b90c-0e812402c8ac	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:38:55.418	2026-11-16 11:38:55.418	2026-11-23 11:38:55.416	\N
 cmwj6xdcn00b0l3y8zcooc9a0	cmwj6xd1w00aul3y8ll382ry0	7eb508d9df780f7bbcd7bf6a59c8c4401adaf51256477e33caa9dbaa83b69dee	fam_65e7bffc-fe3a-4d00-9bfd-317aabe862e6	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:38:56.856	2026-11-16 11:38:56.856	2026-11-23 11:38:56.854	\N
+cmwj7rhxq00acl3jslik4mdzn	cmwj7rhsz00a8l3js4vrczhcz	b18671e8c06c0b4b7932ec7a95849503afc165403de17f8825bf9cc2d254979c	fam_b9b46dee-a80e-45d2-ba77-e6078a9dc61b	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:22.479	2026-11-16 12:02:22.479	2026-11-23 12:02:22.472	\N
 cmwj6xeus00c2l3y8hk724svo	cmwj6xeit00bwl3y8yks7cd7r	f2ab5f9cd7989da18573895cdccddf541ecbbb29bee0d8ed696f1da51694b178	fam_106031ac-935c-45f0-9b4a-5d82f85f58bd	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:38:58.804	2026-11-16 11:38:58.804	2026-11-23 11:38:58.802	\N
+cmwj7ri7p00ajl3jsub7gdklv	cmwj7ri2n00afl3jsqgk61fp0	91575d29a2dfc80adc1d9816d862dc1ee2f44817b4cfe92393eb2674e6aa5fe1	fam_e586f12e-cee0-45f8-a09d-ca350ab44cbc	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:22.837	2026-11-16 12:02:22.837	2026-11-23 12:02:22.83	\N
 cmwj6z3qw00e6l3y89x3pjm01	cmwj2fa4w0000l3s4x4q1jmst	75018cebf38ec1eba3aca467b58f8bed75805b61b29614571b756fda29e31304	fam_aaeb25e1-5fa8-4be4-94dd-b50a765b3385	Web Browser	node	2026-11-16 11:40:17.721	2026-11-16 11:40:17.721	2026-11-23 11:40:17.717	\N
 cmwj6z6sn00fbl3y8rbr6o8cy	cmwj6z6hh00f5l3y8wly8d46b	120cb05c252748dd0e6bfb2f3346eaaa4bf27f43701fbad185fe3ab20ff59177	fam_ea96c5ff-6945-4c07-9ecf-487361e9a7bd	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:40:21.672	2026-11-16 11:40:21.672	2026-11-23 11:40:21.668	\N
 cmwj6z7e900fil3y8gi01jnel	cmwj6z74200fel3y8b21ragl4	3c3a2c1ad4877bd7763176da3e351d0476264afd193cd8d602de05b6cb6dc35c	fam_9834d1cb-d548-4a71-84bb-2bbf6760cc89	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:40:22.449	2026-11-16 11:40:22.449	2026-11-23 11:40:22.445	\N
@@ -2662,6 +2803,12 @@ cmwj7opyd0069l3jsv5ee5q0t	cmwj7opoi0063l3jsb4gz7quy	8eed21c1a161ac447064894b8809
 cmwj7oq9i006hl3jsg4zpl4pc	cmwj7op3r005ql3jsb2wkt4j7	e2429de3170f592fafe0104035faada1d0e04b75c7df384bc07ab2d6858582e4	fam_dbcc585e-b969-4a7d-aed1-57dedc492386	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:00:13.302	2026-11-16 12:00:13.302	2026-11-23 12:00:13.3	\N
 cmwj7oqj0006ll3jsz74n5s5e	cmwj7opoi0063l3jsb4gz7quy	6ae0780428107320d7d6b1bea2dd0a460a4dc2398cd28aba55904846872d1aac	fam_5c6531b1-28b8-491f-bd66-4d0dc5e21466	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:00:13.644	2026-11-16 12:00:13.644	2026-11-23 12:00:13.643	\N
 cmwj7or3m006sl3jspttjcyj6	cmwj7oqu3006ol3jscxsley7w	0c861306cb80cbc19f57dc77deafaa9c0ddcb83ce3a1363d1785f98a701eb98b	fam_9bf772b5-c58c-46b8-b0fa-16426c61bea9	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:00:14.386	2026-11-16 12:00:14.386	2026-11-23 12:00:14.384	\N
+cmwj7riuw00b6l3js4ot9qqz9	cmwj7rig500aml3jssdan8w5b	aa1f9de6740e9a7c1662fb1cdf55f7384f02e7976f3f8afe86a761df08b75458	fam_7b695526-9165-4f59-b694-810838d1191c	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:23.672	2026-11-16 12:02:23.672	2026-11-23 12:02:23.666	\N
+cmwj7rj5600bel3jstyej101z	cmwj58zak0069l3rc3wksnuya	0395ef8c86a5af4b79fcb72ff5c7658252af64d56b3d5bcf8442d6d6ed570cc0	fam_696e1916-3715-4625-9f58-bd4f5a121ac4	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:24.042	2026-11-16 12:02:24.042	2026-11-23 12:02:24.035	\N
+cmwj7rjll00bnl3jsbf2hz5hm	cmwj7rjei00bhl3jsrnts5en8	8762b1daf6ce0ca5f05faff56cf30c0d4ee56736d1eb3917235d46bdeff513b8	fam_ff4095da-e7df-4565-bed2-15e0d151714b	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:24.633	2026-11-16 12:02:24.633	2026-11-23 12:02:24.626	\N
+cmwj7rjxn00c2l3js8nv8egu2	cmwj7rjrx00bwl3jszvkmrhbk	746ba22c6bc55f4fd9fd3b2d42ed1aa0cd19453276b3ffba021e168ef48e3724	fam_9fa7b4b4-56cc-40e4-8400-87d6c403fdbe	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:25.067	2026-11-16 12:02:25.067	2026-11-23 12:02:25.06	\N
+cmwj7rkeu00chl3js6kf1ffup	cmwj7rk9o00cbl3jss734waya	4960b6be39161b14ebdc6b4487648d3e85a57408f7a08869ea9545ddcb337f4f	fam_a26dc238-e9e7-4a37-8c85-8b1a3b44b82a	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:25.687	2026-11-16 12:02:25.687	2026-11-23 12:02:25.68	\N
+cmwj7rl2900djl3js4nzcqcgm	cmwj7rkx000ddl3js2msk70ls	c725236543b332dafb737bc44796b4585637cc5b8f0daef39ba152c3174ba590	fam_3b4ecc21-3e49-4700-a2b9-d2160bb5f3ed	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:26.529	2026-11-16 12:02:26.529	2026-11-23 12:02:26.522	\N
 \.
 
 
@@ -2702,6 +2849,11 @@ ret-alpha-grocers-1794830389112	Alpha Grocers 1794830389112	alpha-grocers-179483
 ret-beta-provisions-1794830389855	Beta Provisions 1794830389855	beta-provisions-1794830389855	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
 ret-alpha-grocers-1794830412167	Alpha Grocers 1794830412167	alpha-grocers-1794830412167	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
 ret-beta-provisions-1794830412920	Beta Provisions 1794830412920	beta-provisions-1794830412920	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
+ret-fresh-greens-mart-mwj7rfps	Fresh Greens Mart mwj7rfps	fresh-greens-mart-mwj7rfps	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	SUSPENDED	2026-11-16 12:02:20.352	Audit pending
+ret-organic-greens-1794830545700	Organic Greens 1794830545700	organic-greens-1794830545700	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
+ret-pilot-store-1794830546671	Pilot Store 1794830546671	pilot-store-1794830546671	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
+ret-alpha-grocers-1794831687719	Alpha Grocers 1794831687719	alpha-grocers-1794831687719	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
+ret-beta-provisions-1794831688199	Beta Provisions 1794831688199	beta-provisions-1794831688199	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
 \.
 
 
@@ -2749,6 +2901,15 @@ cmwj7opeb0060l3jsb1xxbqks	cmwj7op3r005ql3jsb2wkt4j7	Alpha Grocers 1794830412167	
 cmwj7opz8006dl3jsbvrnezjs	cmwj7opoi0063l3jsb4gz7quy	Beta Provisions 1794830412920	{}	APPROVED	2026-11-16 12:00:12.932	2026-11-16 12:00:12.951	superadmin@rasoiiq.in	\N
 cmwj7or4g006wl3jsl49f63wc	cmwj7oqu3006ol3jscxsley7w	Self Review Store 1794830414405	{}	PENDING	2026-11-16 12:00:14.416	\N	\N	\N
 cmwj7orf00001l3egl5nicpp4	cmwj7ore8006xl3jslfdqmo7e	Suspended Merchant 1794830414795	{"phone": "1234567890"}	PENDING	2026-11-16 12:00:14.796	\N	\N	\N
+cmwj7rf3z008rl3jsocczcju2	cmwj7rddt0078l3js99qnh5nu	Joshi Organic Groceries	{"city": "Ahmedabad", "phone": "+91 98980 12345"}	APPROVED	2026-11-16 12:02:18.816	2026-11-16 12:02:19.044	cmwj2fa4w0000l3s4x4q1jmst	\N
+cmwj7rg9n0003l3vsmwuzoszd	cmwj7rfxl008zl3jsgcrfbi1l	Fresh Greens Mart mwj7rfps	{"city": "Ahmedabad", "phone": "9876543210"}	APPROVED	2026-11-16 12:02:20.315	2026-11-16 12:02:20.327	admin@rasoiiq.in	\N
+cmwj7rivs00bal3jskdoj19qr	cmwj7ri2n00afl3jsqgk61fp0	Admin Rogue Grocers	{}	PENDING	2026-11-16 12:02:23.704	\N	\N	\N
+cmwj7rkfp00crl3js8xtmyurl	cmwj7rk9o00cbl3jss734waya	Organic Greens 1794830545700	{"city": "Bengaluru", "phone": "+91 9876543210"}	APPROVED	2026-11-16 12:02:25.717	2026-11-16 12:02:25.722	superadmin@rasoiiq.in	\N
+cmwj7rl6r00drl3jse5hyca4p	cmwj7rklp00cul3jspzl5jack	Pilot Store 1794830546671	{"city": "Bengaluru"}	APPROVED	2026-11-16 12:02:26.692	2026-11-16 12:02:26.7	superadmin@rasoiiq.in	\N
+cmwj8g1mc000vl3o0ij8uw5ur	cmwj8g1ew000ll3o0s4ydlvql	Alpha Grocers 1794831687719	{}	APPROVED	2026-11-16 12:21:27.732	2026-11-16 12:21:27.753	superadmin@rasoiiq.in	\N
+cmwj8g1zi0018l3o0wguruoe1	cmwj8g1tf000yl3o0x8rjs5k7	Beta Provisions 1794831688199	{}	APPROVED	2026-11-16 12:21:28.205	2026-11-16 12:21:28.213	superadmin@rasoiiq.in	\N
+cmwj8g2p8001rl3o0pe9sjj33	cmwj8g2io001jl3o0sy36ms5s	Self Review Store 1794831689123	{}	PENDING	2026-11-16 12:21:29.133	\N	\N	\N
+cmwj8g2z80001l3ykqqkf0h85	cmwj8g2wk001sl3o0az4czbyk	Suspended Merchant 1794831689491	{"phone": "1234567890"}	PENDING	2026-11-16 12:21:29.492	\N	\N	\N
 \.
 
 
@@ -2800,6 +2961,9 @@ cmwj6yxy000cil3y89921x4jl	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItd
 cmwj6z3t400e9l3y8r9fgimvn	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqNnowd2owMGNsbDN5ODl2a2gxdG5jIiwiaWQiOiJjbXdqNnowd2owMGNsbDN5ODl2a2gxdG5jIiwiZW1haWwiOiJwaWxvdC51c2VyLm13ajZ6MGplQHRlc3RyYXNvaS5pbiIsImZ1bGxOYW1lIjoiVml2ZWsgSm9zaGkiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgyOTIxNjI5Mi1lODgzYjhlNmFkYmNkYzRkMDdjZDM3NTJjZTRiNjRkYSIsImlhdCI6MTc5NDgyOTIxNiwiZXhwIjoxNzk0ODMwMTE2LCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.yQdjOwQsx2PaPxISlydTDn-EBhu-xkxQKgv822e3Wu4	User logout	2026-11-16 11:40:17.796	2026-11-16 11:55:16
 cmwj7rad20072l3jsgokz9sx5	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItZGVtby0xIiwiZW1haWwiOiJkZW1vQHJhc29paXEuaW4iLCJmdWxsTmFtZSI6IlBvb2phIFNoYXJtYSIsInJvbGUiOiJDVVNUT01FUiIsImhvdXNlaG9sZElkIjoiaGgtc2hhcm1hLWZhbWlseSIsImp0aSI6IjE3OTQ4MzA1MzI2NDcteGt4YjF1dCIsImlhdCI6MTc5NDgzMDUzMiwiZXhwIjoxNzk1NDM1MzMyfQ.9Z0n7F-9QFKQyc-XFY22hGlE_2agYnxSuc_w7otbvR8	User logout	2026-11-16 12:02:12.661	2026-11-23 12:02:12
 cmwj7rave0075l3js8hiibuvb	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItdGVtcC1yZXZva2UiLCJlbWFpbCI6ImRlbW9AcmFzb2lpcS5pbiIsImZ1bGxOYW1lIjoiUG9vamEgU2hhcm1hIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJoaC1zaGFybWEtZmFtaWx5IiwianRpIjoiMTc5NDgzMDUzMzMxMS1tM2hubmtkIiwiaWF0IjoxNzk0ODMwNTMzLCJleHAiOjE3OTU0MzUzMzN9.k9BnD-PqIRYdecWBEIPlvOFO0hzZDWTkEYvllmyzr4A	User logout	2026-11-16 12:02:13.321	2026-11-23 12:02:13
+cmwj7rfan008wl3jsphc8bsdi	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqN3JkZHQwMDc4bDNqczk5cW5oNW51IiwiaWQiOiJjbXdqN3JkZHQwMDc4bDNqczk5cW5oNW51IiwiZW1haWwiOiJwaWxvdC51c2VyLm13ajdyZDRzQHRlc3RyYXNvaS5pbiIsImZ1bGxOYW1lIjoiVml2ZWsgSm9zaGkiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgzMDUzNzk1My1hNGE2YWMzNTI4MmZjNmFjMmEwYjliYzgyYmFiMGU4MiIsImlhdCI6MTc5NDgzMDUzNywiZXhwIjoxNzk0ODMxNDM3LCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.nh2yvukycw95666BPu6A-Tyn0rS5HJqD0PVNTInm6_o	User logout	2026-11-16 12:02:19.054	2026-11-16 12:17:17
+cmwj8jgsd001xl3o0ger02xhv	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItZGVtby0xIiwiZW1haWwiOiJkZW1vQHJhc29paXEuaW4iLCJmdWxsTmFtZSI6IlBvb2phIFNoYXJtYSIsInJvbGUiOiJDVVNUT01FUiIsImhvdXNlaG9sZElkIjoiaGgtc2hhcm1hLWZhbWlseSIsImp0aSI6IjE3OTQ4MzE4NDczNDQtZzl3cmhiNSIsImlhdCI6MTc5NDgzMTg0NywiZXhwIjoxNzk1NDM2NjQ3fQ.YMQPo2Rsl5WFAOA6oCNaXGKJlcWVzuYizy1IWGskaGo	User logout	2026-11-16 12:24:07.354	2026-11-23 12:24:07
+cmwj8jh890020l3o08uwgme6g	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItdGVtcC1yZXZva2UiLCJlbWFpbCI6ImRlbW9AcmFzb2lpcS5pbiIsImZ1bGxOYW1lIjoiUG9vamEgU2hhcm1hIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJoaC1zaGFybWEtZmFtaWx5IiwianRpIjoiMTc5NDgzMTg0NzkxOC12N2VtcmNjIiwiaWF0IjoxNzk0ODMxODQ3LCJleHAiOjE3OTU0MzY2NDd9.Ix7vu-WgRs9NOdgiJBqie7avSu_5NdlwEmbKl7O1yiE	User logout	2026-11-16 12:24:07.927	2026-11-23 12:24:07
 \.
 
 
@@ -2838,7 +3002,7 @@ cmwj4s5o6000xl32wnkyy0jlm	platform.max_members_per_household	10	Maximum family m
 cmwj4s5oa000yl32ww1uw6qho	platform.demo_orders_enabled	true	Permit simulated checkout and demo order generation	\N	2026-11-16 10:38:54.394	2026-11-16 10:38:54.394
 cmwj4s5oe000zl32wll9ja17r	ai.gemini_model	gemini-2.5-flash-lite	Active Google Gemini LLM model identifier	\N	2026-11-16 10:38:54.398	2026-11-16 10:38:54.398
 cmwj4s5oj0010l32wntsx9v9q	ai.secondary_provider	deterministic-offline	Fallback AI planning engine when primary quota is exhausted	\N	2026-11-16 10:38:54.403	2026-11-16 10:38:54.403
-cmwj4s5on0011l32wh1uxro1d	pricing.default_delivery_fee_inr	35	Quick-commerce delivery fee in INR	superadmin@rasoiiq.in	2026-11-16 11:40:20.32	2026-11-16 10:38:54.407
+cmwj4s5on0011l32wh1uxro1d	pricing.default_delivery_fee_inr	35	Quick-commerce delivery fee in INR	superadmin@rasoiiq.in	2026-11-16 12:02:20.735	2026-11-16 10:38:54.407
 \.
 
 
@@ -2850,11 +3014,10 @@ COPY public."User" (id, email, "passwordHash", "fullName", "phoneNumber", role, 
 user-demo-1	demo@rasoiiq.in	$2b$10$demo_hash_rasoi_iq_2026	Pooja Sharma	+91 98765 43210	CUSTOMER	2026-11-16 06:15:04.98	2026-11-16 07:27:44.381	\N	\N		ACTIVE	\N	\N	\N
 user-demo-patel	patel.family@rasoiiq.demo	$2b$10$demo_hash_rasoi_iq_2026	Rameshbhai Patel	+91 98250 11223	CUSTOMER	2026-11-16 06:15:05.055	2026-11-16 07:27:44.411	\N	\N		ACTIVE	\N	\N	\N
 user-demo-mehta	mehta.family@rasoiiq.demo	$2b$10$demo_hash_rasoi_iq_2026	Kirit Mehta	+91 98980 44556	CUSTOMER	2026-11-16 06:15:05.091	2026-11-16 07:27:44.426	\N	\N		ACTIVE	\N	\N	\N
-cmwj2fa4w0000l3s4x4q1jmst	admin@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$TfUYCY8ObBkFhXavknrTrA$M0D5ShbMC+KqI6phtRMy2I3B998moRxFpt8IgFf8Bqo	Platform Administrator	\N	ADMIN	2026-11-16 09:32:54.416	2026-11-16 11:40:17.727	2026-11-16 09:32:54.413	2026-11-16 11:40:17.724	admin@rasoiiq.in	ACTIVE	\N	\N	\N
 cmwj4vrp1001kl3rcpspgngcx	ops.lead.mwj4vql1@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$w+j+U73JA17dNB8/1NDNPA$OCt4+5KK/EX9HcTZESeNLQ3D77eZISzlRZLBtFJprlI	Operations Lead	\N	SUPPORT	2026-11-16 10:41:42.901	2026-11-16 10:41:42.917	2026-11-16 10:41:42.9	\N	ops.lead.mwj4vql1@rasoiiq.in	ACTIVE	\N	\N	\N
 cmwj4nyub0000l3ic1cbm4scv	superadmin@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$wDj/oOtWUls8fkoLoaqBJg$RbWn/vvrELtxlPT598OkshrIEXR1xSJrI9lyMlOxIN0	Super Administrator	\N	SUPER_ADMIN	2026-11-16 10:35:38.915	2026-11-16 10:35:38.915	2026-11-16 10:35:38.907	\N	superadmin@rasoiiq.in	ACTIVE	\N	\N	\N
 cmwj4rt2s0000l32wbc1f7nfy	rogue.admin.mwj4rste@test.in	$argon2id$v=19$m=65536,t=3,p=1$GIvNKgcG+OAxb/nCPfWSUA$EMQi7/iEW1UVjQLo0YZaQf/GvbTxsBADTDobFS0x5lc	Rogue Admin Attempt	\N	CUSTOMER	2026-11-16 10:38:38.068	2026-11-16 10:38:38.068	\N	\N	rogue.admin.mwj4rste@test.in	PENDING_VERIFICATION	\N	\N	\N
-cmwj58zak0069l3rc3wksnuya	rogue.admin.mwj58z1h@test.in	$argon2id$v=19$m=65536,t=3,p=4$pOMr/zItbwPajHcsz3AnDw$bvlM35+UqVyI8LltagvtTqdDkAW7d0khAn5UXOwVX1k	Rogue Admin Attempt	\N	RETAILER	2026-11-16 10:51:59.277	2026-11-16 11:40:25.883	\N	2026-11-16 11:40:25.88	rogue.admin.mwj58z1h@test.in	ACTIVE	\N	\N	\N
+cmwj58zak0069l3rc3wksnuya	rogue.admin.mwj58z1h@test.in	$argon2id$v=19$m=65536,t=3,p=4$aClFmmqVQ+WgupIt8NQ0FA$OCfFdK9zKgRI0L64lOQQzFwJKLS8KNqfb9nR6p0duCw	Rogue Admin Attempt	\N	RETAILER	2026-11-16 10:51:59.277	2026-11-16 12:02:24.048	\N	2026-11-16 12:02:24.041	rogue.admin.mwj58z1h@test.in	ACTIVE	\N	\N	\N
 cmwj4s4se0005l32w7q19yt5l	rogue.admin.mwj4s4j1@test.in	$argon2id$v=19$m=65536,t=3,p=1$ZLsazWsmfTdmlJNKXzCU9g$PkEKpBk85+kdohKNh6TcRbYzZ6S7JeoPsocNiPP259w	Rogue Admin Attempt	\N	RETAILER	2026-11-16 10:38:53.247	2026-11-16 10:38:53.798	\N	\N	rogue.admin.mwj4s4j1@test.in	ACTIVE	\N	\N	\N
 cmwj4s5ml000ql32wsc99mofs	ops.lead.mwj4s4j1@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$NRaWRIuLShNmNNzR3aS8Sw$hux9pWr5qbO4rIxABqNhYlgHz5X6klzwfBBgW9D2MrU	Operations Lead	\N	SUPPORT	2026-11-16 10:38:54.334	2026-11-16 10:38:54.357	2026-11-16 10:38:54.329	\N	ops.lead.mwj4s4j1@rasoiiq.in	ACTIVE	\N	\N	\N
 cmwj5902u006ul3rc3rb95v74	ops.lead.mwj58z1h@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$AsYSFAytMs7sv5Y7Hc2OAQ$3p1hI1itfxeg2mKSTVCE8M6njkrHZkMOTugWVdxUPhA	Operations Lead	\N	SUPPORT	2026-11-16 10:52:00.294	2026-11-16 10:52:00.319	2026-11-16 10:52:00.292	\N	ops.lead.mwj58z1h@rasoiiq.in	ACTIVE	\N	\N	\N
@@ -2876,6 +3039,7 @@ cmwj69j7f001il31w0f1f7u85	adm-1794828022272@rasoi.internal	$argon2id$v=19$m=6553
 cmwj69jw1001pl31wlxz9v75z	victim-1794828025254@test.com	$argon2id$v=19$m=65536,t=3,p=1$k8zlEjbBr30fSphd+wszzQ$Rf3u7V0pH9EzcZ5KxpifHUTy7FlIH3jwLtfzmIoXr0U	Victim User	\N	CUSTOMER	2026-11-16 11:20:25.585	2026-11-16 11:20:26.525	2026-11-16 11:20:25.604	2026-11-16 11:20:26.514	victim-1794828025254@test.com	ACTIVE	\N	\N	\N
 cmwj6a0o7002el31w6imlht2w	cust-1794828046990@test.com	$argon2id$v=19$m=65536,t=3,p=1$uh6q3YhOctAD2aVaOZiXjA$LBqikzWmy9buVWqMDJLJQJKdIeGU5JFt0uOtu1jPdVw	Test Customer Role	\N	CUSTOMER	2026-11-16 11:20:47.335	2026-11-16 11:20:47.703	2026-11-16 11:20:47.35	2026-11-16 11:20:47.693	cust-1794828046990@test.com	ACTIVE	\N	\N	\N
 cmwj6a17w002nl31w11gbuhpy	supp-1794828046990@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$I2K6XaSybeNv8Bhw9aO1rg$q9ZF+WuJHwlIvwYpo8d+L5e47ROp3lYzPcxGNfLmqm4	Staff SUPPORT	\N	SUPPORT	2026-11-16 11:20:48.045	2026-11-16 11:20:48.383	2026-11-16 11:20:48.034	2026-11-16 11:20:48.373	supp-1794828046990@rasoi.internal	ACTIVE	\N	\N	\N
+cmwj2fa4w0000l3s4x4q1jmst	admin@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$TfUYCY8ObBkFhXavknrTrA$M0D5ShbMC+KqI6phtRMy2I3B998moRxFpt8IgFf8Bqo	Platform Administrator	\N	ADMIN	2026-11-16 09:32:54.416	2026-11-16 12:02:19.017	2026-11-16 09:32:54.413	2026-11-16 12:02:19.015	admin@rasoiiq.in	ACTIVE	\N	\N	\N
 cmwj6a1qq002ul31wd5hbzrci	ops-1794828046990@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$+TzDIpMi/JMWUi0x+pLT1w$LEi6QFmrXPB9LgIFVvHgzX70MelzOZRbw6MCnMLvuiw	Staff OPERATIONS	\N	OPERATIONS	2026-11-16 11:20:48.722	2026-11-16 11:20:49.066	2026-11-16 11:20:48.712	2026-11-16 11:20:49.055	ops-1794828046990@rasoi.internal	ACTIVE	\N	\N	\N
 cmwj6a29s0031l31wowndvpej	adm-1794828046990@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$Kib3G6qTJq77c6NGOBhDVA$XDiq+Grw2/vFfbV+ijB7eJLc4D0/MS1TdZMac8rNDsQ	Staff ADMIN	\N	ADMIN	2026-11-16 11:20:49.409	2026-11-16 11:20:49.765	2026-11-16 11:20:49.398	2026-11-16 11:20:49.755	adm-1794828046990@rasoi.internal	ACTIVE	\N	\N	\N
 cmwj6fsb00000l3rc0jdk9bkv	cust-1794828316096@test.com	$argon2id$v=19$m=65536,t=3,p=1$GjZs7FoLtatFGU+a9wRGNg$GC/5fvugK4KfB3sPcTjF7erpMHzlQrNTdoes3sGO0uY	Test Customer Role	\N	CUSTOMER	2026-11-16 11:25:16.428	2026-11-16 11:25:16.825	2026-11-16 11:25:16.459	2026-11-16 11:25:16.822	cust-1794828316096@test.com	ACTIVE	\N	\N	\N
@@ -2949,6 +3113,25 @@ cmwj7oodb0055l3js8v9wpnko	cust-susp-1794830410495@pilot.com	$argon2id$v=19$m=655
 cmwj7op3r005ql3jsb2wkt4j7	reta-1794830411477@merchant.com	$argon2id$v=19$m=65536,t=3,p=1$AAJ2NQ6efk0TCyOvICqVtA$GL/ebGj6hB8EbYWZuQSRr7/d0YoyyBqV2FlwZMiN6PQ	Merchant A Owner	\N	RETAILER	2026-11-16 12:00:11.8	2026-11-16 12:00:13.31	2026-11-16 12:00:11.818	2026-11-16 12:00:13.307	reta-1794830411477@merchant.com	ACTIVE	\N	\N	\N
 cmwj7opoi0063l3jsb4gz7quy	retb-1794830412220@merchant.com	$argon2id$v=19$m=65536,t=3,p=1$FtIxzA+vInT/SBc820+5/g$l5l7pUGFHCfMXruhqsZLukOaSjBJcZXVUou06UK3/ak	Merchant B Owner	\N	RETAILER	2026-11-16 12:00:12.546	2026-11-16 12:00:13.65	2026-11-16 12:00:12.568	2026-11-16 12:00:13.648	retb-1794830412220@merchant.com	ACTIVE	\N	\N	\N
 cmwj7oqu3006ol3jscxsley7w	selfreview-1794830413706@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$Fj8eZPOmzXgfoMyxf93i/A$c5P2+szcfaWtbsJdPBVGIV/6tJnlSGkQ5b1A/F6+ghY	Self Review Admin	\N	ADMIN	2026-11-16 12:00:14.043	2026-11-16 12:00:14.393	2026-11-16 12:00:14.041	2026-11-16 12:00:14.391	selfreview-1794830413706@rasoi.internal	ACTIVE	\N	\N	\N
+cmwj7res6008bl3jswnlr3isx	invited.family.mwj7rd4s@testrasoi.in	$argon2id$v=19$m=65536,t=3,p=1$KumxAllWtlI7V+tiS72CpQ$v6P7kvCAC/DaASi+2uYdKe6o0Ne5DTDX/RLKcMXPk0Y	Aarti Joshi	\N	CUSTOMER	2026-11-16 12:02:18.39	2026-11-16 12:02:18.751	2026-11-16 12:02:18.425	2026-11-16 12:02:18.75	invited.family.mwj7rd4s@testrasoi.in	ACTIVE	\N	\N	\N
+cmwj7rgke009kl3js889zqrz9	ops.lead.mwj7rfps@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$yLu9v3n3KmZOUAf8JgUjEQ$1PVATCgEhhRs9BFCX6zjRvHIMCVKaCgFjg+CjH/IqLE	Operations Lead	\N	SUPPORT	2026-11-16 12:02:20.703	2026-11-16 12:02:20.717	2026-11-16 12:02:20.696	\N	ops.lead.mwj7rfps@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwj7rddt0078l3js99qnh5nu	pilot.user.mwj7rd4s@testrasoi.in	$argon2id$v=19$m=65536,t=3,p=1$13yCDj4FGD6R5ftt+cnuCw$CuUQ6w4N5l5YXchdeJ2Br4TW/hvkNq4A2YGqqN4oJ3w	Vivek Joshi	+91 9988776655	RETAILER	2026-11-16 12:02:16.578	2026-11-16 12:02:19.049	2026-11-16 12:02:16.681	2026-11-16 12:02:17.96	pilot.user.mwj7rd4s@testrasoi.in	ACTIVE	\N	\N	\N
+cmwj7rfxl008zl3jsgcrfbi1l	rogue.admin.mwj7rfps@test.in	$argon2id$v=19$m=65536,t=3,p=1$rNrilMmL+yEsYPK4sNp86g$mU85F1I4xCPUHNh4ndoR9LN9N6y0woLrnKf1GDd2Xc4	Rogue Admin Attempt	\N	RETAILER	2026-11-16 12:02:19.881	2026-11-16 12:02:20.336	\N	\N	rogue.admin.mwj7rfps@test.in	ACTIVE	\N	\N	\N
+cmwj7rh6j009sl3jsdq0tyh5s	cust-1794830541314@test.com	$argon2id$v=19$m=65536,t=3,p=1$al7x1GFdkT9VD3M3mdx95g$iVqHE5ezf/wAuW+z9WRwI6fQP0agjRfNIKQWd1+lPlw	Test Customer Role	\N	CUSTOMER	2026-11-16 12:02:21.499	2026-11-16 12:02:21.715	2026-11-16 12:02:21.504	2026-11-16 12:02:21.709	cust-1794830541314@test.com	ACTIVE	\N	\N	\N
+cmwj7rhi200a1l3jsmijqywhg	supp-1794830541314@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$bInDZ9+0ndAPD6kW5pjAOg$1eaYIwTgiAyCol/Eu6YFjI/QZgWLbW6HkGIENt5/QqM	Staff SUPPORT	\N	SUPPORT	2026-11-16 12:02:21.914	2026-11-16 12:02:22.118	2026-11-16 12:02:21.907	2026-11-16 12:02:22.111	supp-1794830541314@rasoi.internal	ACTIVE	\N	\N	\N
+cmwj7rhsz00a8l3js4vrczhcz	ops-1794830541314@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$4S0b0fMVlpI2Ft63IJBneg$pFgY9urp19DnG0lcNFnnCFsFCSJVwAIBi0KHPmVi8wI	Staff OPERATIONS	\N	OPERATIONS	2026-11-16 12:02:22.307	2026-11-16 12:02:22.483	2026-11-16 12:02:22.301	2026-11-16 12:02:22.477	ops-1794830541314@rasoi.internal	ACTIVE	\N	\N	\N
+cmwj7ri2n00afl3jsqgk61fp0	adm-1794830541314@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$V+FDJ5BWwnHhvR3vqwmJaw$wWdsqjsWV4po8dGjfCuFbvhVF+avtTgWyvWQ1FskvXw	Staff ADMIN	\N	ADMIN	2026-11-16 12:02:22.656	2026-11-16 12:02:22.841	2026-11-16 12:02:22.649	2026-11-16 12:02:22.835	adm-1794830541314@rasoi.internal	ACTIVE	\N	\N	\N
+cmwj8g2wk001sl3o0az4czbyk	suspapp-1794831689159@pilot.com	$argon2id$v=19$m=65536,t=3,p=1$fo8Actcwkra0O+3SsQ9qWw$WmeU+wZ/VJ8+vt5LFh4LBROWmpGHkbPU9MyY/zh7XeI	Suspended Applicant	\N	CUSTOMER	2026-11-16 12:21:29.396	2026-11-16 12:21:29.484	2026-11-16 12:21:29.482	\N	suspapp-1794831689159@pilot.com	SUSPENDED	\N	\N	\N
+cmwj8g0uk0000l3o0weyxl9zb	cust-susp-1794831686519@pilot.com	$argon2id$v=19$m=65536,t=3,p=1$JDvZ1dB+SWJRKD7xPME2tw$le/C2TsUBsKLCreTIH+kOosIvMewXYC7nDwYOt5H9Kk	Suspension Test Customer	\N	CUSTOMER	2026-11-16 12:21:26.732	2026-11-16 12:21:27.129	2026-11-16 12:21:26.755	2026-11-16 12:21:26.943	cust-susp-1794831686519@pilot.com	ACTIVE	\N	\N	\N
+cmwj7rig500aml3jssdan8w5b	victim-1794830542933@test.com	$argon2id$v=19$m=65536,t=3,p=1$WGTEdQQOXTIl5k/R2UYTDA$5/YFembe09Y1TBcgl7Dt70El73v036IX2wbFFX8mIHk	Victim User	\N	CUSTOMER	2026-11-16 12:02:23.141	2026-11-16 12:02:23.678	2026-11-16 12:02:23.142	2026-11-16 12:02:23.671	victim-1794830542933@test.com	ACTIVE	\N	\N	\N
+cmwj7rjei00bhl3jsrnts5en8	c1-1794830544073@test.com	$argon2id$v=19$m=65536,t=3,p=1$VQOOEO2QeAZUg7DB93lnTQ$wXwAu0xx07eYaX83hr+w56DzxvNiU2TcJkBkNlVdMN4	User One	\N	CUSTOMER	2026-11-16 12:02:24.378	2026-11-16 12:02:24.638	2026-11-16 12:02:24.386	2026-11-16 12:02:24.631	c1-1794830544073@test.com	ACTIVE	\N	\N	\N
+cmwj7rjrx00bwl3jszvkmrhbk	c2-1794830544653@test.com	$argon2id$v=19$m=65536,t=3,p=1$D9QY4fJMGOKK4JMnAtjepQ$4UyEL6b5nb3deO0tgzhaTIu3A7T9XrOmyyrrdXubofQ	User Two	\N	CUSTOMER	2026-11-16 12:02:24.861	2026-11-16 12:02:25.073	2026-11-16 12:02:24.862	2026-11-16 12:02:25.066	c2-1794830544653@test.com	ACTIVE	\N	\N	\N
+cmwj7rk9o00cbl3jss734waya	merchant-cust-1794830545328@test.com	$argon2id$v=19$m=65536,t=3,p=1$5UV+ZosFPbG1znTqej2zTA$udJ+K/0k6I5v4t3pwPWTAKVcC6Ti5Kb7Cfipwumikeg	Merchant Customer	\N	RETAILER	2026-11-16 12:02:25.501	2026-11-16 12:02:25.731	2026-11-16 12:02:25.501	2026-11-16 12:02:25.685	merchant-cust-1794830545328@test.com	ACTIVE	\N	\N	\N
+cmwj7rkx000ddl3js2msk70ls	invited-1794830546133@pilot.com	$argon2id$v=19$m=65536,t=3,p=1$V68qPwov0KbVq+W/wX53fA$AzHA5pYz9sWWPMZnfvAm32uc53nuZOI/LPUkyXjKzk4	Aarav Patel	\N	CUSTOMER	2026-11-16 12:02:26.34	2026-11-16 12:02:26.534	2026-11-16 12:02:26.337	2026-11-16 12:02:26.527	invited-1794830546133@pilot.com	ACTIVE	\N	\N	\N
+cmwj7rklp00cul3jspzl5jack	pilot-e2e-1794830545752@rasoi.pilot	$argon2id$v=19$m=65536,t=3,p=1$TZOgIo55c9015NiHMPbZyw$nbrh3tLV4wI05t+bxwFvuxNKFlgOy9NKlReUHlZnzBM	Pilot Lead	\N	RETAILER	2026-11-16 12:02:25.933	2026-11-16 12:02:26.738	2026-11-16 12:02:25.931	2026-11-16 12:02:26.119	pilot-e2e-1794830545752@rasoi.pilot	SUSPENDED	2026-11-16 12:02:26.731	superadmin@rasoiiq.in	End-of-pilot verification suspension
+cmwj8g1ew000ll3o0s4ydlvql	reta-1794831687228@merchant.com	$argon2id$v=19$m=65536,t=3,p=1$PgxGAc21s6ijkts2kwhxLA$hD2/4J7W0OeZA+6BWh5841C2Oh73ryyGi9EKIUoLsOc	Merchant A Owner	\N	RETAILER	2026-11-16 12:21:27.464	2026-11-16 12:21:28.425	2026-11-16 12:21:27.48	2026-11-16 12:21:28.422	reta-1794831687228@merchant.com	ACTIVE	\N	\N	\N
+cmwj8g1tf000yl3o0x8rjs5k7	retb-1794831687777@merchant.com	$argon2id$v=19$m=65536,t=3,p=1$hQTv2wDjoj8IaUDS2GYx9A$jyxuz3YsdWA+/OOtLJuOK3Q7EVQyJ2sMwawxFpt0acI	Merchant B Owner	\N	RETAILER	2026-11-16 12:21:27.988	2026-11-16 12:21:28.664	2026-11-16 12:21:27.999	2026-11-16 12:21:28.661	retb-1794831687777@merchant.com	ACTIVE	\N	\N	\N
+cmwj8g2io001jl3o0sy36ms5s	selfreview-1794831688718@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$c4TEIWANCVaDgLdSjf4Skw$zLT1aLv8SfEkaUCfGy5BGbke6ZRvXO1x1NUXo6Y499o	Self Review Admin	\N	ADMIN	2026-11-16 12:21:28.896	2026-11-16 12:21:29.113	2026-11-16 12:21:28.893	2026-11-16 12:21:29.11	selfreview-1794831688718@rasoi.internal	ACTIVE	\N	\N	\N
 \.
 
 
@@ -3671,5 +3854,5 @@ ALTER TABLE ONLY public."Store"
 -- PostgreSQL database dump complete
 --
 
-\unrestrict yBn2guBsFSqjvYle2ifBWvEVAEaadXfxFhPn57stejON0aG9laIhVUHyW6VuMsI
+\unrestrict Ly5D0SR7ZIbUb4gRkc5npcMjShsCxF3hEUQIBSPLRU9teO3bTqiFMAcbdolpndl
 
