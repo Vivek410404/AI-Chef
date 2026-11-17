@@ -109,9 +109,9 @@ export function Navbar({
   return (
     <header className="sticky top-0 z-40 w-full glass-header border-b border-cream-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        
+
         {/* Brand Logo */}
-        <div 
+        <div
           onClick={() => handleNavClick(isAuthenticated ? 'dashboard' : 'landing')}
           className="flex items-center gap-3 cursor-pointer group"
           title="Return to Home"
@@ -137,11 +137,10 @@ export function Navbar({
             <>
               <button
                 onClick={() => handleNavClick('dashboard')}
-                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
-                  activeTab === 'dashboard'
-                    ? 'bg-surface text-forest-900 shadow-sm'
-                    : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
-                }`}
+                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${activeTab === 'dashboard'
+                  ? 'bg-surface text-forest-900 shadow-sm'
+                  : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
+                  }`}
               >
                 <LayoutDashboard className="w-4 h-4 text-forest-700" />
                 <span>Dashboard</span>
@@ -149,11 +148,10 @@ export function Navbar({
 
               <button
                 onClick={() => handleNavClick('planner')}
-                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
-                  activeTab === 'planner'
-                    ? 'bg-surface text-forest-900 shadow-sm'
-                    : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
-                }`}
+                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${activeTab === 'planner'
+                  ? 'bg-surface text-forest-900 shadow-sm'
+                  : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
+                  }`}
               >
                 <Calendar className="w-4 h-4 text-forest-500" />
                 <span>7-Day Planner</span>
@@ -161,11 +159,10 @@ export function Navbar({
 
               <button
                 onClick={() => handleNavClick('recipes')}
-                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
-                  activeTab === 'recipes'
-                    ? 'bg-surface text-forest-900 shadow-sm'
-                    : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
-                }`}
+                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${activeTab === 'recipes'
+                  ? 'bg-surface text-forest-900 shadow-sm'
+                  : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
+                  }`}
               >
                 <UtensilsCrossed className="w-4 h-4 text-terracotta-500" />
                 <span>Discover</span>
@@ -173,16 +170,15 @@ export function Navbar({
 
               <button
                 onClick={() => handleNavClick('basket')}
-                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 relative ${
-                  activeTab === 'basket'
-                    ? 'bg-surface text-forest-900 shadow-sm'
-                    : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
-                }`}
+                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 relative ${activeTab === 'basket'
+                  ? 'bg-surface text-forest-900 shadow-sm'
+                  : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
+                  }`}
               >
                 <ShoppingBag className="w-4 h-4 text-emerald-600" />
                 <span>Smart Basket</span>
                 {basketCount > 0 && (
-                  <span className="ml-1 bg-terracotta-500 text-white text-[11px] font-bold px-1.5 py-0.2 rounded-full min-w-5 text-center">
+                  <span className="ml-1 bg-terracotta-500 text-white text-[11px] px-1 py-0.5 font-bold rounded-full min-w-5items-center text-center">
                     {basketCount}
                   </span>
                 )}
@@ -190,11 +186,10 @@ export function Navbar({
 
               <button
                 onClick={() => handleNavClick('pantry')}
-                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
-                  activeTab === 'pantry'
-                    ? 'bg-surface text-forest-900 shadow-sm'
-                    : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
-                }`}
+                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${activeTab === 'pantry'
+                  ? 'bg-surface text-forest-900 shadow-sm'
+                  : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
+                  }`}
               >
                 <Package className="w-4 h-4 text-amber-600" />
                 <span>My Pantry</span>
@@ -204,21 +199,19 @@ export function Navbar({
             <>
               <button
                 onClick={() => handleNavClick('landing')}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
-                  activeTab === 'landing'
-                    ? 'bg-surface text-forest-900 shadow-sm'
-                    : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
-                }`}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${activeTab === 'landing'
+                  ? 'bg-surface text-forest-900 shadow-sm'
+                  : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
+                  }`}
               >
                 <span>Home</span>
               </button>
               <button
                 onClick={() => handleNavClick('recipes')}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
-                  activeTab === 'recipes'
-                    ? 'bg-surface text-forest-900 shadow-sm'
-                    : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
-                }`}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${activeTab === 'recipes'
+                  ? 'bg-surface text-forest-900 shadow-sm'
+                  : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
+                  }`}
               >
                 <UtensilsCrossed className="w-4 h-4 text-terracotta-500" />
                 <span>Explore Recipes</span>
@@ -229,7 +222,7 @@ export function Navbar({
 
         {/* Right Action Cluster */}
         <div className="flex items-center gap-2 sm:gap-3">
-          
+
           {/* Ask AI Chef (Logged In) */}
           {isAuthenticated && onOpenAiPlanner && (
             <button
@@ -281,11 +274,10 @@ export function Navbar({
           {isRetailer && (
             <button
               onClick={() => handleNavClick('retailer-admin')}
-              className={`p-2 sm:px-3 sm:py-2 rounded-xl border text-xs font-semibold transition-colors flex items-center gap-1.5 ${
-                activeTab === 'retailer-admin'
-                  ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
-                  : 'border-cream-300 text-stone-600 hover:text-stone-900 hover:bg-cream-100'
-              }`}
+              className={`p-2 sm:px-3 sm:py-2 rounded-xl border text-xs font-semibold transition-colors flex items-center gap-1.5 ${activeTab === 'retailer-admin'
+                ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
+                : 'border-cream-300 text-stone-600 hover:text-stone-900 hover:bg-cream-100'
+                }`}
               title="Retailer Partner Portal"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-terracotta-500" />

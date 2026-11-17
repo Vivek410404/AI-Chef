@@ -53,6 +53,20 @@ export function MaharajDigestModal({
   ];
 
   useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
     if (!isOpen) return;
     async function loadSummary() {
       setIsLoading(true);
@@ -76,10 +90,9 @@ export function MaharajDigestModal({
       const SOAK = ['ing-kabuli-chana', 'ing-rajma', 'ing-chana-dal', 'ing-urad-dal', 'ing-toor-dal'];
       const soaking: any[] = [];
       const prep: any[] = [];
-      let totalServings = 0;
+      const householdServings = household?.members?.length || (dayMeals.length > 0 ? (dayMeals[0]?.servings || 1) : 1);
 
       dayMeals.forEach(m => {
-        totalServings += m.servings || 4;
         if (m.recipe?.ingredients) {
           m.recipe.ingredients.forEach(ing => {
             if (SOAK.includes(ing.ingredientId)) {
@@ -117,12 +130,12 @@ export function MaharajDigestModal({
         householdId: household?.id || 'my-household',
         householdName: household?.name || 'My Kitchen',
         targetDay,
-        totalServings: totalServings || 4,
+        totalServings: householdServings,
         plannedMeals: dayMeals.map(m => ({
           mealCategory: m.mealCategory,
           recipeTitle: m.recipe?.title || m.recipeId,
           cuisine: m.recipe?.cuisine || 'Gujarati',
-          servings: m.servings || 4,
+          servings: m.servings || householdServings,
           prepTimeMinutes: m.recipe?.prepTimeMinutes || 15,
           cookTimeMinutes: m.recipe?.cookTimeMinutes || 20,
           isJainFriendly: m.recipe?.isJainFriendly ?? true
@@ -148,9 +161,10 @@ export function MaharajDigestModal({
 
   const handleCopyWhatsApp = () => {
     if (!summary) return;
+    const householdServings = household?.members?.length || (summary.plannedMeals?.[0]?.servings || summary.totalServings || 1);
     const lines = [
       `🍲 *RasoiIQ — Kal Ka Menu (${summary.householdName})*`,
-      `📅 *Day:* ${summary.targetDay.toUpperCase()} | *Servings:* ${summary.totalServings} portions`,
+      `📅 *Day:* ${summary.targetDay.toUpperCase()} | *Servings:* ${householdServings} ${householdServings === 1 ? 'portion per meal' : 'portions per meal'}`,
       '',
       '🍽️ *PLANNED MEALS:*'
     ];
@@ -201,8 +215,14 @@ export function MaharajDigestModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-forest-950/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-3xl my-6 bg-surface rounded-3xl border border-cream-300 shadow-elevated overflow-hidden flex flex-col max-h-[90vh]">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-forest-950/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-3xl my-6 bg-surface rounded-3xl border border-cream-300 shadow-elevated overflow-hidden flex flex-col max-h-[90vh]"
+      >
         
         {/* Modal Header */}
         <div className="flex items-center justify-between p-5 sm:p-6 border-b border-cream-200 bg-cream-50/70">
@@ -229,7 +249,7 @@ export function MaharajDigestModal({
 
         {/* Day Selector & Action Bar */}
         <div className="px-5 py-3 border-b border-cream-200 bg-white flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto py-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
             {DAYS.map(d => (
               <button
                 key={d.id}
@@ -266,7 +286,7 @@ export function MaharajDigestModal({
         </div>
 
         {/* Modal Printable Body */}
-        <div id="maharaj-printable-content" className="p-5 sm:p-6 overflow-y-auto space-y-5 text-sm bg-white">
+        <div id="maharaj-printable-content" className="p-5 sm:p-6 overflow-y-auto no-scrollbar space-y-5 text-sm bg-white">
           
           {/* Metadata Card */}
           <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/70 flex flex-wrap items-center justify-between gap-4">
@@ -281,7 +301,12 @@ export function MaharajDigestModal({
             <div className="flex items-center gap-6 text-xs text-stone-600">
               <div className="flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-forest-700" />
-                <span><strong>{summary?.householdName || 'My Kitchen'}</strong> ({summary?.totalServings || 2} Servings)</span>
+                {(() => {
+                  const activeServings = household?.members?.length || (summary?.plannedMeals?.[0]?.servings || summary?.totalServings || 1);
+                  return (
+                    <span><strong>{summary?.householdName || household?.name || 'My Kitchen'}</strong> ({activeServings} {activeServings === 1 ? 'Serving' : 'Servings'})</span>
+                  );
+                })()}
               </div>
             </div>
           </div>

@@ -49,6 +49,20 @@ export function AiPlannerModal({ isOpen, onClose, onApplyPlan, household }: AiPl
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
     if (household) {
       if (household.members?.length) {
         setServings(household.members.length);
@@ -96,8 +110,14 @@ export function AiPlannerModal({ isOpen, onClose, onApplyPlan, household }: AiPl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-surface rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-6">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-surface rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto no-scrollbar border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-6"
+      >
         
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-4 border-b border-cream-200">

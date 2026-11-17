@@ -129,9 +129,8 @@ export class MealPlansService {
     const overnightSoaking: any[] = [];
     const advancePrep: any[] = [];
 
-    let totalServings = 0;
+    const householdServings = household?.members?.length || (dayMeals.length > 0 ? (dayMeals[0]?.servings || 1) : 1);
     const plannedMeals = dayMeals.map(m => {
-      totalServings += m.servings || 4;
       if (m.recipe?.ingredients) {
         for (const ing of m.recipe.ingredients) {
           if (SOAK_INGREDIENTS.includes(ing.ingredientId)) {
@@ -192,10 +191,10 @@ export class MealPlansService {
       `🍲 *RASOIIQ MAHARAJ COOK DIGEST*`,
       `🏠 *Household:* ${household.name}`,
       `📅 *Day:* ${targetDay.toUpperCase()}`,
-      `👥 *Total Servings:* ${totalServings}`,
+      `👥 *Servings:* ${householdServings} ${householdServings === 1 ? 'serving per meal' : 'servings per meal'}`,
       ``,
       `🍽️ *SCHEDULED MEALS:*`,
-      ...plannedMeals.map(m => `  • [${m.mealCategory.toUpperCase()}] ${m.recipeTitle} (${m.servings} servings, ${m.cuisine})`),
+      ...plannedMeals.map(m => `  • [${m.mealCategory.toUpperCase()}] ${m.recipeTitle} (${m.servings} portions, ${m.cuisine})`),
       ...(overnightSoaking.length > 0 ? [``, `💧 *OVERNIGHT SOAKING:*`, ...overnightSoaking.map(s => `  • ${s.ingredientName} (${s.quantity}${s.unit}) - ${s.notes}`)] : []),
       ...(advancePrep.length > 0 ? [``, `🔪 *ADVANCE PREP:*`, ...advancePrep.map(p => `  • ${p.task} (${p.forMeal}): ${p.instructions}`)] : []),
       ``,
@@ -207,7 +206,7 @@ export class MealPlansService {
       householdId: household.id,
       householdName: household.name,
       targetDay,
-      totalServings,
+      totalServings: householdServings,
       plannedMeals,
       overnightSoaking,
       advancePreparation: advancePrep,
