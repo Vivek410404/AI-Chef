@@ -16,7 +16,8 @@ import {
   Truck,
   Check,
   Sparkles,
-  MapPin
+  MapPin,
+  AlertCircle
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
@@ -229,6 +230,17 @@ export default function MyOrdersPage() {
             >
               Delivered
             </button>
+          </div>
+        </div>
+
+        {/* Phase 6.2.3 Truthful Demo & Payment Disclosure Banner */}
+        <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs text-amber-900 flex items-start gap-3 shadow-xs">
+          <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <span className="font-bold block">Demo Checkout & Simulation Transparency Disclosure</span>
+            <p className="text-[11px] text-stone-600 leading-relaxed">
+              Order accepted by RasoiIQ demo checkout. Catalog availability validation passed. No real payment was processed. Delivery progress and ETA are simulated demonstration windows. External retailer live dark-store inventory is unverified.
+            </p>
           </div>
         </div>
 

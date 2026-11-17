@@ -421,9 +421,12 @@ export class MarketplaceService {
   async updateOrderStatus(
     orderId: string,
     dto: { status: string; statusReason?: string; substitutionNotes?: string; fulfillmentNotes?: string },
-    currentUser?: any,
-    isSimulationWorker = false
+    currentUser?: any
   ) {
+    if (!currentUser) {
+      throw new ForbiddenException('Authentication required to modify order status.');
+    }
+
     // 1. Fetch order (from memory or DB)
     let order = this.orders.find(o => o.id === orderId || o.orderNumber === orderId);
     if (!order && this.store.isPrismaConnected) {
@@ -452,7 +455,7 @@ export class MarketplaceService {
     const rawCurrent = (order.status || 'ORDER_CONFIRMED').toUpperCase().trim();
     const currentCanonical = MarketplaceService.CANONICAL_MAP[rawCurrent] || 'ORDER_CONFIRMED';
 
-    // 3. Mandatory cancellation reason
+    // 3. Mandatory cancellation reason (>= 3 non-whitespace characters)
     if (targetCanonical === 'CANCELLED') {
       if (!dto.statusReason || dto.statusReason.trim().length < 3) {
         throw new BadRequestException('A cancellation reason of at least 3 characters is mandatory.');
@@ -460,7 +463,7 @@ export class MarketplaceService {
     }
 
     // 4. Role-based authorization & cancellation window
-    if (currentUser && currentUser.role === 'CUSTOMER') {
+    if (currentUser.role === 'CUSTOMER') {
       if (targetCanonical !== 'CANCELLED') {
         throw new ForbiddenException('Access denied. Customers are not authorized to advance order delivery status.');
       }
@@ -473,7 +476,7 @@ export class MarketplaceService {
           `Customer order cancellation is only permitted when the order is in ORDER_CONFIRMED status. Current status is "${currentCanonical}". Please contact customer support for assistance.`
         );
       }
-    } else if (currentUser && currentUser.role === 'RETAILER') {
+    } else if (currentUser.role === 'RETAILER') {
       const userRetailerId = currentUser.retailerId || 'ret-blinkit';
       if (order.retailerId && order.retailerId !== userRetailerId) {
         throw new ForbiddenException(
@@ -485,8 +488,10 @@ export class MarketplaceService {
           `Retailers may only cancel orders in ORDER_CONFIRMED or HUB_PACKING status. Current status: "${currentCanonical}".`
         );
       }
-    } else if (!currentUser && !isSimulationWorker) {
-      throw new ForbiddenException('Authentication or simulation authority required to advance order status.');
+    } else if (currentUser.role === 'SYSTEM_WORKER') {
+      // Authorized internal worker follows canonical state transitions
+    } else if (!['ADMIN', 'SUPER_ADMIN', 'OPERATIONS'].includes(currentUser.role)) {
+      throw new ForbiddenException(`Role "${currentUser.role}" is not authorized to modify order status.`);
     }
 
     // Duplicate transition handling: Idempotent no-op
@@ -516,7 +521,7 @@ export class MarketplaceService {
     }
 
     // 5. Apply status transition in PostgreSQL and in-memory
-    const updatedBy = currentUser?.email || currentUser?.id || (isSimulationWorker ? 'simulation-worker' : 'system');
+    const updatedBy = currentUser.role === 'SYSTEM_WORKER' ? 'system-worker' : (currentUser.email || currentUser.id || 'system');
     const reason = dto.statusReason || `Transitioned from ${currentCanonical} to ${targetCanonical}`;
 
     if (this.store.isPrismaConnected) {

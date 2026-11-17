@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { StoreService } from '../data/store.service';
 import {
   calculateMealPlanRequirements,
@@ -112,7 +112,7 @@ export class GroceryService {
   private readonly logger = new Logger(GroceryService.name);
   private activeBasketItems: Map<string, BasketItem[]> = new Map();
   private selectedRetailers: Map<string, string> = new Map();
-  private readonly reorderIdempotencyRecords: Map<string, { response: any; timestamp: number }> = new Map();
+  private readonly reorderIdempotencyRecords: Map<string, { response: any; fingerprint: string; timestamp: number }> = new Map();
   private readonly householdReorderLocks: Map<string, boolean> = new Map();
 
   constructor(private readonly store: StoreService) {}
@@ -763,14 +763,32 @@ export class GroceryService {
       throw new BadRequestException('orderId is required to reorder.');
     }
 
-    // 0. Idempotency Check: Return identical result for duplicate idempotency key
-    if (options.idempotencyKey) {
-      const cached = this.reorderIdempotencyRecords.get(options.idempotencyKey);
-      if (cached && Date.now() - cached.timestamp < 300000) {
-        return {
-          ...cached.response,
-          isIdempotentReplay: true
-        };
+    // 0. Idempotency Check: Scoped by household + request-body fingerprinting
+    const requestFingerprint = JSON.stringify({
+      orderId: options.orderId,
+      targetRetailerId: options.targetRetailerId || null,
+      replaceCart: Boolean(options.replaceCart)
+    });
+    const scopedIdempotencyKey = options.idempotencyKey ? `${householdId}:${options.idempotencyKey}` : null;
+
+    if (scopedIdempotencyKey) {
+      const cached = this.reorderIdempotencyRecords.get(scopedIdempotencyKey);
+      if (cached) {
+        if (Date.now() - cached.timestamp < 300000) {
+          if (cached.fingerprint !== requestFingerprint) {
+            throw new ConflictException({
+              statusCode: 409,
+              error: 'IDEMPOTENCY_CONFLICT',
+              message: `Idempotency key "${options.idempotencyKey}" was previously used with a different request payload. Reusing an idempotency key with conflicting parameters is prohibited.`
+            });
+          }
+          return {
+            ...cached.response,
+            isIdempotentReplay: true
+          };
+        } else {
+          this.reorderIdempotencyRecords.delete(scopedIdempotencyKey);
+        }
       }
     }
 
@@ -962,8 +980,20 @@ export class GroceryService {
         priceIntegrityNotice: 'Authoritative live retailer prices recalculated. Historical prices were not reused.'
       };
 
-      if (options.idempotencyKey) {
-        this.reorderIdempotencyRecords.set(options.idempotencyKey, { response: result, timestamp: Date.now() });
+      if (scopedIdempotencyKey) {
+        if (this.reorderIdempotencyRecords.size > 1000) {
+          const now = Date.now();
+          for (const [k, v] of this.reorderIdempotencyRecords.entries()) {
+            if (now - v.timestamp > 300000) {
+              this.reorderIdempotencyRecords.delete(k);
+            }
+          }
+        }
+        this.reorderIdempotencyRecords.set(scopedIdempotencyKey, {
+          response: result,
+          fingerprint: requestFingerprint,
+          timestamp: Date.now()
+        });
       }
 
       return result;
@@ -1338,17 +1368,30 @@ export function evaluatePantryStockLevel(
 // ---------------------------------------------------------------------------
 // Phase 6.2.2: Central Inventory Availability Evaluator (Fail-Closed)
 // ---------------------------------------------------------------------------
-export type InventoryAvailabilityStatus = 'AVAILABLE' | 'OUT_OF_STOCK' | 'UNKNOWN_AVAILABILITY' | 'DISCONTINUED';
+export type InventoryAvailabilityStatus =
+  | 'AVAILABLE'
+  | 'OUT_OF_STOCK'
+  | 'UNKNOWN_AVAILABILITY'
+  | 'DISCONTINUED'
+  | 'EXTERNAL_RETAILER_STOCK_UNVERIFIED';
 
 export function evaluateInventoryAvailability(
   item: { inStock?: boolean | null | string; stockCount?: number | null; status?: string } | null | undefined,
   requestedQuantity: number = 1
-): { isAvailable: boolean; status: InventoryAvailabilityStatus; reason: string } {
+): {
+  isAvailable: boolean;
+  status: InventoryAvailabilityStatus;
+  reason: string;
+  catalogSource: string;
+  retailerConfirmation: string;
+} {
   if (!item) {
     return {
       isAvailable: false,
       status: 'UNKNOWN_AVAILABILITY',
-      reason: 'Catalog item or inventory record does not exist'
+      reason: 'Catalog item or inventory record does not exist',
+      catalogSource: 'RASOIIQ_INTERNAL_CATALOG',
+      retailerConfirmation: 'EXTERNAL_RETAILER_STOCK_UNVERIFIED'
     };
   }
 
@@ -1357,7 +1400,9 @@ export function evaluateInventoryAvailability(
     return {
       isAvailable: false,
       status: 'DISCONTINUED',
-      reason: 'Product has been permanently discontinued from the merchant catalog'
+      reason: 'Product has been permanently discontinued from the merchant catalog',
+      catalogSource: 'RASOIIQ_INTERNAL_CATALOG',
+      retailerConfirmation: 'EXTERNAL_RETAILER_STOCK_UNVERIFIED'
     };
   }
 
@@ -1366,7 +1411,9 @@ export function evaluateInventoryAvailability(
     return {
       isAvailable: false,
       status: 'OUT_OF_STOCK',
-      reason: 'Product is explicitly marked out of stock at fulfillment hub'
+      reason: 'Product is explicitly marked out of stock at fulfillment hub',
+      catalogSource: 'RASOIIQ_INTERNAL_CATALOG',
+      retailerConfirmation: 'EXTERNAL_RETAILER_STOCK_UNVERIFIED'
     };
   }
 
@@ -1375,7 +1422,9 @@ export function evaluateInventoryAvailability(
     return {
       isAvailable: false,
       status: 'UNKNOWN_AVAILABILITY',
-      reason: `Inventory availability status is unverified (value: ${item.inStock ?? 'null/undefined'}). Fail-closed protection active.`
+      reason: `Inventory availability status is unverified (value: ${item.inStock ?? 'null/undefined'}). Fail-closed protection active.`,
+      catalogSource: 'RASOIIQ_INTERNAL_CATALOG',
+      retailerConfirmation: 'EXTERNAL_RETAILER_STOCK_UNVERIFIED'
     };
   }
 
@@ -1385,18 +1434,28 @@ export function evaluateInventoryAvailability(
       return {
         isAvailable: false,
         status: 'OUT_OF_STOCK',
-        reason: 'Zero units remaining in fulfillment dark store'
+        reason: 'Zero units remaining in fulfillment dark store',
+        catalogSource: 'RASOIIQ_INTERNAL_CATALOG',
+        retailerConfirmation: 'EXTERNAL_RETAILER_STOCK_UNVERIFIED'
       };
     }
     if (requestedQuantity > item.stockCount) {
       return {
         isAvailable: false,
         status: 'OUT_OF_STOCK',
-        reason: `Requested ${requestedQuantity} units exceeds available stock of ${item.stockCount} units`
+        reason: `Requested ${requestedQuantity} units exceeds available stock of ${item.stockCount} units`,
+        catalogSource: 'RASOIIQ_INTERNAL_CATALOG',
+        retailerConfirmation: 'EXTERNAL_RETAILER_STOCK_UNVERIFIED'
       };
     }
   }
 
-  // 5. Fully verified available
-  return { isAvailable: true, status: 'AVAILABLE', reason: 'Verified in stock' };
+  // 5. Fully verified available in internal catalog
+  return {
+    isAvailable: true,
+    status: 'AVAILABLE',
+    reason: 'Verified in stock in RasoiIQ internal catalog. External live retailer dark-store inventory is unverified (sample catalog demonstration).',
+    catalogSource: 'RASOIIQ_INTERNAL_CATALOG',
+    retailerConfirmation: 'EXTERNAL_RETAILER_STOCK_UNVERIFIED'
+  };
 }

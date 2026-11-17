@@ -754,11 +754,11 @@ export function GroceryBasketView({
               </button>
 
               <div className="text-center space-y-1">
-                <p className="text-[11px] text-stone-500 font-semibold">
-                  Zero-cost demonstration checkout.
+                <p className="text-[11px] text-amber-800 font-semibold">
+                  Demo Checkout · No Real Payment Processed
                 </p>
-                <p className="text-[10px] text-stone-400">
-                  No real retailer orders are placed or payment credentials taken.
+                <p className="text-[10px] text-stone-500">
+                  Order accepted by RasoiIQ demo checkout. Catalog availability validation passed. Live dark-store inventory unverified.
                 </p>
               </div>
             </div>

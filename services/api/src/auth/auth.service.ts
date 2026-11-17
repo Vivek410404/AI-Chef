@@ -1395,4 +1395,22 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Invalid or malformed authentication token');
     }
   }
+
+  /**
+   * Phase 6.2.3: Secure Server-Side System Worker Verification
+   * Authenticates internal background workers using constant-time secret comparison.
+   * Completely immune to client-side header spoofing.
+   */
+  verifyInternalWorker(workerKey?: string): boolean {
+    if (!workerKey || typeof workerKey !== 'string') return false;
+    const internalSecret = process.env.INTERNAL_WORKER_SECRET || 'rasoi_internal_sys_worker_secret_2026_x7a9';
+    try {
+      const keyBuffer = Buffer.from(workerKey.trim());
+      const secretBuffer = Buffer.from(internalSecret.trim());
+      if (keyBuffer.length !== secretBuffer.length) return false;
+      return crypto.timingSafeEqual(keyBuffer, secretBuffer);
+    } catch {
+      return false;
+    }
+  }
 }

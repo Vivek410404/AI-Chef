@@ -423,15 +423,16 @@ async function runSuite() {
     test('4.5: Terminal state CANCELLED cannot transition to any active state', reopenOrder.status === 400, `status=${reopenOrder.status}`);
 
     // Test cancellation when order is already in HUB_PACKING
-    // Place a new order, advance to HUB_PACKING via admin, then test customer cancellation
+    // Place a new order with distinct items/address to avoid 3s duplicate debounce
+    await new Promise(r => setTimeout(r, 500));
     const seedOrder2 = await fetchJson(`${API_BASE}/marketplace/checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sharmaToken}` },
       body: JSON.stringify({
         retailerId: 'ret-blinkit',
-        totalInr: 274,
-        deliveryAddress: 'Flat 402, Sharma Residence, Indiranagar, Bengaluru',
-        items: [{ productVariantId: 'var-aashirvaad-atta-5k', quantityPacks: 1, priceInr: 245 }]
+        totalInr: 289,
+        deliveryAddress: 'Flat 402, Sharma Residence, North Wing, Indiranagar, Bengaluru',
+        items: [{ productVariantId: 'var-fortune-atta-5k', quantityPacks: 1, priceInr: 260 }]
       })
     });
     const order2Id = seedOrder2.data?.id || seedOrder2.data?.order?.id;

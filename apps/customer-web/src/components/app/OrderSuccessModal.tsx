@@ -179,8 +179,8 @@ export function OrderSuccessModal({ isOpen, onClose, onReturnToDashboard, orderD
 
           <div className="flex items-center justify-between pt-0.5">
             <div>
-              <span className="text-stone-600 font-semibold block">Total Billed:</span>
-              <span className="text-[10px] text-emerald-600 font-bold">100% price consistency verified</span>
+              <span className="text-stone-600 font-semibold block">Total Demo Amount:</span>
+              <span className="text-[10px] text-amber-700 font-bold">Demo Order Accepted · No Payment Processed</span>
             </div>
             <span className="font-black text-xl text-forest-900">{formatInr(orderData.totalAmountInr)}</span>
           </div>
@@ -191,6 +191,17 @@ export function OrderSuccessModal({ isOpen, onClose, onReturnToDashboard, orderD
               {orderData.deliveryAddress}
             </p>
           </div>
+        </div>
+
+        {/* Phase 6.2.3 Truthful Demo Order & Payment Transparency Notice */}
+        <div className="p-3 rounded-xl bg-amber-50/90 border border-amber-200 text-[11px] text-amber-900 text-left space-y-1">
+          <p className="font-bold flex items-center gap-1.5 text-amber-900">
+            <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0" />
+            <span>Demo Checkout & Simulation Disclosure</span>
+          </p>
+          <p className="text-[10px] text-stone-600 leading-relaxed">
+            Order accepted by RasoiIQ demo checkout. Catalog availability validation passed. No real payment was processed. Delivery progress and ETA are simulated demonstration windows. External retailer live dark-store inventory is unverified.
+          </p>
         </div>
 
         <div className="p-3 rounded-xl bg-forest-50/70 border border-forest-200 text-[11px] text-forest-800 text-left flex items-start gap-2">

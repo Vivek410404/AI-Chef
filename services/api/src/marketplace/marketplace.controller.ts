@@ -80,7 +80,7 @@ export class MarketplaceController {
     @Param('id') id: string,
     @Body() body: { status: string; statusReason?: string; substitutionNotes?: string; fulfillmentNotes?: string },
     @Headers('authorization') authHeader?: string,
-    @Headers('x-simulation-worker') simulationHeader?: string
+    @Headers('x-internal-worker-key') internalWorkerKey?: string
   ) {
     let currentUser: any;
     if (authHeader) {
@@ -89,8 +89,27 @@ export class MarketplaceController {
         currentUser = await this.authService.verifyToken(token);
       } catch {}
     }
-    const isSimWorker = simulationHeader === 'rasoi-internal-sim-worker-2026';
-    return this.marketplaceService.updateOrderStatus(id, body, currentUser, isSimWorker);
+
+    // Phase 6.2.3: Secure Server-Side System Worker Verification
+    if (internalWorkerKey) {
+      const isValidWorker = this.authService.verifyInternalWorker(internalWorkerKey);
+      if (!isValidWorker) {
+        throw new ForbiddenException('Invalid internal system worker credential.');
+      }
+      if (currentUser && (currentUser.role === 'CUSTOMER' || currentUser.role === 'RETAILER')) {
+        throw new ForbiddenException(
+          'Privilege escalation blocked: Authenticated customer and retailer sessions cannot assume SYSTEM_WORKER authority.'
+        );
+      }
+      currentUser = {
+        id: 'system-worker',
+        email: 'system-worker@internal.rasoiiq.in',
+        role: 'SYSTEM_WORKER',
+        isSystemWorker: true
+      };
+    }
+
+    return this.marketplaceService.updateOrderStatus(id, body, currentUser);
   }
 
   @Post('orders/:id/cancel')
