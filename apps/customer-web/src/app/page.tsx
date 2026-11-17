@@ -782,6 +782,7 @@ export default function HomePage() {
               planItems={mealPlanItems}
               household={household}
               requirements={requirements}
+              basketCount={basketCount}
               onAddMeal={handleAddMealFromSlot}
               onRegenerateMeal={handleRegenerateMeal}
               onRemoveMeal={handleRemoveMeal}

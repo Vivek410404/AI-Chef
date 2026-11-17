@@ -43,6 +43,7 @@ interface MealPlannerViewProps {
   planItems: MealPlanItem[];
   household: Household | null;
   requirements: ScaledIngredientRequirement[];
+  basketCount?: number;
   onAddMeal: (day: DayOfWeek, meal: MealCategory) => void;
   onRegenerateMeal?: (day: DayOfWeek, meal: MealCategory) => void;
   onRemoveMeal: (id: string) => void;
@@ -75,6 +76,7 @@ export function MealPlannerView({
   planItems,
   household,
   requirements,
+  basketCount,
   onAddMeal,
   onRegenerateMeal,
   onRemoveMeal,
@@ -169,7 +171,7 @@ export function MealPlannerView({
             className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl bg-terracotta-500 hover:bg-terracotta-600 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-soft transition-all"
           >
             <ShoppingBag className="w-4 h-4" />
-            <span>Smart Basket ({requirements.length})</span>
+            <span>Smart Basket ({basketCount !== undefined ? basketCount : requirements.length})</span>
           </button>
 
           <button

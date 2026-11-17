@@ -96,7 +96,7 @@ export function CustomerDashboardView({
 
   return (
     <div className="space-y-6 animate-fade-in">
-      
+
       {/* 1. Welcome & Household Header Banner */}
       <div className="bg-surface rounded-3xl p-6 sm:p-8 border border-cream-300 shadow-soft flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative overflow-hidden">
         <div className="space-y-2 relative z-10 max-w-2xl">
@@ -108,7 +108,7 @@ export function CustomerDashboardView({
               {household?.dietaryPreference || 'VEGETARIAN'} Mode
             </span>
             <span className="text-xs font-semibold text-stone-600 bg-cream-100 px-2.5 py-0.5 rounded-full border border-cream-200">
-              {household?.cuisinePreference || 'ALL_INDIAN'}
+              {household?.cuisinePreference || 'ALL INDIAN'}
             </span>
           </div>
 
@@ -142,7 +142,7 @@ export function CustomerDashboardView({
             <Sparkles className="w-4 h-4 text-saffron-500 animate-pulse" />
             <span>Generate with AI Chef</span>
           </button>
-          
+
           <div className="flex gap-2">
             <button
               onClick={onGoToPlanner}
@@ -157,7 +157,7 @@ export function CustomerDashboardView({
               className="flex-1 px-4 py-2.5 rounded-xl bg-terracotta-500 hover:bg-terracotta-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              <span>Smart Basket ({requirements.length})</span>
+              <span>Smart Basket ({basket ? basket.items.filter(i => i.isSelectedForPurchase).length : requirements.length})</span>
             </button>
           </div>
         </div>
@@ -165,7 +165,7 @@ export function CustomerDashboardView({
 
       {/* 2. Primary 2-Column Grid: Today's Meals + Nutrition Snapshot */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Left Column (2 Cols): Today's Meals */}
         <div className="lg:col-span-2 bg-surface rounded-3xl p-6 border border-cream-300 shadow-soft space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-cream-200 gap-3">
@@ -187,11 +187,10 @@ export function CustomerDashboardView({
                 <button
                   key={d.id}
                   onClick={() => setSelectedDay(d.id)}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                    selectedDay === d.id
-                      ? 'bg-forest-700 text-white shadow-xs'
-                      : 'text-stone-600 hover:text-forest-900 hover:bg-cream-200'
-                  }`}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${selectedDay === d.id
+                    ? 'bg-forest-700 text-white shadow-xs'
+                    : 'text-stone-600 hover:text-forest-900 hover:bg-cream-200'
+                    }`}
                 >
                   {d.short}
                 </button>
@@ -328,7 +327,7 @@ export function CustomerDashboardView({
 
       {/* 3. Secondary 2-Column Grid: 7-Day Plan Progress + Grocery & Smart Basket */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+
         {/* Weekly Meal Plan Overview */}
         <div className="bg-surface rounded-3xl p-6 border border-cream-300 shadow-soft space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-cream-200">
@@ -360,13 +359,12 @@ export function CustomerDashboardView({
                 <div
                   key={d.id}
                   onClick={onGoToPlanner}
-                  className={`p-2 rounded-xl border cursor-pointer transition-colors ${
-                    isToday
-                      ? 'bg-forest-700 text-white border-forest-800'
-                      : dayMealsCount > 0
+                  className={`p-2 rounded-xl border cursor-pointer transition-colors ${isToday
+                    ? 'bg-forest-700 text-white border-forest-800'
+                    : dayMealsCount > 0
                       ? 'bg-cream-100 text-forest-900 border-cream-200 hover:bg-cream-200'
                       : 'bg-cream-50 text-stone-400 border-cream-100'
-                  }`}
+                    }`}
                 >
                   <span className="font-extrabold block text-[11px]">{d.short}</span>
                   <span className={`text-[10px] ${isToday ? 'text-cream-200' : 'text-stone-500'}`}>
