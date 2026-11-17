@@ -290,12 +290,14 @@ export function buildGroceryBasket(
   // Multi-retailer price comparison calculation
   const comparisons: RetailerBasketComparison[] = retailers.map((retailer) => {
     const factor = getRetailerMultiplier(retailer.name);
-    // If this is the active retailer, subtotal equals the direct item total sum to guarantee zero rounding divergence
+    // Every retailer's subtotal is computed using consistent item-by-item rounded pricing
+    // so comparisons remain 100% stable regardless of which retailer is currently selected.
     const retailerSubtotal = isCartEmpty
       ? 0
-      : (retailer.id === selectedRetailer?.id
-          ? selectedItems.reduce((sum, i) => sum + i.totalPriceInr, 0)
-          : Math.round(baseCatalogSubtotal * factor));
+      : selectedItems.reduce((sum, i) => {
+          const itemPrice = Math.round(i.productVariant.sellingPriceInr * factor);
+          return sum + (i.quantityPacks * itemPrice);
+        }, 0);
 
     const retailerDelivery = (isCartEmpty || retailerSubtotal >= retailer.freeDeliveryThresholdInr)
       ? 0

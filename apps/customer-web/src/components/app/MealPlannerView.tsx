@@ -348,77 +348,153 @@ export function MealPlannerView({
 
           {/* Goal Editor Pop-down */}
           {isEditingProteinGoal && (
-            <div className="p-3.5 rounded-xl bg-surface border border-amber-200 space-y-2 animate-fade-in text-xs">
+            <div className="p-4 rounded-2xl bg-surface border border-amber-200/80 space-y-3.5 animate-fade-in text-xs shadow-xs">
               <div className="flex justify-between items-center">
-                <span className="font-bold text-forest-900">Configure Daily Protein Goal (Optional):</span>
-                <span className="font-black text-sm text-terracotta-600">{customProteinGoal}g / day</span>
+                <div>
+                  <span className="font-extrabold text-forest-900 block">Daily Protein Target:</span>
+                  <span className="text-[11px] text-stone-500">Personalized daily macronutrient intake goal</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-black text-base text-terracotta-600 block">{customProteinGoal}g / day</span>
+                  <span className="text-[10px] text-stone-400 font-semibold">
+                    {customProteinGoal <= 45 ? 'Light Maintenance' : customProteinGoal <= 70 ? 'Balanced Adult' : customProteinGoal <= 100 ? 'Active Lifestyle' : 'High Athletic'}
+                  </span>
+                </div>
               </div>
-              <input
-                type="range"
-                min="40"
-                max="140"
-                step="5"
-                value={customProteinGoal}
-                onChange={(e) => setCustomProteinGoal(Number(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer"
-              />
-              <div className="flex justify-between text-[10px] text-stone-400 font-semibold">
-                <span>40g (Light)</span>
-                <span>65g (Balanced)</span>
-                <span>90g (Active)</span>
-                <span>140g (High Athletic)</span>
+
+              {/* Quick Preset Selector Buttons */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                {[
+                  { value: 40, label: 'Light', desc: '40g / day' },
+                  { value: 65, label: 'Balanced', desc: '65g / day' },
+                  { value: 90, label: 'Active', desc: '90g / day' },
+                  { value: 140, label: 'High Athletic', desc: '140g / day' }
+                ].map((preset) => {
+                  const isActive = customProteinGoal === preset.value;
+                  return (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      onClick={() => setCustomProteinGoal(preset.value)}
+                      className={`py-2 px-2.5 rounded-xl border text-center transition-all ${
+                        isActive
+                          ? 'bg-forest-800 text-white border-forest-900 shadow-xs'
+                          : 'bg-cream-50 hover:bg-cream-100 text-stone-700 border-cream-200 hover:border-forest-300'
+                      }`}
+                    >
+                      <span className="font-bold text-xs block">{preset.label}</span>
+                      <span className={`text-[10px] block ${isActive ? 'text-amber-300 font-semibold' : 'text-stone-400'}`}>
+                        {preset.desc}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-              <p className="text-[10px] text-stone-500 leading-snug pt-1">
-                Note: This is an optional personal preference target. RasoiIQ does not prescribe medical or weight-loss targets.
+
+              {/* Range Slider with Precise Calibrated Markers */}
+              <div className="pt-2 space-y-1 relative">
+                <input
+                  type="range"
+                  min="40"
+                  max="140"
+                  step="5"
+                  value={customProteinGoal}
+                  onChange={(e) => setCustomProteinGoal(Number(e.target.value))}
+                  className="w-full accent-amber-500 cursor-pointer"
+                />
+                
+                {/* Mathematically aligned label scale: (val - 40) / (140 - 40) * 100% */}
+                <div className="relative h-4 text-[10px] font-semibold text-stone-400">
+                  <span className="absolute left-0 cursor-pointer hover:text-forest-900" onClick={() => setCustomProteinGoal(40)}>
+                    40g
+                  </span>
+                  <span
+                    className="absolute cursor-pointer hover:text-forest-900"
+                    style={{ left: '25%', transform: 'translateX(-50%)' }}
+                    onClick={() => setCustomProteinGoal(65)}
+                  >
+                    65g (Balanced)
+                  </span>
+                  <span
+                    className="absolute cursor-pointer hover:text-forest-900"
+                    style={{ left: '50%', transform: 'translateX(-50%)' }}
+                    onClick={() => setCustomProteinGoal(90)}
+                  >
+                    90g (Active)
+                  </span>
+                  <span className="absolute right-0 cursor-pointer hover:text-forest-900" onClick={() => setCustomProteinGoal(140)}>
+                    140g (Athletic)
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-[10px] text-stone-500 leading-snug border-t border-cream-200 pt-2">
+                Tip: Indian ICMR guidelines recommend 0.8g–1.0g protein per kg of body weight for healthy adults (approx. 55g–65g/day). Adjust higher for athletic training.
               </p>
             </div>
           )}
 
           {/* Progress Bar & Numerical Metrics */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <div className="flex justify-between items-baseline text-xs">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-black text-forest-900">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-forest-900">
                   {nutritionTab === 'daily'
                     ? `${activeDailyNutrition.total.protein}g`
                     : `${weeklyAnalytics.weeklyDailyAverage.protein}g`}
                 </span>
-                <span className="text-xs font-semibold text-stone-500">
-                  / {customProteinGoal}g goal
+                <span className="text-xs font-bold text-stone-500">
+                  / {customProteinGoal}g daily target
                 </span>
               </div>
-              <span className="font-black text-xs text-amber-800">
-                {nutritionTab === 'daily'
-                  ? `${activeDailyNutrition.proteinProgressPercent || 0}% of target`
-                  : `${weeklyAnalytics.avgDailyProteinProgressPercent || 0}% of target`}
-              </span>
+              <div className="text-right">
+                <span className="font-black text-sm text-forest-900">
+                  {nutritionTab === 'daily'
+                    ? `${activeDailyNutrition.proteinProgressPercent || 0}%`
+                    : `${weeklyAnalytics.avgDailyProteinProgressPercent || 0}%`}
+                </span>
+                <span className="text-[11px] text-stone-500 ml-1 font-semibold">of daily goal</span>
+              </div>
             </div>
 
-            <div className="w-full bg-cream-200/80 h-3 rounded-full overflow-hidden p-0.5">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  (nutritionTab === 'daily'
-                    ? (activeDailyNutrition.proteinProgressPercent || 0)
-                    : (weeklyAnalytics.avgDailyProteinProgressPercent || 0)) >= 80
-                    ? 'bg-forest-600'
-                    : (nutritionTab === 'daily'
-                        ? (activeDailyNutrition.proteinProgressPercent || 0)
-                        : (weeklyAnalytics.avgDailyProteinProgressPercent || 0)) >= 50
-                      ? 'bg-amber-500'
-                      : 'bg-terracotta-500'
-                }`}
-                style={{
-                  width: `${Math.min(
-                    100,
-                    nutritionTab === 'daily'
-                      ? activeDailyNutrition.proteinProgressPercent || 0
-                      : weeklyAnalytics.avgDailyProteinProgressPercent || 0
-                  )}%`
-                }}
-              />
+            {/* Visual Calibrated Progress Bar with Midpoint & Target Markers */}
+            <div className="space-y-1">
+              <div className="relative w-full bg-cream-200/90 h-3.5 rounded-full overflow-hidden p-0.5 border border-cream-300">
+                {/* 50% Midpoint reference line */}
+                <div className="absolute top-0 bottom-0 left-1/2 w-px bg-stone-300/70 z-10 pointer-events-none" />
+
+                <div
+                  className={`h-full rounded-full transition-all duration-500 shadow-xs ${
+                    (nutritionTab === 'daily'
+                      ? (activeDailyNutrition.proteinProgressPercent || 0)
+                      : (weeklyAnalytics.avgDailyProteinProgressPercent || 0)) >= 80
+                      ? 'bg-gradient-to-r from-forest-600 to-emerald-600'
+                      : (nutritionTab === 'daily'
+                          ? (activeDailyNutrition.proteinProgressPercent || 0)
+                          : (weeklyAnalytics.avgDailyProteinProgressPercent || 0)) >= 50
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600'
+                        : 'bg-gradient-to-r from-terracotta-500 to-orange-500'
+                  }`}
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      nutritionTab === 'daily'
+                        ? activeDailyNutrition.proteinProgressPercent || 0
+                        : weeklyAnalytics.avgDailyProteinProgressPercent || 0
+                    )}%`
+                  }}
+                />
+              </div>
+
+              {/* Progress Milestones Scale */}
+              <div className="flex justify-between items-center text-[10px] text-stone-400 font-semibold px-0.5">
+                <span>0g (Start)</span>
+                <span className="text-stone-500">50% Midpoint ({(customProteinGoal / 2).toFixed(0)}g)</span>
+                <span className="font-bold text-forest-800">100% Goal ({customProteinGoal}g)</span>
+              </div>
             </div>
 
-            <div className="flex justify-between text-[10px] text-stone-500 pt-0.5">
+            <div className="flex justify-between text-[10px] text-stone-500 pt-1 border-t border-cream-200">
               <span>Weekly Avg: <strong>{weeklyAnalytics.weeklyDailyAverage.protein}g/day</strong></span>
               <span>7-Day Total: <strong>{weeklyAnalytics.weeklyTotal.protein}g</strong></span>
             </div>
