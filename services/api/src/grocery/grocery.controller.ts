@@ -155,6 +155,28 @@ export class GroceryController {
     return this.groceryService.clearCart(householdId);
   }
 
+  @Post('cart/reorder')
+  async reorderBasket(
+    @Body() body: { orderId: string; targetRetailerId?: string; replaceCart?: boolean; householdId?: string },
+    @Headers('authorization') authHeader?: string
+  ) {
+    const householdId = await this.resolveHouseholdId(authHeader, body.householdId);
+    return this.groceryService.reorderBasket(householdId, {
+      orderId: body.orderId,
+      targetRetailerId: body.targetRetailerId,
+      replaceCart: body.replaceCart
+    });
+  }
+
+  @Get('pantry-restock-suggestions')
+  async getPantryRestockSuggestions(
+    @Query('householdId') queryHouseholdId?: string,
+    @Headers('authorization') authHeader?: string
+  ) {
+    const householdId = await this.resolveHouseholdId(authHeader, queryHouseholdId);
+    return this.groceryService.getPantryRestockSuggestions(householdId);
+  }
+
   // ---------------------------------------------------------------------------
   // Existing Meal-Plan Basket Endpoints (Preserved 100%)
   // ---------------------------------------------------------------------------

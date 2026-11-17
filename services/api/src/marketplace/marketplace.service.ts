@@ -93,6 +93,8 @@ export class MarketplaceService {
       userId: orderData.userId,
       householdId: orderData.householdId || 'hh-sharma-family',
       items: orderData.items.map(item => ({
+        productVariantId: item.productVariantId || item.variantId || item.id,
+        variantId: item.variantId || item.productVariantId || item.id,
         ingredientId: item.ingredientId,
         productName: item.productName || item.productVariant?.brand || item.ingredientName || 'Pantry Essential',
         brand: item.brand || item.productVariant?.brand || 'Fresh Produce',
@@ -107,7 +109,7 @@ export class MarketplaceService {
       subtotalInr: subtotal > 0 ? subtotal : Math.max(0, orderData.totalInr - deliveryFee),
       deliveryFeeInr: deliveryFee,
       totalAmountInr: orderData.totalInr,
-      status: 'DEMO ORDER CONFIRMED',
+      status: 'ORDER_CONFIRMED',
       deliveryAddress: orderData.deliveryAddress,
       placedAt: nowIso,
       createdAt: nowIso
@@ -347,5 +349,181 @@ export class MarketplaceService {
       return updated;
     }
     return { id, applicationStatus: status, reviewedBy };
+  }
+
+  // Canonical state transition machine for orders
+  static readonly CANONICAL_MAP: Record<string, string> = {
+    'ORDER_CONFIRMED': 'ORDER_CONFIRMED',
+    'CONFIRMED': 'ORDER_CONFIRMED',
+    'PLACED': 'ORDER_CONFIRMED',
+    'DEMO ORDER CONFIRMED': 'ORDER_CONFIRMED',
+    'HUB_PACKING': 'HUB_PACKING',
+    'PREPARING': 'HUB_PACKING',
+    'PACKED': 'HUB_PACKING',
+    'OUT_FOR_DELIVERY': 'OUT_FOR_DELIVERY',
+    'DISPATCHED': 'OUT_FOR_DELIVERY',
+    'DELIVERED': 'DELIVERED',
+    'CANCELLED': 'CANCELLED'
+  };
+
+  static readonly CANONICAL_TRANSITIONS: Record<string, string[]> = {
+    'ORDER_CONFIRMED': ['HUB_PACKING', 'CANCELLED'],
+    'HUB_PACKING': ['OUT_FOR_DELIVERY', 'CANCELLED'],
+    'OUT_FOR_DELIVERY': ['DELIVERED'],
+    'DELIVERED': [], // Terminal state
+    'CANCELLED': []  // Terminal state
+  };
+
+  async updateOrderStatus(
+    orderId: string,
+    dto: { status: string; statusReason?: string; substitutionNotes?: string; fulfillmentNotes?: string },
+    currentUser?: any,
+    isSimulationWorker = false
+  ) {
+    // 1. Authorization checks: Customers strictly forbidden from self-transitioning orders
+    if (currentUser && currentUser.role === 'CUSTOMER') {
+      throw new ForbiddenException('Access denied. Customers are not authorized to advance order delivery status.');
+    }
+
+    if (!currentUser && !isSimulationWorker) {
+      throw new ForbiddenException('Authentication or simulation authority required to advance order status.');
+    }
+
+    // 2. Fetch order (from memory or DB)
+    let order = this.orders.find(o => o.id === orderId || o.orderNumber === orderId);
+    if (!order && this.store.isPrismaConnected) {
+      const dbOrder = await this.store.prisma.order.findUnique({
+        where: { id: orderId },
+        include: { items: true, statusHistory: true }
+      });
+      if (dbOrder) {
+        order = dbOrder;
+      }
+    }
+
+    if (!order) {
+      throw new NotFoundException(`Order with ID "${orderId}" not found.`);
+    }
+
+    // 3. Retailer isolation: Retailer can only update their own retailer orders
+    if (currentUser && currentUser.role === 'RETAILER') {
+      const userRetailerId = currentUser.retailerId || 'ret-blinkit';
+      if (order.retailerId && order.retailerId !== userRetailerId) {
+        throw new ForbiddenException(
+          `Access denied. Retailer "${userRetailerId}" is not authorized to modify status for "${order.retailerId}" order.`
+        );
+      }
+    }
+
+    // 4. Validate canonical state transition
+    const rawTarget = (dto.status || '').toUpperCase().trim();
+    const targetCanonical = MarketplaceService.CANONICAL_MAP[rawTarget];
+    if (!targetCanonical) {
+      throw new BadRequestException(
+        `Invalid order status "${dto.status}". Allowed statuses: ORDER_CONFIRMED, HUB_PACKING, OUT_FOR_DELIVERY, DELIVERED, CANCELLED`
+      );
+    }
+
+    const rawCurrent = (order.status || 'ORDER_CONFIRMED').toUpperCase().trim();
+    const currentCanonical = MarketplaceService.CANONICAL_MAP[rawCurrent] || 'ORDER_CONFIRMED';
+
+    // Duplicate transition handling: Idempotent no-op
+    if (currentCanonical === targetCanonical) {
+      const history = this.store.isPrismaConnected
+        ? await this.store.prisma.orderStatusHistory.findMany({
+            where: { orderId: order.id },
+            orderBy: { createdAt: 'desc' }
+          })
+        : [];
+      return {
+        success: true,
+        isDuplicate: true,
+        message: `Order #${order.id} is already in status "${targetCanonical}". Duplicate transition ignored.`,
+        order: { ...order, status: targetCanonical },
+        statusHistory: history
+      };
+    }
+
+    const legalNext = MarketplaceService.CANONICAL_TRANSITIONS[currentCanonical] || [];
+    if (!legalNext.includes(targetCanonical)) {
+      throw new BadRequestException(
+        `Illegal state transition from "${currentCanonical}" to "${targetCanonical}". Legal next transitions from "${currentCanonical}" are: ${
+          legalNext.length > 0 ? legalNext.join(', ') : 'None (Order is in terminal state)'
+        }`
+      );
+    }
+
+    // 5. Apply status transition in PostgreSQL and in-memory
+    const updatedBy = currentUser?.email || currentUser?.id || (isSimulationWorker ? 'simulation-worker' : 'system');
+    const reason = dto.statusReason || `Transitioned from ${currentCanonical} to ${targetCanonical}`;
+
+    if (this.store.isPrismaConnected) {
+      try {
+        await this.store.prisma.$transaction(async (tx) => {
+          await tx.order.update({
+            where: { id: order.id },
+            data: {
+              status: targetCanonical,
+              statusReason: reason,
+              substitutionNotes: dto.substitutionNotes || (order.substitutionNotes ?? null),
+              fulfillmentNotes: dto.fulfillmentNotes || (order.fulfillmentNotes ?? null),
+              updatedBy
+            }
+          });
+
+          await tx.orderStatusHistory.create({
+            data: {
+              orderId: order.id,
+              fromStatus: currentCanonical,
+              toStatus: targetCanonical,
+              reason,
+              changedBy: updatedBy
+            }
+          });
+        });
+      } catch (err: any) {
+        throw new BadRequestException(`Failed to persist order transition in database: ${err.message}`);
+      }
+    }
+
+    // Update in-memory order
+    order.status = targetCanonical;
+    if (dto.statusReason) order.statusReason = dto.statusReason;
+    if (dto.substitutionNotes) order.substitutionNotes = dto.substitutionNotes;
+    if (dto.fulfillmentNotes) order.fulfillmentNotes = dto.fulfillmentNotes;
+    order.updatedBy = updatedBy;
+    order.updatedAt = new Date().toISOString();
+
+    const statusHistory = this.store.isPrismaConnected
+      ? await this.store.prisma.orderStatusHistory.findMany({
+          where: { orderId: order.id },
+          orderBy: { createdAt: 'desc' }
+        })
+      : [];
+
+    return {
+      success: true,
+      orderId: order.id,
+      fromStatus: currentCanonical,
+      toStatus: targetCanonical,
+      transitionTimestamp: new Date().toISOString(),
+      order,
+      statusHistory
+    };
+  }
+
+  async getOrderStatusHistory(orderId: string, currentUser?: any) {
+    const order = await this.getOrderById(orderId, currentUser);
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    if (this.store.isPrismaConnected) {
+      return this.store.prisma.orderStatusHistory.findMany({
+        where: { orderId: order.id },
+        orderBy: { createdAt: 'asc' }
+      });
+    }
+    return [];
   }
 }

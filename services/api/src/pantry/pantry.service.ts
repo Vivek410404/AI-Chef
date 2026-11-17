@@ -17,6 +17,7 @@ export class PantryService {
       quantity: number;
       unit: StandardUnit;
       isLowStock?: boolean;
+      lowStockThreshold?: number;
     }
   ): Promise<PantryItem> {
     const list = this.store.pantryItems.get(householdId) || [];
@@ -30,6 +31,9 @@ export class PantryService {
       existing.currentQuantity = item.quantity;
       existing.unit = item.unit;
       existing.isLowStock = item.isLowStock ?? existing.isLowStock;
+      if (item.lowStockThreshold !== undefined) {
+        (existing as any).lowStockThreshold = item.lowStockThreshold;
+      }
       existing.updatedAt = new Date().toISOString();
       this.store.pantryItems.set(householdId, list);
       await this.store.persistPantryItem(householdId, existing);
@@ -46,6 +50,9 @@ export class PantryService {
       isLowStock: item.isLowStock ?? false,
       updatedAt: new Date().toISOString()
     };
+    if (item.lowStockThreshold !== undefined) {
+      (newItem as any).lowStockThreshold = item.lowStockThreshold;
+    }
     list.push(newItem);
     this.store.pantryItems.set(householdId, list);
     await this.store.persistPantryItem(householdId, newItem);

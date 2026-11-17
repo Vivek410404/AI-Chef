@@ -501,6 +501,17 @@ export const api = {
     });
   },
 
+  async reorderOrder(data: { orderId: string; targetRetailerId?: string; replaceCart?: boolean }): Promise<any> {
+    return fetchJson<any>('/grocery/cart/reorder', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async getPantryRestockSuggestions(): Promise<any> {
+    return fetchJson<any>('/grocery/pantry-restock-suggestions');
+  },
+
   async getBasket(retailerId?: string): Promise<GroceryBasket> {
     const query = retailerId ? `?retailerId=${retailerId}` : '';
     return fetchJson<GroceryBasket>(`/grocery/basket${query}`);

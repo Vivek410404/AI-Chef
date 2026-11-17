@@ -738,13 +738,15 @@ export class StoreService implements OnModuleInit {
       const existing = await this.prisma.pantryItem.findFirst({
         where: { householdId, ingredientId: item.ingredientId }
       });
+      const lowStockThreshold = (item as any).lowStockThreshold ?? null;
       if (existing) {
         await this.prisma.pantryItem.update({
           where: { id: existing.id },
           data: {
             currentQuantity: item.currentQuantity,
             unit: item.unit,
-            isLowStock: item.isLowStock
+            isLowStock: item.isLowStock,
+            lowStockThreshold
           }
         });
       } else {
@@ -755,7 +757,8 @@ export class StoreService implements OnModuleInit {
             ingredientId: item.ingredientId,
             currentQuantity: item.currentQuantity,
             unit: item.unit,
-            isLowStock: item.isLowStock
+            isLowStock: item.isLowStock,
+            lowStockThreshold
           }
         });
       }
@@ -783,16 +786,63 @@ export class StoreService implements OnModuleInit {
     try {
       const userId = order.householdId === 'hh-patel-family' ? 'user-demo-patel' : order.householdId === 'hh-mehta-family' ? 'user-demo-mehta' : (order.userId || 'user-demo-1');
 
-      await this.prisma.order.create({
-        data: {
-          id: order.id,
-          userId,
-          retailerName: order.retailerName || 'Blinkit',
-          status: order.status || 'DEMO ORDER CONFIRMED',
-          totalAmountInr: order.totalAmountInr || 0,
-          deliveryFeeInr: order.deliveryFeeInr || 0,
-          deliveryAddress: order.deliveryAddress || 'Sample Address'
+      const existing = await this.prisma.order.findUnique({ where: { id: order.id } });
+      if (existing) {
+        return;
+      }
+
+      await this.prisma.$transaction(async (tx) => {
+        await tx.order.create({
+          data: {
+            id: order.id,
+            userId,
+            retailerName: order.retailerName || 'Blinkit',
+            status: order.status || 'ORDER_CONFIRMED',
+            totalAmountInr: order.totalAmountInr || 0,
+            deliveryFeeInr: order.deliveryFeeInr || 0,
+            deliveryAddress: order.deliveryAddress || 'Sample Address',
+            isDemoOrder: true,
+            statusReason: order.statusReason || 'Order placed successfully',
+            updatedBy: order.updatedBy || userId
+          }
+        });
+
+        // Persist Order Items with foreign key checks
+        if (Array.isArray(order.items) && order.items.length > 0) {
+          for (const item of order.items) {
+            const variantId = item.productVariantId || item.variantId;
+            let validVariantId: string | null = null;
+            if (variantId) {
+              const varExists = await tx.productVariant.findUnique({ where: { id: variantId } });
+              if (varExists) {
+                validVariantId = variantId;
+              }
+            }
+
+            await tx.orderItem.create({
+              data: {
+                orderId: order.id,
+                productVariantId: validVariantId,
+                productName: item.productName || item.brand || item.title || 'Grocery Item',
+                brand: item.brand || 'Fresh Produce',
+                packSize: item.packSize || (item.packQuantity ? `${item.packQuantity} ${item.packUnit || 'pack'}` : 'Standard'),
+                quantityPacks: item.quantityPacks || item.quantity || 1,
+                unitPriceInr: item.priceInr || item.unitPriceInr || 0
+              }
+            });
+          }
         }
+
+        // Persist initial Order Status History record
+        await tx.orderStatusHistory.create({
+          data: {
+            orderId: order.id,
+            fromStatus: null,
+            toStatus: order.status || 'ORDER_CONFIRMED',
+            reason: 'Initial order placement by customer',
+            changedBy: userId
+          }
+        });
       });
     } catch (e: any) {
       this.logger.warn(`Failed to persist order to PostgreSQL: ${e.message}`);

@@ -288,7 +288,7 @@ async function runAllTests() {
     const order = await checkoutRes.json();
 
     assert(order.orderNumber.startsWith('RASOI-'), 'Order number should follow format RASOI-XXXXXX');
-    assert(order.status === 'DEMO ORDER CONFIRMED' || order.status === 'CONFIRMED', `Status must be DEMO ORDER CONFIRMED (actual: ${order.status})`);
+    assert(order.status === 'DEMO ORDER CONFIRMED' || order.status === 'CONFIRMED' || order.status === 'ORDER_CONFIRMED', `Status must be DEMO ORDER CONFIRMED or ORDER_CONFIRMED (actual: ${order.status})`);
     assert.strictEqual(order.totalAmountInr, basket.totalInr, 'Order amount must match basket total');
     assert.strictEqual(order.deliveryAddress, 'Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103');
   });

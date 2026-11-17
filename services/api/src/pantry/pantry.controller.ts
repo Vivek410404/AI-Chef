@@ -63,7 +63,7 @@ export class PantryController {
 
   @Post()
   async addOrUpdate(
-    @Body() body: { ingredientId: string; quantity: number; unit: StandardUnit; isLowStock?: boolean; householdId?: string },
+    @Body() body: { ingredientId: string; quantity: number; unit: StandardUnit; isLowStock?: boolean; lowStockThreshold?: number; householdId?: string },
     @Headers('authorization') authHeader?: string
   ): Promise<PantryItem> {
     const householdId = await this.resolveHouseholdId(authHeader, body.householdId);

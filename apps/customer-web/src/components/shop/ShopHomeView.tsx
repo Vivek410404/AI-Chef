@@ -118,13 +118,16 @@ export function ShopHomeView({
   useEffect(() => {
     async function loadInitialData() {
       try {
-        const [cats, pantry] = await Promise.all([
+        const [cats, restockRes, pantry] = await Promise.all([
           api.getGroceryCategories().catch(() => []),
+          api.getPantryRestockSuggestions().catch(() => null),
           api.getPantry().catch(() => [])
         ]);
         if (Array.isArray(cats)) setCategories(cats);
-        if (Array.isArray(pantry)) {
-          const low = pantry.filter(p => p.isLowStock || (p.currentQuantity && p.currentQuantity <= 500));
+        if (restockRes && Array.isArray(restockRes.suggestions)) {
+          setLowStockPantryItems(restockRes.suggestions);
+        } else if (Array.isArray(pantry)) {
+          const low = pantry.filter(p => p.isLowStock || (p.lowStockThreshold && p.currentQuantity <= p.lowStockThreshold));
           setLowStockPantryItems(low);
         }
       } catch (err) {

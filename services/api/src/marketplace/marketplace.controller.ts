@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, Headers, Req, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Body, Param, UseGuards, Headers, Req, ForbiddenException } from '@nestjs/common';
 import { MarketplaceService } from './marketplace.service';
 import { Retailer, ProductVariant } from '@rasoi/shared-types';
 import { RolesGuard } from '../auth/roles.guard';
@@ -73,6 +73,39 @@ export class MarketplaceController {
       } catch {}
     }
     return this.marketplaceService.getOrderById(id, currentUser);
+  }
+
+  @Patch('orders/:id/status')
+  async updateOrderStatus(
+    @Param('id') id: string,
+    @Body() body: { status: string; statusReason?: string; substitutionNotes?: string; fulfillmentNotes?: string },
+    @Headers('authorization') authHeader?: string,
+    @Headers('x-simulation-worker') simulationHeader?: string
+  ) {
+    let currentUser: any;
+    if (authHeader) {
+      try {
+        const token = authHeader.replace(/^Bearer\s+/i, '');
+        currentUser = await this.authService.verifyToken(token);
+      } catch {}
+    }
+    const isSimWorker = simulationHeader === 'rasoi-internal-sim-worker-2026';
+    return this.marketplaceService.updateOrderStatus(id, body, currentUser, isSimWorker);
+  }
+
+  @Get('orders/:id/history')
+  async getOrderStatusHistory(
+    @Param('id') id: string,
+    @Headers('authorization') authHeader?: string
+  ) {
+    let currentUser: any;
+    if (authHeader) {
+      try {
+        const token = authHeader.replace(/^Bearer\s+/i, '');
+        currentUser = await this.authService.verifyToken(token);
+      } catch {}
+    }
+    return this.marketplaceService.getOrderStatusHistory(id, currentUser);
   }
 
   // Protected Administrative & Partner Portal Endpoints

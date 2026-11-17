@@ -77,7 +77,7 @@ export default function MyOrdersPage() {
     }
   };
 
-  // 1-Click Reorder handler
+  // 1-Click Reorder handler with live price revalidation and unavailable item handling
   const handleReorder = async (order: any) => {
     if (!order.items || order.items.length === 0) {
       showToast('No items available to reorder.');
@@ -86,32 +86,52 @@ export default function MyOrdersPage() {
 
     setReorderingOrderId(order.id);
     try {
-      // Find variant or add products to cart
+      const res = await api.reorderOrder({
+        orderId: order.id,
+        replaceCart: true
+      });
+
+      if (res.success) {
+        const unavailMsg = res.unavailableCount > 0 ? ` (${res.unavailableCount} items out of stock/unavailable)` : '';
+        showToast(`✓ Reordered ${res.addedCount} items at live prices!${unavailMsg}`);
+        setTimeout(() => {
+          router.push('/#basket');
+        }, 800);
+      } else if (res.requiresRetailerSwitch) {
+        showToast(res.message);
+      } else {
+        showToast(res.message || 'Failed to reorder items.');
+      }
+    } catch (err: any) {
+      // Fallback: add available variants directly
       let addedCount = 0;
       for (const it of order.items) {
         if (it.productVariantId || it.variantId) {
-          await api.addToCart({
-            productVariantId: it.productVariantId || it.variantId,
-            quantity: it.quantity || 1
-          });
-          addedCount++;
+          try {
+            await api.addToCart({
+              productVariantId: it.productVariantId || it.variantId,
+              quantity: it.quantity || 1
+            });
+            addedCount++;
+          } catch {}
         }
       }
-      showToast(`✓ Added ${addedCount || order.items.length} items from Order to your basket!`);
-      setTimeout(() => {
-        router.push('/#basket');
-      }, 1000);
-    } catch (err: any) {
-      showToast(`Reorder completed with standard items: ${err.message}`);
+      showToast(`✓ Loaded ${addedCount || order.items.length} items to basket: ${err.message}`);
+      setTimeout(() => router.push('/#basket'), 1000);
     } finally {
       setReorderingOrderId(null);
     }
   };
 
-  // Derive order stage based on age for realistic simulation
+  // Derive order stage based on persisted backend status with demo simulation progression fallback
   const getOrderStage = (order: any) => {
     const status = (order.status || '').toUpperCase();
     if (status === 'DELIVERED' || status === 'COMPLETED') return 4;
+    if (status === 'OUT_FOR_DELIVERY' || status === 'DISPATCHED') return 3;
+    if (status === 'HUB_PACKING' || status === 'PREPARING' || status === 'PACKED') return 2;
+    if (status === 'CANCELLED') return -1;
+
+    // Simulation fallback if order is in initial confirmed status
     const createdAt = new Date(order.createdAt || order.placedAt || Date.now()).getTime();
     const ageMinutes = (Date.now() - createdAt) / (1000 * 60);
 
@@ -319,6 +339,12 @@ export default function MyOrdersPage() {
                       <span className={stage >= 3 ? 'text-emerald-800' : ''}>
                         {stage === 4 ? '3. Delivered' : '3. On the Way'}
                       </span>
+                    </div>
+
+                    {/* Simulation Disclosure Notice */}
+                    <div className="pt-1 border-t border-cream-200/60 flex items-center justify-between text-[10px] text-stone-600">
+                      <span>Demo tracking — delivery progress is simulated.</span>
+                      <span className="text-stone-500">Estimated delivery window for simulation demo</span>
                     </div>
                   </div>
 
