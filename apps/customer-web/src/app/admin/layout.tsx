@@ -59,7 +59,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoadingTimedOut(true);
-    }, 1500);
+    }, 350);
     return () => clearTimeout(timer);
   }, []);
 
@@ -148,12 +148,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (isLoading && !loadingTimedOut) {
     return (
-      <div className="min-h-screen glass-admin-bg text-stone-100 flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen glass-admin-bg text-stone-100 flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: '#070B12', minHeight: '100vh' }}>
         {/* Ambient background glows */}
-        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-emerald-500/10 rounded-full blur-[128px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-teal-500/10 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-emerald-500/10 rounded-full blur-[128px] pointer-events-none animate-glass-drift-1" />
+        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-teal-500/10 rounded-full blur-[140px] pointer-events-none animate-glass-drift-2" />
 
-        <div className="glass-admin-card rounded-3xl p-8 text-center relative z-10 shadow-2xl border border-white/10 max-w-sm w-full mx-4">
+        <div className="glass-admin-card rounded-3xl p-8 text-center relative z-10 shadow-2xl border border-white/10 max-w-sm w-full mx-4 backdrop-blur-3xl">
           <div className="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.1] backdrop-blur-xl flex items-center justify-center mx-auto mb-4 shadow-[0_0_25px_rgba(16,185,129,0.2)]">
             <ChefHat className="w-7 h-7 text-emerald-400 animate-spin" />
           </div>
@@ -167,10 +167,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Logged-in non-staff user (e.g. CUSTOMER)
   if (user && !isStaff) {
     return (
-      <div className="min-h-screen glass-admin-bg text-stone-100 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      <div className="min-h-screen glass-admin-bg text-stone-100 flex flex-col items-center justify-center p-4 relative overflow-hidden" style={{ backgroundColor: '#070B12', minHeight: '100vh' }}>
         {/* Ambient background glows */}
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-red-500/10 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-amber-500/10 rounded-full blur-[140px] pointer-events-none animate-glass-drift-1" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-red-500/10 rounded-full blur-[140px] pointer-events-none animate-glass-drift-2" />
 
         <div className="max-w-md w-full glass-admin-card rounded-3xl p-8 sm:p-10 text-center shadow-2xl relative z-10 border border-white/10 overflow-hidden">
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
@@ -218,17 +218,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Not authenticated: Real Admin Login & Two-Factor Authentication Gate (Glass UI)
   if (!isStaff) {
     return (
-      <div className="min-h-screen glass-admin-bg text-stone-100 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      <div className="min-h-screen glass-admin-bg text-stone-100 flex flex-col items-center justify-center p-4 relative overflow-hidden" style={{ backgroundColor: '#070B12', minHeight: '100vh' }}>
         {/* Ambient glowing colorful desktop backdrop */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
           {/* Top-left emerald nebula */}
-          <div className="absolute -top-24 -left-24 w-[600px] h-[600px] bg-gradient-to-br from-emerald-500/30 to-teal-500/20 rounded-full blur-[130px] animate-pulse" style={{ animationDuration: '8s' }} />
+          <div className="absolute -top-24 -left-24 w-[600px] h-[600px] bg-gradient-to-br from-emerald-500/30 to-teal-500/20 rounded-full blur-[130px] animate-glass-drift-1" />
           {/* Top-right indigo aurora */}
-          <div className="absolute -top-24 -right-24 w-[650px] h-[650px] bg-gradient-to-bl from-indigo-500/25 to-purple-500/20 rounded-full blur-[140px]" />
+          <div className="absolute -top-24 -right-24 w-[650px] h-[650px] bg-gradient-to-bl from-indigo-500/25 to-purple-500/20 rounded-full blur-[140px] animate-glass-drift-2" />
           {/* Center orb directly behind the frosted glass card */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-emerald-500/20 via-teal-400/15 to-cyan-500/20 rounded-full blur-[120px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-emerald-500/20 via-teal-400/15 to-cyan-500/20 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '6s' }} />
           {/* Bottom ambient sunset flare */}
-          <div className="absolute -bottom-32 left-1/3 w-[550px] h-[550px] bg-gradient-to-t from-amber-500/15 to-orange-500/10 rounded-full blur-[140px]" />
+          <div className="absolute -bottom-32 left-1/3 w-[550px] h-[550px] bg-gradient-to-t from-amber-500/15 to-orange-500/10 rounded-full blur-[140px] animate-glass-drift-1" />
         </div>
 
         <div className="max-w-md w-full glass-admin-card rounded-3xl p-8 sm:p-10 shadow-2xl relative z-10 border border-white/[0.18] overflow-hidden backdrop-blur-3xl">
@@ -435,12 +435,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="min-h-screen glass-admin-bg text-stone-100 flex flex-col md:flex-row relative selection:bg-emerald-500/30 selection:text-emerald-200">
+    <div className="min-h-screen glass-admin-bg text-stone-100 flex flex-col md:flex-row relative selection:bg-emerald-500/30 selection:text-emerald-200" style={{ backgroundColor: '#070B12', minHeight: '100vh' }}>
       {/* Ambient background glows for admin dashboard */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-32 left-64 w-[750px] h-[750px] bg-gradient-to-br from-emerald-500/18 to-teal-500/12 rounded-full blur-[160px]" />
-        <div className="absolute top-1/3 -right-24 w-[650px] h-[650px] bg-gradient-to-bl from-indigo-500/16 to-purple-500/12 rounded-full blur-[170px]" />
-        <div className="absolute -bottom-32 left-1/3 w-[650px] h-[650px] bg-gradient-to-t from-amber-500/12 to-emerald-500/10 rounded-full blur-[160px]" />
+        <div className="absolute -top-32 left-64 w-[750px] h-[750px] bg-gradient-to-br from-emerald-500/18 to-teal-500/12 rounded-full blur-[160px] animate-glass-drift-1" />
+        <div className="absolute top-1/3 -right-24 w-[650px] h-[650px] bg-gradient-to-bl from-indigo-500/16 to-purple-500/12 rounded-full blur-[170px] animate-glass-drift-2" />
+        <div className="absolute -bottom-32 left-1/3 w-[650px] h-[650px] bg-gradient-to-t from-amber-500/12 to-emerald-500/10 rounded-full blur-[160px] animate-glass-drift-1" />
       </div>
 
       {/* Sidebar Navigation (Glass) */}

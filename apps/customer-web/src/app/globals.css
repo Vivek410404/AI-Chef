@@ -41,6 +41,13 @@ body {
 }
 
 /* True Acrylic Glassmorphism for Admin */
+html:has(.glass-admin-bg),
+body:has(.glass-admin-bg) {
+  background-color: #070B12 !important;
+  color: #F3F4F6 !important;
+  min-height: 100vh;
+}
+
 .glass-admin-bg {
   background-color: #070B12;
   background-image: 
@@ -119,4 +126,115 @@ body {
 }
 .glass-admin-btn-primary:active:not(:disabled) {
   transform: translateY(0);
+}
+
+/* Dynamic Glass Aurora Animations */
+@keyframes glass-drift-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(40px, -30px) scale(1.1);
+  }
+}
+
+@keyframes glass-drift-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-35px, 35px) scale(1.08);
+  }
+}
+
+@keyframes glass-pulse-glow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+}
+
+.animate-glass-drift-1 {
+  animation: glass-drift-1 16s ease-in-out infinite;
+}
+
+.animate-glass-drift-2 {
+  animation: glass-drift-2 20s ease-in-out infinite;
+}
+
+.animate-glass-glow {
+  animation: glass-pulse-glow 8s ease-in-out infinite;
+}
+
+/* Glass Admin Monorepo Theme Overrides */
+.glass-admin-bg .bg-stone-900,
+.glass-admin-bg .bg-stone-900\/90,
+.glass-admin-bg .bg-stone-900\/80,
+.glass-admin-bg .bg-stone-900\/60 {
+  background: rgba(255, 255, 255, 0.045) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.glass-admin-bg .bg-stone-950,
+.glass-admin-bg .bg-stone-950\/60,
+.glass-admin-bg .bg-stone-950\/70,
+.glass-admin-bg .bg-stone-950\/80 {
+  background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.glass-admin-bg .bg-stone-800,
+.glass-admin-bg .bg-stone-800\/80 {
+  background: rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.glass-admin-bg .border-stone-800,
+.glass-admin-bg .border-stone-800\/80,
+.glass-admin-bg .border-stone-700 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.glass-admin-bg input:not([type="checkbox"]),
+.glass-admin-bg select,
+.glass-admin-bg textarea {
+  background: rgba(255, 255, 255, 0.04) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #FFFFFF !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.glass-admin-bg input:focus,
+.glass-admin-bg select:focus,
+.glass-admin-bg textarea:focus {
+  border-color: rgba(52, 211, 153, 0.8) !important;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  outline: none !important;
+}
+
+.glass-admin-bg table thead {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.glass-admin-bg table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  transition: all 0.2s ease !important;
+}
+
+.glass-admin-bg table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
 }
