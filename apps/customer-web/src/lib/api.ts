@@ -14,16 +14,14 @@ import {
 } from '@rasoi/shared-types';
 
 function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    // In browser, always use relative /api proxy to avoid CORS and Incognito cookie partitioning
+    return '/api';
+  }
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
-  if (typeof window !== 'undefined') {
-    // When accessed from LAN IP or second device, use relative /api proxy
-    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      return '/api';
-    }
-  }
-  return 'http://localhost:4000/api';
+  return process.env.INTERNAL_API_URL || 'http://localhost:4000/api';
 }
 
 let inMemoryAuthToken: string | null = null;

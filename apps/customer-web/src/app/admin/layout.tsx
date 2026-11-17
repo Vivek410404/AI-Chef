@@ -54,11 +54,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
 
   useEffect(() => {
-    // Background health check
-    api.admin.getSystemHealth().then(setSystemHealth).catch(() => {});
+    const timer = setTimeout(() => {
+      setLoadingTimedOut(true);
+    }, 1500);
+    return () => clearTimeout(timer);
   }, []);
+
+  const isStaff = user && ADMIN_ROLES.includes(user.role);
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
+  useEffect(() => {
+    // Only run health check if user is verified staff
+    if (isStaff) {
+      api.admin.getSystemHealth().then(setSystemHealth).catch(() => {});
+    }
+  }, [isStaff]);
 
   // Cooldown timer for 2FA resend
   useEffect(() => {
@@ -68,9 +81,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }, 1000);
     return () => clearInterval(interval);
   }, [resendCooldown]);
-
-  const isStaff = user && ADMIN_ROLES.includes(user.role);
-  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const navItems = [
     { href: '/admin', label: 'Overview', icon: LayoutDashboard, exact: true },
@@ -136,7 +146,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !loadingTimedOut) {
     return (
       <div className="min-h-screen bg-stone-900 text-stone-100 flex items-center justify-center">
         <div className="text-center">
