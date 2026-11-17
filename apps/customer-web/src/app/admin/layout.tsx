@@ -21,7 +21,16 @@ import {
   ExternalLink,
   ShieldAlert,
   ChevronRight,
-  Server
+  Server,
+  Lock,
+  Mail,
+  KeyRound,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
@@ -35,10 +44,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [systemHealth, setSystemHealth] = useState<any>(null);
 
+  // Admin 2FA Login States
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [mfaSessionId, setMfaSessionId] = useState<string | null>(null);
+  const [maskedEmail, setMaskedEmail] = useState<string | null>(null);
+  const [otpCode, setOtpCode] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
   useEffect(() => {
     // Background health check
     api.admin.getSystemHealth().then(setSystemHealth).catch(() => {});
   }, []);
+
+  // Cooldown timer for 2FA resend
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setResendCooldown(prev => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
 
   const isStaff = user && ADMIN_ROLES.includes(user.role);
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
@@ -56,13 +85,54 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/system-health', label: 'System Health', icon: Activity }
   ];
 
-  const handleQuickAdminLogin = async (role: 'SUPER_ADMIN' | 'ADMIN' | 'OPERATIONS' | 'SUPPORT') => {
+  const handleAdminCredentialsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    setAuthLoading(true);
     try {
-      await api.getDemoSession(role as any);
+      const res = await api.adminLogin(adminEmail, adminPassword);
+      if (res?.requiresMfa) {
+        setMfaSessionId(res.mfaSessionId);
+        setMaskedEmail(res.maskedEmail);
+        setResendCooldown(45);
+      } else {
+        await refreshUser();
+        router.refresh();
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Authentication failed. Please verify administrative credentials.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mfaSessionId || otpCode.trim().length !== 6) return;
+    setAuthError(null);
+    setAuthLoading(true);
+    try {
+      await api.adminVerifyOtp(mfaSessionId, otpCode.trim());
       await refreshUser();
       router.refresh();
-    } catch (e: any) {
-      alert(`Login failed: ${e.message}`);
+    } catch (err: any) {
+      setAuthError(err.message || 'Invalid or expired verification code.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!mfaSessionId || resendCooldown > 0) return;
+    setAuthError(null);
+    setAuthLoading(true);
+    try {
+      await api.adminResendOtp(mfaSessionId);
+      setResendCooldown(45);
+    } catch (err: any) {
+      setAuthError(err.message || 'Failed to dispatch new verification code.');
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -77,67 +147,241 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // Not authorized screen
-  if (!isStaff) {
+  // Logged-in non-staff user (e.g. CUSTOMER)
+  if (user && !isStaff) {
     return (
       <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full bg-stone-900 border border-stone-800 rounded-3xl p-8 text-center shadow-2xl">
-          <div className="w-16 h-16 rounded-2xl bg-red-950/60 border border-red-800/80 flex items-center justify-center mx-auto mb-6">
-            <ShieldAlert className="w-8 h-8 text-red-400" />
+          <div className="w-16 h-16 rounded-2xl bg-amber-950/60 border border-amber-800/80 flex items-center justify-center mx-auto mb-6">
+            <ShieldAlert className="w-8 h-8 text-amber-400" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white mb-2">Restricted Access</h1>
-          <p className="text-stone-400 text-sm mb-6">
-            The RasoiIQ Operations Console is strictly limited to authorized platform operators, administrators, and support staff.
+          <p className="text-stone-400 text-sm mb-6 leading-relaxed">
+            The RasoiIQ Operations Console is strictly limited to authorized platform operators, administrators, and support personnel.
           </p>
 
-          {user && (
-            <div className="mb-6 p-4 rounded-xl bg-stone-950 border border-stone-800 text-left text-xs space-y-1">
-              <p className="text-stone-400">Current Identity: <span className="text-white font-mono">{user.email}</span></p>
-              <p className="text-stone-400">Role: <span className="text-amber-400 font-mono">{user.role}</span></p>
-              <p className="text-red-400 font-semibold mt-2">Error: Role lacks administrative permissions.</p>
-            </div>
-          )}
+          <div className="mb-6 p-4 rounded-xl bg-stone-950 border border-stone-800 text-left text-xs space-y-1.5">
+            <p className="text-stone-400">Current Identity: <span className="text-white font-mono">{user.email}</span></p>
+            <p className="text-stone-400">Assigned Role: <span className="text-amber-400 font-mono uppercase">{user.role}</span></p>
+            <p className="text-red-400 font-semibold pt-1 border-t border-stone-800">
+              Error: Customer accounts are not permitted in the management console.
+            </p>
+          </div>
 
           <div className="space-y-3">
+            <button
+              onClick={async () => {
+                await logout();
+                router.refresh();
+              }}
+              className="w-full py-2.5 px-4 rounded-xl bg-forest-700 hover:bg-forest-600 text-white text-sm font-semibold flex items-center justify-center gap-2 transition shadow-soft"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out & Enter Administrator Credentials</span>
+            </button>
             <Link
               href="/"
               className="w-full py-2.5 px-4 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-sm font-semibold flex items-center justify-center gap-2 transition"
             >
               Return to Customer App
             </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-            <div className="pt-4 border-t border-stone-800">
-              <p className="text-xs text-stone-400 font-semibold mb-3 uppercase tracking-wider">
-                Local Demo Authorization
-              </p>
-              <div className="grid grid-cols-2 gap-2">
+  // Not authenticated: Real Admin Login & Two-Factor Authentication Gate
+  if (!isStaff) {
+    return (
+      <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-stone-900 border border-stone-800 rounded-3xl p-8 shadow-2xl">
+          {!mfaSessionId ? (
+            /* Stage 1: Administrator Credentials Entry */
+            <div>
+              <div className="text-center mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-forest-950/80 border border-forest-700/60 flex items-center justify-center mx-auto mb-4 text-emerald-400 shadow-soft">
+                  <ShieldCheck className="w-7 h-7" />
+                </div>
+                <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
+                  RasoiIQ Operations Console
+                </h1>
+                <p className="text-xs text-stone-400 font-medium">
+                  Two-factor verified administrative access only
+                </p>
+              </div>
+
+              {authError && (
+                <div className="mb-5 p-3.5 rounded-xl bg-red-950/70 border border-red-800 text-xs text-red-200 flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <span>{authError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleAdminCredentialsSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-stone-300 mb-1.5 uppercase tracking-wider">
+                    Administrator Email
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-stone-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      required
+                      value={adminEmail}
+                      onChange={e => setAdminEmail(e.target.value)}
+                      placeholder="admin@rasoiiq.in"
+                      className="w-full bg-stone-950 border border-stone-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-stone-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-stone-300 mb-1.5 uppercase tracking-wider">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-stone-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={adminPassword}
+                      onChange={e => setAdminPassword(e.target.value)}
+                      placeholder="Enter administrator password"
+                      className="w-full bg-stone-950 border border-stone-800 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-stone-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300 transition"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
                 <button
-                  onClick={() => handleQuickAdminLogin('SUPER_ADMIN')}
-                  className="py-2 px-3 rounded-lg bg-purple-900/60 hover:bg-purple-800/80 border border-purple-700 text-purple-200 text-xs font-semibold transition"
+                  type="submit"
+                  disabled={authLoading || !adminEmail || !adminPassword}
+                  className="w-full mt-2 py-3 px-4 rounded-xl bg-forest-700 hover:bg-forest-600 disabled:opacity-50 text-white text-sm font-bold flex items-center justify-center gap-2 transition shadow-soft"
                 >
-                  Super Admin
+                  {authLoading ? (
+                    <>
+                      <ChefHat className="w-4 h-4 animate-spin text-terracotta-200" />
+                      <span>Verifying Credentials...</span>
+                    </>
+                  ) : (
+                    <>
+                      <KeyRound className="w-4 h-4" />
+                      <span>Verify Identity & Send Access Code</span>
+                    </>
+                  )}
                 </button>
-                <button
-                  onClick={() => handleQuickAdminLogin('ADMIN')}
-                  className="py-2 px-3 rounded-lg bg-blue-900/60 hover:bg-blue-800/80 border border-blue-700 text-blue-200 text-xs font-semibold transition"
+              </form>
+
+              <div className="mt-6 pt-4 border-t border-stone-800 text-center">
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-200 transition"
                 >
-                  Admin
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Return to Customer App</span>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            /* Stage 2: Two-Factor Email OTP Verification */
+            <div>
+              <div className="text-center mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-950/80 border border-emerald-700/60 flex items-center justify-center mx-auto mb-4 text-emerald-400 shadow-soft">
+                  <KeyRound className="w-7 h-7" />
+                </div>
+                <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
+                  Two-Factor Verification
+                </h1>
+                <p className="text-xs text-stone-400 font-medium">
+                  A 6-digit access code was sent to:
+                </p>
+                <div className="mt-2 inline-block px-3 py-1 rounded-lg bg-stone-950 border border-stone-800 text-xs font-mono text-emerald-400">
+                  {maskedEmail}
+                </div>
+              </div>
+
+              {authError && (
+                <div className="mb-5 p-3.5 rounded-xl bg-red-950/70 border border-red-800 text-xs text-red-200 flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <span>{authError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleOtpSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-stone-300 mb-2 uppercase tracking-wider text-center">
+                    Enter 6-Digit Verification Code
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]{6}"
+                    maxLength={6}
+                    autoFocus
+                    required
+                    value={otpCode}
+                    onChange={e => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder="••••••"
+                    className="w-full bg-stone-950 border border-stone-800 rounded-xl py-3 text-center text-2xl font-mono tracking-[0.5em] text-emerald-300 placeholder-stone-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition"
+                  />
+                  <p className="text-[11px] text-stone-500 text-center mt-1.5">
+                    Code expires in 10 minutes. Check spam folder if not received.
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={authLoading || otpCode.trim().length !== 6}
+                  className="w-full py-3 px-4 rounded-xl bg-forest-700 hover:bg-forest-600 disabled:opacity-50 text-white text-sm font-bold flex items-center justify-center gap-2 transition shadow-soft"
+                >
+                  {authLoading ? (
+                    <>
+                      <ChefHat className="w-4 h-4 animate-spin text-terracotta-200" />
+                      <span>Authenticating Access...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Verify Code & Enter Console</span>
+                    </>
+                  )}
                 </button>
+              </form>
+
+              <div className="mt-5 flex items-center justify-between text-xs border-t border-stone-800 pt-4">
                 <button
-                  onClick={() => handleQuickAdminLogin('OPERATIONS')}
-                  className="py-2 px-3 rounded-lg bg-amber-900/60 hover:bg-amber-800/80 border border-amber-700 text-amber-200 text-xs font-semibold transition"
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={resendCooldown > 0 || authLoading}
+                  className="inline-flex items-center gap-1.5 text-stone-400 hover:text-stone-200 disabled:text-stone-600 transition"
                 >
-                  Operations
+                  <RefreshCw className={`w-3.5 h-3.5 ${authLoading ? 'animate-spin' : ''}`} />
+                  <span>
+                    {resendCooldown > 0 ? `Resend Code in ${resendCooldown}s` : 'Resend Code'}
+                  </span>
                 </button>
+
                 <button
-                  onClick={() => handleQuickAdminLogin('SUPPORT')}
-                  className="py-2 px-3 rounded-lg bg-teal-900/60 hover:bg-teal-800/80 border border-teal-700 text-teal-200 text-xs font-semibold transition"
+                  type="button"
+                  onClick={() => {
+                    setMfaSessionId(null);
+                    setOtpCode('');
+                    setAuthError(null);
+                  }}
+                  className="text-stone-400 hover:text-stone-200 transition"
                 >
-                  Support
+                  Sign in with another account
                 </button>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     );
@@ -261,22 +505,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="text-[10px] text-emerald-400 font-bold uppercase">Online</span>
             </div>
 
-            {/* Role Switcher Pill for Local Demo Validation */}
-            <div className="hidden lg:flex items-center gap-1 bg-stone-950 p-1 rounded-xl border border-stone-800">
-              <span className="text-[10px] uppercase font-bold text-stone-500 px-2">Role:</span>
-              {(['SUPER_ADMIN', 'ADMIN', 'OPERATIONS', 'SUPPORT'] as const).map(r => (
-                <button
-                  key={r}
-                  onClick={() => handleQuickAdminLogin(r)}
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold transition ${
-                    user.role === r
-                      ? 'bg-stone-800 text-white shadow-sm'
-                      : 'text-stone-400 hover:text-white'
-                  }`}
-                >
-                  {r.replace('_', ' ')}
-                </button>
-              ))}
+            {/* Verified Admin Role Badge */}
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-stone-900 border border-stone-800 text-xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-300">
+                {user.role}
+              </span>
             </div>
           </div>
         </header>

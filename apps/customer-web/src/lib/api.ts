@@ -230,6 +230,41 @@ export const api = {
     return res;
   },
 
+  async adminLogin(email: string, password: string) {
+    return fetchJson<{
+      requiresMfa: boolean;
+      mfaSessionId: string;
+      maskedEmail: string;
+      expiresInSeconds: number;
+    }>('/auth/admin/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+  },
+
+  async adminVerifyOtp(mfaSessionId: string, otp: string) {
+    const res = await fetchJson<{
+      accessToken: string;
+      refreshToken: string;
+      expiresIn: number;
+      user: any;
+    }>('/auth/admin/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ mfaSessionId, otp })
+    });
+    if (res?.accessToken) {
+      inMemoryAuthToken = res.accessToken;
+    }
+    return res;
+  },
+
+  async adminResendOtp(mfaSessionId: string) {
+    return fetchJson<{ success: boolean; message: string }>('/auth/admin/resend-otp', {
+      method: 'POST',
+      body: JSON.stringify({ mfaSessionId })
+    });
+  },
+
   async logout() {
     try {
       await fetchJson<{ success: boolean }>('/auth/logout', { method: 'POST' });

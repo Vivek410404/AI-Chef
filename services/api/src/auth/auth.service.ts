@@ -17,6 +17,19 @@ import { EmailService } from '../email/email.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import * as jwt from 'jsonwebtoken';
+import * as crypto from 'crypto';
+
+interface AdminMfaSession {
+  sessionId: string;
+  userId: string;
+  email: string;
+  fullName: string;
+  role: string;
+  otpHash: string;
+  expiresAt: number;
+  attempts: number;
+  lastSentAt: number;
+}
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -24,6 +37,7 @@ export class AuthService implements OnModuleInit {
   private readonly jwtSecret = process.env.JWT_SECRET || 'rasoi_iq_super_secret_jwt_key_2026';
 
   private static readonly revokedTokens = new Set<string>();
+  private static readonly adminMfaSessions = new Map<string, AdminMfaSession>();
 
   constructor(
     public readonly store: StoreService,
@@ -438,6 +452,233 @@ export class AuthService implements OnModuleInit {
     return this.handleLegacyDemoLogin(cleanEmail);
   }
 
+  /**
+   * Secure Platform Administrative Login (Step 1: Credential Verification & 2FA Dispatch)
+   */
+  async adminLogin(email: string, passwordPlain: string, clientIp = '127.0.0.1', userAgent?: string) {
+    const cleanEmail = this.normalizeEmail(email);
+    this.rateLimiter.check(`admin-login:${clientIp}`, 10, 60000);
+
+    if (!this.store.isPrismaConnected) {
+      throw new ForbiddenException('Database unavailable. Administrative login requires PostgreSQL persistence.');
+    }
+
+    const user = await this.store.prisma.user.findFirst({
+      where: ({
+        OR: [{ email: cleanEmail }, { normalizedEmail: cleanEmail }]
+      } as any)
+    });
+
+    if (!user) {
+      await this.auditService.log({ action: 'ADMIN_LOGIN_FAILURE', metadata: { email: cleanEmail, reason: 'USER_NOT_FOUND' }, ipAddress: clientIp });
+      throw new UnauthorizedException('Invalid administrative credentials');
+    }
+
+    const adminRoles = ['SUPER_ADMIN', 'ADMIN', 'OPERATIONS', 'SUPPORT'];
+    if (!adminRoles.includes(user.role)) {
+      await this.auditService.log({ action: 'ADMIN_LOGIN_DENIED', userId: user.id, metadata: { email: cleanEmail, role: user.role, reason: 'ROLE_NOT_AUTHORIZED' }, ipAddress: clientIp });
+      throw new ForbiddenException('Access denied. This console is strictly reserved for authorized platform administrators.');
+    }
+
+    if (user.status === 'PENDING_VERIFICATION') {
+      throw new UnauthorizedException('Administrative account email is pending verification. Please verify your email before accessing the console.');
+    }
+
+    if (user.status === 'SUSPENDED' || user.status === 'DELETED') {
+      throw new ForbiddenException('Administrative account has been suspended or deactivated. Contact platform security.');
+    }
+
+    const isValidPassword = await this.passwordService.verify(user.passwordHash, passwordPlain);
+    if (!isValidPassword) {
+      await this.auditService.log({ action: 'ADMIN_LOGIN_FAILURE', userId: user.id, metadata: { email: cleanEmail, reason: 'INVALID_PASSWORD' }, ipAddress: clientIp });
+      throw new UnauthorizedException('Invalid administrative credentials');
+    }
+
+    // Generate cryptographically secure 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const sessionId = crypto.randomBytes(24).toString('hex');
+
+    // Clean up any stale sessions (> 15 mins)
+    const now = Date.now();
+    for (const [key, sess] of AuthService.adminMfaSessions.entries()) {
+      if (now > sess.expiresAt) {
+        AuthService.adminMfaSessions.delete(key);
+      }
+    }
+
+    // Store MFA challenge session (valid for 10 minutes)
+    AuthService.adminMfaSessions.set(sessionId, {
+      sessionId,
+      userId: user.id,
+      email: user.email,
+      fullName: user.fullName || 'Administrator',
+      role: user.role,
+      otpHash,
+      expiresAt: now + 10 * 60 * 1000,
+      attempts: 0,
+      lastSentAt: now
+    });
+
+    // Send the OTP via email
+    await this.emailService.sendAdminOtp(user.email, user.fullName || 'Administrator', otp);
+
+    this.logger.log(`[Admin2FA] 6-digit OTP dispatched to admin ${user.email} (session: ${sessionId.slice(0, 8)}...)`);
+
+    // Mask the email address for safe frontend display (e.g. panchanivivek0401@gmail.com -> p***k@gmail.com)
+    const [name, domain] = user.email.split('@');
+    const maskedEmail = name.length <= 2 
+      ? `${name[0]}*@${domain}`
+      : `${name[0]}***${name[name.length - 1]}@${domain}`;
+
+    return {
+      requiresMfa: true,
+      mfaSessionId: sessionId,
+      maskedEmail,
+      expiresInSeconds: 600
+    };
+  }
+
+  /**
+   * Secure Platform Administrative Login (Step 2: 2FA OTP Verification)
+   */
+  async adminVerifyOtp(mfaSessionId: string, otp: string, clientIp = '127.0.0.1', userAgent?: string) {
+    if (!mfaSessionId || !otp) {
+      throw new BadRequestException('Session ID and 6-digit verification code are required');
+    }
+
+    const session = AuthService.adminMfaSessions.get(mfaSessionId);
+    if (!session || Date.now() > session.expiresAt) {
+      if (session) AuthService.adminMfaSessions.delete(mfaSessionId);
+      throw new UnauthorizedException('Verification session expired or invalid. Please sign in again.');
+    }
+
+    session.attempts += 1;
+    if (session.attempts > 5) {
+      AuthService.adminMfaSessions.delete(mfaSessionId);
+      await this.auditService.log({
+        action: 'ADMIN_2FA_LOCKED',
+        userId: session.userId,
+        metadata: { email: session.email, reason: 'TOO_MANY_FAILED_ATTEMPTS' },
+        ipAddress: clientIp
+      });
+      throw new ForbiddenException('Too many invalid verification attempts. Session locked. Please sign in again.');
+    }
+
+    const inputHash = crypto.createHash('sha256').update(otp.trim()).digest('hex');
+    const hashMatches = crypto.timingSafeEqual(Buffer.from(inputHash), Buffer.from(session.otpHash));
+
+    if (!hashMatches) {
+      await this.auditService.log({
+        action: 'ADMIN_2FA_INVALID_OTP',
+        userId: session.userId,
+        metadata: { email: session.email, attempt: session.attempts },
+        ipAddress: clientIp
+      });
+      throw new UnauthorizedException('Invalid 6-digit verification code. Please check your email and try again.');
+    }
+
+    // OTP Verified! Consume session
+    AuthService.adminMfaSessions.delete(mfaSessionId);
+
+    const user = await this.store.prisma.user.findUnique({
+      where: { id: session.userId },
+      include: ({
+        householdMembers: {
+          include: { household: true }
+        },
+        households: true
+      } as any)
+    });
+
+    if (!user) {
+      throw new NotFoundException('Administrative account record not found.');
+    }
+
+    // Issue rotating refresh token
+    const { refreshToken: rawRefreshToken, tokenHash, tokenFamilyId } = this.tokenService.generateRefreshToken();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await this.store.prisma.refreshSession.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        tokenFamilyId,
+        deviceName: 'Admin Console' + (userAgent ? ` (${userAgent.substring(0, 30)})` : ''),
+        userAgent: userAgent || 'Admin Console',
+        expiresAt
+      }
+    });
+
+    await this.store.prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() }
+    });
+
+    const { accessToken, expiresIn } = this.tokenService.generateAccessToken({
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role
+    });
+
+    await this.auditService.log({
+      action: 'ADMIN_LOGIN_SUCCESS',
+      userId: user.id,
+      metadata: { role: user.role, email: user.email, mfa: 'EMAIL_OTP' },
+      ipAddress: clientIp,
+      userAgent
+    });
+
+    return {
+      accessToken,
+      refreshToken: rawRefreshToken,
+      expiresIn,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        status: user.status,
+        emailVerifiedAt: user.emailVerifiedAt
+      }
+    };
+  }
+
+  /**
+   * Resend Admin 2FA OTP Code
+   */
+  async adminResendOtp(mfaSessionId: string) {
+    if (!mfaSessionId) {
+      throw new BadRequestException('Session ID is required');
+    }
+
+    const session = AuthService.adminMfaSessions.get(mfaSessionId);
+    if (!session || Date.now() > session.expiresAt) {
+      throw new UnauthorizedException('Verification session expired or invalid. Please sign in again.');
+    }
+
+    const cooldownMs = 45000; // 45 seconds cooldown
+    const elapsed = Date.now() - session.lastSentAt;
+    if (elapsed < cooldownMs) {
+      const waitSec = Math.ceil((cooldownMs - elapsed) / 1000);
+      throw new BadRequestException(`Please wait ${waitSec} seconds before requesting a new verification code.`);
+    }
+
+    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    session.otpHash = crypto.createHash('sha256').update(newOtp).digest('hex');
+    session.lastSentAt = Date.now();
+    session.expiresAt = Date.now() + 10 * 60 * 1000;
+    session.attempts = 0; // reset attempts on new code
+
+    await this.emailService.sendAdminOtp(session.email, session.fullName, newOtp);
+
+    return {
+      success: true,
+      message: 'A new 6-digit verification code has been dispatched to your email.'
+    };
+  }
+
   private handleLegacyDemoLogin(cleanEmail: string) {
     if (cleanEmail === 'demo@rasoiiq.in' || cleanEmail.includes('sharma') || cleanEmail === 'pooja@sharma.in') {
       return this.createDemoSession('CUSTOMER', { email: cleanEmail, householdId: 'hh-sharma-family', userId: 'user-demo-1' });
@@ -449,7 +690,7 @@ export class AuthService implements OnModuleInit {
       return this.createDemoSession('CUSTOMER', { email: cleanEmail, householdId: 'hh-mehta-family', userId: 'user-demo-mehta' });
     }
     if (cleanEmail.includes('admin')) {
-      return this.createDemoSession('ADMIN', { email: cleanEmail });
+      throw new ForbiddenException('Administrative demo bypass is disabled. Please use the secure administrative login with 2FA.');
     }
     if (cleanEmail.includes('blinkit') || cleanEmail.includes('retailer')) {
       return this.createDemoSession('RETAILER', { email: cleanEmail });
@@ -969,17 +1210,9 @@ export class AuthService implements OnModuleInit {
     const hasValidSecret = options?.secret === adminSecret;
 
     if (['SUPER_ADMIN', 'ADMIN', 'OPERATIONS', 'SUPPORT'].includes(role)) {
-      const isKnownAdmin = [
-        'superadmin@rasoiiq.in',
-        'admin@rasoiiq.in',
-        'ops@rasoiiq.com',
-        'operations@rasoiiq.in',
-        'support@rasoiiq.in',
-        'admin@rasoi.demo'
-      ].includes(email.toLowerCase());
-      if (!isKnownAdmin && !hasValidSecret) {
-        throw new ForbiddenException(`Privilege escalation blocked. Role "${role}" requires verified platform administrative identity.`);
-      }
+      throw new ForbiddenException(
+        `Privilege escalation blocked: Administrative roles (${role}) cannot be accessed via unauthenticated demo endpoints. Verified credentials and 2FA OTP are strictly required.`
+      );
     } else if (role === 'RETAILER') {
       const isKnownRetailer =
         email.toLowerCase().includes('blinkit') ||

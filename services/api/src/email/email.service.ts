@@ -9,7 +9,7 @@ export interface CapturedEmail {
   html?: string;
   token?: string;
   link?: string;
-  type: 'VERIFICATION' | 'PASSWORD_RESET' | 'PASSWORD_CHANGED' | 'HOUSEHOLD_INVITATION';
+  type: 'VERIFICATION' | 'PASSWORD_RESET' | 'PASSWORD_CHANGED' | 'HOUSEHOLD_INVITATION' | 'ADMIN_OTP';
   sentAt: Date;
 }
 
@@ -79,6 +79,44 @@ export class EmailService {
       token,
       link,
       type: 'HOUSEHOLD_INVITATION'
+    });
+  }
+
+  async sendAdminOtp(to: string, fullName: string, otp: string): Promise<boolean> {
+    const subject = `Your RasoiIQ Admin Access Code: ${otp}`;
+    const text = `Hello ${fullName},\n\nA sign-in attempt to the RasoiIQ Administrative Console was initiated.\n\nYour 6-digit access code is:\n\n   ${otp}\n\nThis verification code expires in 10 minutes and can only be used once.\n\nIf you did not initiate this request, please contact security immediately.`;
+    const html = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; border: 1px solid #e7e5e4; border-radius: 16px; background-color: #fafaf9; color: #1c1917;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="margin: 0; color: #15803d; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">RasoiIQ Operations Console</h2>
+          <p style="margin: 4px 0 0; color: #78716c; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Two-Factor Administrative Verification</p>
+        </div>
+        <div style="background-color: #ffffff; border: 1px solid #e7e5e4; border-radius: 12px; padding: 24px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px;">
+          <p style="margin: 0 0 12px; font-size: 13px; color: #78716c; font-weight: 500;">Enter the following one-time code to complete your login:</p>
+          <div style="display: inline-block; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #047857; background: #ecfdf5; border: 1px dashed #10b981; padding: 12px 24px; border-radius: 10px;">
+            ${otp}
+          </div>
+          <p style="margin: 12px 0 0; font-size: 12px; color: #a8a29e;">This code will expire in <strong>10 minutes</strong>.</p>
+        </div>
+        <p style="font-size: 13px; color: #44403c; line-height: 1.5; margin: 0 0 8px;">
+          Hello <strong>${fullName || 'Administrator'}</strong>,
+        </p>
+        <p style="font-size: 12px; color: #78716c; line-height: 1.5; margin: 0 0 16px;">
+          A login attempt with your administrative credentials was detected. If you did not make this request, your account password may be compromised.
+        </p>
+        <div style="border-top: 1px solid #e7e5e4; padding-top: 12px; font-size: 11px; color: #a8a29e; text-align: center;">
+          RasoiIQ Secure Operations Console &bull; Controlled Household Pilot
+        </div>
+      </div>
+    `;
+
+    return this.deliverEmail({
+      to,
+      subject,
+      text,
+      html,
+      token: otp,
+      type: 'ADMIN_OTP'
     });
   }
 

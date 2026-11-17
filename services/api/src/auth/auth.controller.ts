@@ -122,6 +122,51 @@ export class AuthController {
     return result;
   }
 
+  /**
+   * Secure Platform Administrative Login (Step 1: Credentials -> 2FA Dispatch)
+   */
+  @Post('admin/login')
+  async adminLogin(
+    @Body() dto: LoginDto,
+    @Req() req: Request,
+    @Ip() ip: string
+  ) {
+    const clientIp = this.extractClientIp(req, ip);
+    const userAgent = req.headers['user-agent'];
+    return this.authService.adminLogin(dto.email, dto.password || '', clientIp, userAgent);
+  }
+
+  /**
+   * Secure Platform Administrative Login (Step 2: 2FA OTP Verification -> Session Issuance)
+   */
+  @Post('admin/verify-otp')
+  async adminVerifyOtp(
+    @Body() dto: { mfaSessionId: string; otp: string },
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Ip() ip: string
+  ) {
+    const clientIp = this.extractClientIp(req, ip);
+    const userAgent = req.headers['user-agent'];
+    const result: any = await this.authService.adminVerifyOtp(dto.mfaSessionId, dto.otp, clientIp, userAgent);
+
+    if (result.accessToken) {
+      this.setAuthCookies(res, result.accessToken, result.refreshToken);
+    }
+
+    return result;
+  }
+
+  /**
+   * Resend Admin 2FA Verification Code
+   */
+  @Post('admin/resend-otp')
+  async adminResendOtp(
+    @Body() dto: { mfaSessionId: string }
+  ) {
+    return this.authService.adminResendOtp(dto.mfaSessionId);
+  }
+
   @Post('refresh')
   async refresh(
     @Body() dto: RefreshTokenDto,
