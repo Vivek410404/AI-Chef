@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PantryItem, StandardUnit } from '@rasoi/shared-types';
 import { X, Plus, Trash2, Package, AlertCircle, Check } from 'lucide-react';
 import { SEED_INGREDIENTS } from '@rasoi/database';
@@ -24,6 +24,20 @@ export function PantryManagerModal({
   const [quantity, setQuantity] = useState(1000);
   const [unit, setUnit] = useState<StandardUnit>('g');
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleAdd = () => {
@@ -31,8 +45,14 @@ export function PantryManagerModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-surface rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-6">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-surface rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-6"
+      >
         
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-cream-200">
@@ -108,7 +128,7 @@ export function PantryManagerModal({
             Current Stock in Pantry ({pantryItems.length} items)
           </h3>
 
-          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar pr-1">
             {pantryItems.map((item) => (
               <div
                 key={item.id}

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CheckCircle2, Clock, MapPin, ShoppingBag, X, ShieldCheck, Tag, Check } from 'lucide-react';
 import { formatInr } from '@/lib/utils';
 
@@ -12,6 +12,20 @@ interface OrderSuccessModalProps {
 }
 
 export function OrderSuccessModal({ isOpen, onClose, onReturnToDashboard, orderData }: OrderSuccessModalProps) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen || !orderData) return null;
 
   const handleReturn = () => {
@@ -23,8 +37,14 @@ export function OrderSuccessModal({ isOpen, onClose, onReturnToDashboard, orderD
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-surface rounded-3xl w-full max-w-lg max-h-[92vh] overflow-y-auto border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-5 text-center relative">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-surface rounded-3xl w-full max-w-lg max-h-[92vh] overflow-y-auto no-scrollbar border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-5 text-center relative"
+      >
         
         {/* Close Button */}
         <button
@@ -72,7 +92,7 @@ export function OrderSuccessModal({ isOpen, onClose, onReturnToDashboard, orderD
               <span className="text-[10px] font-bold uppercase text-stone-500 block">
                 Ordered Items ({orderData.items.length})
               </span>
-              <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
+              <div className="max-h-36 overflow-y-auto no-scrollbar space-y-1 pr-1">
                 {orderData.items.map((item: any, idx: number) => (
                   <div key={idx} className="flex justify-between items-center text-[11px] py-0.5">
                     <span className="text-stone-700 font-medium truncate max-w-[240px]">

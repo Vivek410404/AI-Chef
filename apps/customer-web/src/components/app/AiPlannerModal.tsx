@@ -411,7 +411,7 @@ export function AiPlannerModal({ isOpen, onClose, onApplyPlan, household }: AiPl
             </p>
 
             {/* Meals List Preview */}
-            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-56 overflow-y-auto no-scrollbar pr-1">
               <h4 className="text-xs font-bold uppercase tracking-wider text-stone-500">Suggested Weekly Meals</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {result.meals.map((meal, idx) => (

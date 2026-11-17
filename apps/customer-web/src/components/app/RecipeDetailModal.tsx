@@ -39,6 +39,20 @@ export function RecipeDetailModal({ recipe, onClose, onAddToPlan }: RecipeDetail
     }
   }, [recipe]);
 
+  React.useEffect(() => {
+    if (!recipe) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [recipe, onClose]);
+
   const nutrition = useMemo(() => {
     if (!recipe) return null;
     return calculateRecipeNutrition(recipe, servings);
@@ -60,8 +74,14 @@ export function RecipeDetailModal({ recipe, onClose, onAddToPlan }: RecipeDetail
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-surface rounded-3xl w-full max-w-3xl max-h-[92vh] overflow-y-auto border border-cream-300 shadow-2xl relative">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-surface rounded-3xl w-full max-w-3xl max-h-[92vh] overflow-y-auto no-scrollbar border border-cream-300 shadow-2xl relative"
+      >
         
         {/* Close Button */}
         <button
@@ -260,7 +280,7 @@ export function RecipeDetailModal({ recipe, onClose, onAddToPlan }: RecipeDetail
                 <span className="text-[11px] font-bold text-forest-900 block">
                   Ingredient Contributions (Total Recipe Recipe Weight):
                 </span>
-                <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                <div className="max-h-48 overflow-y-auto no-scrollbar space-y-1.5 pr-1">
                   {nutrition.ingredients.map((ing, idx) => (
                     <div
                       key={idx}
