@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   GroceryBasket,
   ScaledIngredientRequirement,
@@ -74,10 +74,26 @@ export function GroceryBasketView({
   // Substitution Modal State
   const [substitutingItem, setSubstitutingItem] = useState<BasketItem | null>(null);
 
-  // Address Modal State
+  // Address Modal & Feedback State
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<DeliveryAddress | null>(null);
   const [pincodeError, setPincodeError] = useState('');
+  const [savedFeedback, setSavedFeedback] = useState<string | null>(null);
+
+  // Body scroll locking and Escape key dismiss for Delivery Address Modal
+  useEffect(() => {
+    if (isAddressModalOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setIsAddressModalOpen(false);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isAddressModalOpen]);
 
   if (!basket) {
     return (
@@ -110,9 +126,9 @@ export function GroceryBasketView({
         label: 'Other',
         flat: '',
         street: '',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        pincode: '560103'
+        city: selectedAddress?.city || 'Bengaluru',
+        state: selectedAddress?.state || 'Karnataka',
+        pincode: selectedAddress?.pincode || '560103'
       });
     }
     setPincodeError('');
@@ -124,15 +140,27 @@ export function GroceryBasketView({
     if (!editingAddress) return;
 
     // PIN code validation: 6 numeric digits starting with 1-9
+    const cleanPin = editingAddress.pincode.replace(/\D/g, '').trim();
     const pinRegex = /^[1-9][0-9]{5}$/;
-    if (!pinRegex.test(editingAddress.pincode.trim())) {
+    if (!pinRegex.test(cleanPin)) {
       setPincodeError('Please enter a valid 6-digit Indian PIN code (e.g. 560103, 400064, 110085)');
       return;
     }
 
-    onSaveAddress(editingAddress);
+    const finalizedAddress: DeliveryAddress = {
+      ...editingAddress,
+      pincode: cleanPin,
+      flat: editingAddress.flat.trim(),
+      street: editingAddress.street.trim(),
+      city: editingAddress.city.trim() || 'Bengaluru',
+      state: editingAddress.state.trim() || 'Karnataka'
+    };
+
+    onSaveAddress(finalizedAddress);
     setIsAddressModalOpen(false);
     setEditingAddress(null);
+    setSavedFeedback(`Delivery address (${finalizedAddress.label}) updated & saved!`);
+    setTimeout(() => setSavedFeedback(null), 3500);
   };
 
   return (
@@ -819,15 +847,27 @@ export function GroceryBasketView({
 
       {/* Delivery Address Modal */}
       {isAddressModalOpen && editingAddress && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-surface rounded-3xl w-full max-w-md border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-5">
+        <div
+          onClick={() => setIsAddressModalOpen(false)}
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-surface rounded-3xl w-full max-w-md border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-5"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-cream-200">
-              <h3 className="text-lg font-black text-forest-900">
-                Delivery Address
-              </h3>
+              <div>
+                <h3 className="text-lg font-black text-forest-900">
+                  Delivery Address
+                </h3>
+                <p className="text-[11px] text-stone-500 font-medium">
+                  Set grocery drop-off destination & quick commerce serviceability
+                </p>
+              </div>
               <button
+                type="button"
                 onClick={() => setIsAddressModalOpen(false)}
-                className="p-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-cream-100"
+                className="p-1.5 rounded-full text-stone-400 hover:text-stone-700 hover:bg-cream-100 transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -835,7 +875,7 @@ export function GroceryBasketView({
 
             <form onSubmit={handleSaveAddressForm} className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-stone-700 mb-1">Address Label</label>
+                <label className="block font-bold text-stone-700 mb-1.5">Address Label</label>
                 <div className="flex items-center gap-2">
                   {(['Home', 'Office', 'Parents', 'Other'] as const).map((lbl) => (
                     <button
@@ -844,8 +884,8 @@ export function GroceryBasketView({
                       onClick={() => setEditingAddress({ ...editingAddress, label: lbl })}
                       className={`px-3 py-1.5 rounded-xl font-bold border transition-colors ${
                         editingAddress.label === lbl
-                          ? 'bg-forest-700 text-white border-forest-700'
-                          : 'bg-white text-stone-600 border-cream-300'
+                          ? 'bg-forest-700 text-white border-forest-700 shadow-xs'
+                          : 'bg-white text-stone-600 border-cream-300 hover:border-forest-300'
                       }`}
                     >
                       {lbl}
@@ -861,8 +901,9 @@ export function GroceryBasketView({
                   required
                   value={editingAddress.flat}
                   onChange={(e) => setEditingAddress({ ...editingAddress, flat: e.target.value })}
+                  onFocus={(e) => e.target.select()}
                   placeholder="e.g. Flat 402, Green Glen Layout"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-medium text-forest-900 focus:outline-none focus:border-forest-600"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-medium text-forest-900 focus:outline-none focus:border-forest-600 focus:ring-1 focus:ring-forest-600"
                 />
               </div>
 
@@ -873,8 +914,9 @@ export function GroceryBasketView({
                   required
                   value={editingAddress.street}
                   onChange={(e) => setEditingAddress({ ...editingAddress, street: e.target.value })}
+                  onFocus={(e) => e.target.select()}
                   placeholder="e.g. Bellandur Outer Ring Road"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-medium text-forest-900 focus:outline-none focus:border-forest-600"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-medium text-forest-900 focus:outline-none focus:border-forest-600 focus:ring-1 focus:ring-forest-600"
                 />
               </div>
 
@@ -886,8 +928,9 @@ export function GroceryBasketView({
                     required
                     value={editingAddress.city}
                     onChange={(e) => setEditingAddress({ ...editingAddress, city: e.target.value })}
-                    placeholder="Bengaluru"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-medium text-forest-900 focus:outline-none focus:border-forest-600"
+                    onFocus={(e) => e.target.select()}
+                    placeholder="e.g. Bengaluru, Mumbai, Ahmedabad"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-medium text-forest-900 focus:outline-none focus:border-forest-600 focus:ring-1 focus:ring-forest-600"
                   />
                 </div>
 
@@ -898,8 +941,9 @@ export function GroceryBasketView({
                     required
                     value={editingAddress.state}
                     onChange={(e) => setEditingAddress({ ...editingAddress, state: e.target.value })}
-                    placeholder="Karnataka"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-medium text-forest-900 focus:outline-none focus:border-forest-600"
+                    onFocus={(e) => e.target.select()}
+                    placeholder="e.g. Karnataka, Gujarat"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-medium text-forest-900 focus:outline-none focus:border-forest-600 focus:ring-1 focus:ring-forest-600"
                   />
                 </div>
               </div>
@@ -908,15 +952,17 @@ export function GroceryBasketView({
                 <label className="block font-bold text-stone-700 mb-1">6-Digit PIN Code</label>
                 <input
                   type="text"
-                  maxLength={6}
+                  inputMode="numeric"
                   required
                   value={editingAddress.pincode}
                   onChange={(e) => {
-                    setEditingAddress({ ...editingAddress, pincode: e.target.value });
-                    setPincodeError('');
+                    const clean = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setEditingAddress({ ...editingAddress, pincode: clean });
+                    if (pincodeError) setPincodeError('');
                   }}
-                  placeholder="e.g. 560103"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-bold text-forest-900 focus:outline-none focus:border-forest-600"
+                  onFocus={(e) => e.target.select()}
+                  placeholder="e.g. 560103, 380015"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-bold text-forest-900 tracking-wider focus:outline-none focus:border-forest-600 focus:ring-1 focus:ring-forest-600"
                 />
                 {pincodeError && (
                   <p className="text-red-600 text-[11px] font-semibold mt-1 flex items-center gap-1">
@@ -936,13 +982,21 @@ export function GroceryBasketView({
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-2xl bg-forest-700 hover:bg-forest-800 text-white font-bold shadow-soft transition-colors"
+                  className="flex-1 py-3 rounded-2xl bg-forest-700 hover:bg-forest-800 text-white font-bold shadow-soft hover:shadow-elevated transition-colors"
                 >
                   Save Address
                 </button>
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Floating Save Confirmation Notification */}
+      {savedFeedback && (
+        <div className="fixed bottom-6 right-6 z-50 bg-forest-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-forest-700 flex items-center gap-2.5 animate-slide-up text-xs font-bold">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{savedFeedback}</span>
         </div>
       )}
 

@@ -140,7 +140,7 @@ export default function HomePage() {
   const [placedOrder, setPlacedOrder] = useState<any | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-  // Delivery Addresses State (Multiple locations supported)
+  // Delivery Addresses State (Multiple locations supported, persisted in localStorage)
   const [deliveryAddresses, setDeliveryAddresses] = useState<DeliveryAddress[]>([
     {
       id: 'addr-home',
@@ -175,17 +175,57 @@ export default function HomePage() {
   ]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('addr-home');
 
+  // Load persisted delivery addresses from localStorage on client hydration
+  useEffect(() => {
+    try {
+      const storedAddresses = localStorage.getItem('rasoi_delivery_addresses');
+      if (storedAddresses) {
+        const parsed = JSON.parse(storedAddresses);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setDeliveryAddresses(parsed);
+        }
+      }
+      const storedSelectedId = localStorage.getItem('rasoi_selected_address_id');
+      if (storedSelectedId) {
+        setSelectedAddressId(storedSelectedId);
+      }
+    } catch (e) {
+      console.warn('Failed to load persisted delivery addresses:', e);
+    }
+  }, []);
+
+  const handleSelectAddress = (addressId: string) => {
+    setSelectedAddressId(addressId);
+    try {
+      localStorage.setItem('rasoi_selected_address_id', addressId);
+    } catch (e) {
+      console.warn('Failed to persist selected address id:', e);
+    }
+  };
+
   const handleSaveAddress = (address: DeliveryAddress) => {
     setDeliveryAddresses(prev => {
       const idx = prev.findIndex(a => a.id === address.id);
+      let next: DeliveryAddress[];
       if (idx >= 0) {
-        const next = [...prev];
+        next = [...prev];
         next[idx] = address;
-        return next;
+      } else {
+        next = [...prev, address];
       }
-      return [...prev, address];
+      try {
+        localStorage.setItem('rasoi_delivery_addresses', JSON.stringify(next));
+      } catch (e) {
+        console.warn('Failed to persist delivery addresses to localStorage:', e);
+      }
+      return next;
     });
     setSelectedAddressId(address.id);
+    try {
+      localStorage.setItem('rasoi_selected_address_id', address.id);
+    } catch (e) {
+      console.warn('Failed to persist selected address id:', e);
+    }
   };
 
   // Initialize data on mount
@@ -820,7 +860,7 @@ export default function HomePage() {
               onOpenPantry={() => setIsPantryModalOpen(true)}
               deliveryAddresses={deliveryAddresses}
               selectedAddressId={selectedAddressId}
-              onSelectAddress={setSelectedAddressId}
+              onSelectAddress={handleSelectAddress}
               onSaveAddress={handleSaveAddress}
               isCheckingOut={isCheckingOut}
             />
