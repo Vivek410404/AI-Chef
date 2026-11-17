@@ -43,12 +43,13 @@ interface GroceryBasketViewProps {
   onSwapVariant: (ingredientId: string, variantId: string) => void;
   onRemoveItem: (ingredientId: string) => void;
   onSelectRetailer: (retailerId: string) => void;
-  onCheckout: (address: DeliveryAddress) => void;
+  onCheckout: (address?: DeliveryAddress) => void;
   onOpenPantry: () => void;
   deliveryAddresses: DeliveryAddress[];
-  selectedAddressId: string;
+  selectedAddressId: string | null;
   onSelectAddress: (addressId: string) => void;
   onSaveAddress: (address: DeliveryAddress) => void;
+  onDeleteAddress?: (addressId: string) => void;
   isCheckingOut?: boolean;
 }
 
@@ -67,6 +68,7 @@ export function GroceryBasketView({
   selectedAddressId,
   onSelectAddress,
   onSaveAddress,
+  onDeleteAddress,
   isCheckingOut = false
 }: GroceryBasketViewProps) {
   const [activeTab, setActiveTab] = useState<'basket' | 'requirements'>('basket');
@@ -104,7 +106,7 @@ export function GroceryBasketView({
     );
   }
 
-  const selectedAddress = deliveryAddresses.find(a => a.id === selectedAddressId) || deliveryAddresses[0];
+  const selectedAddress = (selectedAddressId ? deliveryAddresses.find(a => a.id === selectedAddressId) : null) || deliveryAddresses[0] || null;
 
   const selectedItems = basket.items.filter(i => i.isSelectedForPurchase);
   const unselectedItems = basket.items.filter(i => !i.isSelectedForPurchase);
@@ -123,12 +125,12 @@ export function GroceryBasketView({
     } else {
       setEditingAddress({
         id: `addr-${Date.now()}`,
-        label: 'Other',
+        label: deliveryAddresses.length === 0 ? 'Home' : 'Other',
         flat: '',
         street: '',
-        city: selectedAddress?.city || 'Bengaluru',
-        state: selectedAddress?.state || 'Karnataka',
-        pincode: selectedAddress?.pincode || '560103'
+        city: '',
+        state: '',
+        pincode: ''
       });
     }
     setPincodeError('');
@@ -143,7 +145,12 @@ export function GroceryBasketView({
     const cleanPin = editingAddress.pincode.replace(/\D/g, '').trim();
     const pinRegex = /^[1-9][0-9]{5}$/;
     if (!pinRegex.test(cleanPin)) {
-      setPincodeError('Please enter a valid 6-digit Indian PIN code (e.g. 560103, 400064, 110085)');
+      setPincodeError('Please enter a valid 6-digit Indian PIN code (e.g. 400001, 380015, 110001)');
+      return;
+    }
+
+    if (!editingAddress.flat.trim() || !editingAddress.street.trim() || !editingAddress.city.trim() || !editingAddress.state.trim()) {
+      setPincodeError('Please fill in Flat/House, Street/Area, City, and State.');
       return;
     }
 
@@ -152,8 +159,8 @@ export function GroceryBasketView({
       pincode: cleanPin,
       flat: editingAddress.flat.trim(),
       street: editingAddress.street.trim(),
-      city: editingAddress.city.trim() || 'Bengaluru',
-      state: editingAddress.state.trim() || 'Karnataka'
+      city: editingAddress.city.trim(),
+      state: editingAddress.state.trim()
     };
 
     onSaveAddress(finalizedAddress);
@@ -191,7 +198,18 @@ export function GroceryBasketView({
             <MapPin className="w-4 h-4 text-forest-700 shrink-0" />
             <div className="text-xs">
               <span className="text-stone-400 block text-[10px] uppercase font-bold">Delivery Location</span>
-              <span className="font-extrabold text-forest-900">{selectedAddress?.city || 'Bengaluru'} ({selectedAddress?.pincode})</span>
+              {selectedAddress ? (
+                <span className="font-extrabold text-forest-900">{selectedAddress.city} ({selectedAddress.pincode})</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleOpenEditAddress()}
+                  className="font-extrabold text-terracotta-600 hover:text-terracotta-700 underline flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Set Address</span>
+                  <Plus className="w-3 h-3" />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -617,61 +635,103 @@ export function GroceryBasketView({
               </div>
 
               {/* Delivery Address Section */}
-              <div className="p-3.5 rounded-2xl bg-cream-50 border border-cream-200 text-xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 font-bold text-forest-800">
-                    <MapPin className="w-3.5 h-3.5 text-forest-700" />
-                    <span>Delivering to ({selectedAddress?.label}):</span>
+              {selectedAddress ? (
+                <div className="p-3.5 rounded-2xl bg-cream-50 border border-cream-200 text-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-bold text-forest-800">
+                      <MapPin className="w-3.5 h-3.5 text-forest-700" />
+                      <span>Delivering to ({selectedAddress.label}):</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditAddress(selectedAddress)}
+                        className="text-[11px] font-extrabold text-forest-700 hover:text-forest-900 underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                        <span>Change</span>
+                      </button>
+                      {onDeleteAddress && (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteAddress(selectedAddress.id)}
+                          className="text-[11px] font-bold text-stone-400 hover:text-red-600 transition p-0.5 cursor-pointer"
+                          title="Delete this address"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <button
-                    onClick={() => handleOpenEditAddress(selectedAddress)}
-                    className="text-[11px] font-extrabold text-forest-700 hover:text-forest-900 underline flex items-center gap-1"
-                  >
-                    <Edit3 className="w-3 h-3" />
-                    <span>Change</span>
-                  </button>
-                </div>
 
-                <p className="text-stone-700 leading-snug font-medium">
-                  {selectedAddress?.flat}, {selectedAddress?.street}, {selectedAddress?.city} {selectedAddress?.pincode}
-                </p>
+                  <p className="text-stone-700 leading-snug font-medium">
+                    {selectedAddress.flat ? `${selectedAddress.flat}, ` : ''}{selectedAddress.street}, {selectedAddress.city} {selectedAddress.pincode}
+                  </p>
 
-                {/* Saved Address Quick Pills */}
-                <div className="flex items-center gap-1.5 pt-1 flex-wrap">
-                  {deliveryAddresses.map((addr) => (
+                  {/* Saved Address Quick Pills */}
+                  <div className="flex items-center gap-1.5 pt-1 flex-wrap">
+                    {deliveryAddresses.map((addr) => (
+                      <button
+                        key={addr.id}
+                        type="button"
+                        onClick={() => onSelectAddress(addr.id)}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+                          addr.id === selectedAddressId
+                            ? 'bg-forest-700 text-white border-forest-700'
+                            : 'bg-surface text-stone-600 border-cream-300 hover:border-forest-400'
+                        }`}
+                      >
+                        {addr.label}
+                      </button>
+                    ))}
                     <button
-                      key={addr.id}
-                      onClick={() => onSelectAddress(addr.id)}
-                      className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-colors ${
-                        addr.id === selectedAddressId
-                          ? 'bg-forest-700 text-white border-forest-700'
-                          : 'bg-surface text-stone-600 border-cream-300 hover:border-forest-400'
-                      }`}
+                      type="button"
+                      onClick={() => handleOpenEditAddress()}
+                      className="px-2 py-0.5 rounded-lg text-[10px] font-bold border border-dashed border-stone-300 text-stone-500 hover:text-forest-700 hover:border-forest-500 transition-colors flex items-center gap-0.5 cursor-pointer"
                     >
-                      {addr.label}
+                      <Plus className="w-2.5 h-2.5" />
+                      <span>New</span>
                     </button>
-                  ))}
+                  </div>
+
+                  <div className="pt-1.5 border-t border-cream-200/80 flex items-center justify-between text-[10px]">
+                    <span className="text-stone-500">Retailer Serviceability:</span>
+                    <span className="font-extrabold text-emerald-700 flex items-center gap-1">
+                      <Check className="w-3 h-3 text-emerald-600" />
+                      Serviceable ({activeRetailerComp?.retailer.deliveryTimeEstimate})
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs space-y-2 text-center">
+                  <div className="flex items-center justify-center gap-1.5 text-amber-900 font-bold">
+                    <MapPin className="w-4 h-4 text-amber-700" />
+                    <span>No Delivery Address Added</span>
+                  </div>
+                  <p className="text-stone-600 text-[11px] leading-relaxed">
+                    Please add your delivery address to see local grocer serviceability and proceed with checkout.
+                  </p>
                   <button
+                    type="button"
                     onClick={() => handleOpenEditAddress()}
-                    className="px-2 py-0.5 rounded-lg text-[10px] font-bold border border-dashed border-stone-300 text-stone-500 hover:text-forest-700 hover:border-forest-500 transition-colors flex items-center gap-0.5"
+                    className="w-full py-2.5 px-3 rounded-xl bg-forest-700 hover:bg-forest-800 text-white font-bold text-xs shadow-soft transition flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <Plus className="w-2.5 h-2.5" />
-                    <span>New</span>
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Delivery Address</span>
                   </button>
                 </div>
-
-                <div className="pt-1.5 border-t border-cream-200/80 flex items-center justify-between text-[10px]">
-                  <span className="text-stone-500">Retailer Serviceability:</span>
-                  <span className="font-extrabold text-emerald-700 flex items-center gap-1">
-                    <Check className="w-3 h-3 text-emerald-600" />
-                    Serviceable ({activeRetailerComp?.retailer.deliveryTimeEstimate})
-                  </span>
-                </div>
-              </div>
+              )}
 
               {/* Checkout Button */}
               <button
-                onClick={() => onCheckout(selectedAddress)}
+                type="button"
+                onClick={() => {
+                  if (!selectedAddress) {
+                    handleOpenEditAddress();
+                    return;
+                  }
+                  onCheckout(selectedAddress);
+                }}
                 disabled={selectedItems.length === 0 || isCheckingOut}
                 className="w-full py-4 rounded-2xl bg-forest-700 hover:bg-forest-800 disabled:opacity-50 text-white font-black text-sm shadow-soft transition-all flex items-center justify-center gap-2 group cursor-pointer"
               >
@@ -679,6 +739,11 @@ export function GroceryBasketView({
                   <>
                     <Loader2 className="w-4 h-4 animate-spin text-white" />
                     <span>Processing Simulated Order...</span>
+                  </>
+                ) : !selectedAddress ? (
+                  <>
+                    <MapPin className="w-4 h-4" />
+                    <span>Add Address to Checkout</span>
                   </>
                 ) : (
                   <>
@@ -902,7 +967,7 @@ export function GroceryBasketView({
                   value={editingAddress.flat}
                   onChange={(e) => setEditingAddress({ ...editingAddress, flat: e.target.value })}
                   onFocus={(e) => e.target.select()}
-                  placeholder="e.g. Flat 402, Green Glen Layout"
+                  placeholder="e.g. Flat 101, Sunshine Heights"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-medium text-forest-900 focus:outline-none focus:border-forest-600 focus:ring-1 focus:ring-forest-600"
                 />
               </div>
@@ -915,7 +980,7 @@ export function GroceryBasketView({
                   value={editingAddress.street}
                   onChange={(e) => setEditingAddress({ ...editingAddress, street: e.target.value })}
                   onFocus={(e) => e.target.select()}
-                  placeholder="e.g. Bellandur Outer Ring Road"
+                  placeholder="e.g. MG Road, Near City Mall"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-medium text-forest-900 focus:outline-none focus:border-forest-600 focus:ring-1 focus:ring-forest-600"
                 />
               </div>
@@ -929,7 +994,7 @@ export function GroceryBasketView({
                     value={editingAddress.city}
                     onChange={(e) => setEditingAddress({ ...editingAddress, city: e.target.value })}
                     onFocus={(e) => e.target.select()}
-                    placeholder="e.g. Bengaluru, Mumbai, Ahmedabad"
+                    placeholder="e.g. Mumbai, Ahmedabad, Delhi"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-medium text-forest-900 focus:outline-none focus:border-forest-600 focus:ring-1 focus:ring-forest-600"
                   />
                 </div>
@@ -942,7 +1007,7 @@ export function GroceryBasketView({
                     value={editingAddress.state}
                     onChange={(e) => setEditingAddress({ ...editingAddress, state: e.target.value })}
                     onFocus={(e) => e.target.select()}
-                    placeholder="e.g. Karnataka, Gujarat"
+                    placeholder="e.g. Maharashtra, Gujarat, Delhi"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-medium text-forest-900 focus:outline-none focus:border-forest-600 focus:ring-1 focus:ring-forest-600"
                   />
                 </div>
@@ -961,7 +1026,7 @@ export function GroceryBasketView({
                     if (pincodeError) setPincodeError('');
                   }}
                   onFocus={(e) => e.target.select()}
-                  placeholder="e.g. 560103, 380015"
+                  placeholder="e.g. 400001, 380015, 110001"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-cream-300 bg-white font-bold text-forest-900 tracking-wider focus:outline-none focus:border-forest-600 focus:ring-1 focus:ring-forest-600"
                 />
                 {pincodeError && (

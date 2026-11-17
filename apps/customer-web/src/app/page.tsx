@@ -140,40 +140,9 @@ export default function HomePage() {
   const [placedOrder, setPlacedOrder] = useState<any | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-  // Delivery Addresses State (Multiple locations supported, persisted in localStorage)
-  const [deliveryAddresses, setDeliveryAddresses] = useState<DeliveryAddress[]>([
-    {
-      id: 'addr-home',
-      label: 'Home',
-      flat: 'Flat 402, Green Glen Layout',
-      street: 'Outer Ring Road, Bellandur',
-      city: 'Bengaluru',
-      state: 'Karnataka',
-      pincode: '560103',
-      isDefault: true
-    },
-    {
-      id: 'addr-office',
-      label: 'Office',
-      flat: 'Tower B, 7th Floor, Mindspace Tech Park',
-      street: 'Link Road, Malad West',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400064',
-      isDefault: false
-    },
-    {
-      id: 'addr-parents',
-      label: 'Parents',
-      flat: 'House No. 42',
-      street: 'Sector 15, Near City Center',
-      city: 'New Delhi',
-      state: 'Delhi-NCR',
-      pincode: '110085',
-      isDefault: false
-    }
-  ]);
-  const [selectedAddressId, setSelectedAddressId] = useState<string>('addr-home');
+  // Delivery Addresses State (User-defined only, zero hardcoded defaults, persisted in localStorage)
+  const [deliveryAddresses, setDeliveryAddresses] = useState<DeliveryAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
   // Load persisted delivery addresses from localStorage on client hydration
   useEffect(() => {
@@ -181,13 +150,28 @@ export default function HomePage() {
       const storedAddresses = localStorage.getItem('rasoi_delivery_addresses');
       if (storedAddresses) {
         const parsed = JSON.parse(storedAddresses);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setDeliveryAddresses(parsed);
+        if (Array.isArray(parsed)) {
+          // Strictly purge any legacy hardcoded mock addresses
+          const cleanAddresses: DeliveryAddress[] = parsed.filter((a: any) =>
+            a && typeof a === 'object' &&
+            !a.flat?.includes('Green Glen Layout') &&
+            !a.flat?.includes('Mindspace Tech Park') &&
+            !a.street?.includes('Sector 15, Near City Center')
+          );
+          setDeliveryAddresses(cleanAddresses);
+          localStorage.setItem('rasoi_delivery_addresses', JSON.stringify(cleanAddresses));
+
+          const storedSelectedId = localStorage.getItem('rasoi_selected_address_id');
+          if (storedSelectedId && cleanAddresses.some(a => a.id === storedSelectedId)) {
+            setSelectedAddressId(storedSelectedId);
+          } else if (cleanAddresses.length > 0) {
+            setSelectedAddressId(cleanAddresses[0].id);
+            localStorage.setItem('rasoi_selected_address_id', cleanAddresses[0].id);
+          } else {
+            setSelectedAddressId(null);
+            localStorage.removeItem('rasoi_selected_address_id');
+          }
         }
-      }
-      const storedSelectedId = localStorage.getItem('rasoi_selected_address_id');
-      if (storedSelectedId) {
-        setSelectedAddressId(storedSelectedId);
       }
     } catch (e) {
       console.warn('Failed to load persisted delivery addresses:', e);
@@ -226,6 +210,35 @@ export default function HomePage() {
     } catch (e) {
       console.warn('Failed to persist selected address id:', e);
     }
+  };
+
+  const handleDeleteAddress = (addressId: string) => {
+    setDeliveryAddresses(prev => {
+      const next = prev.filter(a => a.id !== addressId);
+      try {
+        localStorage.setItem('rasoi_delivery_addresses', JSON.stringify(next));
+      } catch (e) {
+        console.warn('Failed to persist delivery addresses after delete:', e);
+      }
+      return next;
+    });
+    setSelectedAddressId(prev => {
+      if (prev === addressId) {
+        const remaining = deliveryAddresses.filter(a => a.id !== addressId);
+        const nextId = remaining.length > 0 ? remaining[0].id : null;
+        try {
+          if (nextId) {
+            localStorage.setItem('rasoi_selected_address_id', nextId);
+          } else {
+            localStorage.removeItem('rasoi_selected_address_id');
+          }
+        } catch (e) {
+          console.warn('Failed to update selected address id after delete:', e);
+        }
+        return nextId;
+      }
+      return prev;
+    });
   };
 
   // Initialize data on mount
@@ -626,9 +639,13 @@ export default function HomePage() {
 
   const handleCheckout = async (address?: DeliveryAddress) => {
     if (!basket || isCheckingOut) return;
-    setIsCheckingOut(true);
     const activeAddr = address || deliveryAddresses.find(a => a.id === selectedAddressId) || deliveryAddresses[0];
-    const formattedAddress = `${activeAddr.flat}, ${activeAddr.street}, ${activeAddr.city} ${activeAddr.pincode} (${activeAddr.state})`;
+    if (!activeAddr) {
+      alert('Please add a delivery address to complete your order.');
+      return;
+    }
+    setIsCheckingOut(true);
+    const formattedAddress = `${activeAddr.flat ? `${activeAddr.flat}, ` : ''}${activeAddr.street}, ${activeAddr.city} ${activeAddr.pincode} (${activeAddr.state})`;
     const selectedItems = basket.items.filter(i => i.isSelectedForPurchase);
 
     try {
@@ -862,6 +879,7 @@ export default function HomePage() {
               selectedAddressId={selectedAddressId}
               onSelectAddress={handleSelectAddress}
               onSaveAddress={handleSaveAddress}
+              onDeleteAddress={handleDeleteAddress}
               isCheckingOut={isCheckingOut}
             />
           </div>
