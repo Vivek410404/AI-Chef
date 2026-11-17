@@ -341,8 +341,8 @@ export function ShopHomeView({
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-                Quick Indian Groceries, Delivered Smart
+              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
+                Quick Indian Groceries, <span className="text-saffron-400">Delivered Smart</span>
               </h1>
               <p className="text-stone-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
                 Discover everyday staples, fresh produce, and regional specialties. Shop directly or merge with your weekly household meal plan.
