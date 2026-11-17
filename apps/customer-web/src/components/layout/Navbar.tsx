@@ -19,14 +19,15 @@ import {
   ChevronDown,
   Menu,
   X,
-  ShieldAlert
+  ShieldAlert,
+  Store
 } from 'lucide-react';
 import { Household } from '@rasoi/shared-types';
 import { useAuth } from '@/lib/auth-context';
 
 interface NavbarProps {
-  activeTab?: 'landing' | 'dashboard' | 'planner' | 'recipes' | 'basket' | 'pantry' | 'retailer-admin';
-  setActiveTab?: (tab: 'landing' | 'dashboard' | 'planner' | 'recipes' | 'basket' | 'pantry' | 'retailer-admin') => void;
+  activeTab?: 'landing' | 'dashboard' | 'planner' | 'recipes' | 'basket' | 'pantry' | 'retailer-admin' | 'shop';
+  setActiveTab?: (tab: 'landing' | 'dashboard' | 'planner' | 'recipes' | 'basket' | 'pantry' | 'retailer-admin' | 'shop') => void;
   onOpenAiPlanner?: () => void;
   onOpenHousehold?: () => void;
   onSwitchHousehold?: (householdId: string) => void;
@@ -80,8 +81,8 @@ export function Navbar({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleNavClick = (tab: 'landing' | 'dashboard' | 'planner' | 'recipes' | 'basket' | 'pantry' | 'retailer-admin') => {
-    if (!isAuthenticated && tab !== 'landing' && tab !== 'recipes') {
+  const handleNavClick = (tab: 'landing' | 'dashboard' | 'planner' | 'recipes' | 'basket' | 'pantry' | 'retailer-admin' | 'shop') => {
+    if (!isAuthenticated && tab !== 'landing' && tab !== 'recipes' && tab !== 'shop') {
       router.push(`/login?redirect=${tab}`);
       return;
     }
@@ -137,7 +138,7 @@ export function Navbar({
             <>
               <button
                 onClick={() => handleNavClick('dashboard')}
-                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${activeTab === 'dashboard'
+                className={`px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'dashboard'
                   ? 'bg-surface text-forest-900 shadow-sm'
                   : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
                   }`}
@@ -147,19 +148,30 @@ export function Navbar({
               </button>
 
               <button
+                onClick={() => handleNavClick('shop')}
+                className={`px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'shop'
+                  ? 'bg-surface text-forest-900 shadow-sm'
+                  : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
+                  }`}
+              >
+                <Store className="w-4 h-4 text-emerald-600" />
+                <span>Shop</span>
+              </button>
+
+              <button
                 onClick={() => handleNavClick('planner')}
-                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${activeTab === 'planner'
+                className={`px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'planner'
                   ? 'bg-surface text-forest-900 shadow-sm'
                   : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
                   }`}
               >
                 <Calendar className="w-4 h-4 text-forest-500" />
-                <span>7-Day Planner</span>
+                <span>Planner</span>
               </button>
 
               <button
                 onClick={() => handleNavClick('recipes')}
-                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${activeTab === 'recipes'
+                className={`px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'recipes'
                   ? 'bg-surface text-forest-900 shadow-sm'
                   : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
                   }`}
@@ -170,7 +182,7 @@ export function Navbar({
 
               <button
                 onClick={() => handleNavClick('basket')}
-                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 relative ${activeTab === 'basket'
+                className={`px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 relative ${activeTab === 'basket'
                   ? 'bg-surface text-forest-900 shadow-sm'
                   : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
                   }`}
@@ -178,7 +190,7 @@ export function Navbar({
                 <ShoppingBag className="w-4 h-4 text-emerald-600" />
                 <span>Smart Basket</span>
                 {basketCount > 0 && (
-                  <span className="ml-1 bg-terracotta-500 text-white text-[11px] px-1 py-0.5 font-bold rounded-full min-w-5items-center text-center">
+                  <span className="ml-0.5 bg-terracotta-500 text-white text-[11px] px-1.5 py-0.5 font-bold rounded-full min-w-5 text-center">
                     {basketCount}
                   </span>
                 )}
@@ -186,7 +198,7 @@ export function Navbar({
 
               <button
                 onClick={() => handleNavClick('pantry')}
-                className={`px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${activeTab === 'pantry'
+                className={`px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'pantry'
                   ? 'bg-surface text-forest-900 shadow-sm'
                   : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
                   }`}
@@ -205,6 +217,16 @@ export function Navbar({
                   }`}
               >
                 <span>Home</span>
+              </button>
+              <button
+                onClick={() => handleNavClick('shop')}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${activeTab === 'shop'
+                  ? 'bg-surface text-forest-900 shadow-sm'
+                  : 'text-stone-600 hover:text-forest-900 hover:bg-surface/50'
+                  }`}
+              >
+                <Store className="w-4 h-4 text-emerald-600" />
+                <span>Shop</span>
               </button>
               <button
                 onClick={() => handleNavClick('recipes')}
@@ -464,6 +486,13 @@ export function Navbar({
               >
                 <LayoutDashboard className="w-4 h-4 text-forest-700" />
                 <span>Dashboard</span>
+              </button>
+              <button
+                onClick={() => handleNavClick('shop')}
+                className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-forest-950 hover:bg-cream-100 flex items-center gap-2.5"
+              >
+                <Store className="w-4 h-4 text-emerald-600" />
+                <span>Shop</span>
               </button>
               <button
                 onClick={() => handleNavClick('planner')}

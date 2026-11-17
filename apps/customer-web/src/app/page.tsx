@@ -35,11 +35,12 @@ import { PantryManagerModal } from '@/components/app/PantryManagerModal';
 import { OrderSuccessModal } from '@/components/app/OrderSuccessModal';
 import { RetailerAdminViews } from '@/components/app/RetailerAdminViews';
 import { RecipePickerModal } from '@/components/app/RecipePickerModal';
+import { ShopHomeView } from '@/components/shop/ShopHomeView';
 import { SEED_RECIPES, SEED_DEMO_HOUSEHOLD, SEED_PANTRY_ITEMS, SEED_RETAILERS, SEED_PRODUCT_VARIANTS } from '@rasoi/database';
 import { calculateMealPlanRequirements, buildGroceryBasket } from '@rasoi/grocery-engine';
 import { ChefHat } from 'lucide-react';
 
-type ActiveTab = 'landing' | 'dashboard' | 'planner' | 'recipes' | 'basket' | 'pantry' | 'retailer-admin';
+type ActiveTab = 'landing' | 'dashboard' | 'planner' | 'recipes' | 'basket' | 'pantry' | 'retailer-admin' | 'shop';
 
 export default function HomePage() {
   const router = useRouter();
@@ -48,11 +49,14 @@ export default function HomePage() {
 
   // Synchronize tab changes to URL hash
   const changeTab = (tab: ActiveTab) => {
-    if (!isAuthenticated && tab !== 'landing' && tab !== 'recipes') {
+    if (!isAuthenticated && tab !== 'landing' && tab !== 'recipes' && tab !== 'shop') {
       router.push(`/login?redirect=${tab}`);
       return;
     }
     setActiveTab(tab);
+    if (tab === 'basket' || tab === 'shop') {
+      refreshBasket();
+    }
     if (typeof window !== 'undefined') {
       const newUrl = tab === 'landing' ? window.location.pathname : `${window.location.pathname}#${tab}`;
       window.history.replaceState(null, '', newUrl);
@@ -64,15 +68,17 @@ export default function HomePage() {
     if (isAuthLoading) return;
 
     const validTabs: ActiveTab[] = [
-      'landing', 'dashboard', 'planner', 'recipes', 'basket', 'pantry', 'retailer-admin'
+      'landing', 'dashboard', 'planner', 'recipes', 'basket', 'pantry', 'retailer-admin', 'shop'
     ];
 
     if (!isAuthenticated) {
       const hash = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : '';
-      if (hash && hash !== 'landing' && hash !== 'recipes') {
+      if (hash && hash !== 'landing' && hash !== 'recipes' && hash !== 'shop') {
         router.push(`/login?redirect=${hash}`);
       } else if (hash === 'recipes') {
         setActiveTab('recipes');
+      } else if (hash === 'shop') {
+        setActiveTab('shop');
       } else {
         setActiveTab('landing');
       }
@@ -851,6 +857,14 @@ export default function HomePage() {
               onOpenHousehold={() => setIsHouseholdModalOpen(true)}
             />
           </div>
+        )}
+
+        {activeTab === 'shop' && (
+          <ShopHomeView
+            onNavigateToBasket={() => changeTab('basket')}
+            onNavigateToPlanner={() => changeTab('planner')}
+            cartItemCount={basket ? basket.items.filter(i => i.isSelectedForPurchase).length : 0}
+          />
         )}
 
         {activeTab === 'recipes' && (

@@ -274,6 +274,20 @@ export function buildGroceryBasket(
     });
   }
 
+  // Also preserve direct shopping items that are not derived from meal-plan requirements
+  const reqIngredientIds = new Set(requirements.map(r => r.ingredientId));
+  for (const directItem of existingBasketItems) {
+    if (!reqIngredientIds.has(directItem.ingredientId) && directItem.quantityPacks > 0) {
+      const effectivePricePerPackInr = Math.round(directItem.productVariant.sellingPriceInr * selectedMultiplier);
+      const totalPriceInr = directItem.quantityPacks * effectivePricePerPackInr;
+      items.push({
+        ...directItem,
+        effectivePricePerPackInr,
+        totalPriceInr
+      });
+    }
+  }
+
   const selectedItems = items.filter(i => i.isSelectedForPurchase);
   const isCartEmpty = selectedItems.length === 0;
 

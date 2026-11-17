@@ -376,21 +376,31 @@ model Store {
 }
 
 model Product {
-  id          String           @id @default(cuid())
-  brand       String
-  title       String
-  category    String
-  imageUrl    String
-  description String?
-  variants    ProductVariant[]
+  id           String           @id @default(cuid())
+  slug         String?          @unique
+  brand        String
+  title        String
+  category     String
+  imageUrl     String
+  description  String?
+  tags         String[]         @default([])
+  status       String           @default("ACTIVE") // ACTIVE, OUT_OF_STOCK, DISCONTINUED
+  isSampleData Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @default(now()) @updatedAt
+  variants     ProductVariant[]
+
+  @@index([category])
+  @@index([brand])
+  @@index([status])
 }
 
 model ProductVariant {
   id              String         @id @default(cuid())
   productId       String
   product         Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
-  ingredientId    String         // Decoupled link to culinary ingredient
-  ingredient      Ingredient     @relation(fields: [ingredientId], references: [id])
+  ingredientId    String?        // Decoupled link to culinary ingredient (optional for general essentials)
+  ingredient      Ingredient?    @relation(fields: [ingredientId], references: [id])
   sku             String         @unique
   brand           String
   title           String
@@ -399,9 +409,13 @@ model ProductVariant {
   mrpInr          Float
   sellingPriceInr Float
   imageUrl        String
+  inStock         Boolean        @default(true)
   storeProducts   StoreProduct[]
   basketItems     BasketItem[]
   orderItems      OrderItem[]
+
+  @@index([productId])
+  @@index([sku])
 }
 
 model StoreProduct {
@@ -413,6 +427,10 @@ model StoreProduct {
   inStock          Boolean        @default(true)
   stockCount       Int            @default(50)
   localPriceInr    Float
+
+  @@unique([storeId, productVariantId])
+  @@index([storeId])
+  @@index([productVariantId])
 }
 
 model Basket {

@@ -425,6 +425,82 @@ export const api = {
     return fetchJson<ScaledIngredientRequirement[]>('/grocery/requirements');
   },
 
+  // Grocery Shop & Discovery (Phase 6.1)
+  async getGroceryCategories(): Promise<any[]> {
+    return fetchJson<any[]>('/grocery/categories');
+  },
+
+  async getGroceryProducts(params: {
+    q?: string;
+    category?: string;
+    brand?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    retailerId?: string;
+    available?: boolean;
+    sort?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<any> {
+    const sp = new URLSearchParams();
+    if (params.q) sp.set('q', params.q);
+    if (params.category) sp.set('category', params.category);
+    if (params.brand) sp.set('brand', params.brand);
+    if (params.minPrice !== undefined) sp.set('minPrice', String(params.minPrice));
+    if (params.maxPrice !== undefined) sp.set('maxPrice', String(params.maxPrice));
+    if (params.retailerId) sp.set('retailerId', params.retailerId);
+    if (params.available !== undefined) sp.set('available', String(params.available));
+    if (params.sort) sp.set('sort', params.sort);
+    if (params.page) sp.set('page', String(params.page));
+    if (params.limit) sp.set('limit', String(params.limit));
+    const qs = sp.toString() ? `?${sp.toString()}` : '';
+    return fetchJson<any>(`/grocery/products${qs}`);
+  },
+
+  async getProductBySlug(slug: string): Promise<any> {
+    return fetchJson<any>(`/grocery/products/${encodeURIComponent(slug)}`);
+  },
+
+  async getSearchSuggestions(q: string): Promise<any[]> {
+    if (!q || !q.trim()) return [];
+    return fetchJson<any[]>(`/grocery/search/suggestions?q=${encodeURIComponent(q.trim())}`);
+  },
+
+  async addToCart(data: { productVariantId: string; quantity?: number; retailerId?: string }): Promise<any> {
+    return fetchJson<any>('/grocery/cart/add', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async switchRetailer(retailerId: string): Promise<any> {
+    return fetchJson<any>('/grocery/cart/switch-retailer', {
+      method: 'POST',
+      body: JSON.stringify({ retailerId })
+    });
+  },
+
+  async updateCartItem(productVariantId: string, quantity: number): Promise<any> {
+    return fetchJson<any>('/grocery/cart/update-item', {
+      method: 'POST',
+      body: JSON.stringify({ productVariantId, quantity })
+    });
+  },
+
+  async removeCartItem(productVariantId: string): Promise<any> {
+    return fetchJson<any>('/grocery/cart/remove-item', {
+      method: 'POST',
+      body: JSON.stringify({ productVariantId })
+    });
+  },
+
+  async clearCart(): Promise<any> {
+    return fetchJson<any>('/grocery/cart/clear', {
+      method: 'POST',
+      body: JSON.stringify({})
+    });
+  },
+
   async getBasket(retailerId?: string): Promise<GroceryBasket> {
     const query = retailerId ? `?retailerId=${retailerId}` : '';
     return fetchJson<GroceryBasket>(`/grocery/basket${query}`);
