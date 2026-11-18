@@ -59,13 +59,15 @@ interface ShopHomeViewProps {
   onNavigateToPlanner?: () => void;
   cartItemCount?: number;
   initialCategory?: string;
+  onCartUpdated?: () => void;
 }
 
 export function ShopHomeView({
   onNavigateToBasket,
   onNavigateToPlanner,
   cartItemCount = 0,
-  initialCategory
+  initialCategory,
+  onCartUpdated
 }: ShopHomeViewProps) {
   // Retailers list
   const [retailers] = useState([
@@ -291,6 +293,7 @@ export function ShopHomeView({
         }));
         showToast(`✓ Added to cart (${retailers.find(r => r.id === targetRetailerId)?.name || 'Retailer'})`);
         refreshCartState();
+        onCartUpdated?.();
       }
     } catch (err: any) {
       showToast(`Error adding to cart: ${err.message}`);
@@ -308,6 +311,7 @@ export function ShopHomeView({
         return next;
       });
       refreshCartState();
+      onCartUpdated?.();
     } catch (err: any) {
       showToast(`Error updating quantity: ${err.message}`);
     }
@@ -338,6 +342,7 @@ export function ShopHomeView({
       setConflictData(null);
       await refreshCartState();
       await loadProducts();
+      onCartUpdated?.();
     } catch (err: any) {
       showToast(`Error switching retailer: ${err.message}`);
     } finally {
@@ -381,7 +386,7 @@ export function ShopHomeView({
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
+              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-black">
                 Quick Indian Groceries, <span className="text-saffron-400">Delivered Smart</span>
               </h1>
               <p className="text-stone-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">

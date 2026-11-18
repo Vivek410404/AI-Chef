@@ -11,12 +11,16 @@ export default function ShopPage() {
   const router = useRouter();
   const [basketCount, setBasketCount] = useState(0);
 
-  useEffect(() => {
+  const refreshBasketCount = () => {
     api.getBasket().then(b => {
       if (b && Array.isArray(b.items)) {
         setBasketCount(b.items.filter(i => i.isSelectedForPurchase).length);
       }
     }).catch(() => {});
+  };
+
+  useEffect(() => {
+    refreshBasketCount();
   }, []);
 
   return (
@@ -34,6 +38,7 @@ export default function ShopPage() {
           onNavigateToBasket={() => router.push('/#basket')}
           onNavigateToPlanner={() => router.push('/#planner')}
           cartItemCount={basketCount}
+          onCartUpdated={refreshBasketCount}
         />
       </main>
       <Footer />

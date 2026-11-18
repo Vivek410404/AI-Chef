@@ -88,11 +88,14 @@ export class MealPlansService {
     return { success: true };
   }
 
-  async applyAiPlan(householdId: string, aiMeals: AISuggestedMeal[]): Promise<MealPlanItem[]> {
+  async applyAiPlan(householdId: string, aiMeals?: AISuggestedMeal[]): Promise<MealPlanItem[]> {
     const newItems: MealPlanItem[] = [];
     const defaultServings = this.store.households.get(householdId)?.members?.length || 1;
+    const mealsToProcess = Array.isArray(aiMeals) && aiMeals.length > 0
+      ? aiMeals
+      : this.getDefaultSuggestedMeals(householdId);
 
-    for (const suggested of aiMeals) {
+    for (const suggested of mealsToProcess) {
       const rec = this.store.recipes.find(r => r.id === suggested.recipeId);
       if (!rec) continue;
 
@@ -112,6 +115,39 @@ export class MealPlansService {
     this.store.mealPlanItems.set(householdId, newItems);
     await this.store.persistMealPlanBatch(householdId, newItems);
     return newItems;
+  }
+
+  private getDefaultSuggestedMeals(householdId: string): AISuggestedMeal[] {
+    const hh = this.store.households.get(householdId);
+    const pref = ((hh as any)?.dietaryPreference || 'VEGETARIAN').toUpperCase();
+    const isJain = pref.includes('JAIN');
+
+    let matching = this.store.recipes.filter(r => {
+      if (isJain) return (r as any).dietaryCategory === 'JAIN' || r.isJainFriendly;
+      return true;
+    });
+    if (matching.length === 0) matching = this.store.recipes;
+
+    const days: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const cats: MealCategory[] = ['breakfast', 'lunch', 'dinner'];
+    const results: AISuggestedMeal[] = [];
+    let idx = 0;
+    for (const d of days) {
+      for (const c of cats) {
+        const rec = matching[idx % matching.length];
+        idx++;
+        results.push({
+          dayOfWeek: d,
+          mealCategory: c,
+          recipeId: rec.id,
+          recipeTitle: rec.title,
+          cuisine: (rec.cuisine as any) || 'NORTH_INDIAN',
+          servings: hh?.members?.length || 2,
+          reason: `Balanced ${c} suggestion honoring household preferences`
+        });
+      }
+    }
+    return results;
   }
 
   async clearPlan(householdId: string): Promise<{ success: boolean }> {

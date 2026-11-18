@@ -116,11 +116,11 @@ export class MealPlansController {
 
   @Post('apply-ai-plan')
   async applyAiPlan(
-    @Body() body: { meals: AISuggestedMeal[]; householdId?: string },
+    @Body() body: { meals?: AISuggestedMeal[]; aiMeals?: AISuggestedMeal[]; householdId?: string },
     @Headers('authorization') authHeader?: string
   ): Promise<MealPlanItem[]> {
-    const householdId = await this.resolveHouseholdId(authHeader, body.householdId);
-    return this.mealPlansService.applyAiPlan(householdId, body.meals);
+    const householdId = await this.resolveHouseholdId(authHeader, body?.householdId);
+    return this.mealPlansService.applyAiPlan(householdId, body?.meals || body?.aiMeals);
   }
 
   @Post('clear')

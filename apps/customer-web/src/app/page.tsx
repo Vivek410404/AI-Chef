@@ -864,6 +864,7 @@ export default function HomePage() {
             onNavigateToBasket={() => changeTab('basket')}
             onNavigateToPlanner={() => changeTab('planner')}
             cartItemCount={basket ? basket.items.filter(i => i.isSelectedForPurchase).length : 0}
+            onCartUpdated={refreshBasket}
           />
         )}
 
