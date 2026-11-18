@@ -101,6 +101,7 @@ export function ShopHomeView({
   // Retailer Conflict modal state
   const [conflictData, setConflictData] = useState<any>(null);
   const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
+  const [isSwitchingRetailer, setIsSwitchingRetailer] = useState(false);
   const [pendingAddAction, setPendingAddAction] = useState<{ variantId: string; quantity: number; retailerId: string } | null>(null);
 
   // Local cart map for instant UI quantity feedback: variantId -> quantity
@@ -153,7 +154,7 @@ export function ShopHomeView({
           setActiveRetailerId(basket.selectedRetailerId);
         }
       }
-    } catch {}
+    } catch { }
   }, []);
 
   useEffect(() => {
@@ -199,7 +200,7 @@ export function ShopHomeView({
       try {
         const list = await api.getSearchSuggestions(searchTerm);
         setSuggestions(list || []);
-      } catch {}
+      } catch { }
     }, 200);
     return () => clearTimeout(timer);
   }, [searchTerm]);
@@ -226,6 +227,37 @@ export function ShopHomeView({
     setSearchTerm('');
     setSearchQuery('');
     setPagination(p => ({ ...p, page: 1 }));
+  };
+
+  const handleClearAllFilters = async () => {
+    setSelectedCategory('all');
+    setSelectedBrand('all');
+    setSearchTerm('');
+    setSearchQuery('');
+    setSortBy('popularity');
+    setPagination(p => ({ ...p, page: 1 }));
+    setIsLoading(true);
+    try {
+      const res = await api.getGroceryProducts({
+        q: '',
+        category: 'all',
+        brand: 'all',
+        retailerId: activeRetailerId,
+        sort: 'popularity',
+        page: 1,
+        limit: 16
+      });
+      if (res && res.products) {
+        setProducts(res.products);
+        setPagination(res.pagination || { total: res.products.length, page: 1, limit: 16, totalPages: 1 });
+        if (res.availableBrands) setAvailableBrands(res.availableBrands);
+      }
+    } catch (err: any) {
+      console.error('Error clearing filters and fetching products:', err);
+      showToast('Could not load products. Please check server connection.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Add to Cart / Conflict Handling
@@ -283,25 +315,33 @@ export function ShopHomeView({
 
   // Confirm Switch Retailer
   const handleConfirmRetailerSwitch = async () => {
-    if (!conflictData || !pendingAddAction) return;
+    if (!conflictData) return;
+    setIsSwitchingRetailer(true);
     try {
       await api.switchRetailer(conflictData.newRetailerId);
       setActiveRetailerId(conflictData.newRetailerId);
       setIsConflictModalOpen(false);
 
-      // Now complete the pending add
-      await api.addToCart({
-        productVariantId: pendingAddAction.variantId,
-        quantity: pendingAddAction.quantity,
-        retailerId: conflictData.newRetailerId
-      });
+      // If triggered by adding a product, complete the pending add
+      if (pendingAddAction) {
+        await api.addToCart({
+          productVariantId: pendingAddAction.variantId,
+          quantity: pendingAddAction.quantity,
+          retailerId: conflictData.newRetailerId
+        });
+        showToast(`✓ Switched cart to ${conflictData.newRetailer} and added item`);
+      } else {
+        showToast(`✓ Switched cart to ${conflictData.newRetailer}`);
+      }
 
-      showToast(`✓ Switched cart to ${conflictData.newRetailer} and added item`);
       setPendingAddAction(null);
       setConflictData(null);
-      refreshCartState();
+      await refreshCartState();
+      await loadProducts();
     } catch (err: any) {
       showToast(`Error switching retailer: ${err.message}`);
+    } finally {
+      setIsSwitchingRetailer(false);
     }
   };
 
@@ -497,11 +537,10 @@ export function ShopHomeView({
                       setActiveRetailerId(r.id);
                     }
                   }}
-                  className={`p-3 rounded-xl border text-left transition-all ${
-                    activeRetailerId === r.id
-                      ? 'border-forest-600 bg-forest-50/70 ring-2 ring-forest-500/20 shadow-sm'
-                      : 'border-cream-300 bg-white hover:border-cream-400'
-                  }`}
+                  className={`p-3 rounded-xl border text-left transition-all ${activeRetailerId === r.id
+                    ? 'border-forest-600 bg-forest-50/70 ring-2 ring-forest-500/20 shadow-sm'
+                    : 'border-cream-300 bg-white hover:border-cream-400'
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-bold text-forest-900">{r.name}</span>
@@ -575,11 +614,10 @@ export function ShopHomeView({
                     setSelectedCategory(isSelected ? 'all' : cat.slug);
                     setPagination(p => ({ ...p, page: 1 }));
                   }}
-                  className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center min-h-[96px] ${
-                    isSelected
-                      ? 'border-forest-600 bg-forest-100/70 ring-2 ring-forest-500/20 shadow-soft'
-                      : 'border-cream-300 bg-surface hover:border-forest-300 hover:bg-cream-50'
-                  }`}
+                  className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center min-h-[96px] ${isSelected
+                    ? 'border-forest-600 bg-forest-100/70 ring-2 ring-forest-500/20 shadow-soft'
+                    : 'border-cream-300 bg-surface hover:border-forest-300 hover:bg-cream-50'
+                    }`}
                 >
                   <div className="w-10 h-10 rounded-xl bg-white border border-cream-200 flex items-center justify-center mb-1.5 shadow-soft">
                     {CATEGORY_ICONS[cat.slug] || <Store className="w-5 h-5 text-forest-600" />}
@@ -700,11 +738,7 @@ export function ShopHomeView({
               We couldn&apos;t find matching items for your search or filter. Try a broader term like &ldquo;Atta&rdquo;, &ldquo;Dal&rdquo;, or &ldquo;Milk&rdquo;.
             </p>
             <button
-              onClick={() => {
-                setSelectedCategory('all');
-                setSelectedBrand('all');
-                handleClearSearch();
-              }}
+              onClick={handleClearAllFilters}
               className="px-4 py-2 rounded-xl bg-forest-900 text-white font-bold text-xs hover:bg-forest-800 transition-colors"
             >
               Clear All Filters
@@ -862,6 +896,7 @@ export function ShopHomeView({
       <RetailerConflictModal
         isOpen={isConflictModalOpen}
         conflictData={conflictData}
+        isSwitching={isSwitchingRetailer}
         onClose={() => {
           setIsConflictModalOpen(false);
           setPendingAddAction(null);
