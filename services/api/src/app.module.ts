@@ -17,7 +17,7 @@ import { AdminModule } from './admin/admin.module';
   providers: [StoreService],
   exports: [StoreService]
 })
-export class StoreModule {}
+export class StoreModule { }
 
 @Module({
   imports: [
@@ -38,4 +38,4 @@ export class StoreModule {}
     AdminModule
   ]
 })
-export class AppModule {}
+export class AppModule { }

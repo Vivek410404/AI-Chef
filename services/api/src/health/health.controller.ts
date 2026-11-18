@@ -12,7 +12,7 @@ export class HealthController {
   async getHealth() {
     const isDbRequired = process.env.REQUIRE_DATABASE === 'true';
     const isDbConnected = this.store.isPrismaConnected;
-    const storageMode = process.env.STORAGE_MODE || 'memory';
+    const storageMode = process.env.STORAGE_MODE || (isDbConnected ? 'postgres' : 'memory');
 
     // If database is required but disconnected, fail with HTTP 503
     if (isDbRequired && !isDbConnected) {
