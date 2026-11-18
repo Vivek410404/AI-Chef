@@ -65,15 +65,34 @@ export class AuthService implements OnModuleInit {
   async loadRevokedTokensFromDatabase() {
     if (!this.store.isPrismaConnected) return;
     try {
-      const allRevoked = await this.store.prisma.revokedToken.findMany();
       const now = new Date();
-      const activeRevoked = allRevoked.filter(item => !item.expiresAt || item.expiresAt > now);
+      const activeRevoked = await this.store.prisma.revokedToken.findMany({
+        where: {
+          expiresAt: { gt: now }
+        }
+      });
       for (const item of activeRevoked) {
         AuthService.revokedTokens.add(item.token);
       }
-      this.logger.log(`Loaded ${activeRevoked.length} persistent revoked tokens from PostgreSQL.`);
+      this.logger.log(`Loaded ${activeRevoked.length} unexpired persistent revoked tokens from PostgreSQL.`);
     } catch (e: any) {
       this.logger.warn(`Failed to preload revoked tokens from database: ${e.message}`);
+    }
+  }
+
+  async cleanupExpiredRevocations(): Promise<number> {
+    if (!this.store.isPrismaConnected) return 0;
+    try {
+      const result = await this.store.prisma.revokedToken.deleteMany({
+        where: {
+          expiresAt: { lt: new Date() }
+        }
+      });
+      this.logger.log(`Cleaned up ${result.count} expired revoked token records.`);
+      return result.count;
+    } catch (e: any) {
+      this.logger.warn(`Failed to clean up expired revoked tokens: ${e.message}`);
+      return 0;
     }
   }
 
@@ -321,13 +340,8 @@ export class AuthService implements OnModuleInit {
     const cleanEmail = this.normalizeEmail(email);
     this.rateLimiter.check(`login:${clientIp}`, 15, 60000);
 
-    // Support legacy demo sessions for backward compatibility if password is omitted or demo accounts
-    const isLegacyDemo =
-      (!password && (cleanEmail === 'demo@rasoiiq.in' || cleanEmail.includes('patel') || cleanEmail.includes('mehta') || cleanEmail.includes('admin') || cleanEmail.includes('blinkit'))) ||
-      (password === '' && cleanEmail.includes('@'));
-
-    if (isLegacyDemo && process.env.NODE_ENV !== 'production') {
-      return this.handleLegacyDemoLogin(cleanEmail);
+    if (!password || typeof password !== 'string' || password.trim() === '') {
+      throw new BadRequestException('Password is required.');
     }
 
     if (this.store.isPrismaConnected) {
@@ -458,7 +472,10 @@ export class AuthService implements OnModuleInit {
       };
     }
 
-    // Memory fallback
+    // Memory fallback when PostgreSQL is not required
+    if (process.env.REQUIRE_DATABASE === 'true') {
+      throw new UnauthorizedException('Authentication service unavailable due to database unavailability.');
+    }
     return this.handleLegacyDemoLogin(cleanEmail);
   }
 
@@ -813,24 +830,34 @@ export class AuthService implements OnModuleInit {
   async logout(authHeader?: string, refreshToken?: string, clientIp = '127.0.0.1') {
     if (authHeader) {
       const cleanToken = authHeader.replace(/^Bearer\s+/i, '').trim();
+      const tokenHash = crypto.createHash('sha256').update(cleanToken).digest('hex');
       AuthService.revokedTokens.add(cleanToken);
+      AuthService.revokedTokens.add(tokenHash);
 
       if (this.store.isPrismaConnected) {
         try {
           const decoded: any = jwt.decode(cleanToken);
-          const expiresAt = decoded?.exp ? new Date(decoded.exp * 1000) : null;
+          const expiresAt = decoded?.exp ? new Date(decoded.exp * 1000) : new Date(Date.now() + 24 * 60 * 60 * 1000);
+          const revocationIdentifier = decoded?.jti ? `jti:${decoded.jti}` : tokenHash;
+          AuthService.revokedTokens.add(revocationIdentifier);
+
           await this.store.prisma.revokedToken.upsert({
-            where: { token: cleanToken },
+            where: { token: revocationIdentifier },
             create: {
-              token: cleanToken,
+              token: revocationIdentifier,
               reason: 'User logout',
               revokedAt: new Date(),
-              expiresAt: expiresAt || new Date(Date.now() + 24 * 60 * 60 * 1000)
+              expiresAt
             },
-            update: {}
+            update: {
+              expiresAt
+            }
           });
         } catch (dbErr: any) {
-          this.logger.warn(`Failed to persist revoked token: ${dbErr.message}`);
+          this.logger.warn(`Failed to persist revoked token hash: ${dbErr.message}`);
+          if (process.env.REQUIRE_DATABASE === 'true') {
+            throw new UnauthorizedException('Logout persistence failed due to database unavailability.');
+          }
         }
       }
     }
@@ -1317,17 +1344,19 @@ export class AuthService implements OnModuleInit {
    */
   async verifyToken(token: string) {
     const cleanToken = token.replace(/^Bearer\s+/i, '').trim();
+    const tokenHash = crypto.createHash('sha256').update(cleanToken).digest('hex');
 
-    if (AuthService.revokedTokens.has(cleanToken)) {
+    if (AuthService.revokedTokens.has(tokenHash) || AuthService.revokedTokens.has(cleanToken)) {
       throw new UnauthorizedException('Token has been revoked. Please sign in again.');
     }
 
     if (this.store.isPrismaConnected) {
       try {
-        const found = await this.store.prisma.revokedToken.findUnique({
-          where: { token: cleanToken }
+        const found = await this.store.prisma.revokedToken.findFirst({
+          where: { token: { in: [tokenHash, cleanToken] } }
         });
         if (found) {
+          AuthService.revokedTokens.add(tokenHash);
           AuthService.revokedTokens.add(cleanToken);
           throw new UnauthorizedException('Token has been revoked. Please sign in again.');
         }
@@ -1349,9 +1378,36 @@ export class AuthService implements OnModuleInit {
         throw new UnauthorizedException(`Invalid role claim "${decoded.role}" in token`);
       }
 
-      // Authoritative database check: immediately reject suspended or deleted users
+      // Check jti revocation if present in token
+      if (decoded.jti) {
+        const jtiKey = `jti:${decoded.jti}`;
+        if (AuthService.revokedTokens.has(jtiKey)) {
+          throw new UnauthorizedException('Token has been revoked. Please sign in again.');
+        }
+        if (this.store.isPrismaConnected) {
+          try {
+            const foundJti = await this.store.prisma.revokedToken.findUnique({
+              where: { token: jtiKey }
+            });
+            if (foundJti) {
+              AuthService.revokedTokens.add(jtiKey);
+              throw new UnauthorizedException('Token has been revoked. Please sign in again.');
+            }
+          } catch (jtiErr: any) {
+            if (jtiErr instanceof UnauthorizedException) throw jtiErr;
+            if (process.env.REQUIRE_DATABASE === 'true') {
+              throw new UnauthorizedException('Authentication verification failed due to database unavailability.');
+            }
+          }
+        }
+      }
+
+      // Authoritative database check: immediately reject missing, suspended, or deleted users
       const targetUserId = decoded.sub || decoded.id;
-      if (this.store.isPrismaConnected && targetUserId) {
+      if (this.store.isPrismaConnected) {
+        if (!targetUserId) {
+          throw new UnauthorizedException('Token missing user identification.');
+        }
         try {
           const dbUser = await this.store.prisma.user.findUnique({
             where: { id: targetUserId },
@@ -1366,26 +1422,27 @@ export class AuthService implements OnModuleInit {
               createdAt: true
             }
           });
-          if (dbUser) {
-            if (dbUser.status === 'SUSPENDED') {
-              throw new UnauthorizedException('Account has been suspended. Access denied.');
-            }
-            if (dbUser.status === 'DELETED') {
-              throw new UnauthorizedException('Account has been deactivated.');
-            }
-            return {
-              ...decoded,
-              id: dbUser.id,
-              sub: dbUser.id,
-              role: dbUser.role || normalizedRole,
-              status: dbUser.status,
-              email: dbUser.email || decoded.email,
-              fullName: dbUser.fullName || decoded.fullName,
-              phoneNumber: dbUser.phoneNumber,
-              emailVerifiedAt: dbUser.emailVerifiedAt,
-              createdAt: dbUser.createdAt
-            };
+          if (!dbUser) {
+            throw new UnauthorizedException('User account does not exist. Access denied.');
           }
+          if (dbUser.status === 'SUSPENDED') {
+            throw new UnauthorizedException('Account has been suspended. Access denied.');
+          }
+          if (dbUser.status === 'DELETED') {
+            throw new UnauthorizedException('Account has been deactivated.');
+          }
+          return {
+            ...decoded,
+            id: dbUser.id,
+            sub: dbUser.id,
+            role: dbUser.role || normalizedRole,
+            status: dbUser.status,
+            email: dbUser.email || decoded.email,
+            fullName: dbUser.fullName || decoded.fullName,
+            phoneNumber: dbUser.phoneNumber,
+            emailVerifiedAt: dbUser.emailVerifiedAt,
+            createdAt: dbUser.createdAt
+          };
         } catch (dbErr: any) {
           if (dbErr instanceof UnauthorizedException) throw dbErr;
           if (process.env.REQUIRE_DATABASE === 'true') {

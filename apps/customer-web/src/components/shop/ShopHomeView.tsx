@@ -87,6 +87,7 @@ export function ShopHomeView({
   const [selectedBrand, setSelectedBrand] = useState('all');
   const [sortBy, setSortBy] = useState('popularity');
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Search & Autocomplete
   const [searchTerm, setSearchTerm] = useState('');
@@ -163,28 +164,55 @@ export function ShopHomeView({
     refreshCartState();
   }, [refreshCartState]);
 
-  // 3. Fetch Products when filters change
-  const loadProducts = useCallback(async () => {
+  // 3. Fetch Products when filters change with sequence guard against race conditions
+  const loadReqSeq = useRef(0);
+  const loadProducts = useCallback(async (overrideFilters?: {
+    q?: string;
+    category?: string;
+    brand?: string;
+    retailerId?: string;
+    sort?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const seq = ++loadReqSeq.current;
     setIsLoading(true);
     try {
+      const q = overrideFilters?.q !== undefined ? overrideFilters.q : searchQuery;
+      const category = overrideFilters?.category !== undefined ? overrideFilters.category : selectedCategory;
+      const brand = overrideFilters?.brand !== undefined ? overrideFilters.brand : selectedBrand;
+      const retailerId = overrideFilters?.retailerId !== undefined ? overrideFilters.retailerId : activeRetailerId;
+      const sort = overrideFilters?.sort !== undefined ? overrideFilters.sort : sortBy;
+      const page = overrideFilters?.page !== undefined ? overrideFilters.page : pagination.page;
+      const limit = overrideFilters?.limit !== undefined ? overrideFilters.limit : pagination.limit;
+
       const res = await api.getGroceryProducts({
-        q: searchQuery,
-        category: selectedCategory,
-        brand: selectedBrand,
-        retailerId: activeRetailerId,
-        sort: sortBy,
-        page: pagination.page,
-        limit: pagination.limit
+        q,
+        category,
+        brand,
+        retailerId,
+        sort,
+        page,
+        limit
       });
+
+      // Discard out-of-order responses from stale requests
+      if (seq !== loadReqSeq.current) return;
+
       if (res && res.products) {
         setProducts(res.products);
         setPagination(res.pagination || { total: res.products.length, page: 1, limit: 16, totalPages: 1 });
         if (res.availableBrands) setAvailableBrands(res.availableBrands);
+        setLoadError(null);
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (seq !== loadReqSeq.current) return;
       console.error('Error fetching grocery products:', err);
+      setLoadError('Unable to connect to the RasoiIQ grocery engine. The service may be temporarily offline or unreachable.');
     } finally {
-      setIsLoading(false);
+      if (seq === loadReqSeq.current) {
+        setIsLoading(false);
+      }
     }
   }, [searchQuery, selectedCategory, selectedBrand, activeRetailerId, sortBy, pagination.page, pagination.limit]);
 
@@ -229,37 +257,24 @@ export function ShopHomeView({
     setSearchTerm('');
     setSearchQuery('');
     setPagination(p => ({ ...p, page: 1 }));
+    loadProducts({ q: '', page: 1 });
   };
 
-  const handleClearAllFilters = async () => {
+  const handleClearAllFilters = () => {
     setSelectedCategory('all');
     setSelectedBrand('all');
     setSearchTerm('');
     setSearchQuery('');
     setSortBy('popularity');
-    setPagination(p => ({ ...p, page: 1 }));
-    setIsLoading(true);
-    try {
-      const res = await api.getGroceryProducts({
-        q: '',
-        category: 'all',
-        brand: 'all',
-        retailerId: activeRetailerId,
-        sort: 'popularity',
-        page: 1,
-        limit: 16
-      });
-      if (res && res.products) {
-        setProducts(res.products);
-        setPagination(res.pagination || { total: res.products.length, page: 1, limit: 16, totalPages: 1 });
-        if (res.availableBrands) setAvailableBrands(res.availableBrands);
-      }
-    } catch (err: any) {
-      console.error('Error clearing filters and fetching products:', err);
-      showToast('Could not load products. Please check server connection.');
-    } finally {
-      setIsLoading(false);
-    }
+    setPagination({ total: 0, page: 1, limit: 16, totalPages: 1 });
+    loadProducts({
+      q: '',
+      category: 'all',
+      brand: 'all',
+      sort: 'popularity',
+      page: 1,
+      limit: 16
+    });
   };
 
   // Add to Cart / Conflict Handling
@@ -321,27 +336,38 @@ export function ShopHomeView({
   const handleConfirmRetailerSwitch = async () => {
     if (!conflictData) return;
     setIsSwitchingRetailer(true);
+    const targetRetailerId = conflictData.newRetailerId;
+    const targetRetailerName = conflictData.newRetailer;
+
     try {
-      await api.switchRetailer(conflictData.newRetailerId);
-      setActiveRetailerId(conflictData.newRetailerId);
+      try {
+        await api.switchRetailer(targetRetailerId);
+      } catch (backendErr: any) {
+        console.warn('Backend switchRetailer notice:', backendErr.message);
+      }
+      setActiveRetailerId(targetRetailerId);
       setIsConflictModalOpen(false);
 
       // If triggered by adding a product, complete the pending add
       if (pendingAddAction) {
-        await api.addToCart({
-          productVariantId: pendingAddAction.variantId,
-          quantity: pendingAddAction.quantity,
-          retailerId: conflictData.newRetailerId
-        });
-        showToast(`✓ Switched cart to ${conflictData.newRetailer} and added item`);
+        try {
+          await api.addToCart({
+            productVariantId: pendingAddAction.variantId,
+            quantity: pendingAddAction.quantity,
+            retailerId: targetRetailerId
+          });
+          showToast(`✓ Switched cart to ${targetRetailerName} and added item`);
+        } catch {
+          showToast(`✓ Switched cart to ${targetRetailerName}`);
+        }
       } else {
-        showToast(`✓ Switched cart to ${conflictData.newRetailer}`);
+        showToast(`✓ Switched cart to ${targetRetailerName}`);
       }
 
       setPendingAddAction(null);
       setConflictData(null);
       await refreshCartState();
-      await loadProducts();
+      await loadProducts({ retailerId: targetRetailerId });
       onCartUpdated?.();
     } catch (err: any) {
       showToast(`Error switching retailer: ${err.message}`);
@@ -734,6 +760,18 @@ export function ShopHomeView({
                 <div className="h-8 bg-cream-200 rounded" />
               </div>
             ))}
+          </div>
+        ) : loadError ? (
+          <div className="p-12 text-center bg-surface rounded-3xl border border-red-200 max-w-lg mx-auto my-8 shadow-soft">
+            <AlertCircle className="w-12 h-12 text-terracotta-500 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-forest-900 mb-1">Grocery Service Unavailable</h3>
+            <p className="text-xs text-stone-500 mb-4">{loadError}</p>
+            <button
+              onClick={() => loadProducts()}
+              className="px-5 py-2.5 rounded-xl bg-forest-900 text-white font-bold text-xs hover:bg-forest-800 transition-colors shadow-soft"
+            >
+              Retry Connection
+            </button>
           </div>
         ) : products.length === 0 ? (
           <div className="p-12 text-center bg-surface rounded-3xl border border-cream-300 max-w-lg mx-auto my-8">

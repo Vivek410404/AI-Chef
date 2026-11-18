@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Ly5D0SR7ZIbUb4gRkc5npcMjShsCxF3hEUQIBSPLRU9teO3bTqiFMAcbdolpndl
+\restrict OkR9rJO7YfVaVFib4Hdp282ypJdmRUi3QqF9xKWyl8TYCdqmouvVLuQhawWkYKE
 
 -- Dumped from database version 18.6 (Ubuntu 18.6-0ubuntu0.26.04.1)
 -- Dumped by pg_dump version 18.6 (Ubuntu 18.6-0ubuntu0.26.04.1)
@@ -365,7 +365,8 @@ CREATE TABLE public."Order" (
     "isDemoOrder" boolean DEFAULT true NOT NULL,
     "statusReason" text,
     "substitutionNotes" text,
-    "updatedBy" text
+    "updatedBy" text,
+    "householdId" text NOT NULL
 );
 
 
@@ -378,13 +379,33 @@ ALTER TABLE public."Order" OWNER TO postgres;
 CREATE TABLE public."OrderItem" (
     id text NOT NULL,
     "orderId" text NOT NULL,
-    "productVariantId" text NOT NULL,
+    "productVariantId" text,
     "quantityPacks" integer NOT NULL,
-    "unitPriceInr" double precision NOT NULL
+    "unitPriceInr" double precision NOT NULL,
+    brand text,
+    "packSize" text,
+    "productName" text
 );
 
 
 ALTER TABLE public."OrderItem" OWNER TO postgres;
+
+--
+-- Name: OrderStatusHistory; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public."OrderStatusHistory" (
+    id text NOT NULL,
+    "orderId" text NOT NULL,
+    "fromStatus" text,
+    "toStatus" text NOT NULL,
+    reason text,
+    "changedBy" text,
+    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+ALTER TABLE public."OrderStatusHistory" OWNER TO postgres;
 
 --
 -- Name: PantryItem; Type: TABLE; Schema: public; Owner: postgres
@@ -447,7 +468,13 @@ CREATE TABLE public."Product" (
     title text NOT NULL,
     category text NOT NULL,
     "imageUrl" text NOT NULL,
-    description text
+    description text,
+    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "isSampleData" boolean DEFAULT true NOT NULL,
+    slug text,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    tags text[] DEFAULT ARRAY[]::text[],
+    "updatedAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -460,7 +487,7 @@ ALTER TABLE public."Product" OWNER TO postgres;
 CREATE TABLE public."ProductVariant" (
     id text NOT NULL,
     "productId" text NOT NULL,
-    "ingredientId" text NOT NULL,
+    "ingredientId" text,
     sku text NOT NULL,
     brand text NOT NULL,
     title text NOT NULL,
@@ -468,7 +495,8 @@ CREATE TABLE public."ProductVariant" (
     "packUnit" text NOT NULL,
     "mrpInr" double precision NOT NULL,
     "sellingPriceInr" double precision NOT NULL,
-    "imageUrl" text NOT NULL
+    "imageUrl" text NOT NULL,
+    "inStock" boolean DEFAULT true NOT NULL
 );
 
 
@@ -705,6 +733,24 @@ CREATE TABLE public."User" (
 
 
 ALTER TABLE public."User" OWNER TO postgres;
+
+--
+-- Name: _prisma_migrations; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public._prisma_migrations (
+    id character varying(36) NOT NULL,
+    checksum character varying(64) NOT NULL,
+    finished_at timestamp with time zone,
+    migration_name character varying(255) NOT NULL,
+    logs text,
+    rolled_back_at timestamp with time zone,
+    started_at timestamp with time zone DEFAULT now() NOT NULL,
+    applied_steps_count integer DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public._prisma_migrations OWNER TO postgres;
 
 --
 -- Data for Name: Address; Type: TABLE DATA; Schema: public; Owner: postgres
@@ -978,6 +1024,7 @@ cmwj6a4f60047l31whw5rqxlc	cmwj6a4eq0043l31wuhrlhgy6	REGISTER	User	cmwj6a4eq0043l
 cmwj6a4os004bl31wvaoj1d71	cmwj6a4eq0043l31wuhrlhgy6	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj6a4eq0043l31wuhrlhgy6"}	::1	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:20:52.54
 cmwj6a4pn004hl31wc6vdrmn3	cmwj6a4eq0043l31wuhrlhgy6	HOUSEHOLD_CREATED	Household	cmwj6a4p7004dl31wpez33ln2	{"name": "Alpha Household", "actorId": "cmwj6a4eq0043l31wuhrlhgy6"}	\N	\N	2026-11-16 11:20:52.572
 cmwj6a4z0004ml31w6evjp0jw	cmwj6a4yl004il31w4i1kjtj0	REGISTER	User	cmwj6a4yl004il31w4i1kjtj0	{"actorId": "cmwj6a4yl004il31w4i1kjtj0"}	::1	\N	2026-11-16 11:20:52.908
+cmwjad5420001l31ku2hev51r	\N	LOGIN_FAILURE	\N	\N	{"email": "nonexistent.user.2026@rasoiiq.in", "actorId": "system"}	::1	\N	2026-11-16 13:15:11.523
 cmwj6a58t004ql31w251iyw5k	cmwj6a4yl004il31w4i1kjtj0	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj6a4yl004il31w4i1kjtj0"}	::1	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:20:53.262
 cmwj6a59p004wl31wze7aya0q	cmwj6a4yl004il31w4i1kjtj0	HOUSEHOLD_CREATED	Household	cmwj6a59b004sl31wczqvl6xj	{"name": "Beta Household", "actorId": "cmwj6a4yl004il31w4i1kjtj0"}	\N	\N	2026-11-16 11:20:53.293
 cmwj6a5xp0051l31wjt3d8htg	cmwj6a5x9004xl31w884y0tym	REGISTER	User	cmwj6a5x9004xl31w884y0tym	{"actorId": "cmwj6a5x9004xl31w884y0tym"}	::1	\N	2026-11-16 11:20:54.158
@@ -1130,6 +1177,7 @@ cmwj6xca200atl3y8yawe6n4i	cmwj6xbyb00afl3y8paohnqpl	HOUSEHOLD_CREATED	Household	
 cmwj6xd2b00ayl3y85q485o6i	cmwj6xd1w00aul3y8ll382ry0	REGISTER	User	cmwj6xd1w00aul3y8ll382ry0	{"actorId": "cmwj6xd1w00aul3y8ll382ry0"}	10.52.174.110	\N	2026-11-16 11:38:56.483
 cmwj6xdd400b2l3y8olfz9pfj	cmwj6xd1w00aul3y8ll382ry0	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj6xd1w00aul3y8ll382ry0"}	10.52.169.162	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:38:56.873
 cmwj6xddx00b8l3y8qj32px0r	cmwj6xd1w00aul3y8ll382ry0	HOUSEHOLD_CREATED	Household	cmwj6xddm00b4l3y84bm9ih1l	{"name": "Merchant Family Household", "actorId": "cmwj6xd1w00aul3y8ll382ry0"}	\N	\N	2026-11-16 11:38:56.902
+cmwjah1o20001l3ggffz36ut3	\N	LOGIN_FAILURE	\N	\N	{"email": "nonexistent.user.2026@rasoiiq.in", "actorId": "system"}	::1	\N	2026-11-16 13:18:13.683
 cmwj6xdfz00bcl3y8xylnfq4y	cmwj4nyub0000l3ic1cbm4scv	RETAILER_APPROVED	RetailerApplication	cmwj6xdek00bal3y8cf39hlw7	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "applicantId": "cmwj6xd1w00aul3y8ll382ry0", "businessName": "Organic Greens 1794829136910", "applicantEmail": "merchant-cust-1794829136062@test.com"}	\N	\N	2026-11-16 11:38:56.975
 cmwj6xdtt00bhl3y8x8pnhqqf	cmwj6xdtd00bdl3y825vovtmm	REGISTER	User	cmwj6xdtd00bdl3y825vovtmm	{"actorId": "cmwj6xdtd00bdl3y825vovtmm"}	10.52.97.117	\N	2026-11-16 11:38:57.474
 cmwj6xe6300bll3y8qwo6hlfq	cmwj6xdtd00bdl3y825vovtmm	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj6xdtd00bdl3y825vovtmm"}	10.52.61.60	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:38:57.916
@@ -1355,6 +1403,549 @@ cmwj8g2iu001ll3o010646ft6	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj8g2io
 cmwj8g2ou001pl3o0tbhwxy57	cmwj8g2io001jl3o0sy36ms5s	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8g2io001jl3o0sy36ms5s"}	10.52.119.41	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:29.119
 cmwj8g2ys001wl3o077le57i8	cmwj8g2wk001sl3o0az4czbyk	REGISTER	User	cmwj8g2wk001sl3o0az4czbyk	{"actorId": "cmwj8g2wk001sl3o0az4czbyk"}	10.52.91.48	\N	2026-11-16 12:21:29.476
 cmwj8g2zz0002l3yk62q70etm	\N	AUDIT_IMMUTABILITY_TEST	SecurityTest	test-sec-1	{"test": "initial value", "timestamp": "2026-11-16T12:21:29.519Z", "immutableCheck": true}	\N	\N	2026-11-16 12:21:29.519
+cmwj8jjy70027l3o0ht0viug2	cmwj8jjxp0023l3o00bvthbh8	REGISTER	User	cmwj8jjxp0023l3o00bvthbh8	{"actorId": "cmwj8jjxp0023l3o00bvthbh8"}	::1	\N	2026-11-16 12:24:11.455
+cmwj8jk0m0029l3o0cb83ei0n	cmwj8jjxp0023l3o00bvthbh8	EMAIL_VERIFIED	User	cmwj8jjxp0023l3o00bvthbh8	{"actorId": "cmwj8jjxp0023l3o00bvthbh8"}	::1	\N	2026-11-16 12:24:11.542
+cmwj8jk6d002bl3o0c78tat5a	cmwj8jjxp0023l3o00bvthbh8	LOGIN_FAILURE	\N	\N	{"actorId": "cmwj8jjxp0023l3o00bvthbh8"}	::1	\N	2026-11-16 12:24:11.75
+cmwj8jkdr002fl3o04jn5lxax	cmwj8jjxp0023l3o00bvthbh8	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jjxp0023l3o00bvthbh8"}	::1	node	2026-11-16 12:24:12.015
+cmwj8jket002jl3o0yj4sl8lo	cmwj8jjxp0023l3o00bvthbh8	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"actorId": "cmwj8jjxp0023l3o00bvthbh8", "tokenFamilyId": "[REDACTED]"}	::1	\N	2026-11-16 12:24:12.053
+cmwj8jkfe002nl3o0wyl48xza	cmwj8jjxp0023l3o00bvthbh8	PASSWORD_RESET_REQUESTED	\N	\N	{"actorId": "cmwj8jjxp0023l3o00bvthbh8"}	::1	\N	2026-11-16 12:24:12.074
+cmwj8jkmc002pl3o0z19vvet5	cmwj8jjxp0023l3o00bvthbh8	PASSWORD_RESET_COMPLETED	\N	\N	{"actorId": "cmwj8jjxp0023l3o00bvthbh8"}	::1	\N	2026-11-16 12:24:12.324
+cmwj8jkui002rl3o0v0g8ijt6	cmwj8jjxp0023l3o00bvthbh8	LOGIN_FAILURE	\N	\N	{"actorId": "cmwj8jjxp0023l3o00bvthbh8"}	::1	\N	2026-11-16 12:24:12.618
+cmwj8jkzw002vl3o0zipl3u77	cmwj8jjxp0023l3o00bvthbh8	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jjxp0023l3o00bvthbh8"}	::1	node	2026-11-16 12:24:12.813
+cmwj8jl0l0031l3o0h21gg3cq	cmwj8jjxp0023l3o00bvthbh8	HOUSEHOLD_CREATED	Household	cmwj8jl09002xl3o0qfna2mwn	{"name": "Joshi Family Kitchen", "actorId": "cmwj8jjxp0023l3o00bvthbh8"}	\N	\N	2026-11-16 12:24:12.837
+cmwj8jl1i0035l3o0b5ojhzsl	cmwj8jjxp0023l3o00bvthbh8	HOUSEHOLD_INVITATION_SENT	HouseholdInvitation	cmwj8jl1b0033l3o0uy6h2gt6	{"role": "MEMBER", "actorId": "cmwj8jjxp0023l3o00bvthbh8", "invitedEmail": "invited.family.mwj8jjow@testrasoi.in"}	\N	\N	2026-11-16 12:24:12.871
+cmwj8jl7a003al3o0ax3y5ndc	cmwj8jl730036l3o0tcgce9oh	REGISTER	User	cmwj8jl730036l3o0tcgce9oh	{"actorId": "cmwj8jl730036l3o0tcgce9oh"}	::1	\N	2026-11-16 12:24:13.079
+cmwj8jl7n003cl3o04c3zkoj7	cmwj8jl730036l3o0tcgce9oh	EMAIL_VERIFIED	User	cmwj8jl730036l3o0tcgce9oh	{"actorId": "cmwj8jl730036l3o0tcgce9oh"}	::1	\N	2026-11-16 12:24:13.091
+cmwj8jle9003gl3o0gupnbz47	cmwj8jl730036l3o0tcgce9oh	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jl730036l3o0tcgce9oh"}	::1	node	2026-11-16 12:24:13.33
+cmwj8jlf1003kl3o0cnaqpgx3	cmwj8jl730036l3o0tcgce9oh	HOUSEHOLD_INVITATION_ACCEPTED	Household	cmwj8jl09002xl3o0qfna2mwn	{"role": "MEMBER", "actorId": "cmwj8jl730036l3o0tcgce9oh"}	\N	\N	2026-11-16 12:24:13.357
+cmwj8jllt003ql3o0di53g59k	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-16 12:24:13.602
+cmwj8jlnb003tl3o0ocah554m	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 12:24:13.655
+cmwj8jm9r003yl3o0eq3lkj1a	cmwj8jm9i003ul3o0rxxhuc97	REGISTER	User	cmwj8jm9i003ul3o0rxxhuc97	{"actorId": "cmwj8jm9i003ul3o0rxxhuc97"}	::1	\N	2026-11-16 12:24:14.463
+cmwj8jmh10040l3o0f579bfbp	cmwj2fa4w0000l3s4x4q1jmst	USER_SUSPENDED	User	cmwj8jm9i003ul3o0rxxhuc97	{"reason": "Investigating suspicious order activity", "actorId": "cmwj2fa4w0000l3s4x4q1jmst", "newStatus": "SUSPENDED", "targetEmail": "rogue.admin.mwj8jm4k@test.in", "previousStatus": "PENDING_VERIFICATION"}	\N	\N	2026-11-16 12:24:14.725
+cmwj8jmig0042l3o0s3ngzshs	cmwj2fa4w0000l3s4x4q1jmst	USER_REACTIVATED	User	cmwj8jm9i003ul3o0rxxhuc97	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "newStatus": "ACTIVE", "targetEmail": "rogue.admin.mwj8jm4k@test.in", "previousStatus": "SUSPENDED"}	\N	\N	2026-11-16 12:24:14.776
+cmwj8jmk60044l3o0jxo2z0h8	cmwj2fa4w0000l3s4x4q1jmst	RETAILER_APPROVED	RetailerApplication	cmwj8jmil0003l3iw5s8a35ly	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "applicantId": "cmwj8jm9i003ul3o0rxxhuc97", "businessName": "Fresh Greens Mart mwj8jm4k", "applicantEmail": "rogue.admin.mwj8jm4k@test.in"}	\N	\N	2026-11-16 12:24:14.838
+cmwj8jmld0046l3o0pm396n2o	cmwj2fa4w0000l3s4x4q1jmst	RETAILER_SUSPENDED	Retailer	ret-fresh-greens-mart-mwj8jm4k	{"reason": "Audit pending", "status": "SUSPENDED", "actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	\N	\N	2026-11-16 12:24:14.881
+cmwj8jmnh0048l3o0jrg3w443	\N	ORDER_STATUS_CHANGED	Order	ord-1794831848260	{"reason": "Out with delivery executive", "actorId": "user-ops-1", "newStatus": "DISPATCHED", "fulfillmentNotes": "Customer requested contactless delivery at doorstep"}	\N	\N	2026-11-16 12:24:14.957
+cmwj8jmp6004al3o0d4venne6	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_CREATED	Recipe	rec-1794831855007	{"title": "Kathiyawadi Ringan No Olo mwj8jm4k", "actorId": "cmwj2fa4w0000l3s4x4q1jmst", "cuisine": "Kathiyawadi"}	\N	\N	2026-11-16 12:24:15.018
+cmwj8jmpq004cl3o01cat6x4u	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_ARCHIVED	Recipe	rec-1794831855007	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "isArchived": true}	\N	\N	2026-11-16 12:24:15.038
+cmwj8jmq8004el3o0ow3wa2no	cmwj2fa4w0000l3s4x4q1jmst	RECIPE_ARCHIVED	Recipe	rec-1794831855007	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst", "isArchived": false}	\N	\N	2026-11-16 12:24:15.056
+cmwj8jmxd004hl3o0tczfcgyl	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj8jmx5004fl3o000ntbyj7	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "staffEmail": "ops.lead.mwj8jm4k@rasoiiq.in", "assignedRole": "OPERATIONS"}	\N	\N	2026-11-16 12:24:15.313
+cmwj8jmxs004jl3o06cgo7fwe	cmwj4nyub0000l3ic1cbm4scv	STAFF_ROLE_CHANGED	User	cmwj8jmx5004fl3o000ntbyj7	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "newRole": "SUPPORT", "previousRole": "OPERATIONS"}	\N	\N	2026-11-16 12:24:15.329
+cmwj8jmyf004ml3o0rv6k7354	cmwj4nyub0000l3ic1cbm4scv	SETTINGS_UPDATED	SystemSetting	cmwj4s5on0011l32wh1uxro1d	{"key": "pricing.default_delivery_fee_inr", "value": "35", "actorId": "cmwj4nyub0000l3ic1cbm4scv"}	\N	\N	2026-11-16 12:24:15.351
+cmwj8jnjy004rl3o0atq7nnzb	cmwj8jnjp004nl3o0dd5t2gus	REGISTER	User	cmwj8jnjp004nl3o0dd5t2gus	{"actorId": "cmwj8jnjp004nl3o0dd5t2gus"}	10.52.200.56	\N	2026-11-16 12:24:16.127
+cmwj8jnq6004vl3o0pxiax3vw	cmwj8jnjp004nl3o0dd5t2gus	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jnjp004nl3o0dd5t2gus"}	10.52.31.46	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:16.35
+cmwj8jnv9004yl3o0wt4qspmy	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj8jnv3004wl3o0u2pycvm2	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "staffEmail": "supp-1794831855893@rasoi.internal", "assignedRole": "SUPPORT"}	\N	\N	2026-11-16 12:24:16.534
+cmwj8jo230052l3o09inbje9d	cmwj8jnv3004wl3o0u2pycvm2	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jnv3004wl3o0u2pycvm2"}	10.52.124.47	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:16.78
+cmwj8jo740055l3o0cg47hw1e	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj8jo6y0053l3o0g9s0guqb	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "staffEmail": "ops-1794831855893@rasoi.internal", "assignedRole": "OPERATIONS"}	\N	\N	2026-11-16 12:24:16.96
+cmwj8jobx0059l3o0aktflexy	cmwj8jo6y0053l3o0g9s0guqb	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jo6y0053l3o0g9s0guqb"}	10.52.79.85	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:17.134
+cmwj8jogp005cl3o0prr8gty0	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj8jogj005al3o0paktz6iq	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "staffEmail": "adm-1794831855893@rasoi.internal", "assignedRole": "ADMIN"}	\N	\N	2026-11-16 12:24:17.305
+cmwj8jon4005gl3o0c0hcxfd7	cmwj8jogj005al3o0paktz6iq	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jogj005al3o0paktz6iq"}	10.52.153.13	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:17.537
+cmwj8jow3005ll3o0kcplewpn	cmwj8jovs005hl3o03h0hw50t	REGISTER	User	cmwj8jovs005hl3o03h0hw50t	{"actorId": "cmwj8jovs005hl3o03h0hw50t"}	10.52.117.56	\N	2026-11-16 12:24:17.86
+cmwj8jp1v005pl3o0vs54liko	cmwj8jovs005hl3o03h0hw50t	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jovs005hl3o03h0hw50t"}	10.52.79.38	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:18.067
+cmwj8jp2d005vl3o0076hfw83	cmwj8jovs005hl3o03h0hw50t	HOUSEHOLD_CREATED	Household	cmwj8jp24005rl3o0e9oc51cb	{"name": "Victim Household", "actorId": "cmwj8jovs005hl3o03h0hw50t"}	\N	\N	2026-11-16 12:24:18.086
+cmwj8jp3g005xl3o0w8c22ces	cmwj4nyub0000l3ic1cbm4scv	USER_SUSPENDED	User	cmwj8jovs005hl3o03h0hw50t	{"reason": "Security violation test suspension", "actorId": "cmwj4nyub0000l3ic1cbm4scv", "newStatus": "SUSPENDED", "targetEmail": "victim-1794831857662@test.com", "previousStatus": "ACTIVE"}	\N	\N	2026-11-16 12:24:18.124
+cmwj8jp50005zl3o08jgqtci4	cmwj4nyub0000l3ic1cbm4scv	USER_REACTIVATED	User	cmwj8jovs005hl3o03h0hw50t	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "newStatus": "ACTIVE", "targetEmail": "victim-1794831857662@test.com", "previousStatus": "SUSPENDED"}	\N	\N	2026-11-16 12:24:18.18
+cmwj8jpb00063l3o0oor9hvat	cmwj8jovs005hl3o03h0hw50t	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jovs005hl3o03h0hw50t"}	10.52.181.65	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:18.396
+cmwj8jpd60067l3o0edsq1ncu	cmwj8jnv3004wl3o0u2pycvm2	SUPPORT_HOUSEHOLD_INSPECTED	Household	hh-sharma-family	{"actorId": "cmwj8jnv3004wl3o0u2pycvm2", "actorRole": "SUPPORT", "accessedAt": "2026-11-16T12:24:18.469Z", "householdName": "Sharma Family", "supportReason": "Investigating delivery delay for customer ticket #SUP-9941"}	\N	\N	2026-11-16 12:24:18.474
+cmwj8jpiw006bl3o0sr3xvge8	cmwj58zak0069l3rc3wksnuya	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj58zak0069l3rc3wksnuya"}	10.52.128.7	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:18.68
+cmwj8jpp2006gl3o00lzk2ibk	cmwj8jpor006cl3o0ugux8gra	REGISTER	User	cmwj8jpor006cl3o0ugux8gra	{"actorId": "cmwj8jpor006cl3o0ugux8gra"}	10.52.174.10	\N	2026-11-16 12:24:18.903
+cmwj8jpun006kl3o0dhdhlrgh	cmwj8jpor006cl3o0ugux8gra	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jpor006cl3o0ugux8gra"}	10.52.159.146	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:19.103
+cmwj8jpva006ql3o0d2x6ajwx	cmwj8jpor006cl3o0ugux8gra	HOUSEHOLD_CREATED	Household	cmwj8jpuz006ml3o05afv0uf6	{"name": "Alpha Household", "actorId": "cmwj8jpor006cl3o0ugux8gra"}	\N	\N	2026-11-16 12:24:19.127
+cmwj8jq3e006vl3o0qt6rx4d5	cmwj8jq2v006rl3o0y7fe0nw9	REGISTER	User	cmwj8jq2v006rl3o0y7fe0nw9	{"actorId": "cmwj8jq2v006rl3o0y7fe0nw9"}	10.52.166.5	\N	2026-11-16 12:24:19.419
+cmwj8jqaz006zl3o00d2c5gii	cmwj8jq2v006rl3o0y7fe0nw9	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jq2v006rl3o0y7fe0nw9"}	10.52.59.25	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:19.691
+cmwj8jqbi0075l3o0ceg26ph9	cmwj8jq2v006rl3o0y7fe0nw9	HOUSEHOLD_CREATED	Household	cmwj8jqb90071l3o0y90nc9vo	{"name": "Beta Household", "actorId": "cmwj8jq2v006rl3o0y7fe0nw9"}	\N	\N	2026-11-16 12:24:19.711
+cmwj8jqnv007al3o0ekeh1lfh	cmwj8jqnk0076l3o07schg62o	REGISTER	User	cmwj8jqnk0076l3o07schg62o	{"actorId": "cmwj8jqnk0076l3o07schg62o"}	10.52.52.76	\N	2026-11-16 12:24:20.156
+cmwj8jqte007el3o046glqmvy	cmwj8jqnk0076l3o07schg62o	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jqnk0076l3o07schg62o"}	10.52.57.1	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:20.354
+cmwj8jqtz007kl3o0wtmeh9up	cmwj8jqnk0076l3o07schg62o	HOUSEHOLD_CREATED	Household	cmwj8jqtp007gl3o03zpy0uuz	{"name": "Merchant Family Household", "actorId": "cmwj8jqnk0076l3o07schg62o"}	\N	\N	2026-11-16 12:24:20.376
+cmwj8jqw0007ol3o0z50u72s7	cmwj4nyub0000l3ic1cbm4scv	RETAILER_APPROVED	RetailerApplication	cmwj8jqug007ml3o02qbfn846	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "applicantId": "cmwj8jqnk0076l3o07schg62o", "businessName": "Organic Greens 1794831860382", "applicantEmail": "merchant-cust-1794831859969@test.com"}	\N	\N	2026-11-16 12:24:20.448
+cmwj8jr4k007tl3o0imohesqy	cmwj8jr48007pl3o0yv3oqxwz	REGISTER	User	cmwj8jr48007pl3o0yv3oqxwz	{"actorId": "cmwj8jr48007pl3o0yv3oqxwz"}	10.52.35.199	\N	2026-11-16 12:24:20.757
+cmwj8jraf007xl3o0ok8vxtk3	cmwj8jr48007pl3o0yv3oqxwz	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jr48007pl3o0yv3oqxwz"}	10.52.119.156	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:20.968
+cmwj8jrat0083l3o0c1l0d2hd	cmwj8jr48007pl3o0yv3oqxwz	HOUSEHOLD_CREATED	Household	cmwj8jran007zl3o0uqprlq2n	{"name": "Pilot Household Alpha", "actorId": "cmwj8jr48007pl3o0yv3oqxwz"}	\N	\N	2026-11-16 12:24:20.982
+cmwj8jrbe0087l3o0z128smhm	cmwj8jr48007pl3o0yv3oqxwz	HOUSEHOLD_INVITATION_SENT	HouseholdInvitation	cmwj8jrb70085l3o0zr6typ42	{"role": "MEMBER", "actorId": "cmwj8jr48007pl3o0yv3oqxwz", "invitedEmail": "invited-1794831860985@pilot.com"}	\N	\N	2026-11-16 12:24:21.002
+cmwj8jrh7008cl3o0kip5c6i7	cmwj8jrgz0088l3o0c4zedu9o	REGISTER	User	cmwj8jrgz0088l3o0c4zedu9o	{"actorId": "cmwj8jrgz0088l3o0c4zedu9o"}	10.52.60.34	\N	2026-11-16 12:24:21.211
+cmwj8jrn3008gl3o0gtgk4tsq	cmwj8jrgz0088l3o0c4zedu9o	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8jrgz0088l3o0c4zedu9o"}	10.52.160.163	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:21.423
+cmwj8jrnr008kl3o0wh66xo05	cmwj8jrgz0088l3o0c4zedu9o	HOUSEHOLD_INVITATION_ACCEPTED	Household	cmwj8jran007zl3o0uqprlq2n	{"role": "MEMBER", "actorId": "cmwj8jrgz0088l3o0c4zedu9o"}	\N	\N	2026-11-16 12:24:21.447
+cmwj8jrsi008ol3o0zulwxscf	cmwj4nyub0000l3ic1cbm4scv	RETAILER_APPROVED	RetailerApplication	cmwj8jrrn008ml3o0q4c0x0so	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "applicantId": "cmwj8jr48007pl3o0yv3oqxwz", "businessName": "Pilot Store 1794831861579", "applicantEmail": "pilot-e2e-1794831860505@rasoi.pilot"}	\N	\N	2026-11-16 12:24:21.619
+cmwj8olj20097l3o0gu5dcthq	cmwj4nyub0000l3ic1cbm4scv	USER_SUSPENDED	User	cmwj8ol50008rl3o03g2qfv3y	{"reason": "Controlled audit suspension test", "actorId": "cmwj4nyub0000l3ic1cbm4scv", "newStatus": "SUSPENDED", "targetEmail": "cust-susp-1794832085977@pilot.com", "previousStatus": "ACTIVE"}	\N	\N	2026-11-16 12:28:06.783
+cmwj8jrtd008ql3o0tp651hz5	cmwj4nyub0000l3ic1cbm4scv	USER_SUSPENDED	User	cmwj8jr48007pl3o0yv3oqxwz	{"reason": "End-of-pilot verification suspension", "actorId": "cmwj4nyub0000l3ic1cbm4scv", "newStatus": "SUSPENDED", "targetEmail": "pilot-e2e-1794831860505@rasoi.pilot", "previousStatus": "ACTIVE"}	\N	\N	2026-11-16 12:24:21.65
+cmwj8ol5n008vl3o0bnkkgfi0	cmwj8ol50008rl3o03g2qfv3y	REGISTER	User	cmwj8ol50008rl3o03g2qfv3y	{"actorId": "cmwj8ol50008rl3o03g2qfv3y"}	10.52.111.193	\N	2026-11-16 12:28:06.299
+cmwj8olft008zl3o0q0sktrbv	cmwj8ol50008rl3o03g2qfv3y	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8ol50008rl3o03g2qfv3y"}	10.52.81.103	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:28:06.665
+cmwj8olhj0095l3o0fl8dio9l	cmwj8ol50008rl3o03g2qfv3y	HOUSEHOLD_CREATED	Household	cmwj8olgk0091l3o0kxp2vmvr	{"name": "Suspension Test Household", "actorId": "cmwj8ol50008rl3o03g2qfv3y"}	\N	\N	2026-11-16 12:28:06.728
+cmwj8ollx0099l3o0x3e61vp5	cmwj4nyub0000l3ic1cbm4scv	USER_REACTIVATED	User	cmwj8ol50008rl3o03g2qfv3y	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "newStatus": "ACTIVE", "targetEmail": "cust-susp-1794832085977@pilot.com", "previousStatus": "SUSPENDED"}	\N	\N	2026-11-16 12:28:06.886
+cmwj8olns009bl3o02dnyhpij	\N	SUPPORT_HOUSEHOLD_INSPECTED	Household	hh-sharma-family	{"actorId": "user-support-1", "actorRole": "SUPPORT", "accessedAt": "2026-11-16T12:28:06.932Z", "householdName": "Sharma Family", "supportReason": "Valid ticket #9901: pantry sync issue"}	\N	\N	2026-11-16 12:28:06.952
+cmwj8olx3009gl3o0ub2z5byb	cmwj8olwl009cl3o0ktj4vts0	REGISTER	User	cmwj8olwl009cl3o0ktj4vts0	{"actorId": "cmwj8olwl009cl3o0ktj4vts0"}	10.52.128.128	\N	2026-11-16 12:28:07.287
+cmwj8om4w009kl3o0nq3im7v3	cmwj8olwl009cl3o0ktj4vts0	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8olwl009cl3o0ktj4vts0"}	10.52.151.18	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:28:07.568
+cmwj8om6h009ol3o0b3eww2gg	cmwj4nyub0000l3ic1cbm4scv	RETAILER_APPROVED	RetailerApplication	cmwj8om59009ml3o0d9wpkeg2	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "applicantId": "cmwj8olwl009cl3o0ktj4vts0", "businessName": "Alpha Grocers 1794832087565", "applicantEmail": "reta-1794832086969@merchant.com"}	\N	\N	2026-11-16 12:28:07.625
+cmwj8omdy009tl3o0y10r87dj	cmwj8omdm009pl3o0m2gr0nwe	REGISTER	User	cmwj8omdm009pl3o0m2gr0nwe	{"actorId": "cmwj8omdm009pl3o0m2gr0nwe"}	10.52.39.11	\N	2026-11-16 12:28:07.894
+cmwj8ompd009xl3o0ph5qs2iy	cmwj8omdm009pl3o0m2gr0nwe	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8omdm009pl3o0m2gr0nwe"}	10.52.180.182	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:28:08.306
+cmwj8omr500a1l3o0vfquafdp	cmwj4nyub0000l3ic1cbm4scv	RETAILER_APPROVED	RetailerApplication	cmwj8omq7009zl3o0ka14s5ar	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "applicantId": "cmwj8omdm009pl3o0m2gr0nwe", "businessName": "Beta Provisions 1794832088303", "applicantEmail": "retb-1794832087623@merchant.com"}	\N	\N	2026-11-16 12:28:08.369
+cmwj8omzi00a5l3o09cehmia8	cmwj8olwl009cl3o0ktj4vts0	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8olwl009cl3o0ktj4vts0"}	10.52.189.185	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:28:08.67
+cmwj8on7u00a9l3o0gcupiuhx	cmwj8omdm009pl3o0m2gr0nwe	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8omdm009pl3o0m2gr0nwe"}	10.52.110.6	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:28:08.97
+cmwj8onht00acl3o0upytg76j	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj8onhk00aal3o076vc7wdz	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "staffEmail": "selfreview-1794832089037@rasoi.internal", "assignedRole": "ADMIN"}	\N	\N	2026-11-16 12:28:09.329
+cmwj8onp200agl3o0cmil7pgc	cmwj8onhk00aal3o076vc7wdz	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8onhk00aal3o076vc7wdz"}	10.52.66.49	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:28:09.59
+cmwj8ony800anl3o0vtyhu0he	cmwj8onxx00ajl3o0pc0lmhs9	REGISTER	User	cmwj8onxx00ajl3o0pc0lmhs9	{"actorId": "cmwj8onxx00ajl3o0pc0lmhs9"}	10.52.134.110	\N	2026-11-16 12:28:09.921
+cmwj8oo0m0002l36s55u77cu1	\N	AUDIT_IMMUTABILITY_TEST	SecurityTest	test-sec-1	{"test": "initial value", "timestamp": "2026-11-16T12:28:09.996Z", "immutableCheck": true}	\N	\N	2026-11-16 12:28:10.006
+cmwj8rg4j0004l310813eva2j	cmwj8rg450000l31098igyczy	REGISTER	User	cmwj8rg450000l31098igyczy	{"actorId": "cmwj8rg450000l31098igyczy"}	10.52.4.116	\N	2026-11-16 12:30:19.747
+cmwj8rgc70008l31024iwt1u9	cmwj8rg450000l31098igyczy	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8rg450000l31098igyczy"}	10.52.189.135	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:30:20.024
+cmwj8rgdh000el3107zus1stb	cmwj8rg450000l31098igyczy	HOUSEHOLD_CREATED	Household	cmwj8rgcz000al310mnqont8a	{"name": "Suspension Test Household", "actorId": "cmwj8rg450000l31098igyczy"}	\N	\N	2026-11-16 12:30:20.069
+cmwj8rgg1000gl310sv4w42qc	cmwj4nyub0000l3ic1cbm4scv	USER_SUSPENDED	User	cmwj8rg450000l31098igyczy	{"reason": "Controlled audit suspension test", "actorId": "cmwj4nyub0000l3ic1cbm4scv", "newStatus": "SUSPENDED", "targetEmail": "cust-susp-1794832219504@pilot.com", "previousStatus": "ACTIVE"}	\N	\N	2026-11-16 12:30:20.162
+cmwj8rgjl000il310l0g3swow	cmwj4nyub0000l3ic1cbm4scv	USER_REACTIVATED	User	cmwj8rg450000l31098igyczy	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "newStatus": "ACTIVE", "targetEmail": "cust-susp-1794832219504@pilot.com", "previousStatus": "SUSPENDED"}	\N	\N	2026-11-16 12:30:20.29
+cmwj8rglq000kl310wvi0974i	\N	SUPPORT_HOUSEHOLD_INSPECTED	Household	hh-sharma-family	{"actorId": "user-support-1", "actorRole": "SUPPORT", "accessedAt": "2026-11-16T12:30:20.348Z", "householdName": "Sharma Family", "supportReason": "Valid ticket #9901: pantry sync issue"}	\N	\N	2026-11-16 12:30:20.366
+cmwj8rgsi000pl310h6plzayh	cmwj8rgs4000ll310t0r3abqk	REGISTER	User	cmwj8rgs4000ll310t0r3abqk	{"actorId": "cmwj8rgs4000ll310t0r3abqk"}	10.52.80.43	\N	2026-11-16 12:30:20.61
+cmwj8rgzk000tl310yhy4xfdg	cmwj8rgs4000ll310t0r3abqk	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8rgs4000ll310t0r3abqk"}	10.52.90.29	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:30:20.865
+cmwj8rh1a000xl3109uupjvcx	cmwj4nyub0000l3ic1cbm4scv	RETAILER_APPROVED	RetailerApplication	cmwj8rh01000vl310wup1z4ib	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "applicantId": "cmwj8rgs4000ll310t0r3abqk", "businessName": "Alpha Grocers 1794832220867", "applicantEmail": "reta-1794832220383@merchant.com"}	\N	\N	2026-11-16 12:30:20.926
+cmwj8rh710012l310jhhr213m	cmwj8rh6t000yl310bgvxb5wu	REGISTER	User	cmwj8rh6t000yl310bgvxb5wu	{"actorId": "cmwj8rh6t000yl310bgvxb5wu"}	10.52.102.128	\N	2026-11-16 12:30:21.133
+cmwj8rhcy0016l310l8l7xofp	cmwj8rh6t000yl310bgvxb5wu	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8rh6t000yl310bgvxb5wu"}	10.52.110.15	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:30:21.346
+cmwj8rhe6001al310lnbtrj15	cmwj4nyub0000l3ic1cbm4scv	RETAILER_APPROVED	RetailerApplication	cmwj8rhdb0018l310cvcepoju	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "applicantId": "cmwj8rh6t000yl310bgvxb5wu", "businessName": "Beta Provisions 1794832221348", "applicantEmail": "retb-1794832220933@merchant.com"}	\N	\N	2026-11-16 12:30:21.39
+cmwj8rhll001el310eo70849u	cmwj8rgs4000ll310t0r3abqk	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8rgs4000ll310t0r3abqk"}	10.52.103.11	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:30:21.658
+cmwjan84g001ol3gg5vu8clki	cmwjahqy20014l3ggjypd0ffc	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjahqy20014l3ggjypd0ffc"}	::1	node	2026-11-16 13:23:01.984
+cmwj8rhsj001il310tk5cg67d	cmwj8rh6t000yl310bgvxb5wu	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8rh6t000yl310bgvxb5wu"}	10.52.86.171	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:30:21.907
+cmwj8ri0s001ll310sqgnxm9u	cmwj4nyub0000l3ic1cbm4scv	STAFF_CREATED	User	cmwj8ri0k001jl3105rphs4uc	{"actorId": "cmwj4nyub0000l3ic1cbm4scv", "staffEmail": "selfreview-1794832221950@rasoi.internal", "assignedRole": "ADMIN"}	\N	\N	2026-11-16 12:30:22.204
+cmwj8ri79001pl310tu7dkipy	cmwj8ri0k001jl3105rphs4uc	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj8ri0k001jl3105rphs4uc"}	10.52.111.172	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:30:22.437
+cmwj8rie8001wl31083k34z4r	cmwj8ridx001sl310n026mvsa	REGISTER	User	cmwj8ridx001sl310n026mvsa	{"actorId": "cmwj8ridx001sl310n026mvsa"}	10.52.165.141	\N	2026-11-16 12:30:22.688
+cmwj8rif30002l3t0po9yme8l	\N	AUDIT_IMMUTABILITY_TEST	SecurityTest	test-sec-1	{"test": "initial value", "timestamp": "2026-11-16T12:30:22.716Z", "immutableCheck": true}	\N	\N	2026-11-16 12:30:22.72
+cmwj9bz9m0021l3107alfkn6m	cmwj9bz8z001xl3107gjis344	REGISTER	User	cmwj9bz8z001xl3107gjis344	{"actorId": "cmwj9bz8z001xl3107gjis344"}	::1	\N	2026-11-16 12:46:17.674
+cmwj9bzk00025l310a44rxar3	cmwj9bz8z001xl3107gjis344	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj9bz8z001xl3107gjis344"}	::1	node	2026-11-16 12:46:18.049
+cmwj9c3dl0027l3100qyz6x68	user-demo-1	LOGIN_FAILURE	\N	\N	{"actorId": "user-demo-1"}	::1	\N	2026-11-16 12:46:23.001
+cmwj9cdwf002bl310x78t8dir	cmwj9bz8z001xl3107gjis344	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj9bz8z001xl3107gjis344"}	::1	node	2026-11-16 12:46:36.639
+cmwj9cogx002gl310t6ubig9h	cmwj9cogl002cl310c2z255yf	REGISTER	User	cmwj9cogl002cl310c2z255yf	{"actorId": "cmwj9cogl002cl310c2z255yf"}	::1	\N	2026-11-16 12:46:50.338
+cmwj9copa002kl310gxfi00un	cmwj9cogl002cl310c2z255yf	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj9cogl002cl310c2z255yf"}	::1	node	2026-11-16 12:46:50.639
+cmwj9coqy002ol310i0wytym9	cmwj9cogl002cl310c2z255yf	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"actorId": "cmwj9cogl002cl310c2z255yf", "tokenFamilyId": "[REDACTED]"}	::1	\N	2026-11-16 12:46:50.699
+cmwj9d5ji002tl310kcad052x	cmwj9d5it002pl310hyhn6ozq	REGISTER	User	cmwj9d5it002pl310hyhn6ozq	{"actorId": "cmwj9d5it002pl310hyhn6ozq"}	::1	\N	2026-11-16 12:47:12.462
+cmwj9d5t7002xl3103cv0krxr	cmwj9d5it002pl310hyhn6ozq	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj9d5it002pl310hyhn6ozq"}	::1	node	2026-11-16 12:47:12.812
+cmwj9d5vf0031l310ihm5p0cb	cmwj9d5it002pl310hyhn6ozq	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"actorId": "cmwj9d5it002pl310hyhn6ozq", "tokenFamilyId": "[REDACTED]"}	::1	\N	2026-11-16 12:47:12.891
+cmwj9dleg0036l310ua7290xv	cmwj9dldz0032l310ocvlj8ve	REGISTER	User	cmwj9dldz0032l310ocvlj8ve	{"actorId": "cmwj9dldz0032l310ocvlj8ve"}	::1	\N	2026-11-16 12:47:33.016
+cmwj9dlo8003al3104k01mw9n	cmwj9dldz0032l310ocvlj8ve	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj9dldz0032l310ocvlj8ve"}	::1	node	2026-11-16 12:47:33.368
+cmwj9dlpp003el310dquklys6	cmwj9dldz0032l310ocvlj8ve	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"actorId": "cmwj9dldz0032l310ocvlj8ve", "tokenFamilyId": "[REDACTED]"}	::1	\N	2026-11-16 12:47:33.421
+cmwj9dyiy003jl310vuw3a87i	cmwj9dyij003fl310ke1i6wb7	REGISTER	User	cmwj9dyij003fl310ke1i6wb7	{"actorId": "cmwj9dyij003fl310ke1i6wb7"}	::1	\N	2026-11-16 12:47:50.027
+cmwj9dysr003nl310j6ilmukw	cmwj9dyij003fl310ke1i6wb7	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj9dyij003fl310ke1i6wb7"}	::1	node	2026-11-16 12:47:50.379
+cmwj9dyu3003rl310eamgvzbv	cmwj9dyij003fl310ke1i6wb7	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"actorId": "cmwj9dyij003fl310ke1i6wb7", "tokenFamilyId": "[REDACTED]"}	::1	\N	2026-11-16 12:47:50.427
+cmwj9ee4g003wl3101y8w6t97	cmwj9ee3x003sl310q7chbr0k	REGISTER	User	cmwj9ee3x003sl310q7chbr0k	{"actorId": "cmwj9ee3x003sl310q7chbr0k"}	::1	\N	2026-11-16 12:48:10.241
+cmwj9eecd0040l310ti2v7u6y	cmwj9ee3x003sl310q7chbr0k	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj9ee3x003sl310q7chbr0k"}	::1	node	2026-11-16 12:48:10.526
+cmwj9eedg0044l310a99a8ba6	cmwj9ee3x003sl310q7chbr0k	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"actorId": "cmwj9ee3x003sl310q7chbr0k", "tokenFamilyId": "[REDACTED]"}	::1	\N	2026-11-16 12:48:10.564
+cmwj9ey6j0049l31072h6q36y	cmwj9ey690045l310dpkrb5j2	REGISTER	User	cmwj9ey690045l310dpkrb5j2	{"actorId": "cmwj9ey690045l310dpkrb5j2"}	::1	\N	2026-11-16 12:48:36.235
+cmwj9eyjw004dl3107aq6ynqy	cmwj9ey690045l310dpkrb5j2	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj9ey690045l310dpkrb5j2"}	::1	node	2026-11-16 12:48:36.717
+cmwj9eyla004hl310cj7dn9bb	cmwj9ey690045l310dpkrb5j2	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"actorId": "cmwj9ey690045l310dpkrb5j2", "tokenFamilyId": "[REDACTED]"}	::1	\N	2026-11-16 12:48:36.766
+cmwj9fqgs004ml3108z161g2x	cmwj9fqgf004il31014ft6mp2	REGISTER	User	cmwj9fqgf004il31014ft6mp2	{"actorId": "cmwj9fqgf004il31014ft6mp2"}	::1	\N	2026-11-16 12:49:12.893
+cmwj9fqp9004ql31012h0syht	cmwj9fqgf004il31014ft6mp2	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj9fqgf004il31014ft6mp2"}	::1	node	2026-11-16 12:49:13.197
+cmwj9fqqw004ul310v61sva74	cmwj9fqgf004il31014ft6mp2	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"actorId": "cmwj9fqgf004il31014ft6mp2", "tokenFamilyId": "[REDACTED]"}	::1	\N	2026-11-16 12:49:13.256
+cmwj9ga9v004zl310q33dkgwz	cmwj9ga9e004vl310pf3wo4bj	REGISTER	User	cmwj9ga9e004vl310pf3wo4bj	{"actorId": "cmwj9ga9e004vl310pf3wo4bj"}	::1	\N	2026-11-16 12:49:38.563
+cmwj9galp0053l3102n4i1a0t	cmwj9ga9e004vl310pf3wo4bj	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj9ga9e004vl310pf3wo4bj"}	::1	node	2026-11-16 12:49:38.989
+cmwj9gang0057l310hs551k6e	cmwj9ga9e004vl310pf3wo4bj	REFRESH_TOKEN_REPLAY_DETECTED	\N	\N	{"actorId": "cmwj9ga9e004vl310pf3wo4bj", "tokenFamilyId": "[REDACTED]"}	::1	\N	2026-11-16 12:49:39.053
+cmwj9gexw0001l3k85p4p86l6	cmwj9ga9e004vl310pf3wo4bj	PILOT_AUDIT_VERIFICATION	Household	hh-sharma-family	{"verificationSession": "phase6"}	\N	\N	2026-11-16 12:49:44.612
+cmwjad5940006l31kprf6pvr1	cmwjad58r0002l31kbumbhh6d	REGISTER	User	cmwjad58r0002l31kbumbhh6d	{"actorId": "cmwjad58r0002l31kbumbhh6d"}	::1	\N	2026-11-16 13:15:11.704
+cmwjaelrh0008l31kfdxjhsdp	\N	LOGIN_FAILURE	\N	\N	{"email": "nonexistent.user.2026@rasoiiq.in", "actorId": "system"}	::1	\N	2026-11-16 13:16:19.757
+cmwjaelya000dl31kncmriobq	cmwjaelxy0009l31k661qevyc	REGISTER	User	cmwjaelxy0009l31k661qevyc	{"actorId": "cmwjaelxy0009l31k661qevyc"}	::1	\N	2026-11-16 13:16:20.003
+cmwjafbxg000fl31k8ss4hid8	\N	LOGIN_FAILURE	\N	\N	{"email": "nonexistent.user.2026@rasoiiq.in", "actorId": "system"}	::1	\N	2026-11-16 13:16:53.668
+cmwjafc3e000kl31k0zqqa4pj	cmwjafc36000gl31kvtroftqi	REGISTER	User	cmwjafc36000gl31kvtroftqi	{"actorId": "cmwjafc36000gl31kvtroftqi"}	::1	\N	2026-11-16 13:16:53.883
+cmwjafcfu000ml31kckbfm7ht	cmwjafc36000gl31kvtroftqi	EMAIL_VERIFIED	User	cmwjafc36000gl31kvtroftqi	{"actorId": "cmwjafc36000gl31kvtroftqi"}	::1	\N	2026-11-16 13:16:54.331
+cmwjafcnm000ql31ktru89cpz	cmwjafc36000gl31kvtroftqi	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjafc36000gl31kvtroftqi"}	::1	\N	2026-11-16 13:16:54.611
+cmwjafcpx000sl31krbzqy6r4	cmwjafc36000gl31kvtroftqi	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjafc36000gl31kvtroftqi", "updatedFields": ["fullName", "phoneNumber"]}	::1	\N	2026-11-16 13:16:54.693
+cmwjafcw6000ul31kot3omu02	cmwjafc36000gl31kvtroftqi	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjafc36000gl31kvtroftqi", "updatedFields": []}	::1	\N	2026-11-16 13:16:54.919
+cmwjafdet000wl31krzqngwqr	cmwjafc36000gl31kvtroftqi	PASSWORD_CHANGED	\N	\N	{"actorId": "cmwjafc36000gl31kvtroftqi"}	::1	\N	2026-11-16 13:16:55.589
+cmwjafdje000yl31k1k3ygbd9	cmwjafc36000gl31kvtroftqi	LOGIN_FAILURE	\N	\N	{"actorId": "cmwjafc36000gl31kvtroftqi"}	::1	\N	2026-11-16 13:16:55.755
+cmwjafdpq0012l31kkip8xx8u	cmwjafc36000gl31kvtroftqi	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjafc36000gl31kvtroftqi"}	::1	\N	2026-11-16 13:16:55.982
+cmwjafdql0018l31ktml46eyb	cmwjafc36000gl31kvtroftqi	HOUSEHOLD_CREATED	Household	cmwjafdq80014l31kf9gibzcw	{"name": "Ananya Family Kitchen", "actorId": "cmwjafc36000gl31kvtroftqi"}	\N	\N	2026-11-16 13:16:56.013
+cmwjafdrl001bl31kwsrw2p84	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 13:16:56.049
+cmwjafeci001fl31kgjeu29ic	cmwjafc36000gl31kvtroftqi	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjafc36000gl31kvtroftqi"}	::1	\N	2026-11-16 13:16:56.802
+cmwjah1tw0006l3ggeifwfl0r	cmwjah1ti0002l3ggfc469esp	REGISTER	User	cmwjah1ti0002l3ggfc469esp	{"actorId": "cmwjah1ti0002l3ggfc469esp"}	::1	\N	2026-11-16 13:18:13.892
+cmwjah25l0008l3gggknyx2qs	cmwjah1ti0002l3ggfc469esp	EMAIL_VERIFIED	User	cmwjah1ti0002l3ggfc469esp	{"actorId": "cmwjah1ti0002l3ggfc469esp"}	::1	\N	2026-11-16 13:18:14.314
+cmwjah2ii000cl3gg8oo5kymr	cmwjah1ti0002l3ggfc469esp	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjah1ti0002l3ggfc469esp"}	::1	\N	2026-11-16 13:18:14.779
+cmwjah2k1000el3gghak7u1jn	cmwjah1ti0002l3ggfc469esp	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjah1ti0002l3ggfc469esp", "updatedFields": ["fullName", "phoneNumber"]}	::1	\N	2026-11-16 13:18:14.834
+cmwjah2py000gl3gggn4ppaop	cmwjah1ti0002l3ggfc469esp	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjah1ti0002l3ggfc469esp", "updatedFields": []}	::1	\N	2026-11-16 13:18:15.046
+cmwjah372000il3gghdaw987k	cmwjah1ti0002l3ggfc469esp	PASSWORD_CHANGED	\N	\N	{"actorId": "cmwjah1ti0002l3ggfc469esp"}	::1	\N	2026-11-16 13:18:15.662
+cmwjah3bz000kl3ggxs06bugk	cmwjah1ti0002l3ggfc469esp	LOGIN_FAILURE	\N	\N	{"actorId": "cmwjah1ti0002l3ggfc469esp"}	::1	\N	2026-11-16 13:18:15.839
+cmwjah3hi000ol3gg0vepp75i	cmwjah1ti0002l3ggfc469esp	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjah1ti0002l3ggfc469esp"}	::1	\N	2026-11-16 13:18:16.039
+cmwjah3i0000ul3ggct5r3oi0	cmwjah1ti0002l3ggfc469esp	HOUSEHOLD_CREATED	Household	cmwjah3hs000ql3ggfiwb50mu	{"name": "Ananya Family Kitchen", "actorId": "cmwjah1ti0002l3ggfc469esp"}	\N	\N	2026-11-16 13:18:16.057
+cmwjah3it000xl3ggun3a6fzd	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 13:18:16.086
+cmwjah41o0011l3ggnl9lkhtu	cmwjah1ti0002l3ggfc469esp	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjah1ti0002l3ggfc469esp"}	::1	\N	2026-11-16 13:18:16.764
+cmwjahqyf0018l3ggbvea7ucj	cmwjahqy20014l3ggjypd0ffc	REGISTER	User	cmwjahqy20014l3ggjypd0ffc	{"actorId": "cmwjahqy20014l3ggjypd0ffc"}	::1	\N	2026-11-16 13:18:46.455
+cmwjahqzu001al3gg6hz1g9ps	cmwjahqy20014l3ggjypd0ffc	EMAIL_VERIFIED	User	cmwjahqy20014l3ggjypd0ffc	{"actorId": "cmwjahqy20014l3ggjypd0ffc"}	::1	\N	2026-11-16 13:18:46.507
+cmwjaki68001cl3ggsp3wnh0d	cmwjahqy20014l3ggjypd0ffc	LOGIN_FAILURE	\N	\N	{"actorId": "cmwjahqy20014l3ggjypd0ffc"}	::1	\N	2026-11-16 13:20:55.04
+cmwjaljw7001gl3ggq0gzihek	cmwjahqy20014l3ggjypd0ffc	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjahqy20014l3ggjypd0ffc"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36	2026-11-16 13:21:43.927
+cmwjan434001kl3gg5zlx4p6u	cmwjahqy20014l3ggjypd0ffc	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjahqy20014l3ggjypd0ffc"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36	2026-11-16 13:22:56.752
+cmwjaobfy0020l3gg250gz5uk	cmwjahqy20014l3ggjypd0ffc	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjahqy20014l3ggjypd0ffc", "updatedFields": ["fullName", "phoneNumber"]}	::1	\N	2026-11-16 13:23:52.942
+cmwjanqqz001sl3ggd3qoesml	cmwjahqy20014l3ggjypd0ffc	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjahqy20014l3ggjypd0ffc"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36	2026-11-16 13:23:26.123
+cmwjans3m001ul3ggkbji1luq	cmwjahqy20014l3ggjypd0ffc	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjahqy20014l3ggjypd0ffc", "updatedFields": ["fullName", "phoneNumber"]}	::1	\N	2026-11-16 13:23:27.874
+cmwjaoabo001yl3ggpz5kj2p7	cmwjahqy20014l3ggjypd0ffc	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjahqy20014l3ggjypd0ffc"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36	2026-11-16 13:23:51.492
+cmwjaod110023l3ggml515e6q	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 13:23:54.997
+cmwjap1n00027l3ggbwochsvs	cmwjahqy20014l3ggjypd0ffc	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjahqy20014l3ggjypd0ffc"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36	2026-11-16 13:24:26.892
+cmwjap3240029l3gg58eoeni8	cmwjahqy20014l3ggjypd0ffc	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjahqy20014l3ggjypd0ffc", "updatedFields": ["fullName", "phoneNumber"]}	::1	\N	2026-11-16 13:24:28.732
+cmwjap4r5002cl3gg3nskfgxy	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 13:24:30.929
+cmwjapsnx002gl3gg71558ci4	cmwjahqy20014l3ggjypd0ffc	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjahqy20014l3ggjypd0ffc"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36	2026-11-16 13:25:01.917
+cmwjapu12002il3ggjkevqvo8	cmwjahqy20014l3ggjypd0ffc	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjahqy20014l3ggjypd0ffc", "updatedFields": ["fullName", "phoneNumber"]}	::1	\N	2026-11-16 13:25:03.687
+cmwjapvq4002ll3gg6pg73ipf	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 13:25:05.885
+cmwjaq7e2002nl3gg82h7u2nd	\N	LOGIN_FAILURE	\N	\N	{"email": "nonexistent.user.2026@rasoiiq.in", "actorId": "system"}	::1	\N	2026-11-16 13:25:21.002
+cmwjaq7i7002sl3gghisuwdke	cmwjaq7hy002ol3gg9kmv4gl8	REGISTER	User	cmwjaq7hy002ol3gg9kmv4gl8	{"actorId": "cmwjaq7hy002ol3gg9kmv4gl8"}	::1	\N	2026-11-16 13:25:21.151
+cmwjaq7r3002ul3gghxy1nriy	cmwjaq7hy002ol3gg9kmv4gl8	EMAIL_VERIFIED	User	cmwjaq7hy002ol3gg9kmv4gl8	{"actorId": "cmwjaq7hy002ol3gg9kmv4gl8"}	::1	\N	2026-11-16 13:25:21.472
+cmwjaq811002yl3ggcz252bld	cmwjaq7hy002ol3gg9kmv4gl8	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjaq7hy002ol3gg9kmv4gl8"}	::1	\N	2026-11-16 13:25:21.829
+cmwjaq81m0030l3gg64757vwo	cmwjaq7hy002ol3gg9kmv4gl8	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjaq7hy002ol3gg9kmv4gl8", "updatedFields": ["fullName", "phoneNumber"]}	::1	\N	2026-11-16 13:25:21.85
+cmwjaq85p0032l3ggrqg1mth9	cmwjaq7hy002ol3gg9kmv4gl8	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjaq7hy002ol3gg9kmv4gl8", "updatedFields": []}	::1	\N	2026-11-16 13:25:21.997
+cmwjaq8k00034l3ggvg30spkh	cmwjaq7hy002ol3gg9kmv4gl8	PASSWORD_CHANGED	\N	\N	{"actorId": "cmwjaq7hy002ol3gg9kmv4gl8"}	::1	\N	2026-11-16 13:25:22.513
+cmwjaq8nt0036l3ggp7ounwu4	cmwjaq7hy002ol3gg9kmv4gl8	LOGIN_FAILURE	\N	\N	{"actorId": "cmwjaq7hy002ol3gg9kmv4gl8"}	::1	\N	2026-11-16 13:25:22.649
+cmwjaq8rx003al3gg2lqf6fdh	cmwjaq7hy002ol3gg9kmv4gl8	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjaq7hy002ol3gg9kmv4gl8"}	::1	\N	2026-11-16 13:25:22.797
+cmwjaq8sa003gl3ggok21hw0k	cmwjaq7hy002ol3gg9kmv4gl8	HOUSEHOLD_CREATED	Household	cmwjaq8s3003cl3gg0ohfkia4	{"name": "Ananya Family Kitchen", "actorId": "cmwjaq7hy002ol3gg9kmv4gl8"}	\N	\N	2026-11-16 13:25:22.81
+cmwjaq8sr003jl3ggppqsn3k9	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 13:25:22.828
+cmwjaq95s003nl3ggkrqaduex	cmwjaq7hy002ol3gg9kmv4gl8	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjaq7hy002ol3gg9kmv4gl8"}	::1	\N	2026-11-16 13:25:23.296
+cmwjb5ff4003ul3gg9bmxroca	cmwjb5fej003ql3gghywo88u2	REGISTER	User	cmwjb5fej003ql3gghywo88u2	{"actorId": "cmwjb5fej003ql3gghywo88u2"}	::1	\N	2026-11-16 13:37:11.249
+cmwjbc6hz003wl3gg2qqzoq69	cmwjb5fej003ql3gghywo88u2	EMAIL_VERIFIED	User	cmwjb5fej003ql3gghywo88u2	{"actorId": "cmwjb5fej003ql3gghywo88u2"}	::1	\N	2026-11-16 13:42:26.279
+cmwjbg0we0040l3gg547xi2f5	cmwjb5fej003ql3gghywo88u2	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjb5fej003ql3gghywo88u2"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-16 13:45:25.646
+cmwjbyznu0001l3tgrdnqh0wh	\N	LOGIN_FAILURE	\N	\N	{"email": "nonexistent.user.2026@rasoiiq.in", "actorId": "system"}	::1	\N	2026-11-16 14:00:10.505
+cmwjbyzyb000al3tg783wyoss	cmwjbyzxb0002l3tgdr3t80p2	REGISTER	User	cmwjbyzxb0002l3tgdr3t80p2	{"actorId": "cmwjbyzxb0002l3tgdr3t80p2"}	::1	\N	2026-11-16 14:00:10.883
+cmwjbz0df000cl3tgb8usa5vm	cmwjbyzxb0002l3tgdr3t80p2	EMAIL_VERIFIED	User	cmwjbyzxb0002l3tgdr3t80p2	{"actorId": "cmwjbyzxb0002l3tgdr3t80p2"}	::1	\N	2026-11-16 14:00:11.427
+cmwjbz0ut000gl3tgiln9zi0u	cmwjbyzxb0002l3tgdr3t80p2	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjbyzxb0002l3tgdr3t80p2"}	::1	\N	2026-11-16 14:00:12.053
+cmwjbz0wk000il3tgwvl9ey5s	cmwjbyzxb0002l3tgdr3t80p2	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjbyzxb0002l3tgdr3t80p2", "updatedFields": ["fullName", "phoneNumber"]}	::1	\N	2026-11-16 14:00:12.116
+cmwjbz13z000kl3tgrbyvlr7z	cmwjbyzxb0002l3tgdr3t80p2	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjbyzxb0002l3tgdr3t80p2", "updatedFields": []}	::1	\N	2026-11-16 14:00:12.383
+cmwjbz1vz000ml3tg7bs75fz0	cmwjbyzxb0002l3tgdr3t80p2	PASSWORD_CHANGED	\N	\N	{"actorId": "cmwjbyzxb0002l3tgdr3t80p2"}	::1	\N	2026-11-16 14:00:13.391
+cmwjbz26n000ol3tgkf4nmzlt	cmwjbyzxb0002l3tgdr3t80p2	LOGIN_FAILURE	\N	\N	{"actorId": "cmwjbyzxb0002l3tgdr3t80p2"}	::1	\N	2026-11-16 14:00:13.775
+cmwjbz2hu000sl3tgupi2r6q6	cmwjbyzxb0002l3tgdr3t80p2	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjbyzxb0002l3tgdr3t80p2"}	::1	\N	2026-11-16 14:00:14.179
+cmwjbz2j3000yl3tgb9boifw2	cmwjbyzxb0002l3tgdr3t80p2	HOUSEHOLD_CREATED	Household	cmwjbz2ii000ul3tgalm1wfqd	{"name": "Ananya Family Kitchen", "actorId": "cmwjbyzxb0002l3tgdr3t80p2"}	\N	\N	2026-11-16 14:00:14.223
+cmwjbz2kn0011l3tgl94imhcp	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 14:00:14.28
+cmwjbz3ay0015l3tgcca3rl14	cmwjbyzxb0002l3tgdr3t80p2	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjbyzxb0002l3tgdr3t80p2"}	::1	\N	2026-11-16 14:00:15.226
+cmwjc388v001bl3tg1w3kuia5	cmwjb5fej003ql3gghywo88u2	LOGIN_FAILURE	\N	\N	{"actorId": "cmwjb5fej003ql3gghywo88u2"}	::1	\N	2026-11-16 14:03:28.256
+cmwjc3crr001dl3tg3jt2pxay	cmwjb5fej003ql3gghywo88u2	LOGIN_FAILURE	\N	\N	{"actorId": "cmwjb5fej003ql3gghywo88u2"}	::1	\N	2026-11-16 14:03:34.12
+cmwjca4yn0001l358za0b7dd3	\N	LOGIN_FAILURE	\N	\N	{"email": "nonexistent.user.2026@rasoiiq.in", "actorId": "system"}	::1	\N	2026-11-16 14:08:50.591
+cmwjca566000al358339blj1j	cmwjca5580002l358gkt4cw2a	REGISTER	User	cmwjca5580002l358gkt4cw2a	{"actorId": "cmwjca5580002l358gkt4cw2a"}	::1	\N	2026-11-16 14:08:50.862
+cmwjca5pi000cl358azxqd8az	cmwjca5580002l358gkt4cw2a	EMAIL_VERIFIED	User	cmwjca5580002l358gkt4cw2a	{"actorId": "cmwjca5580002l358gkt4cw2a"}	::1	\N	2026-11-16 14:08:51.559
+cmwjca63h000gl358sb9brzal	cmwjca5580002l358gkt4cw2a	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjca5580002l358gkt4cw2a"}	::1	\N	2026-11-16 14:08:52.062
+cmwjca65c000il3582twx1shv	cmwjca5580002l358gkt4cw2a	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjca5580002l358gkt4cw2a", "updatedFields": ["fullName", "phoneNumber"]}	::1	\N	2026-11-16 14:08:52.129
+cmwjca6cw000kl358lvf7pztm	cmwjca5580002l358gkt4cw2a	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjca5580002l358gkt4cw2a", "updatedFields": []}	::1	\N	2026-11-16 14:08:52.4
+cmwjca6xg000ml358qnxq3e0m	cmwjca5580002l358gkt4cw2a	PASSWORD_CHANGED	\N	\N	{"actorId": "cmwjca5580002l358gkt4cw2a"}	::1	\N	2026-11-16 14:08:53.14
+cmwjca74l000ol358wfye5wer	cmwjca5580002l358gkt4cw2a	LOGIN_FAILURE	\N	\N	{"actorId": "cmwjca5580002l358gkt4cw2a"}	::1	\N	2026-11-16 14:08:53.397
+cmwjca7bv000sl358p98uwnb3	cmwjca5580002l358gkt4cw2a	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjca5580002l358gkt4cw2a"}	::1	\N	2026-11-16 14:08:53.659
+cmwjca7ct000yl358nboiuidt	cmwjca5580002l358gkt4cw2a	HOUSEHOLD_CREATED	Household	cmwjca7ce000ul358tvz9fw6l	{"name": "Ananya Family Kitchen", "actorId": "cmwjca5580002l358gkt4cw2a"}	\N	\N	2026-11-16 14:08:53.693
+cmwjca7e40011l358sqy1t5ky	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 14:08:53.741
+cmwjca8230015l358vmu21t44	cmwjca5580002l358gkt4cw2a	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjca5580002l358gkt4cw2a"}	::1	\N	2026-11-16 14:08:54.603
+cmwjcub5d0008l3rcwjam9qzl	cmwjcu6w50000l3rcosw7oze7	REGISTER	User	cmwjcu6w50000l3rcosw7oze7	{"actorId": "cmwjcu6w50000l3rcosw7oze7"}	::1	\N	2026-11-16 14:24:31.729
+cmwjcylbf000hl3rcytgk2bt8	cmwjcyiro0009l3rc132yjnvt	REGISTER	User	cmwjcyiro0009l3rc132yjnvt	{"actorId": "cmwjcyiro0009l3rc132yjnvt"}	::1	\N	2026-11-16 14:27:51.531
+cmwjd0x1m000jl3rc8gbxbns6	cmwjcyiro0009l3rc132yjnvt	EMAIL_VERIFIED	User	cmwjcyiro0009l3rc132yjnvt	{"actorId": "cmwjcyiro0009l3rc132yjnvt"}	::1	\N	2026-11-16 14:29:40.042
+cmwjd16id000nl3rc6c1xrg5v	cmwjcyiro0009l3rc132yjnvt	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjcyiro0009l3rc132yjnvt"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-16 14:29:52.31
+cmwjdvriz0001l3acts9o3rb5	\N	LOGIN_FAILURE	\N	\N	{"email": "nonexistent.user.2026@rasoiiq.in", "actorId": "system"}	::1	\N	2026-11-16 14:53:39.227
+cmwjdvuea000al3acic6bdav0	cmwjdvrsc0002l3ackqavlbui	REGISTER	User	cmwjdvrsc0002l3ackqavlbui	{"actorId": "cmwjdvrsc0002l3ackqavlbui"}	::1	\N	2026-11-16 14:53:42.947
+cmwjdvuu7000cl3acn5oer1j3	cmwjdvrsc0002l3ackqavlbui	EMAIL_VERIFIED	User	cmwjdvrsc0002l3ackqavlbui	{"actorId": "cmwjdvrsc0002l3ackqavlbui"}	::1	\N	2026-11-16 14:53:43.519
+cmwjdvva7000gl3acq29qb8mg	cmwjdvrsc0002l3ackqavlbui	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjdvrsc0002l3ackqavlbui"}	::1	\N	2026-11-16 14:53:44.096
+cmwjdvvca000il3acxxjfw8qs	cmwjdvrsc0002l3ackqavlbui	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjdvrsc0002l3ackqavlbui", "updatedFields": ["fullName", "phoneNumber"]}	::1	\N	2026-11-16 14:53:44.17
+cmwjdvvjk000kl3ac648i2a8e	cmwjdvrsc0002l3ackqavlbui	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjdvrsc0002l3ackqavlbui", "updatedFields": []}	::1	\N	2026-11-16 14:53:44.432
+cmwjdw2l7000ml3ac4bempizk	cmwjdvrsc0002l3ackqavlbui	PASSWORD_CHANGED	\N	\N	{"actorId": "cmwjdvrsc0002l3ackqavlbui"}	::1	\N	2026-11-16 14:53:53.563
+cmwjdw2y8000ol3ac7jui6ue9	cmwjdvrsc0002l3ackqavlbui	LOGIN_FAILURE	\N	\N	{"actorId": "cmwjdvrsc0002l3ackqavlbui"}	::1	\N	2026-11-16 14:53:54.032
+cmwjdw385000sl3achqj2fzbj	cmwjdvrsc0002l3ackqavlbui	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjdvrsc0002l3ackqavlbui"}	::1	\N	2026-11-16 14:53:54.389
+cmwjdw397000yl3ac31jwvln8	cmwjdvrsc0002l3ackqavlbui	HOUSEHOLD_CREATED	Household	cmwjdw38r000ul3ac0o2cvs1v	{"name": "Ananya Family Kitchen", "actorId": "cmwjdvrsc0002l3ackqavlbui"}	\N	\N	2026-11-16 14:53:54.428
+cmwjdw3am0011l3ac8kcdz1md	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-16 14:53:54.478
+cmwjdw3zu0015l3acy1xwsdya	cmwjdvrsc0002l3ackqavlbui	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjdvrsc0002l3ackqavlbui"}	::1	\N	2026-11-16 14:53:55.386
+cmwk9rsc20001l3qgk7xv4thm	cmwj2fa4w0000l3s4x4q1jmst	ADMIN_BOOTSTRAP	User	cmwj2fa4w0000l3s4x4q1jmst	{"role": "ADMIN", "email": "admin@rasoiiq.in", "source": "CLI"}	\N	\N	2026-11-17 05:46:21.361
+cmwkadp1v0001l39ouihxj6lm	\N	ADMIN_LOGIN_FAILURE	\N	\N	{"email": "test", "reason": "USER_NOT_FOUND", "actorId": "system"}	::1	\N	2026-11-17 06:03:23.538
+cmwkae0ww0003l39o2lbdlvgn	user-demo-1	ADMIN_LOGIN_DENIED	\N	\N	{"role": "CUSTOMER", "email": "demo@rasoiiq.in", "reason": "ROLE_NOT_AUTHORIZED", "actorId": "user-demo-1"}	::1	\N	2026-11-17 06:03:38.912
+cmwkae12n0005l39ol867bg8k	cmwj2fa4w0000l3s4x4q1jmst	ADMIN_LOGIN_FAILURE	\N	\N	{"email": "admin@rasoiiq.in", "reason": "INVALID_PASSWORD", "actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	\N	2026-11-17 06:03:39.119
+cmwkae3mw0007l39ozu3g4rvz	cmwj2fa4w0000l3s4x4q1jmst	ADMIN_2FA_INVALID_OTP	\N	\N	{"email": "admin@rasoiiq.in", "actorId": "cmwj2fa4w0000l3s4x4q1jmst", "attempt": 1}	::1	\N	2026-11-17 06:03:42.44
+cmwkae3p1000bl39okmpvae41	cmwj2fa4w0000l3s4x4q1jmst	ADMIN_LOGIN_SUCCESS	\N	\N	{"mfa": "EMAIL_OTP", "role": "ADMIN", "email": "admin@rasoiiq.in", "actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 06:03:42.517
+cmwkaefhe000dl39owulrtewc	user-demo-1	ADMIN_LOGIN_DENIED	\N	\N	{"role": "CUSTOMER", "email": "demo@rasoiiq.in", "reason": "ROLE_NOT_AUTHORIZED", "actorId": "user-demo-1"}	::1	\N	2026-11-17 06:03:57.794
+cmwkaefqq000fl39odu021uzw	cmwj2fa4w0000l3s4x4q1jmst	ADMIN_LOGIN_FAILURE	\N	\N	{"email": "admin@rasoiiq.in", "reason": "INVALID_PASSWORD", "actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	\N	2026-11-17 06:03:58.131
+cmwkaejor000hl39o5fnefhsy	cmwj2fa4w0000l3s4x4q1jmst	ADMIN_2FA_INVALID_OTP	\N	\N	{"email": "admin@rasoiiq.in", "actorId": "cmwj2fa4w0000l3s4x4q1jmst", "attempt": 1}	::1	\N	2026-11-17 06:04:03.243
+cmwkaejq0000ll39ol3zb3r8d	cmwj2fa4w0000l3s4x4q1jmst	ADMIN_LOGIN_SUCCESS	\N	\N	{"mfa": "EMAIL_OTP", "role": "ADMIN", "email": "admin@rasoiiq.in", "actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 06:04:03.289
+cmwkawlud0002l3f8izyzthw9	cmwkawlu40000l3f8zugqrfgy	ADMIN_BOOTSTRAP	User	cmwkawlu40000l3f8zugqrfgy	{"role": "ADMIN", "email": "panchanivivek0401@gmail.com", "source": "CLI"}	\N	\N	2026-11-17 06:18:05.845
+cmwkawq1s0001l3zgqzfo2ffh	cmwkawlu40000l3f8zugqrfgy	ADMIN_BOOTSTRAP	User	cmwkawlu40000l3f8zugqrfgy	{"role": "SUPER_ADMIN", "email": "panchanivivek0401@gmail.com", "source": "CLI"}	\N	\N	2026-11-17 06:18:11.296
+cmwkaygbq000pl39otrli3a3k	cmwkawlu40000l3f8zugqrfgy	ADMIN_LOGIN_SUCCESS	\N	\N	{"mfa": "EMAIL_OTP", "role": "SUPER_ADMIN", "email": "panchanivivek0401@gmail.com", "actorId": "cmwkawlu40000l3f8zugqrfgy"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-17 06:19:32.007
+cmwkaysf4000rl39ormbejbd4	cmwkawlu40000l3f8zugqrfgy	HOUSEHOLD_INSPECTED	Household	cmwjdvrsl0004l3acvzebiowg	{"actorId": "cmwkawlu40000l3f8zugqrfgy", "actorRole": "SUPER_ADMIN", "accessedAt": "2026-11-17T06:19:47.671Z", "householdName": "Ananya's Kitchen", "supportReason": "Administrative inspection"}	\N	\N	2026-11-17 06:19:47.68
+cmwkbevl8000xl39oeio1zkc6	cmwkawlu40000l3f8zugqrfgy	ADMIN_LOGIN_SUCCESS	\N	\N	{"mfa": "EMAIL_OTP", "role": "SUPER_ADMIN", "email": "panchanivivek0401@gmail.com", "actorId": "cmwkawlu40000l3f8zugqrfgy"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-17 06:32:18.284
+cmwkc58090005l3msednz9334	cmwkawlu40000l3f8zugqrfgy	ADMIN_LOGIN_FAILURE	\N	\N	{"email": "panchanivivek0401@gmail.com", "reason": "INVALID_PASSWORD", "actorId": "cmwkawlu40000l3f8zugqrfgy"}	::1	\N	2026-11-17 06:52:47.433
+cmwkc5n9t0007l3mshczb2x7p	cmwkawlu40000l3f8zugqrfgy	ADMIN_LOGIN_FAILURE	\N	\N	{"email": "panchanivivek0401@gmail.com", "reason": "INVALID_PASSWORD", "actorId": "cmwkawlu40000l3f8zugqrfgy"}	::1	\N	2026-11-17 06:53:07.217
+cmwkc6c2z000bl3msay9a05za	cmwkawlu40000l3f8zugqrfgy	ADMIN_LOGIN_SUCCESS	\N	\N	{"mfa": "EMAIL_OTP", "role": "SUPER_ADMIN", "email": "panchanivivek0401@gmail.com", "actorId": "cmwkawlu40000l3f8zugqrfgy"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-17 06:53:39.371
+cmwklan900003l35wyulqowj0	\N	LOGIN_FAILURE	\N	\N	{"email": "vivek@rasoi.me", "actorId": "system"}	::1	\N	2026-11-17 11:08:57.013
+cmwkleddn0005l35wdhwci0sw	\N	LOGIN_FAILURE	\N	\N	{"email": "vivek@rasoi.me", "actorId": "system"}	::1	\N	2026-11-17 11:11:50.843
+cmwklg64a0007l35w9meawup2	\N	LOGIN_FAILURE	\N	\N	{"email": "vivek@rasoi.me", "actorId": "system"}	::1	\N	2026-11-17 11:13:14.746
+cmwkm404y0009l35whdxb34kl	\N	LOGIN_FAILURE	\N	\N	{"email": "vivek@rasoi.me", "actorId": "system"}	::1	\N	2026-11-17 11:31:46.738
+cmwknlx8v0001l3doss54g35s	\N	LOGIN_FAILURE	\N	\N	{"email": "sharma.family@rasoi.local", "actorId": "system"}	::1	\N	2026-11-17 12:13:42.415
+cmwknlxa00003l3donlg10cuf	\N	LOGIN_FAILURE	\N	\N	{"email": "admin@rasoi.me", "actorId": "system"}	::1	\N	2026-11-17 12:13:42.457
+cmwknlxah0005l3dohzy1tb01	\N	LOGIN_FAILURE	\N	\N	{"email": "patel.family@rasoi.local", "actorId": "system"}	::1	\N	2026-11-17 12:13:42.473
+cmwknm3qf000nl3doi342zpx7	\N	LOGIN_FAILURE	\N	\N	{"email": "admin@rasoi.me", "actorId": "system"}	::1	\N	2026-11-17 12:13:50.824
+cmwknn6zu000rl3dobrqqqyjg	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 12:14:41.707
+cmwkno2sx000tl3dopq2lv8ah	user-demo-1	LOGIN_FAILURE	\N	\N	{"actorId": "user-demo-1"}	::1	\N	2026-11-17 12:15:22.93
+cmwkno2th000vl3doz5vpcd95	user-demo-patel	LOGIN_FAILURE	\N	\N	{"actorId": "user-demo-patel"}	::1	\N	2026-11-17 12:15:22.949
+cmwkno32h000zl3dol0qxh38m	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 12:15:23.273
+cmwknqnho0013l3dowdzprvy9	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 12:17:23.052
+cmwkntfkf0003l37gva4hhywc	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 12:19:32.751
+cmwkou6hv0003l30gcztyno0h	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 12:48:07.267
+cmwkoymbv0003l3o0eh7j8lq6	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 12:51:34.411
+cmwkp06yz0003l3o0xufrlxl4	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 12:52:47.82
+cmwkp0d5e000dl3o03qqjs7gt	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 12:52:55.826
+cmwkp28re000zl3o0jo5cp8r7	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 12:54:23.45
+cmwkq3prj0005l3v0ruohu963	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 13:23:31.759
+cmwkq5r2x0003l3zwhasmckk8	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 13:25:06.777
+cmwkq6eel0023l3zwe7z52dbw	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 13:25:37.005
+cmwkq6j2t002jl3zw9p2eu94s	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 13:25:43.062
+cmwkq6w250039l3zwwwlvonbh	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 13:25:59.886
+cmwks7tav0003l354llpy11f4	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 14:22:42.199
+cmwks9yc20003l30gnvobfpc9	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 14:24:22.034
+cmwksb392000ll30g79a3j1u4	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 14:25:15.062
+cmwksb3a6000nl30gfxr33n99	user-demo-1	LOGIN_FAILURE	\N	\N	{"actorId": "user-demo-1"}	::1	\N	2026-11-17 14:25:15.102
+cmwksc0ef000rl30g1ipv1e9s	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 14:25:58.023
+cmwkscl8e002hl30g6scstdus	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 14:26:25.022
+cmwksd4fg004hl30g02w15y42	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 14:26:49.9
+cmwksfskf0003l34oxopmhjvb	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 14:28:54.495
+cmwksic560003l3z0btohknqx	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 14:30:53.178
+cmwksitd7001hl3z0cfindw0a	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 14:31:15.499
+cmwksj0310027l3z0w7tbvtlr	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 14:31:24.206
+cmwksj6ex002nl3z0zx925k5f	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 14:31:32.409
+cmwkttrh70001l3xcmeihuwbz	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_FAILURE	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	\N	2026-11-17 15:07:45.883
+cmwktuhuy0005l3xckks3qqpc	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:08:20.074
+cmwktuufi0009l3xcbyre9url	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:08:36.366
+cmwku2dat0011l3cwmsip4auq	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:14:27.414
+cmwku2eaw001rl3cwmlv0tpsj	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:14:28.712
+cmwku2koa0027l3cwwaeqlbc3	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:14:36.971
+cmwku2lwi0047l3cwqq6bt5x8	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:14:38.563
+cmwku3fhl0008l3e46s68i33k	cmwku3csl0000l3e4u70s3oul	REGISTER	User	cmwku3csl0000l3e4u70s3oul	{"actorId": "cmwku3csl0000l3e4u70s3oul"}	::1	\N	2026-11-17 15:15:16.905
+cmwkuhntl0001l3dg8pqmh3ra	\N	LOGIN_FAILURE	\N	\N	{"email": "test@rasoi.dev", "actorId": "system"}	::1	\N	2026-11-17 15:26:20.889
+cmwlt9v0s009gl37sa3gq5izf	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-18 07:40:03.532
+cmwkuica6000hl3dgyvhbt4nn	cmwkui82d0005l3dghimmtq7s	REGISTER	User	cmwkui82d0005l3dghimmtq7s	{"actorId": "cmwkui82d0005l3dghimmtq7s"}	::1	\N	2026-11-17 15:26:52.59
+cmwkuicew000jl3dg358g0c13	cmwkui8240002l3dgafp0gni3	REGISTER	User	cmwkui8240002l3dgafp0gni3	{"actorId": "cmwkui8240002l3dgafp0gni3"}	::1	\N	2026-11-17 15:26:52.761
+cmwkuilz1000ll3dgq7pvx3vt	\N	LOGIN_FAILURE	\N	\N	{"email": "admin@rasoi.dev", "actorId": "system"}	::1	\N	2026-11-17 15:27:05.149
+cmwkvfuu5001pl3cgzf1vtpoc	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:52:56.286
+cmwkvfvf1002fl3cgqnybjahl	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:52:57.037
+cmwkvfwdb002vl3cg273iz71n	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:52:58.272
+cmwkvg9pe004jl3cgbv7r1xdb	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:53:15.555
+cmwkviyov0003l3mot1fwr7bn	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:55:21.247
+cmwkvjsxw0023l3mos48g3lhp	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:56:00.453
+cmwkvk61p0043l3morpe51ge7	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:56:17.437
+cmwkvkcr0004jl3mocids84w4	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 15:56:26.124
+cmwkwv20m0078l3motvrufuy0	cmwkwutmj0070l3mow26tql75	REGISTER	User	cmwkwutmj0070l3mow26tql75	{"actorId": "cmwkwutmj0070l3mow26tql75"}	::1	\N	2026-11-17 16:32:45.046
+cmwkwv7lp007hl3moie5h68mv	cmwkwv2720079l3morb2h2099	REGISTER	User	cmwkwv2720079l3morb2h2099	{"actorId": "cmwkwv2720079l3morb2h2099"}	::1	\N	2026-11-17 16:32:52.285
+cmwkwvksz007ql3mo5qtuvxoj	cmwkwvdup007il3mokxt8omnn	REGISTER	User	cmwkwvdup007il3mokxt8omnn	{"actorId": "cmwkwvdup007il3mokxt8omnn"}	::1	\N	2026-11-17 16:33:09.396
+cmwkwwy1f007zl3mo1b4k4too	cmwkwwuqv007rl3mompcwif43	REGISTER	User	cmwkwwuqv007rl3mompcwif43	{"actorId": "cmwkwwuqv007rl3mompcwif43"}	::1	\N	2026-11-17 16:34:13.203
+cmwkwwy3c0081l3modcx3meor	cmwkwwuqv007rl3mompcwif43	EMAIL_VERIFIED	User	cmwkwwuqv007rl3mompcwif43	{"actorId": "cmwkwwuqv007rl3mompcwif43"}	::1	\N	2026-11-17 16:34:13.272
+cmwkwwydh0085l3moqe797uuf	cmwkwwuqv007rl3mompcwif43	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkwwuqv007rl3mompcwif43"}	::1	node	2026-11-17 16:34:13.638
+cmwkwx2k1008el3moz7wkgo1p	cmwkwwymt0086l3morcmsdgnq	REGISTER	User	cmwkwwymt0086l3morcmsdgnq	{"actorId": "cmwkwwymt0086l3morcmsdgnq"}	::1	\N	2026-11-17 16:34:19.058
+cmwkwx2mg008gl3momp0z6vc8	cmwkwwymt0086l3morcmsdgnq	EMAIL_VERIFIED	User	cmwkwwymt0086l3morcmsdgnq	{"actorId": "cmwkwwymt0086l3morcmsdgnq"}	::1	\N	2026-11-17 16:34:19.144
+cmwkwx2yf008kl3mo5k5v3y95	cmwkwwymt0086l3morcmsdgnq	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkwwymt0086l3morcmsdgnq"}	::1	node	2026-11-17 16:34:19.575
+cmwkwxd3d008tl3moi2gi4v6z	cmwkwxauo008ll3mos42pjnr3	REGISTER	User	cmwkwxauo008ll3mos42pjnr3	{"actorId": "cmwkwxauo008ll3mos42pjnr3"}	::1	\N	2026-11-17 16:34:32.713
+cmwkwxd51008vl3movey7ty2s	cmwkwxauo008ll3mos42pjnr3	EMAIL_VERIFIED	User	cmwkwxauo008ll3mos42pjnr3	{"actorId": "cmwkwxauo008ll3mos42pjnr3"}	::1	\N	2026-11-17 16:34:32.774
+cmwkwxdf4008zl3movlfso635	cmwkwxauo008ll3mos42pjnr3	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkwxauo008ll3mos42pjnr3"}	::1	node	2026-11-17 16:34:33.137
+cmwkwxgia0098l3mo1m43e9my	cmwkwxdoi0090l3mo4y7e0h0g	REGISTER	User	cmwkwxdoi0090l3mo4y7e0h0g	{"actorId": "cmwkwxdoi0090l3mo4y7e0h0g"}	::1	\N	2026-11-17 16:34:37.138
+cmwkwxgj9009al3molkdp7z3v	cmwkwxdoi0090l3mo4y7e0h0g	EMAIL_VERIFIED	User	cmwkwxdoi0090l3mo4y7e0h0g	{"actorId": "cmwkwxdoi0090l3mo4y7e0h0g"}	::1	\N	2026-11-17 16:34:37.174
+cmwkwxgt0009el3moddt8zp3w	cmwkwxdoi0090l3mo4y7e0h0g	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkwxdoi0090l3mo4y7e0h0g"}	::1	node	2026-11-17 16:34:37.524
+cmwkwxgu6009hl3mor4xstx16	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-17 16:34:37.566
+cmwkwxgva009nl3moheq2a2uj	cmwkwxauo008ll3mos42pjnr3	HOUSEHOLD_CREATED	Household	cmwkwxguv009jl3mop91zha41	{"name": "Household A Smoke 1794933269378", "actorId": "cmwkwxauo008ll3mos42pjnr3"}	\N	\N	2026-11-17 16:34:37.607
+cmwkwxjrt009wl3mokqfdd6f1	cmwkwxh4g009ol3moqm9jqz0v	REGISTER	User	cmwkwxh4g009ol3moqm9jqz0v	{"actorId": "cmwkwxh4g009ol3moqm9jqz0v"}	::1	\N	2026-11-17 16:34:41.369
+cmwkwxjsu009yl3momj9w4mb7	cmwkwxh4g009ol3moqm9jqz0v	EMAIL_VERIFIED	User	cmwkwxh4g009ol3moqm9jqz0v	{"actorId": "cmwkwxh4g009ol3moqm9jqz0v"}	::1	\N	2026-11-17 16:34:41.406
+cmwkwxk2h00a2l3mow9qaccan	cmwkwxh4g009ol3moqm9jqz0v	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkwxh4g009ol3moqm9jqz0v"}	::1	node	2026-11-17 16:34:41.754
+cmwkwxk3c00a8l3mozkequ7qn	cmwkwxh4g009ol3moqm9jqz0v	HOUSEHOLD_CREATED	Household	cmwkwxk2x00a4l3monesnvgpa	{"name": "Household B Smoke 1794933269378", "actorId": "cmwkwxh4g009ol3moqm9jqz0v"}	\N	\N	2026-11-17 16:34:41.784
+cmwkwz4j200all3mobvzg0mx6	cmwkwz25k00adl3mo0v3y8ki4	REGISTER	User	cmwkwz25k00adl3mo0v3y8ki4	{"actorId": "cmwkwz25k00adl3mo0v3y8ki4"}	::1	\N	2026-11-17 16:35:54.927
+cmwkwz4kn00anl3mocruqt3ms	cmwkwz25k00adl3mo0v3y8ki4	EMAIL_VERIFIED	User	cmwkwz25k00adl3mo0v3y8ki4	{"actorId": "cmwkwz25k00adl3mo0v3y8ki4"}	::1	\N	2026-11-17 16:35:54.983
+cmwkwz4v900arl3mofjvaw076	cmwkwz25k00adl3mo0v3y8ki4	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkwz25k00adl3mo0v3y8ki4"}	::1	node	2026-11-17 16:35:55.366
+cmwkwz7kv00b0l3mo9zxdaw1k	cmwkwz55a00asl3mo24tv8bil	REGISTER	User	cmwkwz55a00asl3mo24tv8bil	{"actorId": "cmwkwz55a00asl3mo24tv8bil"}	::1	\N	2026-11-17 16:35:58.879
+cmwkwz7m400b2l3mo31s9zu86	cmwkwz55a00asl3mo24tv8bil	EMAIL_VERIFIED	User	cmwkwz55a00asl3mo24tv8bil	{"actorId": "cmwkwz55a00asl3mo24tv8bil"}	::1	\N	2026-11-17 16:35:58.924
+cmwkwz7wu00b6l3moxgng3h94	cmwkwz55a00asl3mo24tv8bil	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkwz55a00asl3mo24tv8bil"}	::1	node	2026-11-17 16:35:59.311
+cmwkwz7xw00b9l3mos67u1imf	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-17 16:35:59.348
+cmwkwz7yz00bfl3moc4d4d4lb	cmwkwz25k00adl3mo0v3y8ki4	HOUSEHOLD_CREATED	Household	cmwkwz7yj00bbl3mou5r1cg36	{"name": "Household A Smoke 1794933351335", "actorId": "cmwkwz25k00adl3mo0v3y8ki4"}	\N	\N	2026-11-17 16:35:59.387
+cmwkwzba600bol3moh5bt746i	cmwkwz89k00bgl3mozeamoofv	REGISTER	User	cmwkwz89k00bgl3mozeamoofv	{"actorId": "cmwkwz89k00bgl3mozeamoofv"}	::1	\N	2026-11-17 16:36:03.678
+cmwkwzbbj00bql3mot9xr8d9n	cmwkwz89k00bgl3mozeamoofv	EMAIL_VERIFIED	User	cmwkwz89k00bgl3mozeamoofv	{"actorId": "cmwkwz89k00bgl3mozeamoofv"}	::1	\N	2026-11-17 16:36:03.727
+cmwkwzbn800bul3mokb5q0nr1	cmwkwz89k00bgl3mozeamoofv	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkwz89k00bgl3mozeamoofv"}	::1	node	2026-11-17 16:36:04.148
+cmwkwzboh00c0l3moghu7ct3w	cmwkwz89k00bgl3mozeamoofv	HOUSEHOLD_CREATED	Household	cmwkwzbnx00bwl3mo47qu98wv	{"name": "Household B Smoke 1794933351335", "actorId": "cmwkwz89k00bgl3mozeamoofv"}	\N	\N	2026-11-17 16:36:04.194
+cmwkx2c1n00cdl3mof42zhj9h	cmwkx29l300c5l3moeug8a2rp	REGISTER	User	cmwkx29l300c5l3moeug8a2rp	{"actorId": "cmwkx29l300c5l3moeug8a2rp"}	::1	\N	2026-11-17 16:38:24.636
+cmwkx2c3d00cfl3mopb39hrhy	cmwkx29l300c5l3moeug8a2rp	EMAIL_VERIFIED	User	cmwkx29l300c5l3moeug8a2rp	{"actorId": "cmwkx29l300c5l3moeug8a2rp"}	::1	\N	2026-11-17 16:38:24.697
+cmwkx2ce800cjl3mojsrbjoly	cmwkx29l300c5l3moeug8a2rp	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkx29l300c5l3moeug8a2rp"}	::1	node	2026-11-17 16:38:25.089
+cmwkx2exa00csl3mozuwzq8q3	cmwkx2cor00ckl3mommh5snpf	REGISTER	User	cmwkx2cor00ckl3mommh5snpf	{"actorId": "cmwkx2cor00ckl3mommh5snpf"}	::1	\N	2026-11-17 16:38:28.366
+cmwkx2eyc00cul3mozgkfc2vn	cmwkx2cor00ckl3mommh5snpf	EMAIL_VERIFIED	User	cmwkx2cor00ckl3mommh5snpf	{"actorId": "cmwkx2cor00ckl3mommh5snpf"}	::1	\N	2026-11-17 16:38:28.405
+cmwkx2f8800cyl3mofz11fs41	cmwkx2cor00ckl3mommh5snpf	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkx2cor00ckl3mommh5snpf"}	::1	node	2026-11-17 16:38:28.76
+cmwkx2f9g00d1l3mor3bbe2qs	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-17 16:38:28.805
+cmwkx2i2h00dal3moyfuyymli	cmwkx2fj100d2l3mofqhxnmgz	REGISTER	User	cmwkx2fj100d2l3mofqhxnmgz	{"actorId": "cmwkx2fj100d2l3mofqhxnmgz"}	::1	\N	2026-11-17 16:38:32.441
+cmwkx2i3h00dcl3mosf20rd15	cmwkx2fj100d2l3mofqhxnmgz	EMAIL_VERIFIED	User	cmwkx2fj100d2l3mofqhxnmgz	{"actorId": "cmwkx2fj100d2l3mofqhxnmgz"}	::1	\N	2026-11-17 16:38:32.477
+cmwkx2idc00dgl3mo82e1x2bs	cmwkx2fj100d2l3mofqhxnmgz	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkx2fj100d2l3mofqhxnmgz"}	::1	node	2026-11-17 16:38:32.832
+cmwkx3c3o00dvl3mo806obg2y	cmwkx396g00dnl3mo5cxmw396	REGISTER	User	cmwkx396g00dnl3mo5cxmw396	{"actorId": "cmwkx396g00dnl3mo5cxmw396"}	::1	\N	2026-11-17 16:39:11.364
+cmwkx3c5c00dxl3mo3gl7t9tu	cmwkx396g00dnl3mo5cxmw396	EMAIL_VERIFIED	User	cmwkx396g00dnl3mo5cxmw396	{"actorId": "cmwkx396g00dnl3mo5cxmw396"}	::1	\N	2026-11-17 16:39:11.425
+cmwkx3cfg00e1l3movmoqy4ya	cmwkx396g00dnl3mo5cxmw396	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkx396g00dnl3mo5cxmw396"}	::1	node	2026-11-17 16:39:11.789
+cmwkx3exs00eal3mo1sznft3q	cmwkx3con00e2l3mocunijwct	REGISTER	User	cmwkx3con00e2l3mocunijwct	{"actorId": "cmwkx3con00e2l3mocunijwct"}	::1	\N	2026-11-17 16:39:15.04
+cmwkx3eyu00ecl3moolw8lqy3	cmwkx3con00e2l3mocunijwct	EMAIL_VERIFIED	User	cmwkx3con00e2l3mocunijwct	{"actorId": "cmwkx3con00e2l3mocunijwct"}	::1	\N	2026-11-17 16:39:15.078
+cmwkx3f8t00egl3moko0a58jd	cmwkx3con00e2l3mocunijwct	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkx3con00e2l3mocunijwct"}	::1	node	2026-11-17 16:39:15.437
+cmwkx3f9w00ejl3moixqzueyr	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-17 16:39:15.476
+cmwkx3i4v00esl3mocv59u5qc	cmwkx3fjb00ekl3mo6qe6eaan	REGISTER	User	cmwkx3fjb00ekl3mo6qe6eaan	{"actorId": "cmwkx3fjb00ekl3mo6qe6eaan"}	::1	\N	2026-11-17 16:39:19.183
+cmwkx3i5y00eul3moyowvf3lm	cmwkx3fjb00ekl3mo6qe6eaan	EMAIL_VERIFIED	User	cmwkx3fjb00ekl3mo6qe6eaan	{"actorId": "cmwkx3fjb00ekl3mo6qe6eaan"}	::1	\N	2026-11-17 16:39:19.222
+cmwkx3ifr00eyl3mo109h5wt7	cmwkx3fjb00ekl3mo6qe6eaan	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkx3fjb00ekl3mo6qe6eaan"}	::1	node	2026-11-17 16:39:19.576
+cmwkx4ig700fdl3moztbq1zwv	cmwkx4fa200f5l3moxe9iari8	REGISTER	User	cmwkx4fa200f5l3moxe9iari8	{"actorId": "cmwkx4fa200f5l3moxe9iari8"}	::1	\N	2026-11-17 16:40:06.247
+cmwkx4ihu00ffl3mo3e5m2jdo	cmwkx4fa200f5l3moxe9iari8	EMAIL_VERIFIED	User	cmwkx4fa200f5l3moxe9iari8	{"actorId": "cmwkx4fa200f5l3moxe9iari8"}	::1	\N	2026-11-17 16:40:06.306
+cmwkx4irw00fjl3mow4x9hra8	cmwkx4fa200f5l3moxe9iari8	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkx4fa200f5l3moxe9iari8"}	::1	node	2026-11-17 16:40:06.668
+cmwkx4lef00fsl3moe0untat3	cmwkx4j1a00fkl3mol4xvmw2q	REGISTER	User	cmwkx4j1a00fkl3mol4xvmw2q	{"actorId": "cmwkx4j1a00fkl3mol4xvmw2q"}	::1	\N	2026-11-17 16:40:10.071
+cmwkx4lfk00ful3mohrehrbdq	cmwkx4j1a00fkl3mol4xvmw2q	EMAIL_VERIFIED	User	cmwkx4j1a00fkl3mol4xvmw2q	{"actorId": "cmwkx4j1a00fkl3mol4xvmw2q"}	::1	\N	2026-11-17 16:40:10.112
+cmwkx4lpi00fyl3mooueszvte	cmwkx4j1a00fkl3mol4xvmw2q	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkx4j1a00fkl3mol4xvmw2q"}	::1	node	2026-11-17 16:40:10.471
+cmwkx4lqi00g1l3mojn5uwbie	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-17 16:40:10.506
+cmwkx4olv00gal3mo14o30wdu	cmwkx4m0100g2l3mohjj1nx7i	REGISTER	User	cmwkx4m0100g2l3mohjj1nx7i	{"actorId": "cmwkx4m0100g2l3mohjj1nx7i"}	::1	\N	2026-11-17 16:40:14.227
+cmwkx4omu00gcl3moaig4l3u5	cmwkx4m0100g2l3mohjj1nx7i	EMAIL_VERIFIED	User	cmwkx4m0100g2l3mohjj1nx7i	{"actorId": "cmwkx4m0100g2l3mohjj1nx7i"}	::1	\N	2026-11-17 16:40:14.262
+cmwkx4owi00ggl3mop7lzhiri	cmwkx4m0100g2l3mohjj1nx7i	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkx4m0100g2l3mohjj1nx7i"}	::1	node	2026-11-17 16:40:14.61
+cmwkx5ltm00hql3moq2h24t6w	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 16:40:57.274
+cmwkx5mu300igl3mo3i6bxc2z	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 16:40:58.587
+cmwkx5o1p00iwl3mouwp6uvdv	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 16:41:00.157
+cmwkx5zev00l9l3mobx2xjan1	cmwkx5wxd00l1l3mowf771xh9	REGISTER	User	cmwkx5wxd00l1l3mowf771xh9	{"actorId": "cmwkx5wxd00l1l3mowf771xh9"}	::1	\N	2026-11-17 16:41:14.887
+cmwkx5zh700lbl3mo97370oeu	cmwkx5wxd00l1l3mowf771xh9	EMAIL_VERIFIED	User	cmwkx5wxd00l1l3mowf771xh9	{"actorId": "cmwkx5wxd00l1l3mowf771xh9"}	::1	\N	2026-11-17 16:41:14.971
+cmwkx5zs200lfl3moufynegxn	cmwkx5wxd00l1l3mowf771xh9	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkx5wxd00l1l3mowf771xh9"}	::1	node	2026-11-17 16:41:15.362
+cmwkx6c4y00lol3moh15iz8qe	cmwkx603t00lgl3mom0i6myrq	REGISTER	User	cmwkx603t00lgl3mom0i6myrq	{"actorId": "cmwkx603t00lgl3mom0i6myrq"}	::1	\N	2026-11-17 16:41:31.379
+cmwkx6c6700lql3moedys6wn4	cmwkx603t00lgl3mom0i6myrq	EMAIL_VERIFIED	User	cmwkx603t00lgl3mom0i6myrq	{"actorId": "cmwkx603t00lgl3mom0i6myrq"}	::1	\N	2026-11-17 16:41:31.423
+cmwkx6cgr00lul3modedmxcri	cmwkx603t00lgl3mom0i6myrq	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkx603t00lgl3mom0i6myrq"}	::1	node	2026-11-17 16:41:31.803
+cmwkx6chr00lxl3mo6x2wfs4o	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-17 16:41:31.839
+cmwkx6gd600m6l3mo3f0ke3io	cmwkx6crb00lyl3mo006moex0	REGISTER	User	cmwkx6crb00lyl3mo006moex0	{"actorId": "cmwkx6crb00lyl3mo006moex0"}	::1	\N	2026-11-17 16:41:36.858
+cmwkx6geb00m8l3mombfve1o6	cmwkx6crb00lyl3mo006moex0	EMAIL_VERIFIED	User	cmwkx6crb00lyl3mo006moex0	{"actorId": "cmwkx6crb00lyl3mo006moex0"}	::1	\N	2026-11-17 16:41:36.899
+cmwkx6gox00mcl3mo7b10q6mz	cmwkx6crb00lyl3mo006moex0	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkx6crb00lyl3mo006moex0"}	::1	node	2026-11-17 16:41:37.281
+cmwkxhtfe0013l3ocgyp0bu0r	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 16:50:27.002
+cmwkxhufn001tl3ocp4qxw0it	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 16:50:28.308
+cmwkxhvlv0029l3oc87j7dupz	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-17 16:50:29.828
+cmwkxiauo004ml3oc97711jux	cmwkxi4jr004el3ocoa8hht1u	REGISTER	User	cmwkxi4jr004el3ocoa8hht1u	{"actorId": "cmwkxi4jr004el3ocoa8hht1u"}	::1	\N	2026-11-17 16:50:49.583
+cmwluyx500047l378icysvnhn	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 08:27:32.292
+cmwkxiawp004ol3ochc4f9gbh	cmwkxi4jr004el3ocoa8hht1u	EMAIL_VERIFIED	User	cmwkxi4jr004el3ocoa8hht1u	{"actorId": "cmwkxi4jr004el3ocoa8hht1u"}	::1	\N	2026-11-17 16:50:49.657
+cmwkxib6t004sl3ocr4wjgp8c	cmwkxi4jr004el3ocoa8hht1u	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkxi4jr004el3ocoa8hht1u"}	::1	node	2026-11-17 16:50:50.021
+cmwkxiiaz0051l3ocvh1kfolg	cmwkxibh7004tl3oc7c5twn9n	REGISTER	User	cmwkxibh7004tl3oc7c5twn9n	{"actorId": "cmwkxibh7004tl3oc7c5twn9n"}	::1	\N	2026-11-17 16:50:59.243
+cmwkxiic30053l3ocpivyhgzw	cmwkxibh7004tl3oc7c5twn9n	EMAIL_VERIFIED	User	cmwkxibh7004tl3oc7c5twn9n	{"actorId": "cmwkxibh7004tl3oc7c5twn9n"}	::1	\N	2026-11-17 16:50:59.284
+cmwkxiime0057l3ocrnvt18mh	cmwkxibh7004tl3oc7c5twn9n	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkxibh7004tl3oc7c5twn9n"}	::1	node	2026-11-17 16:50:59.654
+cmwkxiing005al3oce5o34fp1	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-17 16:50:59.692
+cmwkxilb4005jl3oc92jp3zhv	cmwkxiixh005bl3ocsxmyooyu	REGISTER	User	cmwkxiixh005bl3ocsxmyooyu	{"actorId": "cmwkxiixh005bl3ocsxmyooyu"}	::1	\N	2026-11-17 16:51:03.137
+cmwkxilc6005ll3ochxf7qi5v	cmwkxiixh005bl3ocsxmyooyu	EMAIL_VERIFIED	User	cmwkxiixh005bl3ocsxmyooyu	{"actorId": "cmwkxiixh005bl3ocsxmyooyu"}	::1	\N	2026-11-17 16:51:03.175
+cmwkxiln2005pl3ocx7owqwgk	cmwkxiixh005bl3ocsxmyooyu	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwkxiixh005bl3ocsxmyooyu"}	::1	node	2026-11-17 16:51:03.567
+cmwlrx4mz0013l3wojexyquim	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 07:02:09.851
+cmwlrx5n4001tl3woko6mtzc6	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 07:02:11.152
+cmwlrxruu0028l3wolijs6cuk	cmwlrxogg0020l3wohce8kia3	REGISTER	User	cmwlrxogg0020l3wohce8kia3	{"actorId": "cmwlrxogg0020l3wohce8kia3"}	::1	\N	2026-11-18 07:02:39.942
+cmwlrxrww002al3woubtgeo9u	cmwlrxogg0020l3wohce8kia3	EMAIL_VERIFIED	User	cmwlrxogg0020l3wohce8kia3	{"actorId": "cmwlrxogg0020l3wohce8kia3"}	::1	\N	2026-11-18 07:02:40.016
+cmwlrxs6z002el3wodku5jiuu	cmwlrxogg0020l3wohce8kia3	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlrxogg0020l3wohce8kia3"}	::1	node	2026-11-18 07:02:40.379
+cmwlrxvfg002nl3womcf646lg	cmwlrxsg2002fl3woul4jib8w	REGISTER	User	cmwlrxsg2002fl3woul4jib8w	{"actorId": "cmwlrxsg2002fl3woul4jib8w"}	::1	\N	2026-11-18 07:02:44.572
+cmwlrxvgi002pl3wos458kl4e	cmwlrxsg2002fl3woul4jib8w	EMAIL_VERIFIED	User	cmwlrxsg2002fl3woul4jib8w	{"actorId": "cmwlrxsg2002fl3woul4jib8w"}	::1	\N	2026-11-18 07:02:44.61
+cmwlrxvpv002tl3wotne6ce47	cmwlrxsg2002fl3woul4jib8w	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlrxsg2002fl3woul4jib8w"}	::1	node	2026-11-18 07:02:44.947
+cmwlrxvqz002wl3woi35s4u3h	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-18 07:02:44.987
+cmwlrxzmi0035l3wo4h01vqof	cmwlrxw0a002xl3wo652h7lar	REGISTER	User	cmwlrxw0a002xl3wo652h7lar	{"actorId": "cmwlrxw0a002xl3wo652h7lar"}	::1	\N	2026-11-18 07:02:50.011
+cmwlrxzng0037l3wozkua8am1	cmwlrxw0a002xl3wo652h7lar	EMAIL_VERIFIED	User	cmwlrxw0a002xl3wo652h7lar	{"actorId": "cmwlrxw0a002xl3wo652h7lar"}	::1	\N	2026-11-18 07:02:50.044
+cmwls10dv003bl3woqcl9dlqm	cmwjb5fej003ql3gghywo88u2	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjb5fej003ql3gghywo88u2"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 07:05:10.963
+cmwls9lyv0003l37srkw7bkov	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 07:11:52.183
+cmwlsb06m000jl37sc36z6os9	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 07:12:57.263
+cmwlsc770002hl37scuk1dq82	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 07:13:53.004
+cmwlscp7j004ul37s4eyijxxb	cmwlscmb6004ml37sgp4x2ldl	REGISTER	User	cmwlscmb6004ml37sgp4x2ldl	{"actorId": "cmwlscmb6004ml37sgp4x2ldl"}	::1	\N	2026-11-18 07:14:16.352
+cmwlscp9l004wl37scdj7uttl	cmwlscmb6004ml37sgp4x2ldl	EMAIL_VERIFIED	User	cmwlscmb6004ml37sgp4x2ldl	{"actorId": "cmwlscmb6004ml37sgp4x2ldl"}	::1	\N	2026-11-18 07:14:16.425
+cmwlscpjv0050l37s7lga06my	cmwlscmb6004ml37sgp4x2ldl	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlscmb6004ml37sgp4x2ldl"}	::1	node	2026-11-18 07:14:16.795
+cmwlscs5r0059l37svbg5dy35	cmwlscptp0051l37sex523org	REGISTER	User	cmwlscptp0051l37sex523org	{"actorId": "cmwlscptp0051l37sex523org"}	::1	\N	2026-11-18 07:14:20.175
+cmwlscs6q005bl37swvc4beel	cmwlscptp0051l37sex523org	EMAIL_VERIFIED	User	cmwlscptp0051l37sex523org	{"actorId": "cmwlscptp0051l37sex523org"}	::1	\N	2026-11-18 07:14:20.21
+cmwlscsdl005fl37skajy0dvd	cmwlscptp0051l37sex523org	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlscptp0051l37sex523org"}	::1	node	2026-11-18 07:14:20.458
+cmwlscsef005il37sls39b80o	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-18 07:14:20.488
+cmwlscvt4005rl37sd3htli48	cmwlscsku005jl37se8nvwqse	REGISTER	User	cmwlscsku005jl37se8nvwqse	{"actorId": "cmwlscsku005jl37se8nvwqse"}	::1	\N	2026-11-18 07:14:24.904
+cmwlscvtx005tl37sv26i0or8	cmwlscsku005jl37se8nvwqse	EMAIL_VERIFIED	User	cmwlscsku005jl37se8nvwqse	{"actorId": "cmwlscsku005jl37se8nvwqse"}	::1	\N	2026-11-18 07:14:24.934
+cmwlscw1m005xl37sfw1gfblw	cmwlscsku005jl37se8nvwqse	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlscsku005jl37se8nvwqse"}	::1	node	2026-11-18 07:14:25.21
+cmwlspu2m0067l37sbot8pipc	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 07:24:29.182
+cmwlsq3ow006sl37sfegpuh85	cmwlsq12h006kl37semulwczh	REGISTER	User	cmwlsq12h006kl37semulwczh	{"actorId": "cmwlsq12h006kl37semulwczh"}	::1	\N	2026-11-18 07:24:41.648
+cmwlsq3qm006ul37sc2cftqto	cmwlsq12h006kl37semulwczh	EMAIL_VERIFIED	User	cmwlsq12h006kl37semulwczh	{"actorId": "cmwlsq12h006kl37semulwczh"}	::1	\N	2026-11-18 07:24:41.71
+cmwlsq40d006yl37svxnh4udj	cmwlsq12h006kl37semulwczh	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlsq12h006kl37semulwczh"}	::1	node	2026-11-18 07:24:42.061
+cmwlsq6ne0077l37srkwm1rty	cmwlsq49o006zl37sh8xeotoe	REGISTER	User	cmwlsq49o006zl37sh8xeotoe	{"actorId": "cmwlsq49o006zl37sh8xeotoe"}	::1	\N	2026-11-18 07:24:45.482
+cmwlsq6of0079l37sjl6liwsr	cmwlsq49o006zl37sh8xeotoe	EMAIL_VERIFIED	User	cmwlsq49o006zl37sh8xeotoe	{"actorId": "cmwlsq49o006zl37sh8xeotoe"}	::1	\N	2026-11-18 07:24:45.519
+cmwlsq6y1007dl37svw20acvk	cmwlsq49o006zl37sh8xeotoe	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlsq49o006zl37sh8xeotoe"}	::1	node	2026-11-18 07:24:45.866
+cmwlsq6z2007gl37s7hlsfh5z	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-18 07:24:45.902
+cmwlsq9rw007pl37s67ln768f	cmwlsq78l007hl37su4h25vpp	REGISTER	User	cmwlsq78l007hl37su4h25vpp	{"actorId": "cmwlsq78l007hl37su4h25vpp"}	::1	\N	2026-11-18 07:24:49.532
+cmwlsq9sw007rl37szlppluf3	cmwlsq78l007hl37su4h25vpp	EMAIL_VERIFIED	User	cmwlsq78l007hl37su4h25vpp	{"actorId": "cmwlsq78l007hl37su4h25vpp"}	::1	\N	2026-11-18 07:24:49.569
+cmwlsqa2d007vl37s8n34jttf	cmwlsq78l007hl37su4h25vpp	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlsq78l007hl37su4h25vpp"}	::1	node	2026-11-18 07:24:49.909
+cmwluz4dq004nl378x6u6znvc	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 08:27:41.679
+cmwlt0rxs0099l37sy5ihdc0y	cmwkawlu40000l3f8zugqrfgy	SESSIONS_REVOKED	User	cmwjb5fej003ql3gghywo88u2	{"reason": "Administrative security reset", "actorId": "cmwkawlu40000l3f8zugqrfgy", "sessionsRevoked": 22}	\N	\N	2026-11-18 07:32:59.632
+cmwlt1lk6009dl37sg2j1trip	cmwjb5fej003ql3gghywo88u2	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjb5fej003ql3gghywo88u2"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 07:33:38.022
+cmwlta3mw009kl37spy3t9pwu	cmwjb5fej003ql3gghywo88u2	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjb5fej003ql3gghywo88u2"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 07:40:14.696
+cmwltbdcs009ml37s29ufvwzg	cmwjb5fej003ql3gghywo88u2	PROFILE_UPDATED	\N	\N	{"actorId": "cmwjb5fej003ql3gghywo88u2", "updatedFields": ["fullName", "phoneNumber"]}	::1	\N	2026-11-18 07:41:13.948
+cmwltcolb009ol37sf2p7p59m	cmwjb5fej003ql3gghywo88u2	PASSWORD_CHANGED	\N	\N	{"actorId": "cmwjb5fej003ql3gghywo88u2"}	::1	\N	2026-11-18 07:42:15.167
+cmwltct4v009rl37s3zkqn1s1	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-18 07:42:21.056
+cmwlte09a009vl37sl6wrdq9j	cmwjb5fej003ql3gghywo88u2	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwjb5fej003ql3gghywo88u2"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 07:43:16.942
+cmwltia73009zl37suyx7sbep	cmwjb5fej003ql3gghywo88u2	HOUSEHOLD_INVITATION_SENT	HouseholdInvitation	cmwlti7ls009xl37suyce6s8v	{"role": "MEMBER", "actorId": "cmwjb5fej003ql3gghywo88u2", "invitedEmail": "panchanivivek0401@gmail.com"}	\N	\N	2026-11-18 07:46:36.447
+cmwltk27l00a1l37sg278qief	cmwkawlu40000l3f8zugqrfgy	LOGIN_FAILURE	\N	\N	{"actorId": "cmwkawlu40000l3f8zugqrfgy"}	::1	\N	2026-11-18 07:47:59.409
+cmwltmmua00a3l37s1ukghryq	cmwjb5fej003ql3gghywo88u2	HOUSEHOLD_INVITATION_REVOKED	HouseholdInvitation	cmwlti7ls009xl37suyce6s8v	{"actorId": "cmwjb5fej003ql3gghywo88u2"}	\N	\N	2026-11-18 07:49:59.458
+cmwltofbs00a7l37sefxu5l59	cmwkawlu40000l3f8zugqrfgy	PASSWORD_RESET_REQUESTED	\N	\N	{"actorId": "cmwkawlu40000l3f8zugqrfgy"}	::1	\N	2026-11-18 07:51:23.033
+cmwltpbz700abl37s20tx3uoo	cmwjb5fej003ql3gghywo88u2	HOUSEHOLD_INVITATION_SENT	HouseholdInvitation	cmwltp9j400a9l37syi30kpmg	{"role": "MEMBER", "actorId": "cmwjb5fej003ql3gghywo88u2", "invitedEmail": "asm27052002@gmail.com"}	\N	\N	2026-11-18 07:52:05.347
+cmwltrz4u00akl37syz6bjpmg	cmwltrwwc00acl37siffy7u9l	REGISTER	User	cmwltrwwc00acl37siffy7u9l	{"actorId": "cmwltrwwc00acl37siffy7u9l"}	::1	\N	2026-11-18 07:54:08.67
+cmwlttvqh00aml37sja7q7frb	cmwltrwwc00acl37siffy7u9l	EMAIL_VERIFIED	User	cmwltrwwc00acl37siffy7u9l	{"actorId": "cmwltrwwc00acl37siffy7u9l"}	::1	\N	2026-11-18 07:55:37.577
+cmwltunaq00aql37suo6e5esf	cmwltrwwc00acl37siffy7u9l	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwltrwwc00acl37siffy7u9l"}	::1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 07:56:13.298
+cmwltuwnj00aul37s6z3dl6pz	cmwltrwwc00acl37siffy7u9l	HOUSEHOLD_INVITATION_ACCEPTED	Household	cmwjbo8tb0001l3rks9ymiw4i	{"role": "MEMBER", "actorId": "cmwltrwwc00acl37siffy7u9l"}	\N	\N	2026-11-18 07:56:25.424
+cmwlucu6400b5l37sjm0xmgmp	cmwlucrnx00axl37s08ria2ta	REGISTER	User	cmwlucrnx00axl37s08ria2ta	{"actorId": "cmwlucrnx00axl37s08ria2ta"}	::1	\N	2026-11-18 08:10:22.012
+cmwlucu7w00b7l37s9zcktzjx	cmwlucrnx00axl37s08ria2ta	EMAIL_VERIFIED	User	cmwlucrnx00axl37s08ria2ta	{"actorId": "cmwlucrnx00axl37s08ria2ta"}	::1	\N	2026-11-18 08:10:22.077
+cmwlucui400bbl37sczjtv5io	cmwlucrnx00axl37s08ria2ta	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlucrnx00axl37s08ria2ta"}	::1	node	2026-11-18 08:10:22.444
+cmwlucx8w00bsl37snem4fggp	cmwlucuz600bkl37sxjs47if5	REGISTER	User	cmwlucuz600bkl37sxjs47if5	{"actorId": "cmwlucuz600bkl37sxjs47if5"}	::1	\N	2026-11-18 08:10:26
+cmwlucxa300bul37s7l26d2i7	cmwlucuz600bkl37sxjs47if5	EMAIL_VERIFIED	User	cmwlucuz600bkl37sxjs47if5	{"actorId": "cmwlucuz600bkl37sxjs47if5"}	::1	\N	2026-11-18 08:10:26.043
+cmwlucxkp00byl37sp7oapaf7	cmwlucuz600bkl37sxjs47if5	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlucuz600bkl37sxjs47if5"}	::1	node	2026-11-18 08:10:26.425
+cmwlud2d400cbl37s3fc5f401	cmwlucy0b00c3l37sjoa9xngk	REGISTER	User	cmwlucy0b00c3l37sjoa9xngk	{"actorId": "cmwlucy0b00c3l37sjoa9xngk"}	::1	\N	2026-11-18 08:10:32.633
+cmwlud2e600cdl37s62losj39	cmwlucy0b00c3l37sjoa9xngk	EMAIL_VERIFIED	User	cmwlucy0b00c3l37sjoa9xngk	{"actorId": "cmwlucy0b00c3l37sjoa9xngk"}	::1	\N	2026-11-18 08:10:32.67
+cmwlud2o100chl37s7g0xpa55	cmwlucy0b00c3l37sjoa9xngk	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlucy0b00c3l37sjoa9xngk"}	::1	node	2026-11-18 08:10:33.025
+cmwlutiy20008l378sdnn9w30	cmwluteid0000l3788hcz6990	REGISTER	User	cmwluteid0000l3788hcz6990	{"actorId": "cmwluteid0000l3788hcz6990"}	::1	\N	2026-11-18 08:23:20.619
+cmwlutizr000al378m2m9lofo	cmwluteid0000l3788hcz6990	EMAIL_VERIFIED	User	cmwluteid0000l3788hcz6990	{"actorId": "cmwluteid0000l3788hcz6990"}	::1	\N	2026-11-18 08:23:20.679
+cmwlutj6e000el378w3socu8s	cmwluteid0000l3788hcz6990	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwluteid0000l3788hcz6990"}	::1	node	2026-11-18 08:23:20.918
+cmwlutnbm000vl378pagdjiha	cmwlutjlb000nl378o8jmwhbc	REGISTER	User	cmwlutjlb000nl378o8jmwhbc	{"actorId": "cmwlutjlb000nl378o8jmwhbc"}	::1	\N	2026-11-18 08:23:26.29
+cmwlutncq000xl378qrjoszxk	cmwlutjlb000nl378o8jmwhbc	EMAIL_VERIFIED	User	cmwlutjlb000nl378o8jmwhbc	{"actorId": "cmwlutjlb000nl378o8jmwhbc"}	::1	\N	2026-11-18 08:23:26.33
+cmwlutnki0011l378exdjohkc	cmwlutjlb000nl378o8jmwhbc	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlutjlb000nl378o8jmwhbc"}	::1	node	2026-11-18 08:23:26.61
+cmwlutqsy001el378mi0xfe77	cmwlutnyu0016l378xwczb3pb	REGISTER	User	cmwlutnyu0016l378xwczb3pb	{"actorId": "cmwlutnyu0016l378xwczb3pb"}	::1	\N	2026-11-18 08:23:30.802
+cmwlutqu2001gl378v4q8cxgt	cmwlutnyu0016l378xwczb3pb	EMAIL_VERIFIED	User	cmwlutnyu0016l378xwczb3pb	{"actorId": "cmwlutnyu0016l378xwczb3pb"}	::1	\N	2026-11-18 08:23:30.842
+cmwlutr2q001kl378dblzrg3o	cmwlutnyu0016l378xwczb3pb	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlutnyu0016l378xwczb3pb"}	::1	node	2026-11-18 08:23:31.154
+cmwluvsao001xl3786w4icxxy	cmwluvp8d001pl378lv9i8eqm	REGISTER	User	cmwluvp8d001pl378lv9i8eqm	{"actorId": "cmwluvp8d001pl378lv9i8eqm"}	::1	\N	2026-11-18 08:25:06.048
+cmwluvscb001zl378a3wx0dz0	cmwluvp8d001pl378lv9i8eqm	EMAIL_VERIFIED	User	cmwluvp8d001pl378lv9i8eqm	{"actorId": "cmwluvp8d001pl378lv9i8eqm"}	::1	\N	2026-11-18 08:25:06.108
+cmwluvsmm0023l3786fiye1gb	cmwluvp8d001pl378lv9i8eqm	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwluvp8d001pl378lv9i8eqm"}	::1	node	2026-11-18 08:25:06.478
+cmwluvviy002kl378j4bqu18r	cmwluvt42002cl378qx2ivo25	REGISTER	User	cmwluvt42002cl378qx2ivo25	{"actorId": "cmwluvt42002cl378qx2ivo25"}	::1	\N	2026-11-18 08:25:10.234
+cmwluvvk1002ml378ptmzeuzk	cmwluvt42002cl378qx2ivo25	EMAIL_VERIFIED	User	cmwluvt42002cl378qx2ivo25	{"actorId": "cmwluvt42002cl378qx2ivo25"}	::1	\N	2026-11-18 08:25:10.273
+cmwluvvu6002ql378th1l9pct	cmwluvt42002cl378qx2ivo25	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwluvt42002cl378qx2ivo25"}	::1	node	2026-11-18 08:25:10.638
+cmwluw0jk0033l378a5cz83os	cmwluvw8q002vl378oiuhuj8x	REGISTER	User	cmwluvw8q002vl378oiuhuj8x	{"actorId": "cmwluvw8q002vl378oiuhuj8x"}	::1	\N	2026-11-18 08:25:16.737
+cmwluw0kn0035l378pbja6s2z	cmwluvw8q002vl378oiuhuj8x	EMAIL_VERIFIED	User	cmwluvw8q002vl378oiuhuj8x	{"actorId": "cmwluvw8q002vl378oiuhuj8x"}	::1	\N	2026-11-18 08:25:16.775
+cmwluw0vg0039l378fyanwuan	cmwluvw8q002vl378oiuhuj8x	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwluvw8q002vl378oiuhuj8x"}	::1	node	2026-11-18 08:25:17.164
+cmwluypz6003hl3782o58r4sx	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 08:27:23.01
+cmwlv08wp0070l378ls2jgm4i	cmwlv0470006sl378yxzqecwd	REGISTER	User	cmwlv0470006sl378yxzqecwd	{"actorId": "cmwlv0470006sl378yxzqecwd"}	::1	\N	2026-11-18 08:28:34.201
+cmwlv08ya0072l378delqa8vi	cmwlv0470006sl378yxzqecwd	EMAIL_VERIFIED	User	cmwlv0470006sl378yxzqecwd	{"actorId": "cmwlv0470006sl378yxzqecwd"}	::1	\N	2026-11-18 08:28:34.258
+cmwlv09840076l3780n2xz3mt	cmwlv0470006sl378yxzqecwd	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlv0470006sl378yxzqecwd"}	::1	node	2026-11-18 08:28:34.613
+cmwlv0bus007fl3785hs09djz	cmwlv09hw0077l378nkol1n6z	REGISTER	User	cmwlv09hw0077l378nkol1n6z	{"actorId": "cmwlv09hw0077l378nkol1n6z"}	::1	\N	2026-11-18 08:28:38.02
+cmwlv0bvt007hl378kll31uwt	cmwlv09hw0077l378nkol1n6z	EMAIL_VERIFIED	User	cmwlv09hw0077l378nkol1n6z	{"actorId": "cmwlv09hw0077l378nkol1n6z"}	::1	\N	2026-11-18 08:28:38.057
+cmwlv0c5i007ll378l1rh48no	cmwlv09hw0077l378nkol1n6z	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlv09hw0077l378nkol1n6z"}	::1	node	2026-11-18 08:28:38.407
+cmwlv0c6l007ol3782gnnqbxy	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-18 08:28:38.445
+cmwlv0g4q007xl378n9z10jhr	cmwlv0cga007pl378h3tlmlyp	REGISTER	User	cmwlv0cga007pl378h3tlmlyp	{"actorId": "cmwlv0cga007pl378h3tlmlyp"}	::1	\N	2026-11-18 08:28:43.563
+cmwlv0g5q007zl3788x4jispl	cmwlv0cga007pl378h3tlmlyp	EMAIL_VERIFIED	User	cmwlv0cga007pl378h3tlmlyp	{"actorId": "cmwlv0cga007pl378h3tlmlyp"}	::1	\N	2026-11-18 08:28:43.598
+cmwlv0gf90083l378neex0lid	cmwlv0cga007pl378h3tlmlyp	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlv0cga007pl378h3tlmlyp"}	::1	node	2026-11-18 08:28:43.941
+cmwlyyfeu0007l3soj2gcudde	\N	LOGIN_FAILURE	\N	\N	{"email": "sharma.family@rasoi.me", "actorId": "system"}	::1	\N	2026-11-18 10:19:07.782
+cmwlz6lhl0005l33c1p08ob1u	\N	LOGIN_FAILURE	\N	\N	{"email": "sharma.family@rasoi.me", "actorId": "system"}	::1	\N	2026-11-18 10:25:28.905
+cmwlz6w290009l33c0tw2jh52	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 10:25:42.609
+cmwlz81um000dl33cpi8y3112	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 10:26:36.766
+cmwlz9n7f0003l3j408fms4i8	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 10:27:51.1
+cmwlzah65000tl3j4j5nrr4qh	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 10:28:29.933
+cmwlzcu0z001jl3j4v1tguhsg	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 10:30:19.907
+cmwlzdjt90029l3j44l41ap5z	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 10:30:53.325
+cmwlzef9m002zl3j4u5pdijmc	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 10:31:34.09
+cmwlzg41h003fl3j4ccwce8ka	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 10:32:52.853
+cmwlzh7lz005bl3j4r9nlzgax	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 10:33:44.135
+cmwlzjvlm007ol3j4r3r1lrxi	cmwlzjs7m007gl3j4xmuko7ij	REGISTER	User	cmwlzjs7m007gl3j4xmuko7ij	{"actorId": "cmwlzjs7m007gl3j4xmuko7ij"}	::1	\N	2026-11-18 10:35:48.539
+cmwlzjvmx007ql3j4jodfitgo	cmwlzjs7m007gl3j4xmuko7ij	EMAIL_VERIFIED	User	cmwlzjs7m007gl3j4xmuko7ij	{"actorId": "cmwlzjs7m007gl3j4xmuko7ij"}	::1	\N	2026-11-18 10:35:48.585
+cmwlzjvsj007ul3j4yq41ivd8	cmwlzjs7m007gl3j4xmuko7ij	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlzjs7m007gl3j4xmuko7ij"}	::1	node	2026-11-18 10:35:48.787
+cmwlzjy610083l3j4kc8nw2si	cmwlzjvyv007vl3j4d70egwty	REGISTER	User	cmwlzjvyv007vl3j4d70egwty	{"actorId": "cmwlzjvyv007vl3j4d70egwty"}	::1	\N	2026-11-18 10:35:51.866
+cmwlzjy730085l3j4nobbd5f2	cmwlzjvyv007vl3j4d70egwty	EMAIL_VERIFIED	User	cmwlzjvyv007vl3j4d70egwty	{"actorId": "cmwlzjvyv007vl3j4d70egwty"}	::1	\N	2026-11-18 10:35:51.903
+cmwlzjycl0089l3j4yv4l8n1u	cmwlzjvyv007vl3j4d70egwty	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlzjvyv007vl3j4d70egwty"}	::1	node	2026-11-18 10:35:52.102
+cmwlzjyd9008cl3j4l3oarsmd	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-18 10:35:52.126
+cmwlzk1d6008ll3j48oxeq5z2	cmwlzjyjc008dl3j4cz2inlyd	REGISTER	User	cmwlzjyjc008dl3j4cz2inlyd	{"actorId": "cmwlzjyjc008dl3j4cz2inlyd"}	::1	\N	2026-11-18 10:35:56.01
+cmwlzk1e4008nl3j4c1fuv064	cmwlzjyjc008dl3j4cz2inlyd	EMAIL_VERIFIED	User	cmwlzjyjc008dl3j4cz2inlyd	{"actorId": "cmwlzjyjc008dl3j4cz2inlyd"}	::1	\N	2026-11-18 10:35:56.044
+cmwlzk1kn008rl3j42b31p4yc	cmwlzjyjc008dl3j4cz2inlyd	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlzjyjc008dl3j4cz2inlyd"}	::1	node	2026-11-18 10:35:56.279
+cmwlzlb610096l3j47z4qoqpx	cmwlzl7zs008yl3j4de7xmrom	REGISTER	User	cmwlzl7zs008yl3j4de7xmrom	{"actorId": "cmwlzl7zs008yl3j4de7xmrom"}	::1	\N	2026-11-18 10:36:55.369
+cmwlzlb7i0098l3j4wyoimuyz	cmwlzl7zs008yl3j4de7xmrom	EMAIL_VERIFIED	User	cmwlzl7zs008yl3j4de7xmrom	{"actorId": "cmwlzl7zs008yl3j4de7xmrom"}	::1	\N	2026-11-18 10:36:55.422
+cmwlzlbdt009cl3j4ia7t355t	cmwlzl7zs008yl3j4de7xmrom	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlzl7zs008yl3j4de7xmrom"}	::1	node	2026-11-18 10:36:55.65
+cmwlzldzl009tl3j44nko25fp	cmwlzlbrh009ll3j4r28i362j	REGISTER	User	cmwlzlbrh009ll3j4r28i362j	{"actorId": "cmwlzlbrh009ll3j4r28i362j"}	::1	\N	2026-11-18 10:36:59.025
+cmwlzle0l009vl3j4xhqmmflq	cmwlzlbrh009ll3j4r28i362j	EMAIL_VERIFIED	User	cmwlzlbrh009ll3j4r28i362j	{"actorId": "cmwlzlbrh009ll3j4r28i362j"}	::1	\N	2026-11-18 10:36:59.061
+cmwlzle71009zl3j4129iiczr	cmwlzlbrh009ll3j4r28i362j	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlzlbrh009ll3j4r28i362j"}	::1	node	2026-11-18 10:36:59.294
+cmwlzlhym00acl3j41vsib588	cmwlzlegx00a4l3j4jmenjzct	REGISTER	User	cmwlzlegx00a4l3j4jmenjzct	{"actorId": "cmwlzlegx00a4l3j4jmenjzct"}	::1	\N	2026-11-18 10:37:04.174
+cmwlzlhzh00ael3j4dsdclhp4	cmwlzlegx00a4l3j4jmenjzct	EMAIL_VERIFIED	User	cmwlzlegx00a4l3j4jmenjzct	{"actorId": "cmwlzlegx00a4l3j4jmenjzct"}	::1	\N	2026-11-18 10:37:04.205
+cmwlzli5h00ail3j4fdt41pgu	cmwlzlegx00a4l3j4jmenjzct	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwlzlegx00a4l3j4jmenjzct"}	::1	node	2026-11-18 10:37:04.421
+cmwlzlq2j00asl3j4cnc8gzrz	\N	LOGIN_FAILURE	\N	\N	{"email": "sharma.family@rasoi.me", "actorId": "system"}	::1	\N	2026-11-18 10:37:14.683
+cmwlzrz7k00aul3j4zkndyxxb	\N	LOGIN_FAILURE	\N	\N	{"email": "owner@sharma-kitchen.local", "actorId": "system"}	::1	\N	2026-11-18 10:42:06.464
+cmwm0lcms0005l3lk7mcd5vzc	\N	LOGIN_FAILURE	\N	\N	{"email": "sharma.family@rasoi.me", "actorId": "system"}	::1	\N	2026-11-18 11:04:56.884
+cmwm1gpc40001l3oo73e71u63	\N	LOGIN_FAILURE	\N	\N	{"email": "demo@rasoi.me", "actorId": "system"}	::1	\N	2026-11-18 11:29:19.684
+cmwm2df8x0007l3oojh6cmp4g	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 11:54:46.257
+cmwm2dlu3000xl3ooerscupil	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 11:54:54.796
+cmwm2dt1r001dl3oodiuae587	cmwj2fa4w0000l3s4x4q1jmst	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwj2fa4w0000l3s4x4q1jmst"}	::1	node	2026-11-18 11:55:04.143
+cmwm2glli003yl3oo124wub81	cmwm2gikc003ql3ooztalvyqf	REGISTER	User	cmwm2gikc003ql3ooztalvyqf	{"actorId": "cmwm2gikc003ql3ooztalvyqf"}	::1	\N	2026-11-18 11:57:14.455
+cmwm2gln40040l3ooez5b3mca	cmwm2gikc003ql3ooztalvyqf	EMAIL_VERIFIED	User	cmwm2gikc003ql3ooztalvyqf	{"actorId": "cmwm2gikc003ql3ooztalvyqf"}	::1	\N	2026-11-18 11:57:14.512
+cmwm2glu30044l3oofavf7b9e	cmwm2gikc003ql3ooztalvyqf	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwm2gikc003ql3ooztalvyqf"}	::1	node	2026-11-18 11:57:14.763
+cmwm2gokk004dl3oobcx1caqc	cmwm2glzv0045l3oovuguj96j	REGISTER	User	cmwm2glzv0045l3oovuguj96j	{"actorId": "cmwm2glzv0045l3oovuguj96j"}	::1	\N	2026-11-18 11:57:18.308
+cmwm2golf004fl3oot2s82j7z	cmwm2glzv0045l3oovuguj96j	EMAIL_VERIFIED	User	cmwm2glzv0045l3oovuguj96j	{"actorId": "cmwm2glzv0045l3oovuguj96j"}	::1	\N	2026-11-18 11:57:18.339
+cmwm2got7004jl3ooh103sydp	cmwm2glzv0045l3oovuguj96j	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwm2glzv0045l3oovuguj96j"}	::1	node	2026-11-18 11:57:18.62
+cmwm2gotx004ml3ooe23z9bsa	\N	LOGOUT	\N	\N	{"actorId": "system"}	::1	\N	2026-11-18 11:57:18.646
+cmwm2gssk004vl3oou8je4mve	cmwm2goze004nl3oo73a8qf4t	REGISTER	User	cmwm2goze004nl3oo73a8qf4t	{"actorId": "cmwm2goze004nl3oo73a8qf4t"}	::1	\N	2026-11-18 11:57:23.78
+cmwm2gstf004xl3oo8ty0prov	cmwm2goze004nl3oo73a8qf4t	EMAIL_VERIFIED	User	cmwm2goze004nl3oo73a8qf4t	{"actorId": "cmwm2goze004nl3oo73a8qf4t"}	::1	\N	2026-11-18 11:57:23.811
+cmwm2gt0g0051l3oouiod7udc	cmwm2goze004nl3oo73a8qf4t	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwm2goze004nl3oo73a8qf4t"}	::1	node	2026-11-18 11:57:24.065
+cmwm2hja2005gl3oov2end9cw	cmwm2hgoz0058l3oo1vidsq7g	REGISTER	User	cmwm2hgoz0058l3oo1vidsq7g	{"actorId": "cmwm2hgoz0058l3oo1vidsq7g"}	::1	\N	2026-11-18 11:57:58.106
+cmwm2hjbg005il3oouzq8gfe5	cmwm2hgoz0058l3oo1vidsq7g	EMAIL_VERIFIED	User	cmwm2hgoz0058l3oo1vidsq7g	{"actorId": "cmwm2hgoz0058l3oo1vidsq7g"}	::1	\N	2026-11-18 11:57:58.156
+cmwm2hjgw005ml3oo4zqbc4c5	cmwm2hgoz0058l3oo1vidsq7g	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwm2hgoz0058l3oo1vidsq7g"}	::1	node	2026-11-18 11:57:58.352
+cmwm2hn5p0063l3oolatzvdto	cmwm2hjsu005vl3oou3jeub9w	REGISTER	User	cmwm2hjsu005vl3oou3jeub9w	{"actorId": "cmwm2hjsu005vl3oou3jeub9w"}	::1	\N	2026-11-18 11:58:03.134
+cmwm2hn6q0065l3oozizqft5h	cmwm2hjsu005vl3oou3jeub9w	EMAIL_VERIFIED	User	cmwm2hjsu005vl3oou3jeub9w	{"actorId": "cmwm2hjsu005vl3oou3jeub9w"}	::1	\N	2026-11-18 11:58:03.17
+cmwm2hnct0069l3ooysqvfkav	cmwm2hjsu005vl3oou3jeub9w	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwm2hjsu005vl3oou3jeub9w"}	::1	node	2026-11-18 11:58:03.389
+cmwm2htad006ml3oo814eqhc8	cmwm2hnny006el3oovgstr3jy	REGISTER	User	cmwm2hnny006el3oovgstr3jy	{"actorId": "cmwm2hnny006el3oovgstr3jy"}	::1	\N	2026-11-18 11:58:11.077
+cmwm2htbb006ol3ooti8dawrd	cmwm2hnny006el3oovgstr3jy	EMAIL_VERIFIED	User	cmwm2hnny006el3oovgstr3jy	{"actorId": "cmwm2hnny006el3oovgstr3jy"}	::1	\N	2026-11-18 11:58:11.112
+cmwm2htgk006sl3oogyvaittt	cmwm2hnny006el3oovgstr3jy	LOGIN_SUCCESS	\N	\N	{"actorId": "cmwm2hnny006el3oovgstr3jy"}	::1	node	2026-11-18 11:58:11.3
+cmwm2iau30072l3oocobxo1y4	\N	LOGIN_FAILURE	\N	\N	{"email": "sharma.family@rasoi.me", "actorId": "system"}	::1	\N	2026-11-18 11:58:33.819
+cmwm2jcub0078l3oo7gyzs090	\N	LOGIN_FAILURE	\N	\N	{"email": "sharma.family@rasoi.me", "actorId": "system"}	::1	\N	2026-11-18 11:59:23.076
 \.
 
 
@@ -1363,6 +1954,8 @@ cmwj8g2zz0002l3yk62q70etm	\N	AUDIT_IMMUTABILITY_TEST	SecurityTest	test-sec-1	{"t
 --
 
 COPY public."Basket" (id, "householdId", "selectedRetailerId", "subtotalInr", "deliveryFeeInr", "totalInr", "createdAt", "updatedAt") FROM stdin;
+cmwlyyeqz0001l3soy1kj5y45	hh-sharma-family	ret-blinkit	1474	0	1474	2026-11-18 10:19:06.921	2026-11-18 11:59:22.654
+cmwlzy9eh00awl3j4kp5cbx0p	cmwjbo8tb0001l3rks9ymiw4i	ret-zepto	2745	0	2745	2026-11-18 10:46:59.609	2026-11-18 12:07:56.8
 \.
 
 
@@ -1458,6 +2051,102 @@ cmwj8g0uq0002l3o0a1mnlh0s	cmwj8g0uk0000l3o0weyxl9zb	0fe03fadd17d277753717dacb0bd
 cmwj8g1f3000nl3o0izn2wu6j	cmwj8g1ew000ll3o0s4ydlvql	db2fd51df2fc5359e8be4d59dc576a6d864bb013174ddd7f5210afbbd8ba3b59	2026-11-16 12:51:27.468	\N	2026-11-16 12:21:27.471
 cmwj8g1tk0010l3o0xkg2hp35	cmwj8g1tf000yl3o0x8rjs5k7	2b979593277c7beee27ed847747558448617c4cb06384c07b0de467967567201	2026-11-16 12:51:27.99	\N	2026-11-16 12:21:27.993
 cmwj8g2yk001ul3o0b4iugw8j	cmwj8g2wk001sl3o0az4czbyk	87591aba6327e84f11e995056d4098524504c43fe642c2de54abe8760cb83fa5	2026-11-16 12:51:29.465	\N	2026-11-16 12:21:29.468
+cmwj8jjxx0025l3o058lhqyhl	cmwj8jjxp0023l3o00bvthbh8	00c6da8ef2b7875e946f47eda977c193def7a4d50d69c5033cf6d57823688cee	2026-11-16 12:54:11.441	2026-11-16 12:24:11.527	2026-11-16 12:24:11.445
+cmwj8jl770038l3o0yz3qpasl	cmwj8jl730036l3o0tcgce9oh	9d5f6813c1e19b4e7133fd07675267ea7861dbd9f3a868a35ba1356cf22ab6dc	2026-11-16 12:54:13.072	2026-11-16 12:24:13.083	2026-11-16 12:24:13.075
+cmwj8jm9n003wl3o02qyyvk05	cmwj8jm9i003ul3o0rxxhuc97	4db0f697021984b52d9507cdd991762f2a9e4b78ca11f9ccf43493f87ea418a5	2026-11-16 12:54:14.456	\N	2026-11-16 12:24:14.459
+cmwj8jnju004pl3o0igug81wq	cmwj8jnjp004nl3o0dd5t2gus	91dc7ff635db4db35909e8d1391990b202765e7d88995e833f5c6919187dd42b	2026-11-16 12:54:16.119	\N	2026-11-16 12:24:16.122
+cmwj8jovy005jl3o0h2foxghn	cmwj8jovs005hl3o03h0hw50t	0b992d2fa6c4041fcc52a46f7bd7fcb50eeefac8b209b1981cfc13389b30d5a2	2026-11-16 12:54:17.851	\N	2026-11-16 12:24:17.854
+cmwj8jpow006el3o0soolbmif	cmwj8jpor006cl3o0ugux8gra	d7c457fec97faa176e05a3b5b01115a465a8968481903d4be000722219dee78f	2026-11-16 12:54:18.894	\N	2026-11-16 12:24:18.897
+cmwj8jq33006tl3o0xdch8kn7	cmwj8jq2v006rl3o0y7fe0nw9	86b8d0fae6ac34eb20eef7223dd65cc3e26e7b4a1c0e4cffd9a725d73c49689a	2026-11-16 12:54:19.404	\N	2026-11-16 12:24:19.407
+cmwj8jqnp0078l3o0hmw0056y	cmwj8jqnk0076l3o07schg62o	c8e1951bd0a13ccfd4c17bcda65b4b0dd333531bd9bf9a87bd3236a8d671bcc8	2026-11-16 12:54:20.147	\N	2026-11-16 12:24:20.15
+cmwj8jr4e007rl3o0jathotgd	cmwj8jr48007pl3o0yv3oqxwz	186256bede2730c353e7c3e42af83776f1612949a1fc2ade89240fc3377d5ed8	2026-11-16 12:54:20.747	\N	2026-11-16 12:24:20.75
+cmwj8jrh3008al3o0mamktdc3	cmwj8jrgz0088l3o0c4zedu9o	ae4a245a78729472dc1872a008f27bd0e197a667aa6c17e83d057a3e83278cd4	2026-11-16 12:54:21.205	\N	2026-11-16 12:24:21.208
+cmwj8ol56008tl3o0fgzbt4b8	cmwj8ol50008rl3o03g2qfv3y	c8ee3ee8fb865e95dcc487a9fc88e17379fb30468b0cefc9ea52b93bea718b9f	2026-11-16 12:58:06.268	\N	2026-11-16 12:28:06.283
+cmwj8olwu009el3o04oqum0eq	cmwj8olwl009cl3o0ktj4vts0	a7724be1f8a5bc3e1bd802092656ccf494923762f6f2eb57ac133dfce2d63557	2026-11-16 12:58:07.263	\N	2026-11-16 12:28:07.278
+cmwj8omds009rl3o0rm9ghjmq	cmwj8omdm009pl3o0m2gr0nwe	b911dbfded69443938ae469503d2646bf4be10af6f4ea496981fb12419362b63	2026-11-16 12:58:07.874	\N	2026-11-16 12:28:07.888
+cmwj8ony300all3o0jfvn8as4	cmwj8onxx00ajl3o0pc0lmhs9	9aa2c0ec954ef693172efbdf9c9989cd9f9c1942990b3ae5b266f0d07a2f618f	2026-11-16 12:58:09.901	\N	2026-11-16 12:28:09.915
+cmwj8rg4c0002l310d2q8ut5a	cmwj8rg450000l31098igyczy	e7d12c91c7a9a93f07ba6b62259dcb590f518fbde6dbf786d2a98e762bc2ac71	2026-11-16 13:00:19.727	\N	2026-11-16 12:30:19.74
+cmwj8rgsb000nl310vp53gdar	cmwj8rgs4000ll310t0r3abqk	eee544399e096219c935091295cb2b1f7e33644843c0e32cd578831fc79da347	2026-11-16 13:00:20.591	\N	2026-11-16 12:30:20.604
+cmwj8rh6x0010l310o169wztx	cmwj8rh6t000yl310bgvxb5wu	53d79343888624de6a0c7570bc70d353a8903903e29537ddce341487ff115cc6	2026-11-16 13:00:21.116	\N	2026-11-16 12:30:21.129
+cmwj8rie2001ul310r9euy4tg	cmwj8ridx001sl310n026mvsa	1cd39c001ce5e67a2f11bd752a88a41e5edec5fff8e9a4ecdca3e553c13b984e	2026-11-16 13:00:22.67	\N	2026-11-16 12:30:22.683
+cmwj9bz9d001zl3103fsceozq	cmwj9bz8z001xl3107gjis344	a93579f1f82e86e4fc788e4974e50fcfdbf3ac4066f309aab88d5d62f4f3427e	2026-11-16 13:16:17.663	2026-11-16 12:46:17.7	2026-11-16 12:46:17.665
+cmwj9cogq002el3107qqm9s3b	cmwj9cogl002cl310c2z255yf	8ac79824e965d4e2f31a307dbc90947d09d34521c8fc85e56f13f9cba5b4ec29	2026-11-16 13:16:50.328	2026-11-16 12:46:50.358	2026-11-16 12:46:50.331
+cmwj9d5iz002rl310bx5j54cx	cmwj9d5it002pl310hyhn6ozq	03314efe3fa492c873b418ed8d275b3303690cd17be351dfab49659ee3b8dc1a	2026-11-16 13:17:12.44	2026-11-16 12:47:12.487	2026-11-16 12:47:12.443
+cmwj9dle50034l310sh22f6cq	cmwj9dldz0032l310ocvlj8ve	253674af3985324e2380590db3e896a9ccab725366ec61ef63dc8b154206b04f	2026-11-16 13:17:33.003	2026-11-16 12:47:33.04	2026-11-16 12:47:33.005
+cmwj9dyio003hl310935ybxom	cmwj9dyij003fl310ke1i6wb7	26769224af01308478c2d3ded7e0920c2a576ad3b44c15ba91078494b4fd5b94	2026-11-16 13:17:50.015	2026-11-16 12:47:50.05	2026-11-16 12:47:50.017
+cmwj9ee43003ul310zwqixlk9	cmwj9ee3x003sl310q7chbr0k	26424c39f917878194eb07e0a4942ce37f8a64bb961c9bf121052295884223fc	2026-11-16 13:18:10.226	2026-11-16 12:48:10.262	2026-11-16 12:48:10.228
+cmwj9ey6e0047l310yrh1tui9	cmwj9ey690045l310dpkrb5j2	dea8e2349630a2f6a1049406be759816dff8421dd6e85a58651a9a75787eb394	2026-11-16 13:18:36.228	2026-11-16 12:48:36.27	2026-11-16 12:48:36.23
+cmwj9fqgj004kl310n0djrmmb	cmwj9fqgf004il31014ft6mp2	5fda006e1ca688e96e114f3db76eed16cc0dc230520fe1959eb572a479cc2360	2026-11-16 13:19:12.882	2026-11-16 12:49:12.911	2026-11-16 12:49:12.884
+cmwj9ga9k004xl31050y6pmv3	cmwj9ga9e004vl310pf3wo4bj	e636592273f4c41171c3a10704b23a231d382302622a8a390735fd2a7bc5784e	2026-11-16 13:19:38.551	2026-11-16 12:49:38.582	2026-11-16 12:49:38.552
+cmwjad58x0004l31kmum3yz5n	cmwjad58r0002l31kbumbhh6d	cd2fc6039e71e1bb9353e2786ec8da9af3bcc6d1ec284ce2746309cad81f54e7	2026-11-16 13:45:11.695	\N	2026-11-16 13:15:11.697
+cmwjaely5000bl31kcrruf3bm	cmwjaelxy0009l31k661qevyc	9a310fe201033954dbd12aeb9020681da92f47e2bb5e4d5dd91c9fba9cb92f38	2026-11-16 13:46:19.996	\N	2026-11-16 13:16:19.997
+cmwjahqy80016l3ggy5z13jh4	cmwjahqy20014l3ggjypd0ffc	0e1045ec4c576ab83c55534c8f72f1d35275cf5ac242df97a12c3341723d9bb6	2026-11-16 13:48:46.447	2026-11-16 13:18:46.487	2026-11-16 13:18:46.449
+cmwjcu6ws0006l3rcaaysl9jo	cmwjcu6w50000l3rcosw7oze7	1e00af1d2abac223c48044fa8ef6b01025e8b80a0159ced41b0f008690d00e67	2026-11-16 14:54:26.218	\N	2026-11-16 14:24:26.236
+cmwjb5fes003sl3ggam219fsq	cmwjb5fej003ql3gghywo88u2	6951fc61934486b75c89c00e5c8fd19dbec08697d602575e37317a20e0464fa5	2026-11-16 14:07:11.234	2026-11-16 13:42:26.239	2026-11-16 13:37:11.236
+cmwjcyis9000fl3rchdvb6nla	cmwjcyiro0009l3rc132yjnvt	89c57a7725c62bd281f2a1dad79f0f18fb00457193a897bf1f99da700f504355	2026-11-16 14:57:48.234	2026-11-16 14:29:40.012	2026-11-16 14:27:48.25
+cmwku3ct00006l3e4mli5tjcb	cmwku3csl0000l3e4u70s3oul	9c266c6b35a67b053ab07786cf02f9daf8542ffac17f399f9c4027b645e55630	2026-11-17 15:45:13.417	\N	2026-11-17 15:15:13.428
+cmwkui82m000bl3dg16ts3pya	cmwkui8240002l3dgafp0gni3	7f7e9e45a7b72c17df0227ac87e269fc6bb6f7ade3e580d4d10b3b96761051b2	2026-11-17 15:56:47.122	\N	2026-11-17 15:26:47.134
+cmwkui83o000fl3dg5vbfpz8h	cmwkui82d0005l3dghimmtq7s	664aa6725404ce6f8580fdaedc3ddc90be66185a87fd737a7a1eee7a00c1f923	2026-11-17 15:56:47.13	\N	2026-11-17 15:26:47.172
+cmwkwutn20076l3mof6b1qceo	cmwkwutmj0070l3mow26tql75	0ac6e82872ed8b89193c4d4037d562b6aed7aef3ce784c4ca1d7edd29b94ba7f	2026-11-17 17:02:34.177	\N	2026-11-17 16:32:34.19
+cmwkwv27d007fl3mo7jisfnlb	cmwkwv2720079l3morb2h2099	6e9a3c9230c1d19c2eecd64dcee4c56a584d535e062c3d838c144568c12bd943	2026-11-17 17:02:45.281	\N	2026-11-17 16:32:45.289
+cmwkwvdvg007ol3momucia8cw	cmwkwvdup007il3mokxt8omnn	ce962b5e1184d26dc8b53d5f284dc9d78c76320ce099aea9b1ae470f632329cb	2026-11-17 17:03:00.391	\N	2026-11-17 16:33:00.412
+cmwkwwurh007xl3moxvn5op10	cmwkwwuqv007rl3mompcwif43	2bd65ce1dc571f5bc895d0b97420bce9ef1eb05e2df30883faa4060fb53ec207	2026-11-17 17:04:08.941	2026-11-17 16:34:13.248	2026-11-17 16:34:08.957
+cmwkwwync008cl3moytkfp9xt	cmwkwwymt0086l3morcmsdgnq	5caa5a6087926b7cf296a87acebe55b0a442825a0574ae6f64d108eca0bb2320	2026-11-17 17:04:13.98	2026-11-17 16:34:19.126	2026-11-17 16:34:13.992
+cmwkwz26800ajl3mofl5q76io	cmwkwz25k00adl3mo0v3y8ki4	96af2618c4fa8d487684e9005e2212057967f4159d59ec979605abab125fa841	2026-11-17 17:05:51.853	2026-11-17 16:35:54.964	2026-11-17 16:35:51.873
+cmwkwz55s00ayl3moulqn4mes	cmwkwz55a00asl3mo24tv8bil	d39c90d846c2c68821fc0a76207f126418d379713421c46c6f4aea2e5107c3d7	2026-11-17 17:05:55.729	2026-11-17 16:35:58.904	2026-11-17 16:35:55.744
+cmwkwz8a900bml3mouzknr78n	cmwkwz89k00bgl3mozeamoofv	7c7ede53fd62ba24c6f069c68fccf3ace84953269e8277968d82bd0ea7a7f8ef	2026-11-17 17:05:59.772	2026-11-17 16:36:03.704	2026-11-17 16:35:59.793
+cmwkwxav6008rl3mo2oz7dz6m	cmwkwxauo008ll3mos42pjnr3	f22fa2a5a956e24178ec9a166f01068732608764e24598e0c30fa868743599a1	2026-11-17 17:04:29.813	2026-11-17 16:34:32.757	2026-11-17 16:34:29.826
+cmwkwxdoz0096l3moqlz7ny2s	cmwkwxdoi0090l3mo4y7e0h0g	ae96f720d448bca35b0900e24bd86621b75898cf6515e1684832302e95b50741	2026-11-17 17:04:33.479	2026-11-17 16:34:37.159	2026-11-17 16:34:33.491
+cmwkwxh4w009ul3moxbxka7cz	cmwkwxh4g009ol3moqm9jqz0v	85d8a9c7097ed6a8e3f01e57142bbb0d395efdd3d49d638c67892f3a23237e0a	2026-11-17 17:04:37.941	2026-11-17 16:34:41.39	2026-11-17 16:34:37.952
+cmwkx29ls00cbl3mopdbqatto	cmwkx29l300c5l3moeug8a2rp	d83bb0029049eea08ada48eab52501cd14b552677d54f45eb1ec1fa01b250cd1	2026-11-17 17:08:21.449	2026-11-17 16:38:24.673	2026-11-17 16:38:21.472
+cmwkx2cpa00cql3mofv4hdzee	cmwkx2cor00ckl3mommh5snpf	449133b91ad5a954ea5c8b7706d0bad586fd802c37c23f8a84308dc462a232f5	2026-11-17 17:08:25.466	2026-11-17 16:38:28.384	2026-11-17 16:38:25.486
+cmwkx2fjm00d8l3mob9l5uuee	cmwkx2fj100d2l3mofqhxnmgz	0fef1df0f3a5a74d8ed449d429395f390d88b3635ff17cb976838894fcfb76cf	2026-11-17 17:08:29.15	2026-11-17 16:38:32.456	2026-11-17 16:38:29.17
+cmwkx397200dtl3mo0y2yiszt	cmwkx396g00dnl3mo5cxmw396	af9cf4eba67d7f82c95c1f5117b99660238e59e628c70ce941235696bbe3418d	2026-11-17 17:09:07.578	2026-11-17 16:39:11.401	2026-11-17 16:39:07.599
+cmwkx3cp400e8l3mo0m5lr64z	cmwkx3con00e2l3mocunijwct	75c13f6d23c527c811cd228afcbd7e0bd5728c4c222663a17740ce39fe827af6	2026-11-17 17:09:12.119	2026-11-17 16:39:15.057	2026-11-17 16:39:12.136
+cmwkx3fjr00eql3mo6tibw5on	cmwkx3fjb00ekl3mo6qe6eaan	29df6e4d4f5a4e84f52f7acaeedc300d017c426d41b8a4170c8dc773fe4181e0	2026-11-17 17:09:15.815	2026-11-17 16:39:19.2	2026-11-17 16:39:15.831
+cmwkx4faj00fbl3modnyh156a	cmwkx4fa200f5l3moxe9iari8	bc5d8edb7bb1c26016489941fc97dfcb06281f3c7f1c857a46dce8a89c4a7490	2026-11-17 17:10:02.131	2026-11-17 16:40:06.276	2026-11-17 16:40:02.155
+cmwkx4j1r00fql3mogb94l9z9	cmwkx4j1a00fkl3mol4xvmw2q	c9c4a519534fd761a05c808ea6fccd4477c48b993f0d6d8ad55b94df805828bc	2026-11-17 17:10:07	2026-11-17 16:40:10.084	2026-11-17 16:40:07.023
+cmwkx4m0i00g8l3mo4xkj2iq2	cmwkx4m0100g2l3mohjj1nx7i	371df8d7fc64054dd52a678f8a6cc5f9a3deb24a70f850f4475e09e355a71ff1	2026-11-17 17:10:10.843	2026-11-17 16:40:14.234	2026-11-17 16:40:10.866
+cmwkx5wy100l7l3mo6om7m8a2	cmwkx5wxd00l1l3mowf771xh9	9ac7a9c8bd0c74ca78788e6974942eaf0e15b8cbede211e7832f303485bc5016	2026-11-17 17:11:11.66	2026-11-17 16:41:14.935	2026-11-17 16:41:11.689
+cmwkx604e00lml3mochsqqoz3	cmwkx603t00lgl3mom0i6myrq	f968e089abf83bdd20d39a2ce96422ec8836d2df3edb5304c74ed97166681ea1	2026-11-17 17:11:15.779	2026-11-17 16:41:31.394	2026-11-17 16:41:15.807
+cmwkx6crr00m4l3mofn7b9gai	cmwkx6crb00lyl3mo006moex0	7ca552b6047ea1630d1b8b3de47b8c91068b46665e32c920256a6b2f90df8d58	2026-11-17 17:11:32.175	2026-11-17 16:41:36.868	2026-11-17 16:41:32.2
+cmwkxi4kh004kl3occonocd9b	cmwkxi4jr004el3ocoa8hht1u	7401a589712a22d9cc914ce2a690aa3b101f8b89672f177f743f465229922859	2026-11-17 17:20:41.423	2026-11-17 16:50:49.635	2026-11-17 16:50:41.441
+cmwkxibhl004zl3oc8n62tcod	cmwkxibh7004tl3oc7c5twn9n	6ad56ecf33b6f5a797463b12b1113675b413565ea9da02ef38d8407bfb674303	2026-11-17 17:20:50.399	2026-11-17 16:50:59.268	2026-11-17 16:50:50.41
+cmwkxiixz005hl3ochfo2u4lk	cmwkxiixh005bl3ocsxmyooyu	fc5eda0b63f6b321f57afc91a11b23f0d48dc44767136ead819f57e408094371	2026-11-17 17:21:00.058	2026-11-17 16:51:03.158	2026-11-17 16:51:00.071
+cmwlrxoh60026l3wol9qksyj7	cmwlrxogg0020l3wohce8kia3	bea92fdf84e1e330daef7a34e1ae3f2572600921602ca5b4c6dd2a36c2a7f4f4	2026-11-18 07:32:35.541	2026-11-18 07:02:39.99	2026-11-18 07:02:35.563
+cmwlrxsgh002ll3wodiprl0h3	cmwlrxsg2002fl3woul4jib8w	c4c2c55cfb38aa2967f65787acb84fb22c53f2df12d0c29671e3569edae9bc20	2026-11-18 07:32:40.705	2026-11-18 07:02:44.593	2026-11-18 07:02:40.722
+cmwlrxw0q0033l3wo8n31n2iz	cmwlrxw0a002xl3wo652h7lar	a807de28b7a7e99450521deef963a34196978df35bb0239010f01539de3d4714	2026-11-18 07:32:45.324	2026-11-18 07:02:50.028	2026-11-18 07:02:45.339
+cmwlscmbx004sl37s5k1ajcps	cmwlscmb6004ml37sgp4x2ldl	c030f23ecf6b6521381f468ac6444b3ff5c77c22d7e2194944a8c8e942bc5426	2026-11-18 07:44:12.602	2026-11-18 07:14:16.404	2026-11-18 07:14:12.621
+cmwlscpu50057l37sxm7r888b	cmwlscptp0051l37sex523org	064dded6e81238d971bbf004901c7786dcb8c9bd41bfe43838a44fed403cab55	2026-11-18 07:44:17.152	2026-11-18 07:14:20.196	2026-11-18 07:14:17.165
+cmwlscsl8005pl37s5siff3sl	cmwlscsku005jl37se8nvwqse	02a41bf3f5fb8e5fd864c04761a2ea9ab803e7ff632fc129105f9345e465ef7a	2026-11-18 07:44:20.722	2026-11-18 07:14:24.921	2026-11-18 07:14:20.732
+cmwlsq133006ql37spj1r6idq	cmwlsq12h006kl37semulwczh	e5b8ed893212509f23b67f2eab2b1b3e71fef92dea2ae158b2d91a1f86c5e8d0	2026-11-18 07:54:38.255	2026-11-18 07:24:41.69	2026-11-18 07:24:38.272
+cmwlsq4a50075l37shqj2ks8i	cmwlsq49o006zl37sh8xeotoe	7488b7740bc2013df9288af4620eca7ba4bde7c4cc8606925282b786b66b3ebb	2026-11-18 07:54:42.4	2026-11-18 07:24:45.502	2026-11-18 07:24:42.413
+cmwlsq791007nl37sbw4fz6gz	cmwlsq78l007hl37su4h25vpp	6f94112da5d54a77da6ade05b4f3f25493d0c3fbffb2a079e05ff9b8abbbe574	2026-11-18 07:54:46.249	2026-11-18 07:24:49.552	2026-11-18 07:24:46.262
+cmwltrwwx00ail37sq7pmr1sn	cmwltrwwc00acl37siffy7u9l	bb438c367c45639b3aaca9aa830fafa897db4e8f00ec6c02445ab7778e23dd87	2026-11-18 08:24:05.779	2026-11-18 07:55:37.556	2026-11-18 07:54:05.794
+cmwlucrok00b3l37swc6vlecp	cmwlucrnx00axl37s08ria2ta	da63b79c2c89547ef5fa7a1e62bb09a6db9cb17fd3152cab0ccc643f37a20df2	2026-11-18 08:40:18.771	2026-11-18 08:10:22.059	2026-11-18 08:10:18.788
+cmwlucuzs00bql37suklzxpby	cmwlucuz600bkl37sxjs47if5	dc72d0f5d840db4a0cca3244a8bd27356d548411f99d66e94bd67cb5df3817d3	2026-11-18 08:40:23.064	2026-11-18 08:10:26.025	2026-11-18 08:10:23.08
+cmwlucy0t00c9l37sjshmrol0	cmwlucy0b00c3l37sjoa9xngk	095ca443916a61b4a843e2bc19d80814706e674b31cf5860d9d8fab07402238a	2026-11-18 08:40:26.992	2026-11-18 08:10:32.653	2026-11-18 08:10:27.005
+cmwlutejz0006l378nxymuxiq	cmwluteid0000l3788hcz6990	8cf27a0c8243a4b72b002de8210c9e73f51f58891cf02b705f631135bae30116	2026-11-18 08:53:14.875	2026-11-18 08:23:20.649	2026-11-18 08:23:14.928
+cmwlutjlt000tl378qqyp1ms5	cmwlutjlb000nl378o8jmwhbc	a10c43e9e0781ddc28bcaedcb914b426743e5121c136bbf7b6e1b73055044f09	2026-11-18 08:53:21.448	2026-11-18 08:23:26.301	2026-11-18 08:23:21.473
+cmwlutnz8001cl378gh300fsi	cmwlutnyu0016l378xwczb3pb	e79de0bb9cb41c5e6624f01d86b04e374d876f505da3dc91063d7028a9973b8c	2026-11-18 08:53:27.118	2026-11-18 08:23:30.813	2026-11-18 08:23:27.14
+cmwluvp8z001vl378lg7irk65	cmwluvp8d001pl378lv9i8eqm	1bee37bf9e614857c4c80fd71d6182f7213d888052baba471f5e1eeaf841c003	2026-11-18 08:55:02.074	2026-11-18 08:25:06.079	2026-11-18 08:25:02.1
+cmwluvt4i002il3780i6w62zf	cmwluvt42002cl378qx2ivo25	859300dce9b92b41947fc8b7912000768a747b3f71fe6bd0feac0a798f81d293	2026-11-18 08:55:07.102	2026-11-18 08:25:10.247	2026-11-18 08:25:07.122
+cmwluvw970031l378ho9s89h1	cmwluvw8q002vl378oiuhuj8x	e8dd89a24e763a50b326e728b5a5ccb7c09d794b21408daabebe6c341d210ba0	2026-11-18 08:55:11.157	2026-11-18 08:25:16.748	2026-11-18 08:25:11.18
+cmwlv047n006yl378juc1sadn	cmwlv0470006sl378yxzqecwd	573c58eec8afbcdfb740883df136f74ae7b682afc6318716dfb241a0e140bf01	2026-11-18 08:58:28.101	2026-11-18 08:28:34.242	2026-11-18 08:28:28.115
+cmwlv09ib007dl37827e951bh	cmwlv09hw0077l378nkol1n6z	2bf85b4ff873ba11845c1f93c80f5d1e189f053033eb12b0692e347259146fc8	2026-11-18 08:58:34.969	2026-11-18 08:28:38.044	2026-11-18 08:28:34.98
+cmwlv0cgr007vl37880wg85c7	cmwlv0cga007pl378h3tlmlyp	f6a578a25710f60b8825066dc305a72083eb672384bcf6a7e181604ff10122b9	2026-11-18 08:58:38.8	2026-11-18 08:28:43.582	2026-11-18 08:28:38.812
+cmwlzjs7z007ml3j4mwhemzh9	cmwlzjs7m007gl3j4xmuko7ij	964ecc37aab7523bc6e667395b6374ae376267157ebea54801376567ad9ede1d	2026-11-18 11:05:44.145	2026-11-18 10:35:48.567	2026-11-18 10:35:44.159
+cmwlzjvza0081l3j4x63yszy3	cmwlzjvyv007vl3j4d70egwty	a91d4fd129a3462b486adab49d4a91ad3326aedbcb42c1dd14aec65f117fbebc	2026-11-18 11:05:49.014	2026-11-18 10:35:51.884	2026-11-18 10:35:49.03
+cmwlzjyjo008jl3j49uz12hp0	cmwlzjyjc008dl3j4cz2inlyd	203c6f4a6ab0fab2c8090dc0d0545115416fa4f3df471b1804fbc182216588b4	2026-11-18 11:05:52.343	2026-11-18 10:35:56.027	2026-11-18 10:35:52.356
+cmwlzl8080094l3j4iwlwllun	cmwlzl7zs008yl3j4de7xmrom	71d9eed36f0485d27649b7932b0c6a8ebf394340f033ee40a7b36b64c119538b	2026-11-18 11:06:51.26	2026-11-18 10:36:55.407	2026-11-18 10:36:51.273
+cmwlzlbrw009rl3j42v3e0niz	cmwlzlbrh009ll3j4r28i362j	f9f4d8a4d4ba2a5ae889efef8f25c6e0536a952ae12c6e6cf19b967bab02dc96	2026-11-18 11:06:56.144	2026-11-18 10:36:59.044	2026-11-18 10:36:56.156
+cmwlzleh800aal3j45j187iwm	cmwlzlegx00a4l3j4jmenjzct	456272768a88ac5a7b3f1f1de52c6e57361343509056e2b2ff78a85c947f0098	2026-11-18 11:06:59.651	2026-11-18 10:37:04.191	2026-11-18 10:36:59.661
+cmwm2gikv003wl3oouk2128sm	cmwm2gikc003ql3ooztalvyqf	d2d5d399691454a8382bd8a00c56b6aeea434d77366da82fd7532d2f22e9365f	2026-11-18 12:27:10.529	2026-11-18 11:57:14.492	2026-11-18 11:57:10.544
+cmwm2gm08004bl3oo3897ezpj	cmwm2glzv0045l3oovuguj96j	1f4360dcbde9ffd0184d928c42874c7b7ca376cf2818aca74ba19158abd1959f	2026-11-18 12:27:14.975	2026-11-18 11:57:18.324	2026-11-18 11:57:14.984
+cmwm2gozq004tl3oo4047ui9f	cmwm2goze004nl3oo73a8qf4t	826cc047569497f6b3ed8eada577cfddbc137f38aef1621ddf2e5ec84049c265	2026-11-18 12:27:18.846	2026-11-18 11:57:23.795	2026-11-18 11:57:18.854
+cmwm2hgpk005el3ooa7cd3slh	cmwm2hgoz0058l3oo1vidsq7g	8326dc8a0875c27abda49848d17b449de6498e12ffcdea5e1279fd67b66e9cfa	2026-11-18 12:27:54.762	2026-11-18 11:57:58.14	2026-11-18 11:57:54.776
+cmwm2hjt60061l3ooc16g2dyh	cmwm2hjsu005vl3oou3jeub9w	1d08796cc6961008ed94978003de51bddc1433822a1482cd5e4f0f37e163971a	2026-11-18 12:27:58.786	2026-11-18 11:58:03.158	2026-11-18 11:57:58.795
+cmwm2hnoc006kl3oozoxmmkkt	cmwm2hnny006el3oovgstr3jy	c974c7de3a36b1fbb8910f7706701ecb2e5c2f5c262871c17dfdd803462d9bd3	2026-11-18 12:28:03.795	2026-11-18 11:58:11.096	2026-11-18 11:58:03.804
 \.
 
 
@@ -1512,7 +2201,87 @@ cmwj7rjyb00c6l3jsb6nq12ym	cmwj7rjrx00bwl3jszvkmrhbk	Beta Household	MEDIUM	3500	D
 cmwj7rkf900cll3jsdshqfymk	cmwj7rk9o00cbl3jss734waya	Merchant Family Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:02:25.702	2026-11-16 12:02:25.702	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
 cmwj7rkrc00d4l3js9nan98p0	cmwj7rklp00cul3jspzl5jack	Pilot Household Alpha	MEDIUM	3500	Daily Fresh	2026-11-16 12:02:26.136	2026-11-16 12:02:26.58	Ahmedabad	India	ALL_INDIAN	JAIN	\N	4	Gujarat
 cmwj8g10z000al3o02k1568r0	cmwj8g0uk0000l3o0weyxl9zb	Suspension Test Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:21:26.964	2026-11-16 12:21:26.964	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
-hh-sharma-family	user-demo-1	Sharma Family	MEDIUM	4500	Daily Fresh	2026-11-16 06:15:04.99	2026-11-16 12:24:07.419	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwj8jp24005rl3o0e9oc51cb	cmwj8jovs005hl3o03h0hw50t	Victim Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:24:18.076	2026-11-16 12:24:18.076	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwj8jpuz006ml3o05afv0uf6	cmwj8jpor006cl3o0ugux8gra	Alpha Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:24:19.115	2026-11-16 12:24:19.115	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwj8jqb90071l3o0y90nc9vo	cmwj8jq2v006rl3o0y7fe0nw9	Beta Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:24:19.702	2026-11-16 12:24:19.702	Ahmedabad	India	ALL_INDIAN	JAIN	\N	4	Gujarat
+cmwj8jqtp007gl3o03zpy0uuz	cmwj8jqnk0076l3o07schg62o	Merchant Family Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:24:20.365	2026-11-16 12:24:20.365	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwj8jran007zl3o0uqprlq2n	cmwj8jr48007pl3o0yv3oqxwz	Pilot Household Alpha	MEDIUM	3500	Daily Fresh	2026-11-16 12:24:20.975	2026-11-16 12:24:21.466	Ahmedabad	India	ALL_INDIAN	JAIN	\N	4	Gujarat
+cmwj8olgk0091l3o0kxp2vmvr	cmwj8ol50008rl3o03g2qfv3y	Suspension Test Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:28:06.692	2026-11-16 12:28:06.692	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwj8rgcz000al310mnqont8a	cmwj8rg450000l31098igyczy	Suspension Test Household	MEDIUM	3500	Daily Fresh	2026-11-16 12:30:20.051	2026-11-16 12:30:20.051	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwjbo8tb0001l3rks9ymiw4i	cmwjb5fej003ql3gghywo88u2	Vivek's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-16 13:51:49.151	2026-11-16 13:51:49.151	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwjbyzxk0004l3tgvwin58qe	cmwjbyzxb0002l3tgdr3t80p2	Ananya's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-16 14:00:10.856	2026-11-16 14:00:10.856	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwjca55g0004l358tkq7qfdu	cmwjca5580002l358gkt4cw2a	Ananya's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-16 14:08:50.836	2026-11-16 14:08:50.836	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwjcu6we0002l3rcdetpj8pn	cmwjcu6w50000l3rcosw7oze7	Vivek's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-16 14:24:26.223	2026-11-16 14:24:26.223	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwjcyirx000bl3rckkkstrp5	cmwjcyiro0009l3rc132yjnvt	Ac's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-16 14:27:48.237	2026-11-16 14:27:48.237	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwjdvrsl0004l3acvzebiowg	cmwjdvrsc0002l3ackqavlbui	Ananya's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-16 14:53:39.573	2026-11-16 14:53:39.573	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwku3css0002l3e4aa5uc8h7	cmwku3csl0000l3e4u70s3oul	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 15:15:13.42	2026-11-17 15:15:13.42	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkui82a0004l3dgugpw5ok8	cmwkui8240002l3dgafp0gni3	Reorder's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 15:26:47.123	2026-11-17 15:26:47.123	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkui82j0009l3dg9o69gq1k	cmwkui82d0005l3dghimmtq7s	Reorder's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 15:26:47.131	2026-11-17 15:26:47.131	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkwutmr0072l3moo9dn89of	cmwkwutmj0070l3mow26tql75	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:32:34.179	2026-11-17 16:32:34.179	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkwv277007bl3mopea4iwr3	cmwkwv2720079l3morb2h2099	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:32:45.283	2026-11-17 16:32:45.283	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkwvdux007kl3mohxnjzi4h	cmwkwvdup007il3mokxt8omnn	Test's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:33:00.393	2026-11-17 16:33:00.393	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkwwur4007tl3mo2du53e74	cmwkwwuqv007rl3mompcwif43	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:34:08.943	2026-11-17 16:34:08.943	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkwwyn10088l3mohnegfc7e	cmwkwwymt0086l3morcmsdgnq	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:34:13.981	2026-11-17 16:34:13.981	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkwxauv008nl3mo5l2d0629	cmwkwxauo008ll3mos42pjnr3	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:34:29.815	2026-11-17 16:34:29.815	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkwxdoo0092l3mo2mjypjlu	cmwkwxdoi0090l3mo4y7e0h0g	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:34:33.481	2026-11-17 16:34:33.481	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkwxguv009jl3mop91zha41	cmwkwxauo008ll3mos42pjnr3	Household A Smoke 1794933269378	MEDIUM	3500	Daily Fresh	2026-11-17 16:34:37.591	2026-11-17 16:34:37.591	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwkwxh4m009ql3mocfymuplf	cmwkwxh4g009ol3moqm9jqz0v	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:34:37.943	2026-11-17 16:34:37.943	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkwxk2x00a4l3monesnvgpa	cmwkwxh4g009ol3moqm9jqz0v	Household B Smoke 1794933269378	MEDIUM	3500	Daily Fresh	2026-11-17 16:34:41.77	2026-11-17 16:34:41.77	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwkwz25t00afl3moeo5umkob	cmwkwz25k00adl3mo0v3y8ki4	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:35:51.857	2026-11-17 16:35:51.857	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkwz55h00aul3mohgyjnh7l	cmwkwz55a00asl3mo24tv8bil	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:35:55.733	2026-11-17 16:35:55.733	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkwz7yj00bbl3mou5r1cg36	cmwkwz25k00adl3mo0v3y8ki4	Household A Smoke 1794933351335	MEDIUM	3500	Daily Fresh	2026-11-17 16:35:59.371	2026-11-17 16:35:59.371	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwkwz89u00bil3mol3nhmvwo	cmwkwz89k00bgl3mozeamoofv	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:35:59.777	2026-11-17 16:35:59.777	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkwzbnx00bwl3mo47qu98wv	cmwkwz89k00bgl3mozeamoofv	Household B Smoke 1794933351335	MEDIUM	3500	Daily Fresh	2026-11-17 16:36:04.173	2026-11-17 16:36:04.173	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwkx29lc00c7l3moi17x898p	cmwkx29l300c5l3moeug8a2rp	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:38:21.456	2026-11-17 16:38:21.456	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkx2cox00cml3mo6a5f9lo5	cmwkx2cor00ckl3mommh5snpf	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:38:25.473	2026-11-17 16:38:25.473	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkx2fj900d4l3mo71qqs5o7	cmwkx2fj100d2l3mofqhxnmgz	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:38:29.157	2026-11-17 16:38:29.157	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkx396p00dpl3mo7yy1ch6b	cmwkx396g00dnl3mo5cxmw396	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:39:07.585	2026-11-17 16:39:07.585	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkx3cou00e4l3moyj01sgsi	cmwkx3con00e2l3mocunijwct	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:39:12.127	2026-11-17 16:39:12.127	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkx3fji00eml3mopvdv9cga	cmwkx3fjb00ekl3mo6qe6eaan	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:39:15.822	2026-11-17 16:39:15.822	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkx4fa900f7l3mowzylibzd	cmwkx4fa200f5l3moxe9iari8	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:40:02.145	2026-11-17 16:40:02.145	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkx4j1h00fml3mo03ckm4ai	cmwkx4j1a00fkl3mol4xvmw2q	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:40:07.013	2026-11-17 16:40:07.013	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkx4m0800g4l3mofcfwb692	cmwkx4m0100g2l3mohjj1nx7i	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:40:10.857	2026-11-17 16:40:10.857	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkx5wxm00l3l3momrnagw31	cmwkx5wxd00l1l3mowf771xh9	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:41:11.674	2026-11-17 16:41:11.674	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkx604200lil3mo6oz7nfbu	cmwkx603t00lgl3mom0i6myrq	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:41:15.794	2026-11-17 16:41:15.794	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkx6cri00m0l3mo58rhzktn	cmwkx6crb00lyl3mo006moex0	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:41:32.19	2026-11-17 16:41:32.19	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkxi4k0004gl3oc0hmsrvqj	cmwkxi4jr004el3ocoa8hht1u	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:50:41.425	2026-11-17 16:50:41.425	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkxibhd004vl3ocnu5daape	cmwkxibh7004tl3oc7c5twn9n	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:50:50.401	2026-11-17 16:50:50.401	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwkxiixo005dl3ocasnop0u0	cmwkxiixh005bl3ocsxmyooyu	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-17 16:51:00.06	2026-11-17 16:51:00.06	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlrxogq0022l3wo0l8wv7y3	cmwlrxogg0020l3wohce8kia3	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 07:02:35.546	2026-11-18 07:02:35.546	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlrxsg6002hl3woqo9gq72z	cmwlrxsg2002fl3woul4jib8w	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 07:02:40.711	2026-11-18 07:02:40.711	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlrxw0h002zl3wo2ycyt8wx	cmwlrxw0a002xl3wo652h7lar	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 07:02:45.33	2026-11-18 07:02:45.33	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlscmbg004ol37s42zumhpx	cmwlscmb6004ml37sgp4x2ldl	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 07:14:12.605	2026-11-18 07:14:12.605	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlscptv0053l37sc3kr2q5i	cmwlscptp0051l37sex523org	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 07:14:17.155	2026-11-18 07:14:17.155	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlscsl0005ll37sttmezb4l	cmwlscsku005jl37se8nvwqse	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 07:14:20.724	2026-11-18 07:14:20.724	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlsq12q006ml37sptnbdhhv	cmwlsq12h006kl37semulwczh	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 07:24:38.259	2026-11-18 07:24:38.259	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlsq49v0071l37sbji2mkfi	cmwlsq49o006zl37sh8xeotoe	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 07:24:42.403	2026-11-18 07:24:42.403	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlsq78s007jl37sqy2wiloz	cmwlsq78l007hl37su4h25vpp	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 07:24:46.252	2026-11-18 07:24:46.252	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwltrwwl00ael37sphgr5xal	cmwltrwwc00acl37siffy7u9l	Asm's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 07:54:05.781	2026-11-18 07:54:05.781	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+hh-sharma-family	user-demo-1	Vivek's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-16 06:15:04.99	2026-11-18 07:58:58.439	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	4	Gujarat
+cmwlucro600azl37sz4w9fps8	cmwlucrnx00axl37s08ria2ta	Sharma Family Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 08:10:18.774	2026-11-18 08:10:22.479	Ahmedabad	India	NORTH_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlucuze00bml37s9rmwcska	cmwlucuz600bkl37sxjs47if5	Patel Jain Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 08:10:23.066	2026-11-18 08:10:26.462	Ahmedabad	India	WEST_INDIAN	JAIN	\N	2	Gujarat
+cmwlucy0i00c5l37splggahhg	cmwlucy0b00c3l37sjoa9xngk	Kapoor Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 08:10:26.994	2026-11-18 08:10:33.052	Ahmedabad	India	NORTH_INDIAN	EGGETARIAN	\N	2	Gujarat
+cmwluteiz0002l378ii2cu7na	cmwluteid0000l3788hcz6990	Sharma Family Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 08:23:14.89	2026-11-18 08:23:20.955	Ahmedabad	India	NORTH_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlutjli000pl378r3jvt2a5	cmwlutjlb000nl378o8jmwhbc	Patel Jain Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 08:23:21.463	2026-11-18 08:23:26.648	Ahmedabad	India	WEST_INDIAN	JAIN	\N	2	Gujarat
+cmwlutnz00018l3788q5s2dqr	cmwlutnyu0016l378xwczb3pb	Kapoor Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 08:23:27.132	2026-11-18 08:23:31.187	Ahmedabad	India	NORTH_INDIAN	EGGETARIAN	\N	2	Gujarat
+cmwluvp8m001rl378wus9b8wg	cmwluvp8d001pl378lv9i8eqm	Sharma Family Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 08:25:02.086	2026-11-18 08:25:06.516	Ahmedabad	India	NORTH_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwluvt49002el378sqok1hr7	cmwluvt42002cl378qx2ivo25	Patel Jain Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 08:25:07.114	2026-11-18 08:25:10.671	Ahmedabad	India	WEST_INDIAN	JAIN	\N	2	Gujarat
+cmwluvw8w002xl378zyff0mno	cmwluvw8q002vl378oiuhuj8x	Kapoor Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 08:25:11.168	2026-11-18 08:25:17.195	Ahmedabad	India	NORTH_INDIAN	EGGETARIAN	\N	2	Gujarat
+cmwlv047a006ul378n56cjo5w	cmwlv0470006sl378yxzqecwd	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 08:28:28.103	2026-11-18 08:28:28.103	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlv09i20079l378wx9yjgwq	cmwlv09hw0077l378nkol1n6z	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 08:28:34.971	2026-11-18 08:28:34.971	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlv0cgi007rl37808vcw2u1	cmwlv0cga007pl378h3tlmlyp	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 08:28:38.802	2026-11-18 08:28:38.802	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlzjs7r007il3j4u9q7ue7r	cmwlzjs7m007gl3j4xmuko7ij	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 10:35:44.151	2026-11-18 10:35:44.151	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlzjvz0007xl3j4noruadjk	cmwlzjvyv007vl3j4d70egwty	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 10:35:49.02	2026-11-18 10:35:49.02	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlzjyjh008fl3j4g3zriy5z	cmwlzjyjc008dl3j4cz2inlyd	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 10:35:52.349	2026-11-18 10:35:52.349	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlzl7zz0090l3j4fhwcpcdz	cmwlzl7zs008yl3j4de7xmrom	Sharma Family Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 10:36:51.263	2026-11-18 10:36:55.673	Ahmedabad	India	NORTH_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwlzlbrn009nl3j4mj72449t	cmwlzlbrh009ll3j4r28i362j	Patel Jain Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 10:36:56.147	2026-11-18 10:36:59.324	Ahmedabad	India	WEST_INDIAN	JAIN	\N	2	Gujarat
+cmwlzleh200a6l3j4a2jrdq98	cmwlzlegx00a4l3j4jmenjzct	Kapoor Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 10:36:59.654	2026-11-18 10:37:04.447	Ahmedabad	India	NORTH_INDIAN	EGGETARIAN	\N	2	Gujarat
+cmwm2gikj003sl3ooskghwfbf	cmwm2gikc003ql3ooztalvyqf	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 11:57:10.531	2026-11-18 11:57:10.531	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwm2gm010047l3oo14vr6bar	cmwm2glzv0045l3oovuguj96j	Revoc's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 11:57:14.977	2026-11-18 11:57:14.977	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwm2gozj004pl3ook56636a8	cmwm2goze004nl3oo73a8qf4t	Smoke's Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 11:57:18.848	2026-11-18 11:57:18.848	Ahmedabad	India	ALL_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwm2hgp8005al3ootx5qzed3	cmwm2hgoz0058l3oo1vidsq7g	Sharma Family Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 11:57:54.764	2026-11-18 11:57:58.381	Ahmedabad	India	NORTH_INDIAN	VEGETARIAN	\N	2	Gujarat
+cmwm2hjt0005xl3ookbtk8m5t	cmwm2hjsu005vl3oou3jeub9w	Patel Jain Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 11:57:58.788	2026-11-18 11:58:03.417	Ahmedabad	India	WEST_INDIAN	JAIN	\N	2	Gujarat
+cmwm2hno4006gl3oo6zsw7xfr	cmwm2hnny006el3oovgstr3jy	Kapoor Kitchen	MEDIUM	3500	Daily Fresh	2026-11-18 11:58:03.796	2026-11-18 11:58:11.315	Ahmedabad	India	NORTH_INDIAN	EGGETARIAN	\N	2	Gujarat
 \.
 
 
@@ -1521,6 +2290,9 @@ hh-sharma-family	user-demo-1	Sharma Family	MEDIUM	4500	Daily Fresh	2026-11-16 06
 --
 
 COPY public."HouseholdInvitation" (id, "householdId", "invitedEmail", "invitedByUserId", "tokenHash", role, "expiresAt", "acceptedAt", "revokedAt", "createdAt") FROM stdin;
+cmwj8jrb70085l3o0zr6typ42	cmwj8jran007zl3o0uqprlq2n	invited-1794831860985@pilot.com	cmwj8jr48007pl3o0yv3oqxwz	25fe8e29bf2a0dea71d9aaabec9cafa3c0e79407abf31ea7b7b72b3463dcb852	MEMBER	2026-11-23 12:24:20.992	2026-11-16 12:24:21.435	\N	2026-11-16 12:24:20.995
+cmwlti7ls009xl37suyce6s8v	cmwjbo8tb0001l3rks9ymiw4i	panchanivivek0401@gmail.com	cmwjb5fej003ql3gghywo88u2	549438987ad9a65c595fd8f7e64aadc95f4725c7822922bddb07728fb4f11a29	MEMBER	2026-11-25 07:46:33.076	\N	2026-11-18 07:49:59.446	2026-11-18 07:46:33.088
+cmwltp9j400a9l37syi30kpmg	cmwjbo8tb0001l3rks9ymiw4i	asm27052002@gmail.com	cmwjb5fej003ql3gghywo88u2	bf3ea0e43317bab76acfa7e31b0c246485f4762eea16327d601214940e9c1ea8	MEMBER	2026-11-25 07:52:02.172	2026-11-18 07:56:25.399	\N	2026-11-18 07:52:02.176
 cmwj6fysp003il3rc7yoh17w1	cmwj6fyrf003cl3rc1n58062c	invited-1794828324807@pilot.com	cmwj6fyg50032l3rcif9xvg5z	70fff78db7a302d5e463613fa19bf0130d225e599f20d6bf3c615fb500047c17	MEMBER	2026-11-23 11:25:24.838	2026-11-16 11:25:25.625	\N	2026-11-16 11:25:24.841
 cmwj6i8e6003il3y8cv930leq	cmwj6i8ct003cl3y81vk7pkjq	invited-1794828430554@pilot.com	cmwj6i80g0032l3y87a4qyxrq	a032f0c22cf4d431b27dd89d3a4d6b3e6a29e1110de3d6805797f941b0cf3a5b	MEMBER	2026-11-23 11:27:10.575	2026-11-16 11:27:11.35	\N	2026-11-16 11:27:10.59
 cmwj6xe7t00btl3y8vmh2smg4	cmwj6xe6k00bnl3y8iyefsg3n	invited-1794829137950@pilot.com	cmwj6xdtd00bdl3y825vovtmm	6d3d8b531c2a5e7af3e70cfeba28b4bc088898797d814bc806c59ed0becaf227	MEMBER	2026-11-23 11:38:57.975	2026-11-16 11:38:58.837	\N	2026-11-16 11:38:57.977
@@ -1585,6 +2357,120 @@ cmwj7rkfb00cnl3jsleqer9am	cmwj7rkf900cll3jsdshqfymk	Merchant Customer	adult	VEGE
 cmwj7rkre00d6l3js6cn2zjjs	cmwj7rkrc00d4l3js9nan98p0	Pilot Lead	adult	VEGETARIAN	{}	{}	2026-11-16 12:02:26.138	2026-11-16 12:02:26.138	OWNER	ACTIVE	cmwj7rklp00cul3jspzl5jack
 cmwj7rl2x00dnl3jsxra01qpr	cmwj7rkrc00d4l3js9nan98p0	Aarav Patel	adult	VEGETARIAN	{}	{}	2026-11-16 12:02:26.553	2026-11-16 12:02:26.553	MEMBER	ACTIVE	cmwj7rkx000ddl3js2msk70ls
 cmwj8g112000cl3o0xj27a71k	cmwj8g10z000al3o02k1568r0	Suspension Test Customer	adult	VEGETARIAN	{}	{}	2026-11-16 12:21:26.966	2026-11-16 12:21:26.966	OWNER	ACTIVE	cmwj8g0uk0000l3o0weyxl9zb
+cmwj8jp26005tl3o030v27hl9	cmwj8jp24005rl3o0e9oc51cb	Victim User	adult	VEGETARIAN	{}	{}	2026-11-16 12:24:18.078	2026-11-16 12:24:18.078	OWNER	ACTIVE	cmwj8jovs005hl3o03h0hw50t
+cmwj8jpv2006ol3o0u6onbaom	cmwj8jpuz006ml3o05afv0uf6	User One	adult	VEGETARIAN	{}	{}	2026-11-16 12:24:19.119	2026-11-16 12:24:19.119	OWNER	ACTIVE	cmwj8jpor006cl3o0ugux8gra
+cmwj8jqbb0073l3o0yrjwqn19	cmwj8jqb90071l3o0y90nc9vo	User Two	adult	JAIN	{}	{}	2026-11-16 12:24:19.703	2026-11-16 12:24:19.703	OWNER	ACTIVE	cmwj8jq2v006rl3o0y7fe0nw9
+cmwj8jqtr007il3o0lvl90lu5	cmwj8jqtp007gl3o03zpy0uuz	Merchant Customer	adult	VEGETARIAN	{}	{}	2026-11-16 12:24:20.368	2026-11-16 12:24:20.368	OWNER	ACTIVE	cmwj8jqnk0076l3o07schg62o
+cmwj8jrao0081l3o08eier19p	cmwj8jran007zl3o0uqprlq2n	Pilot Lead	adult	VEGETARIAN	{}	{}	2026-11-16 12:24:20.977	2026-11-16 12:24:20.977	OWNER	ACTIVE	cmwj8jr48007pl3o0yv3oqxwz
+cmwj8jrnj008il3o0hod34cmb	cmwj8jran007zl3o0uqprlq2n	Aarav Patel	adult	VEGETARIAN	{}	{}	2026-11-16 12:24:21.438	2026-11-16 12:24:21.438	MEMBER	ACTIVE	cmwj8jrgz0088l3o0c4zedu9o
+cmwj8olh00093l3o07umgcyyc	cmwj8olgk0091l3o0kxp2vmvr	Suspension Test Customer	adult	VEGETARIAN	{}	{}	2026-11-16 12:28:06.708	2026-11-16 12:28:06.708	OWNER	ACTIVE	cmwj8ol50008rl3o03g2qfv3y
+cmwj8rgd4000cl3108m0i2ioh	cmwj8rgcz000al310mnqont8a	Suspension Test Customer	adult	VEGETARIAN	{}	{}	2026-11-16 12:30:20.057	2026-11-16 12:30:20.057	OWNER	ACTIVE	cmwj8rg450000l31098igyczy
+cmwjbo8tk0003l3rkkde7405u	cmwjbo8tb0001l3rks9ymiw4i	Vivek Panchani	adult	VEGETARIAN	{}	{}	2026-11-16 13:51:49.16	2026-11-16 13:51:49.16	OWNER	ACTIVE	cmwjb5fej003ql3gghywo88u2
+cmwjbyzxs0006l3tguo4axnnm	cmwjbyzxk0004l3tgvwin58qe	Ananya Sharma	adult	VEGETARIAN	{}	{}	2026-11-16 14:00:10.864	2026-11-16 14:00:10.864	OWNER	ACTIVE	cmwjbyzxb0002l3tgdr3t80p2
+cmwjca55m0006l358lgj0yetn	cmwjca55g0004l358tkq7qfdu	Ananya Sharma	adult	VEGETARIAN	{}	{}	2026-11-16 14:08:50.843	2026-11-16 14:08:50.843	OWNER	ACTIVE	cmwjca5580002l358gkt4cw2a
+cmwjcu6wl0004l3rc29wxz25m	cmwjcu6we0002l3rcdetpj8pn	Vivek Test	adult	VEGETARIAN	{}	{}	2026-11-16 14:24:26.229	2026-11-16 14:24:26.229	OWNER	ACTIVE	cmwjcu6w50000l3rcosw7oze7
+cmwjcyis4000dl3rcgjv3lkno	cmwjcyirx000bl3rckkkstrp5	Ac Bd	adult	VEGETARIAN	{}	{}	2026-11-16 14:27:48.244	2026-11-16 14:27:48.244	OWNER	ACTIVE	cmwjcyiro0009l3rc132yjnvt
+cmwjdvrss0006l3ac6cjoxphf	cmwjdvrsl0004l3acvzebiowg	Ananya Sharma	adult	VEGETARIAN	{}	{}	2026-11-16 14:53:39.58	2026-11-16 14:53:39.58	OWNER	ACTIVE	cmwjdvrsc0002l3ackqavlbui
+cmwktuuhq0001l3bwtlftqcj0	cmwj69k8h001zl31wvc9y7lf3	Pooja Sharma	adult	VEGETARIAN	{}	{}	2026-11-17 15:08:36.447	2026-11-17 15:08:36.447	MEMBER	ACTIVE	user-demo-1
+cmwku3csw0004l3e49pc3g50s	cmwku3css0002l3e4aa5uc8h7	Smoke UserA 20261117204513	adult	VEGETARIAN	{}	{}	2026-11-17 15:15:13.424	2026-11-17 15:15:13.424	OWNER	ACTIVE	cmwku3csl0000l3e4u70s3oul
+cmwkui82h0007l3dgerm1sbog	cmwkui82a0004l3dgugpw5ok8	Reorder Test UserB	adult	VEGETARIAN	{}	{}	2026-11-17 15:26:47.129	2026-11-17 15:26:47.129	OWNER	ACTIVE	cmwkui8240002l3dgafp0gni3
+cmwkui82n000dl3dgqmpfbjg0	cmwkui82j0009l3dg9o69gq1k	Reorder Test UserA	adult	VEGETARIAN	{}	{}	2026-11-17 15:26:47.135	2026-11-17 15:26:47.135	OWNER	ACTIVE	cmwkui82d0005l3dghimmtq7s
+cmwkwutmx0074l3movurdm2h2	cmwkwutmr0072l3moo9dn89of	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-17 16:32:34.185	2026-11-17 16:32:34.185	OWNER	ACTIVE	cmwkwutmj0070l3mow26tql75
+cmwkwv27a007dl3momibsq1vz	cmwkwv277007bl3mopea4iwr3	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-17 16:32:45.287	2026-11-17 16:32:45.287	OWNER	ACTIVE	cmwkwv2720079l3morb2h2099
+cmwkwvdv6007ml3mo7bz0xk76	cmwkwvdux007kl3mohxnjzi4h	Test Usr	adult	VEGETARIAN	{}	{}	2026-11-17 16:33:00.402	2026-11-17 16:33:00.402	OWNER	ACTIVE	cmwkwvdup007il3mokxt8omnn
+cmwkwwurb007vl3mo59m5h9v5	cmwkwwur4007tl3mo2du53e74	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-17 16:34:08.951	2026-11-17 16:34:08.951	OWNER	ACTIVE	cmwkwwuqv007rl3mompcwif43
+cmwkwwyn7008al3morsezosj2	cmwkwwyn10088l3mohnegfc7e	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-17 16:34:13.987	2026-11-17 16:34:13.987	OWNER	ACTIVE	cmwkwwymt0086l3morcmsdgnq
+cmwkwxav0008pl3moxxq0m77t	cmwkwxauv008nl3mo5l2d0629	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-17 16:34:29.82	2026-11-17 16:34:29.82	OWNER	ACTIVE	cmwkwxauo008ll3mos42pjnr3
+cmwkwxdou0094l3mogs5579ya	cmwkwxdoo0092l3mo2mjypjlu	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-17 16:34:33.486	2026-11-17 16:34:33.486	OWNER	ACTIVE	cmwkwxdoi0090l3mo4y7e0h0g
+cmwkwxguz009ll3mo1b45gaa2	cmwkwxguv009jl3mop91zha41	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-17 16:34:37.596	2026-11-17 16:34:37.596	OWNER	ACTIVE	cmwkwxauo008ll3mos42pjnr3
+cmwkwxh4r009sl3mosa259qvr	cmwkwxh4m009ql3mocfymuplf	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-17 16:34:37.947	2026-11-17 16:34:37.947	OWNER	ACTIVE	cmwkwxh4g009ol3moqm9jqz0v
+cmwkwxk3100a6l3mo0vukn5vm	cmwkwxk2x00a4l3monesnvgpa	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-17 16:34:41.773	2026-11-17 16:34:41.773	OWNER	ACTIVE	cmwkwxh4g009ol3moqm9jqz0v
+cmwkwz26000ahl3mo50imn517	cmwkwz25t00afl3moeo5umkob	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-17 16:35:51.865	2026-11-17 16:35:51.865	OWNER	ACTIVE	cmwkwz25k00adl3mo0v3y8ki4
+cmwkwz55m00awl3moi964rcse	cmwkwz55h00aul3mohgyjnh7l	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-17 16:35:55.738	2026-11-17 16:35:55.738	OWNER	ACTIVE	cmwkwz55a00asl3mo24tv8bil
+cmwkwz7yo00bdl3mo15wn63bq	cmwkwz7yj00bbl3mou5r1cg36	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-17 16:35:59.376	2026-11-17 16:35:59.376	OWNER	ACTIVE	cmwkwz25k00adl3mo0v3y8ki4
+cmwkwz8a200bkl3mo1g9td6k5	cmwkwz89u00bil3mol3nhmvwo	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-17 16:35:59.786	2026-11-17 16:35:59.786	OWNER	ACTIVE	cmwkwz89k00bgl3mozeamoofv
+cmwkwzbo200byl3mofl4q4vpr	cmwkwzbnx00bwl3mo47qu98wv	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-17 16:36:04.178	2026-11-17 16:36:04.178	OWNER	ACTIVE	cmwkwz89k00bgl3mozeamoofv
+cmwkx29lk00c9l3mos0vnti7a	cmwkx29lc00c7l3moi17x898p	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-17 16:38:21.464	2026-11-17 16:38:21.464	OWNER	ACTIVE	cmwkx29l300c5l3moeug8a2rp
+cmwkx2cp300col3moshmpd83o	cmwkx2cox00cml3mo6a5f9lo5	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-17 16:38:25.48	2026-11-17 16:38:25.48	OWNER	ACTIVE	cmwkx2cor00ckl3mommh5snpf
+cmwkx2fjf00d6l3mokvhrupzt	cmwkx2fj900d4l3mo71qqs5o7	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-17 16:38:29.163	2026-11-17 16:38:29.163	OWNER	ACTIVE	cmwkx2fj100d2l3mofqhxnmgz
+cmwkx396v00drl3moi0aj37hj	cmwkx396p00dpl3mo7yy1ch6b	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-17 16:39:07.591	2026-11-17 16:39:07.591	OWNER	ACTIVE	cmwkx396g00dnl3mo5cxmw396
+cmwkx3coz00e6l3moo0syhb0v	cmwkx3cou00e4l3moyj01sgsi	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-17 16:39:12.131	2026-11-17 16:39:12.131	OWNER	ACTIVE	cmwkx3con00e2l3mocunijwct
+cmwkx3fjn00eol3momz1hgvj0	cmwkx3fji00eml3mopvdv9cga	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-17 16:39:15.827	2026-11-17 16:39:15.827	OWNER	ACTIVE	cmwkx3fjb00ekl3mo6qe6eaan
+cmwkx4fad00f9l3mos93udyzf	cmwkx4fa900f7l3mowzylibzd	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-17 16:40:02.15	2026-11-17 16:40:02.15	OWNER	ACTIVE	cmwkx4fa200f5l3moxe9iari8
+cmwkx4j1m00fol3moarl6w8yw	cmwkx4j1h00fml3mo03ckm4ai	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-17 16:40:07.018	2026-11-17 16:40:07.018	OWNER	ACTIVE	cmwkx4j1a00fkl3mol4xvmw2q
+cmwkx4m0d00g6l3modlye57vo	cmwkx4m0800g4l3mofcfwb692	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-17 16:40:10.861	2026-11-17 16:40:10.861	OWNER	ACTIVE	cmwkx4m0100g2l3mohjj1nx7i
+cmwkx5wxt00l5l3mo38ic42ci	cmwkx5wxm00l3l3momrnagw31	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-17 16:41:11.681	2026-11-17 16:41:11.681	OWNER	ACTIVE	cmwkx5wxd00l1l3mowf771xh9
+cmwkx604900lkl3mo69sa4x79	cmwkx604200lil3mo6oz7nfbu	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-17 16:41:15.801	2026-11-17 16:41:15.801	OWNER	ACTIVE	cmwkx603t00lgl3mom0i6myrq
+cmwkx6crn00m2l3mog8a5irui	cmwkx6cri00m0l3mo58rhzktn	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-17 16:41:32.195	2026-11-17 16:41:32.195	OWNER	ACTIVE	cmwkx6crb00lyl3mo006moex0
+cmwkxi4k8004il3ock48phjqi	cmwkxi4k0004gl3oc0hmsrvqj	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-17 16:50:41.432	2026-11-17 16:50:41.432	OWNER	ACTIVE	cmwkxi4jr004el3ocoa8hht1u
+cmwkxibhh004xl3ocavyysg8s	cmwkxibhd004vl3ocnu5daape	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-17 16:50:50.406	2026-11-17 16:50:50.406	OWNER	ACTIVE	cmwkxibh7004tl3oc7c5twn9n
+cmwkxiixu005fl3ocfcx70cc5	cmwkxiixo005dl3ocasnop0u0	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-17 16:51:00.066	2026-11-17 16:51:00.066	OWNER	ACTIVE	cmwkxiixh005bl3ocsxmyooyu
+cmwlrxogy0024l3wo7ihf4jzm	cmwlrxogq0022l3wo0l8wv7y3	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-18 07:02:35.554	2026-11-18 07:02:35.554	OWNER	ACTIVE	cmwlrxogg0020l3wohce8kia3
+cmwlrxsgb002jl3woxpylo58m	cmwlrxsg6002hl3woqo9gq72z	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-18 07:02:40.715	2026-11-18 07:02:40.715	OWNER	ACTIVE	cmwlrxsg2002fl3woul4jib8w
+cmwlrxw0n0031l3wo7pbenujs	cmwlrxw0h002zl3wo2ycyt8wx	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-18 07:02:45.335	2026-11-18 07:02:45.335	OWNER	ACTIVE	cmwlrxw0a002xl3wo652h7lar
+cmwlscmbp004ql37sdtnb0gwa	cmwlscmbg004ol37s42zumhpx	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-18 07:14:12.613	2026-11-18 07:14:12.613	OWNER	ACTIVE	cmwlscmb6004ml37sgp4x2ldl
+cmwlscpu10055l37sjn797pmg	cmwlscptv0053l37sc3kr2q5i	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-18 07:14:17.161	2026-11-18 07:14:17.161	OWNER	ACTIVE	cmwlscptp0051l37sex523org
+cmwlscsl4005nl37swppaui1k	cmwlscsl0005ll37sttmezb4l	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-18 07:14:20.729	2026-11-18 07:14:20.729	OWNER	ACTIVE	cmwlscsku005jl37se8nvwqse
+cmwlsq12x006ol37svtouvfna	cmwlsq12q006ml37sptnbdhhv	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-18 07:24:38.265	2026-11-18 07:24:38.265	OWNER	ACTIVE	cmwlsq12h006kl37semulwczh
+cmwlsq4a00073l37sebxzef22	cmwlsq49v0071l37sbji2mkfi	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-18 07:24:42.408	2026-11-18 07:24:42.408	OWNER	ACTIVE	cmwlsq49o006zl37sh8xeotoe
+cmwlsq78w007ll37swle2zp2w	cmwlsq78s007jl37sqy2wiloz	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-18 07:24:46.257	2026-11-18 07:24:46.257	OWNER	ACTIVE	cmwlsq78l007hl37su4h25vpp
+cmwltrwws00agl37stha8g0w8	cmwltrwwl00ael37sphgr5xal	Asm	adult	VEGETARIAN	{}	{}	2026-11-18 07:54:05.788	2026-11-18 07:54:05.788	OWNER	ACTIVE	cmwltrwwc00acl37siffy7u9l
+cmwltuwn000asl37szmm8t0h7	cmwjbo8tb0001l3rks9ymiw4i	Asm	adult	VEGETARIAN	{}	{}	2026-11-18 07:56:25.403	2026-11-18 07:56:25.403	MEMBER	ACTIVE	cmwltrwwc00acl37siffy7u9l
+cmwlucroe00b1l37szipcb06e	cmwlucro600azl37sz4w9fps8	Aarav Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 08:10:18.782	2026-11-18 08:10:18.782	OWNER	ACTIVE	cmwlucrnx00axl37s08ria2ta
+mem-1794989422512	cmwlucro600azl37sz4w9fps8	Sunita Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 08:10:22.514	2026-11-18 08:10:22.514	MEMBER	ACTIVE	\N
+mem-1794989422543	cmwlucro600azl37sz4w9fps8	Rohan Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 08:10:22.545	2026-11-18 08:10:22.545	MEMBER	ACTIVE	\N
+mem-1794989422571	cmwlucro600azl37sz4w9fps8	Maharaj Ji	adult	VEGETARIAN	{}	{}	2026-11-18 08:10:22.573	2026-11-18 08:10:22.573	MEMBER	ACTIVE	\N
+cmwlucuzk00bol37stl53pkna	cmwlucuze00bml37s9rmwcska	Bhavin Patel	adult	VEGETARIAN	{}	{}	2026-11-18 08:10:23.073	2026-11-18 08:10:23.073	OWNER	ACTIVE	cmwlucuz600bkl37sxjs47if5
+mem-1794989426513	cmwlucuze00bml37s9rmwcska	Daksha Patel	adult	VEGETARIAN	{}	{}	2026-11-18 08:10:26.515	2026-11-18 08:10:26.515	MEMBER	ACTIVE	\N
+mem-1794989426574	cmwlucuze00bml37s9rmwcska	Anand Patel	adult	VEGETARIAN	{}	{}	2026-11-18 08:10:26.576	2026-11-18 08:10:26.576	MEMBER	ACTIVE	\N
+cmwlucy0o00c7l37sagb3m6i7	cmwlucy0i00c5l37splggahhg	Vikram Kapoor	adult	VEGETARIAN	{}	{}	2026-11-18 08:10:27	2026-11-18 08:10:27	OWNER	ACTIVE	cmwlucy0b00c3l37sjoa9xngk
+mem-1794989433078	cmwlucy0i00c5l37splggahhg	Meera Kapoor	adult	VEGETARIAN	{}	{}	2026-11-18 08:10:33.08	2026-11-18 08:10:33.08	MEMBER	ACTIVE	\N
+cmwluteji0004l37846yubzpy	cmwluteiz0002l378ii2cu7na	Aarav Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 08:23:14.91	2026-11-18 08:23:14.91	OWNER	ACTIVE	cmwluteid0000l3788hcz6990
+mem-1794990200967	cmwluteiz0002l378ii2cu7na	Sunita Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 08:23:20.981	2026-11-18 08:23:20.981	MEMBER	ACTIVE	\N
+mem-1794990200991	cmwluteiz0002l378ii2cu7na	Rohan Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 08:23:21.005	2026-11-18 08:23:21.005	MEMBER	ACTIVE	\N
+mem-1794990201013	cmwluteiz0002l378ii2cu7na	Maharaj Ji	adult	VEGETARIAN	{}	{}	2026-11-18 08:23:21.027	2026-11-18 08:23:21.027	MEMBER	ACTIVE	\N
+cmwlutjln000rl378pthrof4g	cmwlutjli000pl378r3jvt2a5	Bhavin Patel	adult	VEGETARIAN	{}	{}	2026-11-18 08:23:21.468	2026-11-18 08:23:21.468	OWNER	ACTIVE	cmwlutjlb000nl378o8jmwhbc
+mem-1794990206669	cmwlutjli000pl378r3jvt2a5	Daksha Patel	adult	VEGETARIAN	{}	{}	2026-11-18 08:23:26.683	2026-11-18 08:23:26.683	MEMBER	ACTIVE	\N
+mem-1794990206702	cmwlutjli000pl378r3jvt2a5	Anand Patel	adult	VEGETARIAN	{}	{}	2026-11-18 08:23:26.717	2026-11-18 08:23:26.717	MEMBER	ACTIVE	\N
+cmwlutnz4001al378rwchwqlr	cmwlutnz00018l3788q5s2dqr	Vikram Kapoor	adult	VEGETARIAN	{}	{}	2026-11-18 08:23:27.136	2026-11-18 08:23:27.136	OWNER	ACTIVE	cmwlutnyu0016l378xwczb3pb
+mem-1794990211209	cmwlutnz00018l3788q5s2dqr	Meera Kapoor	adult	VEGETARIAN	{}	{}	2026-11-18 08:23:31.224	2026-11-18 08:23:31.224	MEMBER	ACTIVE	\N
+cmwluvp8t001tl378yrnforvz	cmwluvp8m001rl378wus9b8wg	Aarav Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 08:25:02.093	2026-11-18 08:25:02.093	OWNER	ACTIVE	cmwluvp8d001pl378lv9i8eqm
+mem-1794990306539	cmwluvp8m001rl378wus9b8wg	Sunita Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 08:25:06.55	2026-11-18 08:25:06.55	MEMBER	ACTIVE	\N
+mem-1794990306572	cmwluvp8m001rl378wus9b8wg	Rohan Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 08:25:06.583	2026-11-18 08:25:06.583	MEMBER	ACTIVE	\N
+mem-1794990306608	cmwluvp8m001rl378wus9b8wg	Maharaj Ji	adult	VEGETARIAN	{}	{}	2026-11-18 08:25:06.62	2026-11-18 08:25:06.62	MEMBER	ACTIVE	\N
+cmwluvt4e002gl378nn8kkke2	cmwluvt49002el378sqok1hr7	Bhavin Patel	adult	VEGETARIAN	{}	{}	2026-11-18 08:25:07.118	2026-11-18 08:25:07.118	OWNER	ACTIVE	cmwluvt42002cl378qx2ivo25
+mem-1794990310688	cmwluvt49002el378sqok1hr7	Daksha Patel	adult	VEGETARIAN	{}	{}	2026-11-18 08:25:10.7	2026-11-18 08:25:10.7	MEMBER	ACTIVE	\N
+mem-1794990310716	cmwluvt49002el378sqok1hr7	Anand Patel	adult	VEGETARIAN	{}	{}	2026-11-18 08:25:10.727	2026-11-18 08:25:10.727	MEMBER	ACTIVE	\N
+cmwluvw91002zl3783cer54uc	cmwluvw8w002xl378zyff0mno	Vikram Kapoor	adult	VEGETARIAN	{}	{}	2026-11-18 08:25:11.173	2026-11-18 08:25:11.173	OWNER	ACTIVE	cmwluvw8q002vl378oiuhuj8x
+mem-1794990317214	cmwluvw8w002xl378zyff0mno	Meera Kapoor	adult	VEGETARIAN	{}	{}	2026-11-18 08:25:17.226	2026-11-18 08:25:17.226	MEMBER	ACTIVE	\N
+cmwlv047g006wl378jm3zvi4u	cmwlv047a006ul378n56cjo5w	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-18 08:28:28.109	2026-11-18 08:28:28.109	OWNER	ACTIVE	cmwlv0470006sl378yxzqecwd
+cmwlv09i7007bl378qrts7nbu	cmwlv09i20079l378wx9yjgwq	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-18 08:28:34.975	2026-11-18 08:28:34.975	OWNER	ACTIVE	cmwlv09hw0077l378nkol1n6z
+cmwlv0cgn007tl378s33hnsp9	cmwlv0cgi007rl37808vcw2u1	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-18 08:28:38.807	2026-11-18 08:28:38.807	OWNER	ACTIVE	cmwlv0cga007pl378h3tlmlyp
+mem-inactive-1794997147591	hh-sharma-family	Inactive Member	adult	VEGETARIAN	{}	{}	2026-11-18 10:19:07.597	2026-11-18 10:19:07.597	MEMBER	INACTIVE	\N
+cmwlzjs7u007kl3j4f1l0bzjh	cmwlzjs7r007il3j4u9q7ue7r	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-18 10:35:44.154	2026-11-18 10:35:44.154	OWNER	ACTIVE	cmwlzjs7m007gl3j4xmuko7ij
+cmwlzjvz6007zl3j4bsjvtm8r	cmwlzjvz0007xl3j4noruadjk	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-18 10:35:49.027	2026-11-18 10:35:49.027	OWNER	ACTIVE	cmwlzjvyv007vl3j4d70egwty
+cmwlzjyjl008hl3j4ybx0e0h4	cmwlzjyjh008fl3j4g3zriy5z	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-18 10:35:52.353	2026-11-18 10:35:52.353	OWNER	ACTIVE	cmwlzjyjc008dl3j4cz2inlyd
+cmwlzl8040092l3j4epkzcdcr	cmwlzl7zz0090l3j4fhwcpcdz	Aarav Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 10:36:51.268	2026-11-18 10:36:51.268	OWNER	ACTIVE	cmwlzl7zs008yl3j4de7xmrom
+mem-1794998215697	cmwlzl7zz0090l3j4fhwcpcdz	Sunita Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 10:36:55.701	2026-11-18 10:36:55.701	MEMBER	ACTIVE	\N
+mem-1794998215723	cmwlzl7zz0090l3j4fhwcpcdz	Rohan Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 10:36:55.726	2026-11-18 10:36:55.726	MEMBER	ACTIVE	\N
+mem-1794998215746	cmwlzl7zz0090l3j4fhwcpcdz	Maharaj Ji	adult	VEGETARIAN	{}	{}	2026-11-18 10:36:55.749	2026-11-18 10:36:55.749	MEMBER	ACTIVE	\N
+cmwlzlbrr009pl3j42r4ccjuw	cmwlzlbrn009nl3j4mj72449t	Bhavin Patel	adult	VEGETARIAN	{}	{}	2026-11-18 10:36:56.152	2026-11-18 10:36:56.152	OWNER	ACTIVE	cmwlzlbrh009ll3j4r28i362j
+mem-1794998219344	cmwlzlbrn009nl3j4mj72449t	Daksha Patel	adult	VEGETARIAN	{}	{}	2026-11-18 10:36:59.347	2026-11-18 10:36:59.347	MEMBER	ACTIVE	\N
+mem-1794998219375	cmwlzlbrn009nl3j4mj72449t	Anand Patel	adult	VEGETARIAN	{}	{}	2026-11-18 10:36:59.378	2026-11-18 10:36:59.378	MEMBER	ACTIVE	\N
+cmwlzleh500a8l3j48je7z9po	cmwlzleh200a6l3j4a2jrdq98	Vikram Kapoor	adult	VEGETARIAN	{}	{}	2026-11-18 10:36:59.658	2026-11-18 10:36:59.658	OWNER	ACTIVE	cmwlzlegx00a4l3j4jmenjzct
+mem-1794998224466	cmwlzleh200a6l3j4a2jrdq98	Meera Kapoor	adult	VEGETARIAN	{}	{}	2026-11-18 10:37:04.469	2026-11-18 10:37:04.469	MEMBER	ACTIVE	\N
+cmwm2gikp003ul3ool62i8sa5	cmwm2gikj003sl3ooskghwfbf	Smoke User A	adult	VEGETARIAN	{}	{}	2026-11-18 11:57:10.537	2026-11-18 11:57:10.537	OWNER	ACTIVE	cmwm2gikc003ql3ooztalvyqf
+cmwm2gm040049l3oo9jpr17or	cmwm2gm010047l3oo14vr6bar	Revoc User	adult	VEGETARIAN	{}	{}	2026-11-18 11:57:14.981	2026-11-18 11:57:14.981	OWNER	ACTIVE	cmwm2glzv0045l3oovuguj96j
+cmwm2gozm004rl3oo310pc17r	cmwm2gozj004pl3ook56636a8	Smoke User B	adult	VEGETARIAN	{}	{}	2026-11-18 11:57:18.851	2026-11-18 11:57:18.851	OWNER	ACTIVE	cmwm2goze004nl3oo73a8qf4t
+cmwm2hgpe005cl3oo0z2iign8	cmwm2hgp8005al3ootx5qzed3	Aarav Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 11:57:54.77	2026-11-18 11:57:54.77	OWNER	ACTIVE	cmwm2hgoz0058l3oo1vidsq7g
+mem-1795003078406	cmwm2hgp8005al3ootx5qzed3	Sunita Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 11:57:58.408	2026-11-18 11:57:58.408	MEMBER	ACTIVE	\N
+mem-1795003078431	cmwm2hgp8005al3ootx5qzed3	Rohan Sharma	adult	VEGETARIAN	{}	{}	2026-11-18 11:57:58.433	2026-11-18 11:57:58.433	MEMBER	ACTIVE	\N
+mem-1795003078456	cmwm2hgp8005al3ootx5qzed3	Maharaj Ji	adult	VEGETARIAN	{}	{}	2026-11-18 11:57:58.458	2026-11-18 11:57:58.458	MEMBER	ACTIVE	\N
+cmwm2hjt3005zl3oo46dpyiwh	cmwm2hjt0005xl3ookbtk8m5t	Bhavin Patel	adult	VEGETARIAN	{}	{}	2026-11-18 11:57:58.792	2026-11-18 11:57:58.792	OWNER	ACTIVE	cmwm2hjsu005vl3oou3jeub9w
+mem-1795003083442	cmwm2hjt0005xl3ookbtk8m5t	Daksha Patel	adult	VEGETARIAN	{}	{}	2026-11-18 11:58:03.443	2026-11-18 11:58:03.443	MEMBER	ACTIVE	\N
+mem-1795003083470	cmwm2hjt0005xl3ookbtk8m5t	Anand Patel	adult	VEGETARIAN	{}	{}	2026-11-18 11:58:03.471	2026-11-18 11:58:03.471	MEMBER	ACTIVE	\N
+cmwm2hno8006il3oopsg8b566	cmwm2hno4006gl3oo6zsw7xfr	Vikram Kapoor	adult	VEGETARIAN	{}	{}	2026-11-18 11:58:03.8	2026-11-18 11:58:03.8	OWNER	ACTIVE	cmwm2hnny006el3oovgstr3jy
+mem-1795003091334	cmwm2hno4006gl3oo6zsw7xfr	Meera Kapoor	adult	VEGETARIAN	{}	{}	2026-11-18 11:58:11.335	2026-11-18 11:58:11.335	MEMBER	ACTIVE	\N
 \.
 
 
@@ -1664,6 +2550,31 @@ mp-cmwj6i8ct003cl3y81vk7pkjq	cmwj6i8ct003cl3y81vk7pkjq	2026-11-16 11:27:11.457	2
 mp-cmwj6xe6k00bnl3y8iyefsg3n	cmwj6xe6k00bnl3y8iyefsg3n	2026-11-16 11:38:58.924	2026-11-16 11:38:58.925	2026-11-16 11:38:58.925
 mp-cmwj6zd1y00ihl3y8tizaztne	cmwj6zd1y00ihl3y8tizaztne	2026-11-16 11:40:30.725	2026-11-16 11:40:30.728	2026-11-16 11:40:30.728
 mp-cmwj7rkrc00d4l3js9nan98p0	cmwj7rkrc00d4l3js9nan98p0	2026-11-16 12:02:26.609	2026-11-16 12:02:26.616	2026-11-16 12:02:26.616
+mp-cmwj8jran007zl3o0uqprlq2n	cmwj8jran007zl3o0uqprlq2n	2026-11-16 12:24:21.503	2026-11-16 12:24:21.506	2026-11-16 12:24:21.506
+mp-cmwjcyirx000bl3rckkkstrp5	cmwjcyirx000bl3rckkkstrp5	2026-11-16 14:32:36.108	2026-11-16 14:32:36.11	2026-11-16 14:32:36.11
+mp-cmwjbo8tb0001l3rks9ymiw4i	cmwjbo8tb0001l3rks9ymiw4i	2026-11-17 05:23:38.472	2026-11-17 05:23:38.475	2026-11-17 05:23:38.475
+mp-cmwkx29lc00c7l3moi17x898p	cmwkx29lc00c7l3moi17x898p	2026-11-17 16:38:32.941	2026-11-17 16:38:32.948	2026-11-17 16:38:32.948
+mp-cmwkx396p00dpl3mo7yy1ch6b	cmwkx396p00dpl3mo7yy1ch6b	2026-11-17 16:39:19.671	2026-11-17 16:39:19.679	2026-11-17 16:39:19.679
+mp-cmwkx4fa900f7l3mowzylibzd	cmwkx4fa900f7l3mowzylibzd	2026-11-17 16:40:14.706	2026-11-17 16:40:14.719	2026-11-17 16:40:14.719
+mp-cmwkx5wxm00l3l3momrnagw31	cmwkx5wxm00l3l3momrnagw31	2026-11-17 16:41:37.373	2026-11-17 16:41:37.387	2026-11-17 16:41:37.387
+mp-cmwkxi4k0004gl3oc0hmsrvqj	cmwkxi4k0004gl3oc0hmsrvqj	2026-11-17 16:51:03.687	2026-11-17 16:51:03.689	2026-11-17 16:51:03.689
+mp-cmwlscmbg004ol37s42zumhpx	cmwlscmbg004ol37s42zumhpx	2026-11-18 07:14:25.297	2026-11-18 07:14:25.3	2026-11-18 07:14:25.3
+mp-cmwlsq12q006ml37sptnbdhhv	cmwlsq12q006ml37sptnbdhhv	2026-11-18 07:24:50.014	2026-11-18 07:24:50.017	2026-11-18 07:24:50.017
+mp-cmwluteiz0002l378ii2cu7na	cmwluteiz0002l378ii2cu7na	2026-11-18 08:23:21.032	2026-11-18 08:23:21.046	2026-11-18 08:23:21.046
+mp-cmwlutjli000pl378r3jvt2a5	cmwlutjli000pl378r3jvt2a5	2026-11-18 08:23:26.725	2026-11-18 08:23:26.74	2026-11-18 08:23:26.74
+mp-cmwlutnz00018l3788q5s2dqr	cmwlutnz00018l3788q5s2dqr	2026-11-18 08:23:31.23	2026-11-18 08:23:31.244	2026-11-18 08:23:31.244
+mp-cmwluvp8m001rl378wus9b8wg	cmwluvp8m001rl378wus9b8wg	2026-11-18 08:25:06.63	2026-11-18 08:25:06.642	2026-11-18 08:25:06.642
+mp-cmwluvt49002el378sqok1hr7	cmwluvt49002el378sqok1hr7	2026-11-18 08:25:10.736	2026-11-18 08:25:10.748	2026-11-18 08:25:10.748
+mp-cmwluvw8w002xl378zyff0mno	cmwluvw8w002xl378zyff0mno	2026-11-18 08:25:17.236	2026-11-18 08:25:17.248	2026-11-18 08:25:17.248
+mp-cmwlv047a006ul378n56cjo5w	cmwlv047a006ul378n56cjo5w	2026-11-18 08:28:44.035	2026-11-18 08:28:44.036	2026-11-18 08:28:44.036
+mp-cmwlzjs7r007il3j4u9q7ue7r	cmwlzjs7r007il3j4u9q7ue7r	2026-11-18 10:35:56.343	2026-11-18 10:35:56.349	2026-11-18 10:35:56.349
+mp-cmwlzl7zz0090l3j4fhwcpcdz	cmwlzl7zz0090l3j4fhwcpcdz	2026-11-18 10:36:55.765	2026-11-18 10:36:55.768	2026-11-18 10:36:55.768
+mp-cmwlzlbrn009nl3j4mj72449t	cmwlzlbrn009nl3j4mj72449t	2026-11-18 10:36:59.395	2026-11-18 10:36:59.398	2026-11-18 10:36:59.398
+mp-cmwlzleh200a6l3j4a2jrdq98	cmwlzleh200a6l3j4a2jrdq98	2026-11-18 10:37:04.481	2026-11-18 10:37:04.484	2026-11-18 10:37:04.484
+mp-cmwm2gikj003sl3ooskghwfbf	cmwm2gikj003sl3ooskghwfbf	2026-11-18 11:57:24.163	2026-11-18 11:57:24.165	2026-11-18 11:57:24.165
+mp-cmwm2hgp8005al3ootx5qzed3	cmwm2hgp8005al3ootx5qzed3	2026-11-18 11:57:58.473	2026-11-18 11:57:58.475	2026-11-18 11:57:58.475
+mp-cmwm2hjt0005xl3ookbtk8m5t	cmwm2hjt0005xl3ookbtk8m5t	2026-11-18 11:58:03.489	2026-11-18 11:58:03.49	2026-11-18 11:58:03.49
+mp-cmwm2hno4006gl3oo6zsw7xfr	cmwm2hno4006gl3oo6zsw7xfr	2026-11-18 11:58:11.343	2026-11-18 11:58:11.344	2026-11-18 11:58:11.344
 \.
 
 
@@ -1674,30 +2585,304 @@ mp-cmwj7rkrc00d4l3js9nan98p0	cmwj7rkrc00d4l3js9nan98p0	2026-11-16 12:02:26.609	2
 COPY public."MealPlanItem" (id, "mealPlanId", "dayOfWeek", "mealCategory", "recipeId", servings, notes) FROM stdin;
 plan-item-1794828325714-zb1b	mp-cmwj6fyrf003cl3rc1n58062c	Monday	Lunch	recipe-gujarati-khatti-meethi-dal	4	\N
 plan-item-1794828431452-67yv	mp-cmwj6i8ct003cl3y81vk7pkjq	Monday	Lunch	recipe-gujarati-khatti-meethi-dal	4	\N
-plan-item-1794831843639-koamo	mp-hh-sharma-family	monday	breakfast	recipe-kanda-poha	4	\N
-plan-item-1794831843639-nf4s9	mp-hh-sharma-family	monday	lunch	recipe-paneer-butter-masala	4	\N
-plan-item-1794831843639-no6fd	mp-hh-sharma-family	monday	dinner	recipe-gujarati-khatti-meethi-dal	4	\N
-plan-item-1794831843639-v3e5t	mp-hh-sharma-family	tuesday	breakfast	recipe-khaman-dhokla	4	\N
-plan-item-1794831843639-x37aj	mp-hh-sharma-family	tuesday	lunch	recipe-rajma-chawal	4	\N
-plan-item-1794831843639-9cuqo	mp-hh-sharma-family	tuesday	dinner	recipe-bhindi-masala	4	\N
-plan-item-1794831843639-1ut76	mp-hh-sharma-family	wednesday	breakfast	recipe-rava-upma	4	\N
-plan-item-1794831843639-dbgbc	mp-hh-sharma-family	wednesday	dinner	recipe-bengali-cholar-dal	4	\N
-plan-item-1794831843639-2n6su	mp-hh-sharma-family	thursday	breakfast	recipe-methi-thepla	4	\N
-plan-item-1794831843639-dyswl	mp-hh-sharma-family	thursday	lunch	recipe-amritsari-chole	4	\N
-plan-item-1794831843639-nnwst	mp-hh-sharma-family	thursday	dinner	recipe-aloo-gobi	4	\N
-plan-item-1794831843639-wd2ln	mp-hh-sharma-family	friday	breakfast	recipe-idli-sambar	4	\N
-plan-item-1794831843639-bl5yl	mp-hh-sharma-family	friday	lunch	recipe-sambhar-rice	4	\N
-plan-item-1794831843639-em8zs	mp-hh-sharma-family	friday	dinner	recipe-jain-paneer-bhurji	4	\N
-plan-item-1794831843639-190tg	mp-hh-sharma-family	saturday	breakfast	recipe-methi-na-gota	4	\N
-plan-item-1794831843639-x2657	mp-hh-sharma-family	saturday	lunch	recipe-surati-undhiyu	4	\N
-plan-item-1794831843639-ovyui	mp-hh-sharma-family	saturday	dinner	recipe-baingan-bharta	4	\N
-plan-item-1794831843639-8gnut	mp-hh-sharma-family	sunday	breakfast	recipe-masala-dosa	4	\N
-plan-item-1794831843639-7mopn	mp-hh-sharma-family	sunday	lunch	recipe-moong-dal-khichdi	4	\N
-plan-item-1794831843639-m0paf	mp-hh-sharma-family	sunday	dinner	recipe-dal-tadka	4	\N
-plan-item-1794831843639-uuio6	mp-hh-sharma-family	wednesday	lunch	recipe-paneer-butter-masala	4	\N
+plan-item-1794990201028-v1vxb	mp-cmwluteiz0002l378ii2cu7na	monday	breakfast	recipe-paneer-butter-masala	4	\N
+plan-item-1794990201028-cqyo6	mp-cmwluteiz0002l378ii2cu7na	monday	lunch	recipe-gujarati-khatti-meethi-dal	4	\N
+plan-item-1794990201028-p37qh	mp-cmwluteiz0002l378ii2cu7na	monday	dinner	recipe-methi-thepla	4	\N
+plan-item-1794990201028-5iduc	mp-cmwluteiz0002l378ii2cu7na	tuesday	breakfast	recipe-masala-dosa	4	\N
+plan-item-1794990201028-j9bjv	mp-cmwluteiz0002l378ii2cu7na	tuesday	lunch	recipe-rajma-chawal	4	\N
+plan-item-1794990201028-3ddar	mp-cmwluteiz0002l378ii2cu7na	tuesday	dinner	recipe-palak-paneer	4	\N
+plan-item-1794990201028-wj8tx	mp-cmwluteiz0002l378ii2cu7na	wednesday	breakfast	recipe-kanda-poha	4	\N
+plan-item-1794839556092-z8axw	mp-cmwjcyirx000bl3rckkkstrp5	friday	dinner	recipe-surati-undhiyu-jain	1	\N
+plan-item-1794990201028-89sbf	mp-cmwluteiz0002l378ii2cu7na	wednesday	lunch	recipe-moong-dal-khichdi	4	\N
+plan-item-1794990201028-z4cud	mp-cmwluteiz0002l378ii2cu7na	wednesday	dinner	recipe-egg-curry	4	\N
+plan-item-1794990201028-9161e	mp-cmwluteiz0002l378ii2cu7na	thursday	breakfast	recipe-khaman-dhokla	4	\N
+plan-item-1794990201028-fayqb	mp-cmwluteiz0002l378ii2cu7na	thursday	lunch	recipe-amritsari-chole	4	\N
+plan-item-1794990201028-vlykj	mp-cmwluteiz0002l378ii2cu7na	thursday	dinner	recipe-dal-tadka	4	\N
+plan-item-1794990201028-jbnp2	mp-cmwluteiz0002l378ii2cu7na	friday	breakfast	recipe-aloo-gobi	4	\N
+plan-item-1794990201028-tzoxy	mp-cmwluteiz0002l378ii2cu7na	friday	lunch	recipe-idli-sambar	4	\N
+plan-item-1794990201028-5l3xg	mp-cmwluteiz0002l378ii2cu7na	friday	dinner	recipe-rava-upma	4	\N
+plan-item-1794990201028-v7xdw	mp-cmwluteiz0002l378ii2cu7na	saturday	breakfast	recipe-bhindi-masala	4	\N
+plan-item-1794990201028-mjo5i	mp-cmwluteiz0002l378ii2cu7na	saturday	lunch	recipe-sambhar-rice	4	\N
+plan-item-1794990201028-dv9ft	mp-cmwluteiz0002l378ii2cu7na	saturday	dinner	recipe-baingan-bharta	4	\N
+plan-item-1794990201028-4heqb	mp-cmwluteiz0002l378ii2cu7na	sunday	breakfast	recipe-punjabi-chicken-curry	4	\N
+plan-item-1794990201028-lnr9d	mp-cmwluteiz0002l378ii2cu7na	sunday	lunch	recipe-bengali-macher-jhol	4	\N
+plan-item-1794990201028-hqr6o	mp-cmwluteiz0002l378ii2cu7na	sunday	dinner	recipe-bengali-cholar-dal	4	\N
+plan-item-1794831861500-g6yh	mp-cmwj8jran007zl3o0uqprlq2n	Monday	Lunch	recipe-gujarati-khatti-meethi-dal	4	\N
 plan-item-1794829138921-yssq	mp-cmwj6xe6k00bnl3y8iyefsg3n	Monday	Lunch	recipe-gujarati-khatti-meethi-dal	4	\N
+plan-item-1794990211226-sj2rm	mp-cmwlutnz00018l3788q5s2dqr	monday	breakfast	recipe-paneer-butter-masala	2	\N
+plan-item-1794990211226-un2wo	mp-cmwlutnz00018l3788q5s2dqr	monday	lunch	recipe-gujarati-khatti-meethi-dal	2	\N
+plan-item-1794839556092-iwsjt	mp-cmwjcyirx000bl3rckkkstrp5	thursday	lunch	recipe-moong-dal-khichdi	1	\N
+plan-item-1794839556092-lmmic	mp-cmwjcyirx000bl3rckkkstrp5	friday	breakfast	recipe-methi-thepla	1	\N
+plan-item-1794990211226-evcmm	mp-cmwlutnz00018l3788q5s2dqr	monday	dinner	recipe-methi-thepla	2	\N
+plan-item-1794990211226-rcv7w	mp-cmwlutnz00018l3788q5s2dqr	tuesday	breakfast	recipe-masala-dosa	2	\N
+plan-item-1794990211226-q54u3	mp-cmwlutnz00018l3788q5s2dqr	tuesday	lunch	recipe-rajma-chawal	2	\N
+plan-item-1794990211226-h46ko	mp-cmwlutnz00018l3788q5s2dqr	tuesday	dinner	recipe-palak-paneer	2	\N
+plan-item-1794990211226-dq37r	mp-cmwlutnz00018l3788q5s2dqr	wednesday	breakfast	recipe-kanda-poha	2	\N
+plan-item-1794990211226-ebmp0	mp-cmwlutnz00018l3788q5s2dqr	wednesday	lunch	recipe-moong-dal-khichdi	2	\N
+plan-item-1794990211226-6awnw	mp-cmwlutnz00018l3788q5s2dqr	wednesday	dinner	recipe-egg-curry	2	\N
+plan-item-1794990211226-gflqt	mp-cmwlutnz00018l3788q5s2dqr	thursday	breakfast	recipe-khaman-dhokla	2	\N
+plan-item-1794990211226-btveb	mp-cmwlutnz00018l3788q5s2dqr	thursday	lunch	recipe-amritsari-chole	2	\N
+plan-item-1794990211226-kwzxf	mp-cmwlutnz00018l3788q5s2dqr	thursday	dinner	recipe-dal-tadka	2	\N
+plan-item-1794990211226-18fl3	mp-cmwlutnz00018l3788q5s2dqr	friday	breakfast	recipe-aloo-gobi	2	\N
+plan-item-1794990211226-vpgq7	mp-cmwlutnz00018l3788q5s2dqr	friday	lunch	recipe-idli-sambar	2	\N
+plan-item-1794990211226-jmtz1	mp-cmwlutnz00018l3788q5s2dqr	friday	dinner	recipe-rava-upma	2	\N
+plan-item-1794990211226-kqhzj	mp-cmwlutnz00018l3788q5s2dqr	saturday	breakfast	recipe-bhindi-masala	2	\N
+plan-item-1794990211226-y0jvq	mp-cmwlutnz00018l3788q5s2dqr	saturday	lunch	recipe-sambhar-rice	2	\N
+plan-item-1794990211226-hnggo	mp-cmwlutnz00018l3788q5s2dqr	saturday	dinner	recipe-baingan-bharta	2	\N
+plan-item-1794990211226-6cz2m	mp-cmwlutnz00018l3788q5s2dqr	sunday	breakfast	recipe-punjabi-chicken-curry	2	\N
+plan-item-1794990211226-vk17p	mp-cmwlutnz00018l3788q5s2dqr	sunday	lunch	recipe-bengali-macher-jhol	2	\N
+plan-item-1794990211226-5gfai	mp-cmwlutnz00018l3788q5s2dqr	sunday	dinner	recipe-bengali-cholar-dal	2	\N
+plan-item-1794990310733-rt5oc	mp-cmwluvt49002el378sqok1hr7	monday	breakfast	recipe-gujarati-khatti-meethi-dal	3	\N
+plan-item-1794990310733-gqwlu	mp-cmwluvt49002el378sqok1hr7	monday	lunch	recipe-methi-thepla	3	\N
+plan-item-1794990310733-8dnxn	mp-cmwluvt49002el378sqok1hr7	monday	dinner	recipe-moong-dal-khichdi	3	\N
+plan-item-1794990310733-vzcj3	mp-cmwluvt49002el378sqok1hr7	tuesday	breakfast	recipe-khaman-dhokla	3	\N
+plan-item-1794990310733-epk0e	mp-cmwluvt49002el378sqok1hr7	tuesday	lunch	recipe-idli-sambar	3	\N
+plan-item-1794990310733-mu1kf	mp-cmwluvt49002el378sqok1hr7	tuesday	dinner	recipe-bhindi-masala	3	\N
+plan-item-1794990310733-4bc2t	mp-cmwluvt49002el378sqok1hr7	wednesday	breakfast	recipe-bengali-cholar-dal	3	\N
+plan-item-1794990310733-yjq28	mp-cmwluvt49002el378sqok1hr7	wednesday	lunch	recipe-jain-paneer-bhurji	3	\N
+plan-item-1794990310733-4woyu	mp-cmwluvt49002el378sqok1hr7	wednesday	dinner	recipe-jain-moong-dal-tadka	3	\N
+plan-item-1794990310733-d9kxs	mp-cmwluvt49002el378sqok1hr7	thursday	breakfast	recipe-sev-tameta-nu-shaak	3	\N
+plan-item-1794990310733-9odco	mp-cmwluvt49002el378sqok1hr7	thursday	lunch	recipe-bajra-no-rotlo	3	\N
+plan-item-1794990310733-qrovs	mp-cmwluvt49002el378sqok1hr7	thursday	dinner	recipe-bajra-no-rotlo-vegan	3	\N
+plan-item-1794909988437-dmxac	mp-cmwjbo8tb0001l3rks9ymiw4i	monday	breakfast	recipe-methi-thepla	1	\N
+plan-item-1794839556092-jlrh8	mp-cmwjcyirx000bl3rckkkstrp5	friday	lunch	recipe-gujarati-dal-dhokli	1	\N
+plan-item-1794909988437-c4jwe	mp-cmwjbo8tb0001l3rks9ymiw4i	monday	lunch	recipe-rajma-chawal	1	\N
+plan-item-1794990206720-5fhmz	mp-cmwlutjli000pl378r3jvt2a5	monday	breakfast	recipe-gujarati-khatti-meethi-dal	3	\N
+plan-item-1794990206720-9m26i	mp-cmwlutjli000pl378r3jvt2a5	monday	lunch	recipe-methi-thepla	3	\N
 plan-item-1794829230722-7av3	mp-cmwj6zd1y00ihl3y8tizaztne	Monday	Lunch	recipe-gujarati-khatti-meethi-dal	4	\N
+plan-item-1794990206720-vq6ag	mp-cmwlutjli000pl378r3jvt2a5	monday	dinner	recipe-moong-dal-khichdi	3	\N
+plan-item-1794990206720-tifto	mp-cmwlutjli000pl378r3jvt2a5	tuesday	breakfast	recipe-khaman-dhokla	3	\N
+plan-item-1794990206720-g5ls0	mp-cmwlutjli000pl378r3jvt2a5	tuesday	lunch	recipe-idli-sambar	3	\N
+plan-item-1794990206720-amszq	mp-cmwlutjli000pl378r3jvt2a5	tuesday	dinner	recipe-bhindi-masala	3	\N
+plan-item-1794990206720-ubcju	mp-cmwlutjli000pl378r3jvt2a5	wednesday	breakfast	recipe-bengali-cholar-dal	3	\N
+plan-item-1794990206720-2eo77	mp-cmwlutjli000pl378r3jvt2a5	wednesday	lunch	recipe-jain-paneer-bhurji	3	\N
+plan-item-1794990206720-h61lk	mp-cmwlutjli000pl378r3jvt2a5	wednesday	dinner	recipe-jain-moong-dal-tadka	3	\N
+plan-item-1794990206720-4yi9d	mp-cmwlutjli000pl378r3jvt2a5	thursday	breakfast	recipe-sev-tameta-nu-shaak	3	\N
+plan-item-1794990206720-o3ruu	mp-cmwlutjli000pl378r3jvt2a5	thursday	lunch	recipe-bajra-no-rotlo	3	\N
+plan-item-1794990206720-b0pdm	mp-cmwlutjli000pl378r3jvt2a5	thursday	dinner	recipe-bajra-no-rotlo-vegan	3	\N
+plan-item-1794990206720-05sr1	mp-cmwlutjli000pl378r3jvt2a5	friday	breakfast	recipe-surati-undhiyu-jain	3	\N
+plan-item-1794990206720-tejom	mp-cmwlutjli000pl378r3jvt2a5	friday	lunch	recipe-gujarati-dal-dhokli	3	\N
+plan-item-1794990206720-cxw64	mp-cmwlutjli000pl378r3jvt2a5	friday	dinner	recipe-gujarati-kadhi	3	\N
+plan-item-1794990206720-vvhie	mp-cmwlutjli000pl378r3jvt2a5	saturday	breakfast	recipe-vaghireli-khichdi	3	\N
+plan-item-1794990206720-jxf9b	mp-cmwlutjli000pl378r3jvt2a5	saturday	lunch	recipe-gujarati-handvo	3	\N
+plan-item-1794990206720-wdney	mp-cmwlutjli000pl378r3jvt2a5	saturday	dinner	recipe-methi-na-gota	3	\N
+plan-item-1794990206720-f4k2l	mp-cmwlutjli000pl378r3jvt2a5	sunday	breakfast	recipe-gujarati-khatti-meethi-dal	3	\N
+plan-item-1794990206720-0uyxs	mp-cmwlutjli000pl378r3jvt2a5	sunday	lunch	recipe-methi-thepla	3	\N
+plan-item-1794990206720-daql8	mp-cmwlutjli000pl378r3jvt2a5	sunday	dinner	recipe-moong-dal-khichdi	3	\N
+plan-item-1794909988437-7n2d2	mp-cmwjbo8tb0001l3rks9ymiw4i	monday	dinner	recipe-gujarati-khatti-meethi-dal	1	\N
+plan-item-1794909988437-kte7l	mp-cmwjbo8tb0001l3rks9ymiw4i	tuesday	breakfast	recipe-khaman-dhokla	1	\N
+plan-item-1794909988437-l2rty	mp-cmwjbo8tb0001l3rks9ymiw4i	tuesday	lunch	recipe-palak-paneer	1	\N
+plan-item-1794909988437-bfpxv	mp-cmwjbo8tb0001l3rks9ymiw4i	tuesday	dinner	recipe-jain-moong-dal-tadka	1	\N
 plan-item-1794830546607-nfw9	mp-cmwj7rkrc00d4l3js9nan98p0	Monday	Lunch	recipe-gujarati-khatti-meethi-dal	4	\N
+plan-item-1794909988437-uwbxr	mp-cmwjbo8tb0001l3rks9ymiw4i	wednesday	breakfast	recipe-rava-upma	1	\N
+plan-item-1794909988437-6infx	mp-cmwjbo8tb0001l3rks9ymiw4i	wednesday	lunch	recipe-amritsari-chole	1	\N
+plan-item-1794909988437-oxnlz	mp-cmwjbo8tb0001l3rks9ymiw4i	wednesday	dinner	recipe-gujarati-dal-dhokli	1	\N
+plan-item-1794909988437-bfyjx	mp-cmwjbo8tb0001l3rks9ymiw4i	thursday	breakfast	recipe-kanda-poha	1	\N
+plan-item-1794990310733-58snx	mp-cmwluvt49002el378sqok1hr7	friday	breakfast	recipe-surati-undhiyu-jain	3	\N
+plan-item-1794990310733-yhtyp	mp-cmwluvt49002el378sqok1hr7	friday	lunch	recipe-gujarati-dal-dhokli	3	\N
+plan-item-1794909988437-r21zm	mp-cmwjbo8tb0001l3rks9ymiw4i	thursday	lunch	recipe-bhindi-masala	1	\N
+plan-item-1794909988437-m5hbw	mp-cmwjbo8tb0001l3rks9ymiw4i	thursday	dinner	recipe-surati-undhiyu-jain	1	\N
+plan-item-1794990310733-9x7m9	mp-cmwluvt49002el378sqok1hr7	friday	dinner	recipe-gujarati-kadhi	3	\N
+plan-item-1794990310733-g1fme	mp-cmwluvt49002el378sqok1hr7	saturday	breakfast	recipe-vaghireli-khichdi	3	\N
+plan-item-1794990310733-0f50r	mp-cmwluvt49002el378sqok1hr7	saturday	lunch	recipe-gujarati-handvo	3	\N
+plan-item-1794909988437-neimq	mp-cmwjbo8tb0001l3rks9ymiw4i	friday	breakfast	recipe-idli-sambar	1	\N
+plan-item-1794839556091-feuo8	mp-cmwjcyirx000bl3rckkkstrp5	monday	breakfast	recipe-methi-thepla	1	\N
+plan-item-1794839556091-bf7fc	mp-cmwjcyirx000bl3rckkkstrp5	monday	lunch	recipe-moong-dal-khichdi	1	\N
+plan-item-1794839556091-2ertv	mp-cmwjcyirx000bl3rckkkstrp5	monday	dinner	recipe-gujarati-khatti-meethi-dal	1	\N
+plan-item-1794839556091-e1tmi	mp-cmwjcyirx000bl3rckkkstrp5	tuesday	dinner	recipe-surati-undhiyu-jain	1	\N
+plan-item-1794839556091-5e0ry	mp-cmwjcyirx000bl3rckkkstrp5	tuesday	lunch	recipe-gujarati-dal-dhokli	1	\N
+plan-item-1794839556091-ypwqr	mp-cmwjcyirx000bl3rckkkstrp5	tuesday	breakfast	recipe-khaman-dhokla	1	\N
+plan-item-1794839556091-9xcor	mp-cmwjcyirx000bl3rckkkstrp5	wednesday	breakfast	recipe-gujarati-handvo	1	\N
+plan-item-1794839556092-uon1h	mp-cmwjcyirx000bl3rckkkstrp5	wednesday	lunch	recipe-kanda-poha	1	\N
+plan-item-1794839556092-ys09d	mp-cmwjcyirx000bl3rckkkstrp5	wednesday	dinner	recipe-gujarati-kadhi	1	\N
+plan-item-1794839556092-p7f05	mp-cmwjcyirx000bl3rckkkstrp5	saturday	breakfast	recipe-khaman-dhokla	1	\N
+plan-item-1794839556092-6bb9j	mp-cmwjcyirx000bl3rckkkstrp5	saturday	lunch	recipe-surati-undhiyu	1	\N
+plan-item-1794839556092-h47li	mp-cmwjcyirx000bl3rckkkstrp5	saturday	dinner	recipe-gujarati-kadhi	1	\N
+plan-item-1794839556092-86961	mp-cmwjcyirx000bl3rckkkstrp5	sunday	dinner	recipe-gujarati-khatti-meethi-dal	1	\N
+plan-item-1794839556092-j2ggl	mp-cmwjcyirx000bl3rckkkstrp5	sunday	lunch	recipe-kanda-poha	1	\N
+plan-item-1794839556092-3uxuc	mp-cmwjcyirx000bl3rckkkstrp5	sunday	breakfast	recipe-gujarati-handvo	1	\N
+plan-item-1794839556092-3k25m	mp-cmwjcyirx000bl3rckkkstrp5	thursday	breakfast	recipe-methi-na-gota	1	\N
+plan-item-1794839556092-40rfa	mp-cmwjcyirx000bl3rckkkstrp5	thursday	dinner	recipe-gujarati-khatti-meethi-dal	1	\N
+plan-item-1794990306624-pj686	mp-cmwluvp8m001rl378wus9b8wg	monday	breakfast	recipe-paneer-butter-masala	4	\N
+plan-item-1794990306624-69epm	mp-cmwluvp8m001rl378wus9b8wg	monday	lunch	recipe-gujarati-khatti-meethi-dal	4	\N
+plan-item-1794990306624-9zwi1	mp-cmwluvp8m001rl378wus9b8wg	monday	dinner	recipe-methi-thepla	4	\N
+plan-item-1794990306624-o7asc	mp-cmwluvp8m001rl378wus9b8wg	tuesday	breakfast	recipe-masala-dosa	4	\N
+plan-item-1794990306624-ujajp	mp-cmwluvp8m001rl378wus9b8wg	tuesday	lunch	recipe-rajma-chawal	4	\N
+plan-item-1794990306624-5zure	mp-cmwluvp8m001rl378wus9b8wg	tuesday	dinner	recipe-palak-paneer	4	\N
+plan-item-1794990306624-u7pj5	mp-cmwluvp8m001rl378wus9b8wg	wednesday	breakfast	recipe-kanda-poha	4	\N
+plan-item-1794990306624-kq8co	mp-cmwluvp8m001rl378wus9b8wg	wednesday	lunch	recipe-moong-dal-khichdi	4	\N
+plan-item-1794990306624-6n57u	mp-cmwluvp8m001rl378wus9b8wg	wednesday	dinner	recipe-egg-curry	4	\N
+plan-item-1794990306624-plgcx	mp-cmwluvp8m001rl378wus9b8wg	thursday	breakfast	recipe-khaman-dhokla	4	\N
+plan-item-1794990306624-p4mdc	mp-cmwluvp8m001rl378wus9b8wg	thursday	lunch	recipe-amritsari-chole	4	\N
+plan-item-1794990306624-ci8ye	mp-cmwluvp8m001rl378wus9b8wg	thursday	dinner	recipe-dal-tadka	4	\N
+plan-item-1794990306624-9qrln	mp-cmwluvp8m001rl378wus9b8wg	friday	breakfast	recipe-aloo-gobi	4	\N
+plan-item-1794990306624-heg46	mp-cmwluvp8m001rl378wus9b8wg	friday	lunch	recipe-idli-sambar	4	\N
+plan-item-1794909988437-08b5z	mp-cmwjbo8tb0001l3rks9ymiw4i	friday	lunch	recipe-paneer-butter-masala	1	\N
+plan-item-1794909988437-bo5vr	mp-cmwjbo8tb0001l3rks9ymiw4i	friday	dinner	recipe-gujarati-kadhi	1	\N
+plan-item-1794909988437-8vcoo	mp-cmwjbo8tb0001l3rks9ymiw4i	saturday	breakfast	recipe-methi-na-gota	1	\N
+plan-item-1794909988438-lu3m2	mp-cmwjbo8tb0001l3rks9ymiw4i	saturday	lunch	recipe-sambhar-rice	1	\N
+plan-item-1794909988438-33222	mp-cmwjbo8tb0001l3rks9ymiw4i	saturday	dinner	recipe-jain-paneer-bhurji	1	\N
+plan-item-1794909988438-fqdb1	mp-cmwjbo8tb0001l3rks9ymiw4i	sunday	breakfast	recipe-gujarati-handvo	1	\N
+plan-item-1794909988438-rkftf	mp-cmwjbo8tb0001l3rks9ymiw4i	sunday	lunch	recipe-bengali-cholar-dal	1	\N
+plan-item-1794909988438-4qwhi	mp-cmwjbo8tb0001l3rks9ymiw4i	sunday	dinner	recipe-vaghireli-khichdi	1	\N
+plan-item-1794990306624-d17ax	mp-cmwluvp8m001rl378wus9b8wg	friday	dinner	recipe-rava-upma	4	\N
+plan-item-1794990306624-bo2z4	mp-cmwluvp8m001rl378wus9b8wg	saturday	breakfast	recipe-bhindi-masala	4	\N
+plan-item-1794990306624-7m177	mp-cmwluvp8m001rl378wus9b8wg	saturday	lunch	recipe-sambhar-rice	4	\N
+plan-item-1794990306624-uqrsy	mp-cmwluvp8m001rl378wus9b8wg	saturday	dinner	recipe-baingan-bharta	4	\N
+plan-item-1794990306624-w0zx6	mp-cmwluvp8m001rl378wus9b8wg	sunday	breakfast	recipe-punjabi-chicken-curry	4	\N
+plan-item-1794990306624-yjpzc	mp-cmwluvp8m001rl378wus9b8wg	sunday	lunch	recipe-bengali-macher-jhol	4	\N
+plan-item-1794990306624-00a30	mp-cmwluvp8m001rl378wus9b8wg	sunday	dinner	recipe-bengali-cholar-dal	4	\N
+plan-item-1794990310733-snzvu	mp-cmwluvt49002el378sqok1hr7	saturday	dinner	recipe-methi-na-gota	3	\N
+plan-item-1794990310733-yqd8c	mp-cmwluvt49002el378sqok1hr7	sunday	breakfast	recipe-gujarati-khatti-meethi-dal	3	\N
+plan-item-1794990310733-s5oy4	mp-cmwluvt49002el378sqok1hr7	sunday	lunch	recipe-methi-thepla	3	\N
+plan-item-1794990310733-bz6qk	mp-cmwluvt49002el378sqok1hr7	sunday	dinner	recipe-moong-dal-khichdi	3	\N
+plan-item-1794990317232-p6vke	mp-cmwluvw8w002xl378zyff0mno	monday	breakfast	recipe-paneer-butter-masala	2	\N
+plan-item-1794990317232-dajps	mp-cmwluvw8w002xl378zyff0mno	monday	lunch	recipe-gujarati-khatti-meethi-dal	2	\N
+plan-item-1794990317232-iem11	mp-cmwluvw8w002xl378zyff0mno	monday	dinner	recipe-methi-thepla	2	\N
+plan-item-1794990317232-8r22a	mp-cmwluvw8w002xl378zyff0mno	tuesday	breakfast	recipe-masala-dosa	2	\N
+plan-item-1794990317232-r8d1p	mp-cmwluvw8w002xl378zyff0mno	tuesday	lunch	recipe-rajma-chawal	2	\N
+plan-item-1794990317232-c4hec	mp-cmwluvw8w002xl378zyff0mno	tuesday	dinner	recipe-palak-paneer	2	\N
+plan-item-1794990317232-vy71z	mp-cmwluvw8w002xl378zyff0mno	wednesday	breakfast	recipe-kanda-poha	2	\N
+plan-item-1794990317232-fglpg	mp-cmwluvw8w002xl378zyff0mno	wednesday	lunch	recipe-moong-dal-khichdi	2	\N
+plan-item-1794990317232-cnmwk	mp-cmwluvw8w002xl378zyff0mno	wednesday	dinner	recipe-egg-curry	2	\N
+plan-item-1794990317232-x07g0	mp-cmwluvw8w002xl378zyff0mno	thursday	breakfast	recipe-khaman-dhokla	2	\N
+plan-item-1794990317232-2fg55	mp-cmwluvw8w002xl378zyff0mno	thursday	lunch	recipe-amritsari-chole	2	\N
+plan-item-1794990317232-vje9n	mp-cmwluvw8w002xl378zyff0mno	thursday	dinner	recipe-dal-tadka	2	\N
+plan-item-1794990317232-a9nyw	mp-cmwluvw8w002xl378zyff0mno	friday	breakfast	recipe-aloo-gobi	2	\N
+plan-item-1794990317232-lgdyn	mp-cmwluvw8w002xl378zyff0mno	friday	lunch	recipe-idli-sambar	2	\N
+plan-item-1794990317232-z2vfe	mp-cmwluvw8w002xl378zyff0mno	friday	dinner	recipe-rava-upma	2	\N
+plan-item-1794990317232-k2tp5	mp-cmwluvw8w002xl378zyff0mno	saturday	breakfast	recipe-bhindi-masala	2	\N
+plan-item-1794990317232-e46c8	mp-cmwluvw8w002xl378zyff0mno	saturday	lunch	recipe-sambhar-rice	2	\N
+plan-item-1794990317232-46775	mp-cmwluvw8w002xl378zyff0mno	saturday	dinner	recipe-baingan-bharta	2	\N
+plan-item-1794990317232-oklm0	mp-cmwluvw8w002xl378zyff0mno	sunday	breakfast	recipe-punjabi-chicken-curry	2	\N
+plan-item-1794990317232-nwbik	mp-cmwluvw8w002xl378zyff0mno	sunday	lunch	recipe-bengali-macher-jhol	2	\N
+plan-item-1794990317232-dzcuu	mp-cmwluvw8w002xl378zyff0mno	sunday	dinner	recipe-bengali-cholar-dal	2	\N
+plan-item-1794998215761-jqhde	mp-cmwlzl7zz0090l3j4fhwcpcdz	monday	breakfast	recipe-paneer-butter-masala	4	\N
+plan-item-1794998215761-7fci1	mp-cmwlzl7zz0090l3j4fhwcpcdz	monday	lunch	recipe-gujarati-khatti-meethi-dal	4	\N
+plan-item-1794998215761-imlhh	mp-cmwlzl7zz0090l3j4fhwcpcdz	monday	dinner	recipe-methi-thepla	4	\N
+plan-item-1794998215761-y5ewx	mp-cmwlzl7zz0090l3j4fhwcpcdz	tuesday	breakfast	recipe-masala-dosa	4	\N
+plan-item-1794998215761-1naak	mp-cmwlzl7zz0090l3j4fhwcpcdz	tuesday	lunch	recipe-rajma-chawal	4	\N
+plan-item-1794998215761-0bjya	mp-cmwlzl7zz0090l3j4fhwcpcdz	tuesday	dinner	recipe-palak-paneer	4	\N
+plan-item-1794998215761-r63ko	mp-cmwlzl7zz0090l3j4fhwcpcdz	wednesday	breakfast	recipe-kanda-poha	4	\N
+plan-item-1794998215761-gr0ys	mp-cmwlzl7zz0090l3j4fhwcpcdz	wednesday	lunch	recipe-moong-dal-khichdi	4	\N
+plan-item-1794998215761-w5yxi	mp-cmwlzl7zz0090l3j4fhwcpcdz	wednesday	dinner	recipe-egg-curry	4	\N
+plan-item-1794998215761-vyupb	mp-cmwlzl7zz0090l3j4fhwcpcdz	thursday	breakfast	recipe-khaman-dhokla	4	\N
+plan-item-1794998215761-edx0b	mp-cmwlzl7zz0090l3j4fhwcpcdz	thursday	lunch	recipe-amritsari-chole	4	\N
+plan-item-1794998215761-f2ts1	mp-cmwlzl7zz0090l3j4fhwcpcdz	thursday	dinner	recipe-dal-tadka	4	\N
+plan-item-1794998215761-4uedr	mp-cmwlzl7zz0090l3j4fhwcpcdz	friday	breakfast	recipe-aloo-gobi	4	\N
+plan-item-1794998215761-67bjp	mp-cmwlzl7zz0090l3j4fhwcpcdz	friday	lunch	recipe-idli-sambar	4	\N
+plan-item-1794998215761-46xz1	mp-cmwlzl7zz0090l3j4fhwcpcdz	friday	dinner	recipe-rava-upma	4	\N
+plan-item-1794998215761-38csi	mp-cmwlzl7zz0090l3j4fhwcpcdz	saturday	breakfast	recipe-bhindi-masala	4	\N
+plan-item-1794998215761-p6kli	mp-cmwlzl7zz0090l3j4fhwcpcdz	saturday	lunch	recipe-sambhar-rice	4	\N
+plan-item-1794998215761-tc0ah	mp-cmwlzl7zz0090l3j4fhwcpcdz	saturday	dinner	recipe-baingan-bharta	4	\N
+plan-item-1794998215761-ju4cx	mp-cmwlzl7zz0090l3j4fhwcpcdz	sunday	breakfast	recipe-punjabi-chicken-curry	4	\N
+plan-item-1794998215761-1brny	mp-cmwlzl7zz0090l3j4fhwcpcdz	sunday	lunch	recipe-bengali-macher-jhol	4	\N
+plan-item-1794998215761-rez35	mp-cmwlzl7zz0090l3j4fhwcpcdz	sunday	dinner	recipe-bengali-cholar-dal	4	\N
+plan-item-1794998219391-yt5bh	mp-cmwlzlbrn009nl3j4mj72449t	monday	breakfast	recipe-gujarati-khatti-meethi-dal	3	\N
+plan-item-1794998219391-m2iak	mp-cmwlzlbrn009nl3j4mj72449t	monday	lunch	recipe-methi-thepla	3	\N
+plan-item-1794998219391-45y19	mp-cmwlzlbrn009nl3j4mj72449t	monday	dinner	recipe-moong-dal-khichdi	3	\N
+plan-item-1794998219391-pp8ph	mp-cmwlzlbrn009nl3j4mj72449t	tuesday	breakfast	recipe-khaman-dhokla	3	\N
+plan-item-1794998219391-ic282	mp-cmwlzlbrn009nl3j4mj72449t	tuesday	lunch	recipe-idli-sambar	3	\N
+plan-item-1794998219391-7v61i	mp-cmwlzlbrn009nl3j4mj72449t	tuesday	dinner	recipe-bhindi-masala	3	\N
+plan-item-1794998219391-zjxrs	mp-cmwlzlbrn009nl3j4mj72449t	wednesday	breakfast	recipe-bengali-cholar-dal	3	\N
+plan-item-1794998219391-bcyvb	mp-cmwlzlbrn009nl3j4mj72449t	wednesday	lunch	recipe-jain-paneer-bhurji	3	\N
+plan-item-1794998219391-3jj95	mp-cmwlzlbrn009nl3j4mj72449t	wednesday	dinner	recipe-jain-moong-dal-tadka	3	\N
+plan-item-1794998219391-4w4uc	mp-cmwlzlbrn009nl3j4mj72449t	thursday	breakfast	recipe-sev-tameta-nu-shaak	3	\N
+plan-item-1794998219391-fkjef	mp-cmwlzlbrn009nl3j4mj72449t	thursday	lunch	recipe-bajra-no-rotlo	3	\N
+plan-item-1794998219391-kqgb3	mp-cmwlzlbrn009nl3j4mj72449t	thursday	dinner	recipe-bajra-no-rotlo-vegan	3	\N
+plan-item-1794998219391-v4i5h	mp-cmwlzlbrn009nl3j4mj72449t	friday	breakfast	recipe-surati-undhiyu-jain	3	\N
+plan-item-1794998219391-mx4y4	mp-cmwlzlbrn009nl3j4mj72449t	friday	lunch	recipe-gujarati-dal-dhokli	3	\N
+plan-item-1794998219391-y0aup	mp-cmwlzlbrn009nl3j4mj72449t	friday	dinner	recipe-gujarati-kadhi	3	\N
+plan-item-1794998219391-zqgxe	mp-cmwlzlbrn009nl3j4mj72449t	saturday	breakfast	recipe-vaghireli-khichdi	3	\N
+plan-item-1794998219391-c0ugz	mp-cmwlzlbrn009nl3j4mj72449t	saturday	lunch	recipe-gujarati-handvo	3	\N
+plan-item-1794998219391-i2nh3	mp-cmwlzlbrn009nl3j4mj72449t	saturday	dinner	recipe-methi-na-gota	3	\N
+plan-item-1794998219391-mjvi8	mp-cmwlzlbrn009nl3j4mj72449t	sunday	breakfast	recipe-gujarati-khatti-meethi-dal	3	\N
+plan-item-1794998219391-1e5t5	mp-cmwlzlbrn009nl3j4mj72449t	sunday	lunch	recipe-methi-thepla	3	\N
+plan-item-1794998219391-abt49	mp-cmwlzlbrn009nl3j4mj72449t	sunday	dinner	recipe-moong-dal-khichdi	3	\N
+plan-item-1794998224479-zx1au	mp-cmwlzleh200a6l3j4a2jrdq98	monday	breakfast	recipe-paneer-butter-masala	2	\N
+plan-item-1794998224479-pl1cr	mp-cmwlzleh200a6l3j4a2jrdq98	monday	lunch	recipe-gujarati-khatti-meethi-dal	2	\N
+plan-item-1794998224479-vnpra	mp-cmwlzleh200a6l3j4a2jrdq98	monday	dinner	recipe-methi-thepla	2	\N
+plan-item-1794998224479-a7gl5	mp-cmwlzleh200a6l3j4a2jrdq98	tuesday	breakfast	recipe-masala-dosa	2	\N
+plan-item-1794998224479-f2b32	mp-cmwlzleh200a6l3j4a2jrdq98	tuesday	lunch	recipe-rajma-chawal	2	\N
+plan-item-1794998224479-eci08	mp-cmwlzleh200a6l3j4a2jrdq98	tuesday	dinner	recipe-palak-paneer	2	\N
+plan-item-1794998224479-ip9sn	mp-cmwlzleh200a6l3j4a2jrdq98	wednesday	breakfast	recipe-kanda-poha	2	\N
+plan-item-1794998224479-dr84d	mp-cmwlzleh200a6l3j4a2jrdq98	wednesday	lunch	recipe-moong-dal-khichdi	2	\N
+plan-item-1794998224479-2ctnd	mp-cmwlzleh200a6l3j4a2jrdq98	wednesday	dinner	recipe-egg-curry	2	\N
+plan-item-1794998224479-k8s29	mp-cmwlzleh200a6l3j4a2jrdq98	thursday	breakfast	recipe-khaman-dhokla	2	\N
+plan-item-1794998224479-9285t	mp-cmwlzleh200a6l3j4a2jrdq98	thursday	lunch	recipe-amritsari-chole	2	\N
+plan-item-1794998224479-g9mys	mp-cmwlzleh200a6l3j4a2jrdq98	thursday	dinner	recipe-dal-tadka	2	\N
+plan-item-1794998224479-sn8br	mp-cmwlzleh200a6l3j4a2jrdq98	friday	breakfast	recipe-aloo-gobi	2	\N
+plan-item-1794998224479-c3su7	mp-cmwlzleh200a6l3j4a2jrdq98	friday	lunch	recipe-idli-sambar	2	\N
+plan-item-1794998224479-rr700	mp-cmwlzleh200a6l3j4a2jrdq98	friday	dinner	recipe-rava-upma	2	\N
+plan-item-1794998224479-w7ka9	mp-cmwlzleh200a6l3j4a2jrdq98	saturday	breakfast	recipe-bhindi-masala	2	\N
+plan-item-1794998224479-k91zm	mp-cmwlzleh200a6l3j4a2jrdq98	saturday	lunch	recipe-sambhar-rice	2	\N
+plan-item-1794998224479-5t1bf	mp-cmwlzleh200a6l3j4a2jrdq98	saturday	dinner	recipe-baingan-bharta	2	\N
+plan-item-1794998224479-87xih	mp-cmwlzleh200a6l3j4a2jrdq98	sunday	breakfast	recipe-punjabi-chicken-curry	2	\N
+plan-item-1794998224479-o26en	mp-cmwlzleh200a6l3j4a2jrdq98	sunday	lunch	recipe-bengali-macher-jhol	2	\N
+plan-item-1794998224479-zbuvs	mp-cmwlzleh200a6l3j4a2jrdq98	sunday	dinner	recipe-bengali-cholar-dal	2	\N
+plan-item-1795003078470-37yxv	mp-cmwm2hgp8005al3ootx5qzed3	monday	breakfast	recipe-paneer-butter-masala	4	\N
+plan-item-1795003078470-sbxf6	mp-cmwm2hgp8005al3ootx5qzed3	monday	lunch	recipe-gujarati-khatti-meethi-dal	4	\N
+plan-item-1795003078470-wpf5w	mp-cmwm2hgp8005al3ootx5qzed3	monday	dinner	recipe-methi-thepla	4	\N
+plan-item-1795003078470-cbwrk	mp-cmwm2hgp8005al3ootx5qzed3	tuesday	breakfast	recipe-masala-dosa	4	\N
+plan-item-1795003078470-wspxc	mp-cmwm2hgp8005al3ootx5qzed3	tuesday	lunch	recipe-rajma-chawal	4	\N
+plan-item-1795003078470-z5mgu	mp-cmwm2hgp8005al3ootx5qzed3	tuesday	dinner	recipe-palak-paneer	4	\N
+plan-item-1795003078470-nt9df	mp-cmwm2hgp8005al3ootx5qzed3	wednesday	breakfast	recipe-kanda-poha	4	\N
+plan-item-1795003078470-63f91	mp-cmwm2hgp8005al3ootx5qzed3	wednesday	lunch	recipe-moong-dal-khichdi	4	\N
+plan-item-1795003078470-p24qw	mp-cmwm2hgp8005al3ootx5qzed3	wednesday	dinner	recipe-egg-curry	4	\N
+plan-item-1795003078470-rdqm5	mp-cmwm2hgp8005al3ootx5qzed3	thursday	breakfast	recipe-khaman-dhokla	4	\N
+plan-item-1795003078470-xgopg	mp-cmwm2hgp8005al3ootx5qzed3	thursday	lunch	recipe-amritsari-chole	4	\N
+plan-item-1795003078470-60aud	mp-cmwm2hgp8005al3ootx5qzed3	thursday	dinner	recipe-dal-tadka	4	\N
+plan-item-1795003078470-mm68k	mp-cmwm2hgp8005al3ootx5qzed3	friday	breakfast	recipe-aloo-gobi	4	\N
+plan-item-1795003078470-yxt4n	mp-cmwm2hgp8005al3ootx5qzed3	friday	lunch	recipe-idli-sambar	4	\N
+plan-item-1795003078470-dhde3	mp-cmwm2hgp8005al3ootx5qzed3	friday	dinner	recipe-rava-upma	4	\N
+plan-item-1795003078470-iu694	mp-cmwm2hgp8005al3ootx5qzed3	saturday	breakfast	recipe-bhindi-masala	4	\N
+plan-item-1795003078470-xdz1l	mp-cmwm2hgp8005al3ootx5qzed3	saturday	lunch	recipe-sambhar-rice	4	\N
+plan-item-1795003078470-q377m	mp-cmwm2hgp8005al3ootx5qzed3	saturday	dinner	recipe-baingan-bharta	4	\N
+plan-item-1795003078470-14t7x	mp-cmwm2hgp8005al3ootx5qzed3	sunday	breakfast	recipe-punjabi-chicken-curry	4	\N
+plan-item-1795003078470-jtvwc	mp-cmwm2hgp8005al3ootx5qzed3	sunday	lunch	recipe-bengali-macher-jhol	4	\N
+plan-item-1795003078470-rpseq	mp-cmwm2hgp8005al3ootx5qzed3	sunday	dinner	recipe-bengali-cholar-dal	4	\N
+plan-item-1795003083485-25j0c	mp-cmwm2hjt0005xl3ookbtk8m5t	monday	breakfast	recipe-gujarati-khatti-meethi-dal	3	\N
+plan-item-1795003083485-1xfpu	mp-cmwm2hjt0005xl3ookbtk8m5t	monday	lunch	recipe-methi-thepla	3	\N
+plan-item-1795003083485-u9ag7	mp-cmwm2hjt0005xl3ookbtk8m5t	monday	dinner	recipe-moong-dal-khichdi	3	\N
+plan-item-1795003083485-gzf42	mp-cmwm2hjt0005xl3ookbtk8m5t	tuesday	breakfast	recipe-khaman-dhokla	3	\N
+plan-item-1795003083485-4bm9l	mp-cmwm2hjt0005xl3ookbtk8m5t	tuesday	lunch	recipe-idli-sambar	3	\N
+plan-item-1795003083485-y35iv	mp-cmwm2hjt0005xl3ookbtk8m5t	tuesday	dinner	recipe-bhindi-masala	3	\N
+plan-item-1795003083485-i9sge	mp-cmwm2hjt0005xl3ookbtk8m5t	wednesday	breakfast	recipe-bengali-cholar-dal	3	\N
+plan-item-1795003083485-kfubk	mp-cmwm2hjt0005xl3ookbtk8m5t	wednesday	lunch	recipe-jain-paneer-bhurji	3	\N
+plan-item-1795003083485-s5bpd	mp-cmwm2hjt0005xl3ookbtk8m5t	wednesday	dinner	recipe-jain-moong-dal-tadka	3	\N
+plan-item-1795003083485-wo6hs	mp-cmwm2hjt0005xl3ookbtk8m5t	thursday	breakfast	recipe-sev-tameta-nu-shaak	3	\N
+plan-item-1795003083485-ici2l	mp-cmwm2hjt0005xl3ookbtk8m5t	thursday	lunch	recipe-bajra-no-rotlo	3	\N
+plan-item-1795003083485-rtuuk	mp-cmwm2hjt0005xl3ookbtk8m5t	thursday	dinner	recipe-bajra-no-rotlo-vegan	3	\N
+plan-item-1795003083485-28zbm	mp-cmwm2hjt0005xl3ookbtk8m5t	friday	breakfast	recipe-surati-undhiyu-jain	3	\N
+plan-item-1795003083485-r6udt	mp-cmwm2hjt0005xl3ookbtk8m5t	friday	lunch	recipe-gujarati-dal-dhokli	3	\N
+plan-item-1795003083485-3msiy	mp-cmwm2hjt0005xl3ookbtk8m5t	friday	dinner	recipe-gujarati-kadhi	3	\N
+plan-item-1795003083485-c7iku	mp-cmwm2hjt0005xl3ookbtk8m5t	saturday	breakfast	recipe-vaghireli-khichdi	3	\N
+plan-item-1795003083485-zf5ok	mp-cmwm2hjt0005xl3ookbtk8m5t	saturday	lunch	recipe-gujarati-handvo	3	\N
+plan-item-1795003083485-xbzqp	mp-cmwm2hjt0005xl3ookbtk8m5t	saturday	dinner	recipe-methi-na-gota	3	\N
+plan-item-1795003083485-9qhu7	mp-cmwm2hjt0005xl3ookbtk8m5t	sunday	breakfast	recipe-gujarati-khatti-meethi-dal	3	\N
+plan-item-1795003083485-4v5yj	mp-cmwm2hjt0005xl3ookbtk8m5t	sunday	lunch	recipe-methi-thepla	3	\N
+plan-item-1795003083485-5de1c	mp-cmwm2hjt0005xl3ookbtk8m5t	sunday	dinner	recipe-moong-dal-khichdi	3	\N
+plan-item-1795003091341-0xen5	mp-cmwm2hno4006gl3oo6zsw7xfr	monday	breakfast	recipe-paneer-butter-masala	2	\N
+plan-item-1795003091341-nsdil	mp-cmwm2hno4006gl3oo6zsw7xfr	monday	lunch	recipe-gujarati-khatti-meethi-dal	2	\N
+plan-item-1795003091341-vcuhk	mp-cmwm2hno4006gl3oo6zsw7xfr	monday	dinner	recipe-methi-thepla	2	\N
+plan-item-1795003091341-x3zd2	mp-cmwm2hno4006gl3oo6zsw7xfr	tuesday	breakfast	recipe-masala-dosa	2	\N
+plan-item-1795003091341-u6q2h	mp-cmwm2hno4006gl3oo6zsw7xfr	tuesday	lunch	recipe-rajma-chawal	2	\N
+plan-item-1795003091341-dnvto	mp-cmwm2hno4006gl3oo6zsw7xfr	tuesday	dinner	recipe-palak-paneer	2	\N
+plan-item-1795003091341-iktso	mp-cmwm2hno4006gl3oo6zsw7xfr	wednesday	breakfast	recipe-kanda-poha	2	\N
+plan-item-1795003091341-5tvkj	mp-cmwm2hno4006gl3oo6zsw7xfr	wednesday	lunch	recipe-moong-dal-khichdi	2	\N
+plan-item-1795003091341-6vy2r	mp-cmwm2hno4006gl3oo6zsw7xfr	wednesday	dinner	recipe-egg-curry	2	\N
+plan-item-1795003091341-v0klh	mp-cmwm2hno4006gl3oo6zsw7xfr	thursday	breakfast	recipe-khaman-dhokla	2	\N
+plan-item-1795003091341-nmzmd	mp-cmwm2hno4006gl3oo6zsw7xfr	thursday	lunch	recipe-amritsari-chole	2	\N
+plan-item-1795003091341-cn5xr	mp-cmwm2hno4006gl3oo6zsw7xfr	thursday	dinner	recipe-dal-tadka	2	\N
+plan-item-1795003091341-5hvmt	mp-cmwm2hno4006gl3oo6zsw7xfr	friday	breakfast	recipe-aloo-gobi	2	\N
+plan-item-1795003091341-mwyaf	mp-cmwm2hno4006gl3oo6zsw7xfr	friday	lunch	recipe-idli-sambar	2	\N
+plan-item-1795003091341-vr9vf	mp-cmwm2hno4006gl3oo6zsw7xfr	friday	dinner	recipe-rava-upma	2	\N
+plan-item-1795003091341-2bzdm	mp-cmwm2hno4006gl3oo6zsw7xfr	saturday	breakfast	recipe-bhindi-masala	2	\N
+plan-item-1795003091341-mtu9z	mp-cmwm2hno4006gl3oo6zsw7xfr	saturday	lunch	recipe-sambhar-rice	2	\N
+plan-item-1795003091341-alqz7	mp-cmwm2hno4006gl3oo6zsw7xfr	saturday	dinner	recipe-baingan-bharta	2	\N
+plan-item-1795003091341-aghhg	mp-cmwm2hno4006gl3oo6zsw7xfr	sunday	breakfast	recipe-punjabi-chicken-curry	2	\N
+plan-item-1795003091341-ziti3	mp-cmwm2hno4006gl3oo6zsw7xfr	sunday	lunch	recipe-bengali-macher-jhol	2	\N
+plan-item-1795003091341-l247d	mp-cmwm2hno4006gl3oo6zsw7xfr	sunday	dinner	recipe-bengali-cholar-dal	2	\N
 \.
 
 
@@ -1705,281 +2890,784 @@ plan-item-1794830546607-nfw9	mp-cmwj7rkrc00d4l3js9nan98p0	Monday	Lunch	recipe-gu
 -- Data for Name: Order; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."Order" (id, "userId", "retailerName", status, "totalAmountInr", "deliveryFeeInr", "deliveryAddress", "createdAt", "updatedAt", "fulfillmentNotes", "isDemoOrder", "statusReason", "substitutionNotes", "updatedBy") FROM stdin;
-ord-1794810679972	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794810679970)	2026-11-16 06:31:19.974	2026-11-16 06:31:19.974	\N	t	\N	\N	\N
-ord-1794810679985	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794810679970)	2026-11-16 06:31:19.986	2026-11-16 06:31:19.986	\N	t	\N	\N	\N
-ord-1794810680000	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794810679970)	2026-11-16 06:31:20.002	2026-11-16 06:31:20.002	\N	t	\N	\N	\N
-ord-1794810680007	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794810679970)	2026-11-16 06:31:20.008	2026-11-16 06:31:20.008	\N	t	\N	\N	\N
-ord-1794810680011	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794810679970)	2026-11-16 06:31:20.012	2026-11-16 06:31:20.012	\N	t	\N	\N	\N
-ord-1794810685357	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 06:31:25.359	2026-11-16 06:31:25.359	\N	t	\N	\N	\N
-ord-1794810807797	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	0	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:33:27.801	2026-11-16 06:33:27.801	\N	t	\N	\N	\N
-ord-1794810810125	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	0	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:33:30.129	2026-11-16 06:33:30.129	\N	t	\N	\N	\N
-ord-1794811140988	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:39:00.996	2026-11-16 06:39:00.996	\N	t	\N	\N	\N
-ord-1794811143232	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:39:03.238	2026-11-16 06:39:03.238	\N	t	\N	\N	\N
-ord-1794811385019	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:05.021	2026-11-16 06:43:05.021	\N	t	\N	\N	\N
-ord-1794811387312	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:07.314	2026-11-16 06:43:07.314	\N	t	\N	\N	\N
-ord-1794811387318	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:43:07.32	2026-11-16 06:43:07.32	\N	t	\N	\N	\N
-ord-1794811429516	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:49.518	2026-11-16 06:43:49.518	\N	t	\N	\N	\N
-ord-1794811431745	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:51.747	2026-11-16 06:43:51.747	\N	t	\N	\N	\N
-ord-1794811431751	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:43:51.753	2026-11-16 06:43:51.753	\N	t	\N	\N	\N
-ord-1794811550892	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	1563	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 06:45:50.898	2026-11-16 06:45:50.898	\N	t	\N	\N	\N
-ord-1794811560233	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	1976	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 06:46:00.239	2026-11-16 06:46:00.239	\N	t	\N	\N	\N
-ord-1794811560548	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794811560549)	2026-11-16 06:46:00.554	2026-11-16 06:46:00.554	\N	t	\N	\N	\N
-ord-1794811560557	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794811560549)	2026-11-16 06:46:00.563	2026-11-16 06:46:00.563	\N	t	\N	\N	\N
-ord-1794811560566	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794811560549)	2026-11-16 06:46:00.572	2026-11-16 06:46:00.572	\N	t	\N	\N	\N
-ord-1794811560574	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794811560549)	2026-11-16 06:46:00.58	2026-11-16 06:46:00.58	\N	t	\N	\N	\N
-ord-1794811560578	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794811560549)	2026-11-16 06:46:00.584	2026-11-16 06:46:00.584	\N	t	\N	\N	\N
-ord-1794811560837	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 06:46:00.843	2026-11-16 06:46:00.843	\N	t	\N	\N	\N
-ord-1794811561424	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:46:01.43	2026-11-16 06:46:01.43	\N	t	\N	\N	\N
-ord-1794811563666	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:46:03.672	2026-11-16 06:46:03.672	\N	t	\N	\N	\N
-ord-1794811563674	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:46:03.68	2026-11-16 06:46:03.68	\N	t	\N	\N	\N
-ord-1794811689362	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794811689362)	2026-11-16 06:48:09.365	2026-11-16 06:48:09.365	\N	t	\N	\N	\N
-ord-1794811689377	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794811689362)	2026-11-16 06:48:09.38	2026-11-16 06:48:09.38	\N	t	\N	\N	\N
-ord-1794811689387	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794811689362)	2026-11-16 06:48:09.389	2026-11-16 06:48:09.389	\N	t	\N	\N	\N
-ord-1794811689391	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794811689362)	2026-11-16 06:48:09.394	2026-11-16 06:48:09.394	\N	t	\N	\N	\N
-ord-1794811689396	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794811689362)	2026-11-16 06:48:09.399	2026-11-16 06:48:09.399	\N	t	\N	\N	\N
-ord-1794811709720	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:48:29.723	2026-11-16 06:48:29.723	\N	t	\N	\N	\N
-ord-1794811711940	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:48:31.942	2026-11-16 06:48:31.942	\N	t	\N	\N	\N
-ord-1794811711945	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:48:31.947	2026-11-16 06:48:31.947	\N	t	\N	\N	\N
-ord-1794811739645	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:48:59.647	2026-11-16 06:48:59.647	\N	t	\N	\N	\N
-ord-1794811741991	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:49:01.992	2026-11-16 06:49:01.992	\N	t	\N	\N	\N
-ord-1794811742003	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:49:02.005	2026-11-16 06:49:02.005	\N	t	\N	\N	\N
-ord-1794811885447	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2680	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 06:51:25.449	2026-11-16 06:51:25.449	\N	t	\N	\N	\N
-ord-1794811929962	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:52:09.966	2026-11-16 06:52:09.966	\N	t	\N	\N	\N
-ord-1794811932183	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:52:12.186	2026-11-16 06:52:12.186	\N	t	\N	\N	\N
-ord-1794811932190	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:52:12.193	2026-11-16 06:52:12.193	\N	t	\N	\N	\N
-ord-1794814450004	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2680	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:34:10.007	2026-11-16 07:34:10.007	\N	t	\N	\N	\N
-ord-1794814456824	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2534	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 07:34:16.826	2026-11-16 07:34:16.826	\N	t	\N	\N	\N
-ord-1794814457196	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794814457182)	2026-11-16 07:34:17.198	2026-11-16 07:34:17.198	\N	t	\N	\N	\N
-ord-1794814457205	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794814457182)	2026-11-16 07:34:17.207	2026-11-16 07:34:17.207	\N	t	\N	\N	\N
-ord-1794814457219	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794814457182)	2026-11-16 07:34:17.22	2026-11-16 07:34:17.22	\N	t	\N	\N	\N
-ord-1794814457226	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794814457182)	2026-11-16 07:34:17.228	2026-11-16 07:34:17.228	\N	t	\N	\N	\N
-ord-1794814457232	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794814457182)	2026-11-16 07:34:17.233	2026-11-16 07:34:17.233	\N	t	\N	\N	\N
-ord-1794814457483	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 07:34:17.485	2026-11-16 07:34:17.485	\N	t	\N	\N	\N
-ord-1794814458050	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:34:18.052	2026-11-16 07:34:18.052	\N	t	\N	\N	\N
-ord-1794814460343	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:34:20.345	2026-11-16 07:34:20.345	\N	t	\N	\N	\N
-ord-1794814460351	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:34:20.353	2026-11-16 07:34:20.353	\N	t	\N	\N	\N
-ord-1794814626095	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:37:06.104	2026-11-16 07:37:06.104	\N	t	\N	\N	\N
-ord-1794814628341	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:37:08.35	2026-11-16 07:37:08.35	\N	t	\N	\N	\N
-ord-1794814628348	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:37:08.357	2026-11-16 07:37:08.357	\N	t	\N	\N	\N
-ord-1794814892625	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:41:32.635	2026-11-16 07:41:32.635	\N	t	\N	\N	\N
-ord-1794815003346	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2534	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:43:23.351	2026-11-16 07:43:23.351	\N	t	\N	\N	\N
-ord-1794815057256	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794815055188)	2026-11-16 07:44:17.269	2026-11-16 07:44:17.269	\N	t	\N	\N	\N
-ord-1794815058843	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794815055188)	2026-11-16 07:44:18.856	2026-11-16 07:44:18.856	\N	t	\N	\N	\N
-ord-1794815058852	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794815055188)	2026-11-16 07:44:18.864	2026-11-16 07:44:18.864	\N	t	\N	\N	\N
-ord-1794815058858	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794815055188)	2026-11-16 07:44:18.871	2026-11-16 07:44:18.871	\N	t	\N	\N	\N
-ord-1794815059257	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 07:44:19.269	2026-11-16 07:44:19.269	\N	t	\N	\N	\N
-ord-1794815061238	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:44:21.25	2026-11-16 07:44:21.25	\N	t	\N	\N	\N
-ord-1794815063531	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:44:23.543	2026-11-16 07:44:23.543	\N	t	\N	\N	\N
-ord-1794815063536	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:44:23.549	2026-11-16 07:44:23.549	\N	t	\N	\N	\N
-ord-1794815064076	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:44:24.088	2026-11-16 07:44:24.088	\N	t	\N	\N	\N
-ord-1794815302442	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2502	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:48:22.444	2026-11-16 07:48:22.444	\N	t	\N	\N	\N
-ord-1794815434576	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:50:34.578	2026-11-16 07:50:34.578	\N	t	\N	\N	\N
-ord-1794815436819	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:50:36.821	2026-11-16 07:50:36.821	\N	t	\N	\N	\N
-ord-1794815436826	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:50:36.828	2026-11-16 07:50:36.828	\N	t	\N	\N	\N
-ord-1794815437417	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:50:37.418	2026-11-16 07:50:37.418	\N	t	\N	\N	\N
-ord-1794815751185	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2569	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:55:51.196	2026-11-16 07:55:51.196	\N	t	\N	\N	\N
-ord-1794815758045	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2775	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 07:55:58.057	2026-11-16 07:55:58.057	\N	t	\N	\N	\N
-ord-1794815758521	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794815758527)	2026-11-16 07:55:58.532	2026-11-16 07:55:58.532	\N	t	\N	\N	\N
-ord-1794815758535	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794815758527)	2026-11-16 07:55:58.546	2026-11-16 07:55:58.546	\N	t	\N	\N	\N
-ord-1794815758552	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794815758527)	2026-11-16 07:55:58.563	2026-11-16 07:55:58.563	\N	t	\N	\N	\N
-ord-1794815758562	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794815758527)	2026-11-16 07:55:58.573	2026-11-16 07:55:58.573	\N	t	\N	\N	\N
-ord-1794815758570	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794815758527)	2026-11-16 07:55:58.581	2026-11-16 07:55:58.581	\N	t	\N	\N	\N
-ord-1794815758893	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 07:55:58.904	2026-11-16 07:55:58.904	\N	t	\N	\N	\N
-ord-1794815759614	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:55:59.625	2026-11-16 07:55:59.625	\N	t	\N	\N	\N
-ord-1794815761985	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:56:01.996	2026-11-16 07:56:01.996	\N	t	\N	\N	\N
-ord-1794815761995	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:56:02.006	2026-11-16 07:56:02.006	\N	t	\N	\N	\N
-ord-1794815762738	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:56:02.749	2026-11-16 07:56:02.749	\N	t	\N	\N	\N
-ord-1794817209291	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2852	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 08:20:09.293	2026-11-16 08:20:09.293	\N	t	\N	\N	\N
-ord-1794817219541	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2367	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 08:20:19.543	2026-11-16 08:20:19.543	\N	t	\N	\N	\N
-ord-1794817220036	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794817220033)	2026-11-16 08:20:20.038	2026-11-16 08:20:20.038	\N	t	\N	\N	\N
-ord-1794817220049	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794817220033)	2026-11-16 08:20:20.051	2026-11-16 08:20:20.051	\N	t	\N	\N	\N
-ord-1794817220070	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794817220033)	2026-11-16 08:20:20.072	2026-11-16 08:20:20.072	\N	t	\N	\N	\N
-ord-1794817220081	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794817220033)	2026-11-16 08:20:20.083	2026-11-16 08:20:20.083	\N	t	\N	\N	\N
-ord-1794817220088	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794817220033)	2026-11-16 08:20:20.09	2026-11-16 08:20:20.09	\N	t	\N	\N	\N
-ord-1794817220427	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 08:20:20.429	2026-11-16 08:20:20.429	\N	t	\N	\N	\N
-ord-1794817221225	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:20:21.227	2026-11-16 08:20:21.227	\N	t	\N	\N	\N
-ord-1794817223639	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:20:23.641	2026-11-16 08:20:23.641	\N	t	\N	\N	\N
-ord-1794817223649	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 08:20:23.651	2026-11-16 08:20:23.651	\N	t	\N	\N	\N
-ord-1794817224528	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:20:24.53	2026-11-16 08:20:24.53	\N	t	\N	\N	\N
-ord-1794817822270	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:30:22.278	2026-11-16 08:30:22.278	\N	t	\N	\N	\N
-ord-1794818154448	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:35:54.451	2026-11-16 08:35:54.451	\N	t	\N	\N	\N
-ord-1794818318403	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2633	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 08:38:38.413	2026-11-16 08:38:38.413	\N	t	\N	\N	\N
-ord-1794818318851	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794818318854)	2026-11-16 08:38:38.861	2026-11-16 08:38:38.861	\N	t	\N	\N	\N
-ord-1794818318865	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794818318854)	2026-11-16 08:38:38.875	2026-11-16 08:38:38.875	\N	t	\N	\N	\N
-ord-1794818318881	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794818318854)	2026-11-16 08:38:38.891	2026-11-16 08:38:38.891	\N	t	\N	\N	\N
-ord-1794818318889	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794818318854)	2026-11-16 08:38:38.899	2026-11-16 08:38:38.899	\N	t	\N	\N	\N
-ord-1794818318898	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794818318854)	2026-11-16 08:38:38.908	2026-11-16 08:38:38.908	\N	t	\N	\N	\N
-ord-1794818319229	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 08:38:39.238	2026-11-16 08:38:39.238	\N	t	\N	\N	\N
-ord-1794818320015	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:38:40.024	2026-11-16 08:38:40.024	\N	t	\N	\N	\N
-ord-1794818322341	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:38:42.351	2026-11-16 08:38:42.351	\N	t	\N	\N	\N
-ord-1794818322350	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 08:38:42.359	2026-11-16 08:38:42.359	\N	t	\N	\N	\N
-ord-1794818323039	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:38:43.049	2026-11-16 08:38:43.049	\N	t	\N	\N	\N
-ord-1794818323463	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:38:43.473	2026-11-16 08:38:43.473	\N	t	\N	\N	\N
-ord-1794818377176	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:39:37.18	2026-11-16 08:39:37.18	\N	t	\N	\N	\N
-ord-1794818554226	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2827	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 08:42:34.231	2026-11-16 08:42:34.231	\N	t	\N	\N	\N
-ord-1794818567353	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2342	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 08:42:47.355	2026-11-16 08:42:47.355	\N	t	\N	\N	\N
-ord-1794818567850	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794818567848)	2026-11-16 08:42:47.853	2026-11-16 08:42:47.853	\N	t	\N	\N	\N
-ord-1794818567865	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794818567848)	2026-11-16 08:42:47.867	2026-11-16 08:42:47.867	\N	t	\N	\N	\N
-ord-1794818567882	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794818567848)	2026-11-16 08:42:47.885	2026-11-16 08:42:47.885	\N	t	\N	\N	\N
-ord-1794818567891	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794818567848)	2026-11-16 08:42:47.894	2026-11-16 08:42:47.894	\N	t	\N	\N	\N
-ord-1794818567899	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794818567848)	2026-11-16 08:42:47.901	2026-11-16 08:42:47.901	\N	t	\N	\N	\N
-ord-1794818568267	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 08:42:48.27	2026-11-16 08:42:48.27	\N	t	\N	\N	\N
-ord-1794818569015	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:42:49.017	2026-11-16 08:42:49.017	\N	t	\N	\N	\N
-ord-1794818571364	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:42:51.367	2026-11-16 08:42:51.367	\N	t	\N	\N	\N
-ord-1794818571375	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 08:42:51.378	2026-11-16 08:42:51.378	\N	t	\N	\N	\N
-ord-1794818572170	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:42:52.172	2026-11-16 08:42:52.172	\N	t	\N	\N	\N
-ord-1794818572579	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:42:52.582	2026-11-16 08:42:52.582	\N	t	\N	\N	\N
-ord-1794822041138	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822031100)	2026-11-16 09:40:41.139	2026-11-16 09:40:41.139	\N	t	\N	\N	\N
-ord-1794822041797	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822031100)	2026-11-16 09:40:41.799	2026-11-16 09:40:41.799	\N	t	\N	\N	\N
-ord-1794822041810	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822031100)	2026-11-16 09:40:41.812	2026-11-16 09:40:41.812	\N	t	\N	\N	\N
-ord-1794822041822	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822031100)	2026-11-16 09:40:41.824	2026-11-16 09:40:41.824	\N	t	\N	\N	\N
-ord-1794822678759	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794822678756)	2026-11-16 09:51:18.761	2026-11-16 09:51:18.761	\N	t	\N	\N	\N
-ord-1794822678778	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822678756)	2026-11-16 09:51:18.781	2026-11-16 09:51:18.781	\N	t	\N	\N	\N
-ord-1794822678800	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822678756)	2026-11-16 09:51:18.802	2026-11-16 09:51:18.802	\N	t	\N	\N	\N
-ord-1794822678810	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822678756)	2026-11-16 09:51:18.812	2026-11-16 09:51:18.812	\N	t	\N	\N	\N
-ord-1794822678820	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822678756)	2026-11-16 09:51:18.823	2026-11-16 09:51:18.823	\N	t	\N	\N	\N
-ord-1794822740009	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2689	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 09:52:20.014	2026-11-16 09:52:20.014	\N	t	\N	\N	\N
-ord-1794822741933	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2333	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 09:52:21.938	2026-11-16 09:52:21.938	\N	t	\N	\N	\N
-ord-1794822742958	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794822742955)	2026-11-16 09:52:22.963	2026-11-16 09:52:22.963	\N	t	\N	\N	\N
-ord-1794822742988	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822742955)	2026-11-16 09:52:22.992	2026-11-16 09:52:22.992	\N	t	\N	\N	\N
-ord-1794822743020	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822742955)	2026-11-16 09:52:23.025	2026-11-16 09:52:23.025	\N	t	\N	\N	\N
-ord-1794822743037	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822742955)	2026-11-16 09:52:23.041	2026-11-16 09:52:23.041	\N	t	\N	\N	\N
-ord-1794822743054	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822742955)	2026-11-16 09:52:23.058	2026-11-16 09:52:23.058	\N	t	\N	\N	\N
-ord-1794822743811	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:52:23.816	2026-11-16 09:52:23.816	\N	t	\N	\N	\N
-ord-1794822745019	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:52:25.023	2026-11-16 09:52:25.023	\N	t	\N	\N	\N
-ord-1794822747527	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:52:27.531	2026-11-16 09:52:27.531	\N	t	\N	\N	\N
-ord-1794822747540	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:52:27.544	2026-11-16 09:52:27.544	\N	t	\N	\N	\N
-ord-1794822748460	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:52:28.464	2026-11-16 09:52:28.464	\N	t	\N	\N	\N
-ord-1794822748988	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:52:28.992	2026-11-16 09:52:28.992	\N	t	\N	\N	\N
-ord-1794822915943	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:55:15.947	2026-11-16 09:55:15.947	\N	t	\N	\N	\N
-ord-1794822931859	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:55:31.862	2026-11-16 09:55:31.862	\N	t	\N	\N	\N
-ord-1794822934281	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:55:34.284	2026-11-16 09:55:34.284	\N	t	\N	\N	\N
-ord-1794822934290	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:55:34.293	2026-11-16 09:55:34.293	\N	t	\N	\N	\N
-ord-1794822948567	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:55:48.571	2026-11-16 09:55:48.571	\N	t	\N	\N	\N
-ord-1794822958891	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:55:58.894	2026-11-16 09:55:58.894	\N	t	\N	\N	\N
-ord-1794823004627	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2372	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 09:56:44.631	2026-11-16 09:56:44.631	\N	t	\N	\N	\N
-ord-1794823005755	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794823005753)	2026-11-16 09:56:45.758	2026-11-16 09:56:45.758	\N	t	\N	\N	\N
-ord-1794823005766	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794823005753)	2026-11-16 09:56:45.769	2026-11-16 09:56:45.769	\N	t	\N	\N	\N
-ord-1794823005785	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794823005753)	2026-11-16 09:56:45.788	2026-11-16 09:56:45.788	\N	t	\N	\N	\N
-ord-1794823005793	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794823005753)	2026-11-16 09:56:45.796	2026-11-16 09:56:45.796	\N	t	\N	\N	\N
-ord-1794823005800	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794823005753)	2026-11-16 09:56:45.803	2026-11-16 09:56:45.803	\N	t	\N	\N	\N
-ord-1794823006121	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:56:46.124	2026-11-16 09:56:46.124	\N	t	\N	\N	\N
-ord-1794823007828	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:56:47.831	2026-11-16 09:56:47.831	\N	t	\N	\N	\N
-ord-1794823010273	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:56:50.276	2026-11-16 09:56:50.276	\N	t	\N	\N	\N
-ord-1794823010285	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:56:50.288	2026-11-16 09:56:50.288	\N	t	\N	\N	\N
-ord-1794823010988	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:56:50.992	2026-11-16 09:56:50.992	\N	t	\N	\N	\N
-ord-1794823011360	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:56:51.363	2026-11-16 09:56:51.363	\N	t	\N	\N	\N
-ord-1794823210498	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2350	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:00:10.503	2026-11-16 10:00:10.503	\N	t	\N	\N	\N
-ord-1794823229199	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2350	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 10:00:29.203	2026-11-16 10:00:29.203	\N	t	\N	\N	\N
-ord-1794823230317	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2505	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:00:30.323	2026-11-16 10:00:30.323	\N	t	\N	\N	\N
-ord-1794823231293	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794823231286)	2026-11-16 10:00:31.301	2026-11-16 10:00:31.301	\N	t	\N	\N	\N
-ord-1794823231322	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794823231286)	2026-11-16 10:00:31.327	2026-11-16 10:00:31.327	\N	t	\N	\N	\N
-ord-1794823231353	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794823231286)	2026-11-16 10:00:31.357	2026-11-16 10:00:31.357	\N	t	\N	\N	\N
-ord-1794823231370	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794823231286)	2026-11-16 10:00:31.374	2026-11-16 10:00:31.374	\N	t	\N	\N	\N
-ord-1794823231385	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794823231286)	2026-11-16 10:00:31.39	2026-11-16 10:00:31.39	\N	t	\N	\N	\N
-ord-1794823231891	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 10:00:31.895	2026-11-16 10:00:31.895	\N	t	\N	\N	\N
-ord-1794823233090	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:00:33.094	2026-11-16 10:00:33.094	\N	t	\N	\N	\N
-ord-1794823235686	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:00:35.691	2026-11-16 10:00:35.691	\N	t	\N	\N	\N
-ord-1794823235701	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 10:00:35.706	2026-11-16 10:00:35.706	\N	t	\N	\N	\N
-ord-1794823236933	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 10:00:36.938	2026-11-16 10:00:36.938	\N	t	\N	\N	\N
-ord-1794823237743	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 10:00:37.748	2026-11-16 10:40:20.806	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in
-ord-1794825684884	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2808	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 10:41:24.886	2026-11-16 10:41:24.886	\N	t	\N	\N	\N
-ord-1794825691731	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2475	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:41:31.733	2026-11-16 10:41:31.733	\N	t	\N	\N	\N
-ord-1794825692196	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794825692187)	2026-11-16 10:41:32.198	2026-11-16 10:41:32.198	\N	t	\N	\N	\N
-ord-1794825692208	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794825692187)	2026-11-16 10:41:32.21	2026-11-16 10:41:32.21	\N	t	\N	\N	\N
-ord-1794825692222	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794825692187)	2026-11-16 10:41:32.224	2026-11-16 10:41:32.224	\N	t	\N	\N	\N
-ord-1794825692231	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794825692187)	2026-11-16 10:41:32.233	2026-11-16 10:41:32.233	\N	t	\N	\N	\N
-ord-1794825692238	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794825692187)	2026-11-16 10:41:32.24	2026-11-16 10:41:32.24	\N	t	\N	\N	\N
-ord-1794825692587	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 10:41:32.588	2026-11-16 10:41:32.588	\N	t	\N	\N	\N
-ord-1794825693372	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:41:33.374	2026-11-16 10:41:33.374	\N	t	\N	\N	\N
-ord-1794825695792	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:41:35.794	2026-11-16 10:41:35.794	\N	t	\N	\N	\N
-ord-1794825695802	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 10:41:35.804	2026-11-16 10:41:35.804	\N	t	\N	\N	\N
-ord-1794825696510	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 10:41:36.512	2026-11-16 10:41:36.512	\N	t	\N	\N	\N
-ord-1794825696926	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 10:41:36.928	2026-11-16 10:41:42.556	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in
-ord-1794825806875	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2475	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 10:43:26.877	2026-11-16 10:43:26.877	\N	t	\N	\N	\N
-ord-1794825812985	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2741	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:43:32.986	2026-11-16 10:43:32.986	\N	t	\N	\N	\N
-ord-1794825813476	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794825813475)	2026-11-16 10:43:33.478	2026-11-16 10:43:33.478	\N	t	\N	\N	\N
-ord-1794825813488	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794825813475)	2026-11-16 10:43:33.49	2026-11-16 10:43:33.49	\N	t	\N	\N	\N
-ord-1794825813504	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794825813475)	2026-11-16 10:43:33.506	2026-11-16 10:43:33.506	\N	t	\N	\N	\N
-ord-1794825813511	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794825813475)	2026-11-16 10:43:33.513	2026-11-16 10:43:33.513	\N	t	\N	\N	\N
-ord-1794825813518	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794825813475)	2026-11-16 10:43:33.519	2026-11-16 10:43:33.519	\N	t	\N	\N	\N
-ord-1794825813845	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 10:43:33.847	2026-11-16 10:43:33.847	\N	t	\N	\N	\N
-ord-1794825814586	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:43:34.587	2026-11-16 10:43:34.587	\N	t	\N	\N	\N
-ord-1794825816965	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:43:36.967	2026-11-16 10:43:36.967	\N	t	\N	\N	\N
-ord-1794825816972	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 10:43:36.974	2026-11-16 10:43:36.974	\N	t	\N	\N	\N
-ord-1794825817840	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 10:43:37.842	2026-11-16 10:43:37.842	\N	t	\N	\N	\N
-ord-1794826668288	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:57:48.293	2026-11-16 10:57:48.293	\N	t	\N	\N	\N
-ord-1794826668301	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 10:57:48.306	2026-11-16 10:57:48.306	\N	t	\N	\N	\N
-ord-1794825818247	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 10:43:38.249	2026-11-16 10:55:54.097	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in
-ord-1794826657847	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2521	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 10:57:37.849	2026-11-16 10:57:37.849	\N	t	\N	\N	\N
-ord-1794826663981	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2309	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:57:43.983	2026-11-16 10:57:43.983	\N	t	\N	\N	\N
-ord-1794826664564	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794826664562)	2026-11-16 10:57:44.566	2026-11-16 10:57:44.566	\N	t	\N	\N	\N
-ord-1794826664579	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794826664562)	2026-11-16 10:57:44.581	2026-11-16 10:57:44.581	\N	t	\N	\N	\N
-ord-1794826664600	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794826664562)	2026-11-16 10:57:44.602	2026-11-16 10:57:44.602	\N	t	\N	\N	\N
-ord-1794826664611	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794826664562)	2026-11-16 10:57:44.613	2026-11-16 10:57:44.613	\N	t	\N	\N	\N
-ord-1794826664620	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794826664562)	2026-11-16 10:57:44.622	2026-11-16 10:57:44.622	\N	t	\N	\N	\N
-ord-1794826665029	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 10:57:45.034	2026-11-16 10:57:45.034	\N	t	\N	\N	\N
-ord-1794826665872	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:57:45.877	2026-11-16 10:57:45.877	\N	t	\N	\N	\N
-ord-1794826669098	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 10:57:49.103	2026-11-16 10:57:49.103	\N	t	\N	\N	\N
-ord-1794828325799	cmwj6fyg50032l3rcif9xvg5z	Blinkit	DEMO ORDER CONFIRMED	240	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103	2026-11-16 11:25:25.803	2026-11-16 11:25:25.803	\N	t	\N	\N	\N
-ord-1794826669508	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 10:57:49.513	2026-11-16 11:10:22.945	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in
-ord-1794828431545	cmwj6i80g0032l3y87a4qyxrq	Blinkit	DEMO ORDER CONFIRMED	240	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103	2026-11-16 11:27:11.56	2026-11-16 11:27:11.56	\N	t	\N	\N	\N
-ord-1794828556986	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2689	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 11:29:16.992	2026-11-16 11:29:16.992	\N	t	\N	\N	\N
-ord-1794828577774	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2990	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 11:29:37.78	2026-11-16 11:29:37.78	\N	t	\N	\N	\N
-ord-1794828578276	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794828578277)	2026-11-16 11:29:38.281	2026-11-16 11:29:38.281	\N	t	\N	\N	\N
-ord-1794828578290	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794828578277)	2026-11-16 11:29:38.296	2026-11-16 11:29:38.296	\N	t	\N	\N	\N
-ord-1794828578309	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794828578277)	2026-11-16 11:29:38.315	2026-11-16 11:29:38.315	\N	t	\N	\N	\N
-ord-1794828578319	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794828578277)	2026-11-16 11:29:38.325	2026-11-16 11:29:38.325	\N	t	\N	\N	\N
-ord-1794828578327	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794828578277)	2026-11-16 11:29:38.333	2026-11-16 11:29:38.333	\N	t	\N	\N	\N
-ord-1794828578703	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 11:29:38.708	2026-11-16 11:29:38.708	\N	t	\N	\N	\N
-ord-1794828579392	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 11:29:39.398	2026-11-16 11:29:39.398	\N	t	\N	\N	\N
-ord-1794828581838	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 11:29:41.844	2026-11-16 11:29:41.844	\N	t	\N	\N	\N
-ord-1794828581849	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 11:29:41.855	2026-11-16 11:29:41.855	\N	t	\N	\N	\N
-ord-1794828582592	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 11:29:42.598	2026-11-16 11:29:42.598	\N	t	\N	\N	\N
-ord-1794828583074	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 11:29:43.08	2026-11-16 11:29:51.081	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in
-ord-1794829138982	cmwj6xdtd00bdl3y825vovtmm	Blinkit	DEMO ORDER CONFIRMED	240	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103	2026-11-16 11:38:58.984	2026-11-16 11:38:58.984	\N	t	\N	\N	\N
-ord-1794829194615	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2990	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 11:39:54.619	2026-11-16 11:39:54.619	\N	t	\N	\N	\N
-ord-1794829205285	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	3324	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 11:40:05.289	2026-11-16 11:40:05.289	\N	t	\N	\N	\N
-ord-1794829205773	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794829205771)	2026-11-16 11:40:05.777	2026-11-16 11:40:05.777	\N	t	\N	\N	\N
-ord-1794829205786	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794829205771)	2026-11-16 11:40:05.79	2026-11-16 11:40:05.79	\N	t	\N	\N	\N
-ord-1794829205802	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794829205771)	2026-11-16 11:40:05.805	2026-11-16 11:40:05.805	\N	t	\N	\N	\N
-ord-1794829205811	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794829205771)	2026-11-16 11:40:05.814	2026-11-16 11:40:05.814	\N	t	\N	\N	\N
-ord-1794829205818	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794829205771)	2026-11-16 11:40:05.821	2026-11-16 11:40:05.821	\N	t	\N	\N	\N
-ord-1794829206192	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 11:40:06.196	2026-11-16 11:40:06.196	\N	t	\N	\N	\N
-ord-1794829206975	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 11:40:06.979	2026-11-16 11:40:06.979	\N	t	\N	\N	\N
-ord-1794829209422	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 11:40:09.426	2026-11-16 11:40:09.426	\N	t	\N	\N	\N
-ord-1794829209434	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 11:40:09.438	2026-11-16 11:40:09.438	\N	t	\N	\N	\N
-ord-1794829210232	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 11:40:10.236	2026-11-16 11:40:10.236	\N	t	\N	\N	\N
-ord-1794829210692	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 11:40:10.696	2026-11-16 11:40:19.734	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in
-ord-1794829230784	cmwj6zcpy00i7l3y8vp2u3gdx	Blinkit	DEMO ORDER CONFIRMED	240	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103	2026-11-16 11:40:30.788	2026-11-16 11:40:30.788	\N	t	\N	\N	\N
-ord-1794830522879	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2474	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 12:02:02.881	2026-11-16 12:02:02.881	\N	t	\N	\N	\N
-ord-1794830529012	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2400	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 12:02:09.014	2026-11-16 12:02:09.014	\N	t	\N	\N	\N
-ord-1794830529396	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794830529394)	2026-11-16 12:02:09.397	2026-11-16 12:02:09.397	\N	t	\N	\N	\N
-ord-1794830529407	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794830529394)	2026-11-16 12:02:09.409	2026-11-16 12:02:09.409	\N	t	\N	\N	\N
-ord-1794830529421	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794830529394)	2026-11-16 12:02:09.423	2026-11-16 12:02:09.423	\N	t	\N	\N	\N
-ord-1794830529430	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794830529394)	2026-11-16 12:02:09.431	2026-11-16 12:02:09.431	\N	t	\N	\N	\N
-ord-1794830529436	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794830529394)	2026-11-16 12:02:09.437	2026-11-16 12:02:09.437	\N	t	\N	\N	\N
-ord-1794830529702	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 12:02:09.703	2026-11-16 12:02:09.703	\N	t	\N	\N	\N
-ord-1794830530346	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 12:02:10.348	2026-11-16 12:02:10.348	\N	t	\N	\N	\N
-ord-1794830532714	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 12:02:12.716	2026-11-16 12:02:12.716	\N	t	\N	\N	\N
-ord-1794830532722	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 12:02:12.724	2026-11-16 12:02:12.724	\N	t	\N	\N	\N
-ord-1794830533345	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 12:02:13.346	2026-11-16 12:02:13.346	\N	t	\N	\N	\N
-ord-1794830533631	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 12:02:13.633	2026-11-16 12:02:20.389	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in
-ord-1794830546658	cmwj7rklp00cul3jspzl5jack	Blinkit	DEMO ORDER CONFIRMED	240	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103	2026-11-16 12:02:26.665	2026-11-16 12:02:26.665	\N	t	\N	\N	\N
-ord-1794831828306	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2823	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 12:23:48.309	2026-11-16 12:23:48.309	\N	t	\N	\N	\N
-ord-1794831843727	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2438	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 12:24:03.73	2026-11-16 12:24:03.73	\N	t	\N	\N	\N
-ord-1794831844117	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794831844117)	2026-11-16 12:24:04.12	2026-11-16 12:24:04.12	\N	t	\N	\N	\N
-ord-1794831844128	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794831844117)	2026-11-16 12:24:04.131	2026-11-16 12:24:04.131	\N	t	\N	\N	\N
-ord-1794831844141	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794831844117)	2026-11-16 12:24:04.145	2026-11-16 12:24:04.145	\N	t	\N	\N	\N
-ord-1794831844149	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794831844117)	2026-11-16 12:24:04.152	2026-11-16 12:24:04.152	\N	t	\N	\N	\N
-ord-1794831844155	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794831844117)	2026-11-16 12:24:04.158	2026-11-16 12:24:04.158	\N	t	\N	\N	\N
-ord-1794831844437	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 12:24:04.44	2026-11-16 12:24:04.44	\N	t	\N	\N	\N
-ord-1794831845044	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 12:24:05.047	2026-11-16 12:24:05.047	\N	t	\N	\N	\N
-ord-1794831847389	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 12:24:07.392	2026-11-16 12:24:07.392	\N	t	\N	\N	\N
-ord-1794831847395	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 12:24:07.398	2026-11-16 12:24:07.398	\N	t	\N	\N	\N
-ord-1794831847947	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 12:24:07.95	2026-11-16 12:24:07.95	\N	t	\N	\N	\N
-ord-1794831848260	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 12:24:08.263	2026-11-16 12:24:08.263	\N	t	\N	\N	\N
+COPY public."Order" (id, "userId", "retailerName", status, "totalAmountInr", "deliveryFeeInr", "deliveryAddress", "createdAt", "updatedAt", "fulfillmentNotes", "isDemoOrder", "statusReason", "substitutionNotes", "updatedBy", "householdId") FROM stdin;
+ord-1794997147103	user-demo-1	Blinkit	ORDER_CONFIRMED	90	25	123 Pilot Test St, Ahmedabad	2026-11-18 10:19:07.129	2026-11-18 10:19:07.129	\N	t	Order placed successfully	\N	user-demo-1	cmwj69k8h001zl31wvc9y7lf3
+ord-1795003044245	cmwm2gikc003ql3ooztalvyqf	Blinkit	HUB_PACKING	0	25	710 Gujarat Housing Board, Bapunagar, Ahmedabad 380024	2026-11-18 11:57:24.252	2026-11-18 11:57:24.298	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	system-worker	cmwm2gikj003sl3ooskghwfbf
+ord-1795003078531	cmwm2hgoz0058l3oo1vidsq7g	Blinkit	OUT_FOR_DELIVERY	84	25	Flat 402, Sharma Heights, Bengaluru	2026-11-18 11:57:58.535	2026-11-18 11:57:58.569	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	cmwm2hgp8005al3ootx5qzed3
+ord-1795003162681	user-demo-1	Blinkit	ORDER_CONFIRMED	90	25	123 Pilot Test St, Ahmedabad	2026-11-18 11:59:22.692	2026-11-18 11:59:22.692	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794997528174	user-demo-1	Blinkit	ORDER_CONFIRMED	90	25	123 Pilot Test St, Ahmedabad	2026-11-18 10:25:28.214	2026-11-18 10:25:28.214	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794997596836	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 10:26:36.842	2026-11-18 10:26:37.005	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1795003083543	cmwm2hjsu005vl3oou3jeub9w	Zepto	ORDER_CONFIRMED	79	29	B-12, Shanti Nagar, Ahmedabad	2026-11-18 11:58:03.549	2026-11-18 11:58:03.549	\N	t	Order placed successfully	\N	cmwm2hjsu005vl3oou3jeub9w	cmwm2hjt0005xl3ookbtk8m5t
+ord-1795003113407	user-demo-1	Blinkit	ORDER_CONFIRMED	90	25	123 Pilot Test St, Ahmedabad	2026-11-18 11:58:33.41	2026-11-18 11:58:33.41	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1795003091382	cmwm2hnny006el3oovgstr3jy	DMart Ready	ORDER_CONFIRMED	83	49	Flat 901, Palm Court, Mumbai	2026-11-18 11:58:11.385	2026-11-18 11:58:11.385	\N	t	Order placed successfully	\N	cmwm2hnny006el3oovgstr3jy	cmwm2hno4006gl3oo6zsw7xfr
+ord-1794822743020	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822742955)	2026-11-16 09:52:23.025	2026-11-16 09:52:23.025	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822743037	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822742955)	2026-11-16 09:52:23.041	2026-11-16 09:52:23.041	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794997671231	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 10:27:51.264	2026-11-18 10:27:51.415	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794997671462	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 10:27:51.466	2026-11-18 10:27:51.466	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794997671786	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-18 10:27:51.789	2026-11-18 10:27:51.789	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794997709990	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 10:28:30	2026-11-18 10:28:30.13	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794997710191	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 10:28:30.198	2026-11-18 10:28:30.198	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794997710618	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-18 10:28:30.623	2026-11-18 10:28:30.623	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794997819971	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 10:30:19.982	2026-11-18 10:30:20.101	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794997820160	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 10:30:20.174	2026-11-18 10:30:20.174	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794997820549	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-18 10:30:20.562	2026-11-18 10:30:20.562	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794997853380	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 10:30:53.388	2026-11-18 10:30:53.481	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794997853552	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 10:30:53.56	2026-11-18 10:30:53.56	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794997853927	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-18 10:30:53.933	2026-11-18 10:30:53.933	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794997894288	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-18 10:31:34.295	2026-11-18 10:31:34.592	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794997895140	user-demo-1	Blinkit	HUB_PACKING	289	25	Flat 402, Sharma Residence, North Wing, Indiranagar, Bengaluru	2026-11-18 10:31:35.154	2026-11-18 10:31:35.211	\N	t	Store picking started	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794997972967	user-demo-1	Blinkit	DELIVERED	274	25	Suite 155, Test Residency, Bengaluru	2026-11-18 10:32:52.973	2026-11-18 10:32:53.104	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-1794997973206	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 225, Test Residency, Bengaluru	2026-11-18 10:32:53.21	2026-11-18 10:32:53.21	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794997973146	user-demo-1	Blinkit	CANCELLED	274	25	Suite 310, Test Residency, Bengaluru	2026-11-18 10:32:53.151	2026-11-18 10:32:53.248	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794997973175	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 765, Test Residency, Bengaluru	2026-11-18 10:32:53.181	2026-11-18 10:32:53.295	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794997973405	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 455, Test Residency, Bengaluru	2026-11-18 10:32:53.41	2026-11-18 10:32:53.41	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794997973435	user-demo-1	Blinkit	HUB_PACKING	274	25	Suite 192, Test Residency, Bengaluru	2026-11-18 10:32:53.439	2026-11-18 10:32:53.453	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	system-worker	hh-sharma-family
+ord-1794997973486	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-18 10:32:53.49	2026-11-18 10:32:53.49	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794997973341	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 423, Test Residency, Bengaluru	2026-11-18 10:32:53.345	2026-11-18 10:32:53.531	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794997973571	user-demo-1	Blinkit	CANCELLED	274	25	Suite 127, Test Residency, Bengaluru	2026-11-18 10:32:53.578	2026-11-18 10:32:53.62	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794997973669	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 486, Test Residency, Bengaluru	2026-11-18 10:32:53.674	2026-11-18 10:32:53.674	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794828577774	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2990	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 11:29:37.78	2026-11-16 11:29:37.78	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794997973876	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 760, Test Residency, Bengaluru	2026-11-18 10:32:53.882	2026-11-18 10:32:53.882	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1795003466593	cmwjb5fej003ql3gghywo88u2	Zepto	ORDER_CONFIRMED	0	29	Bapunagar Ahmedabad	2026-11-18 12:04:26.6	2026-11-18 12:04:26.6	\N	t	Order placed successfully	\N	cmwjb5fej003ql3gghywo88u2	cmwjbo8tb0001l3rks9ymiw4i
+ord-1794998024229	user-demo-1	Blinkit	DELIVERED	274	25	Suite 114, Test Residency, Bengaluru	2026-11-18 10:33:44.235	2026-11-18 10:33:44.367	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-1794998024508	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 734, Test Residency, Bengaluru	2026-11-18 10:33:44.522	2026-11-18 10:33:44.522	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794998024437	user-demo-1	Blinkit	CANCELLED	274	25	Suite 975, Test Residency, Bengaluru	2026-11-18 10:33:44.442	2026-11-18 10:33:44.597	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794998024469	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 792, Test Residency, Bengaluru	2026-11-18 10:33:44.473	2026-11-18 10:33:44.627	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794998024753	user-demo-1	Blinkit	CANCELLED	274	25	Suite 917, Test Residency, Bengaluru	2026-11-18 10:33:44.757	2026-11-18 10:33:44.817	\N	t	Store out of stock	\N	rogue.admin.mwj58z1h@test.in	hh-sharma-family
+ord-1794998024779	user-demo-1	Blinkit	CANCELLED	274	25	Suite 737, Test Residency, Bengaluru	2026-11-18 10:33:44.783	2026-11-18 10:33:44.842	\N	t	Damaged packaging during packing	\N	rogue.admin.mwj58z1h@test.in	hh-sharma-family
+ord-1794998024860	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-18 10:33:44.864	2026-11-18 10:33:44.864	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794998024682	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 769, Test Residency, Bengaluru	2026-11-18 10:33:44.692	2026-11-18 10:33:44.897	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794998024922	user-demo-1	Blinkit	CANCELLED	274	25	Suite 453, Test Residency, Bengaluru	2026-11-18 10:33:44.926	2026-11-18 10:33:44.95	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794998024997	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 836, Test Residency, Bengaluru	2026-11-18 10:33:45.001	2026-11-18 10:33:45.001	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794998156415	cmwlzjs7m007gl3j4xmuko7ij	Blinkit	HUB_PACKING	0	25	710 Gujarat Housing Board, Bapunagar, Ahmedabad 380024	2026-11-18 10:35:56.424	2026-11-18 10:35:56.454	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	system-worker	cmwlzjs7r007il3j4u9q7ue7r
+ord-1795003539079	cmwjb5fej003ql3gghywo88u2	Zepto	ORDER_CONFIRMED	0	29	Bapunagar Ahmedabad	2026-11-18 12:05:39.085	2026-11-18 12:05:39.085	\N	t	Order placed successfully	\N	cmwjb5fej003ql3gghywo88u2	cmwjbo8tb0001l3rks9ymiw4i
+ord-1795003599575	cmwjb5fej003ql3gghywo88u2	Zepto	ORDER_CONFIRMED	0	29	Bapunagar Ahmedabad	2026-11-18 12:06:39.579	2026-11-18 12:06:39.579	\N	t	Order placed successfully	\N	cmwjb5fej003ql3gghywo88u2	cmwjbo8tb0001l3rks9ymiw4i
+ord-1795003681990	cmwjb5fej003ql3gghywo88u2	Zepto	ORDER_CONFIRMED	0	29	Bapunagar Ahmedabad	2026-11-18 12:08:01.994	2026-11-18 12:08:01.994	\N	t	Order placed successfully	\N	cmwjb5fej003ql3gghywo88u2	cmwjbo8tb0001l3rks9ymiw4i
+ord-1794917988158	user-demo-1	Blinkit	ORDER_CONFIRMED	1283	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:19:48.167	2026-11-17 12:19:48.167	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794998025251	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 960, Test Residency, Bengaluru	2026-11-18 10:33:45.256	2026-11-18 10:33:45.256	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+cmwlzjmps0001l3sc2uty2fgi	user-demo-1	Blinkit	DELIVERED	399	30	Bapunagar Ahmedabad	2026-11-18 10:35:37.024	2026-11-18 10:35:37.26	\N	t	Package delivered to doorstep	\N	system-worker	hh-sharma-family
+cmwlzjmwx0004l3scvmbw6x7y	user-demo-1	Blinkit	HUB_PACKING	299	25	Navrangpura Ahmedabad	2026-11-18 10:35:37.282	2026-11-18 10:35:37.295	\N	t	Worker 1 packing	\N	system-worker	hh-sharma-family
+ord-gate-1794925362330-841	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.332	2026-11-17 14:22:42.332	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794998215869	cmwlzl7zs008yl3j4de7xmrom	Blinkit	OUT_FOR_DELIVERY	84	25	Flat 402, Sharma Heights, Bengaluru	2026-11-18 10:36:55.876	2026-11-18 10:36:55.921	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	cmwlzl7zz0090l3j4fhwcpcdz
+ord-1794925558244	user-demo-1	Blinkit	CANCELLED	274	25	Suite 987, Test Residency, Bengaluru	2026-11-17 14:25:58.252	2026-11-17 14:25:58.353	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794998219440	cmwlzlbrh009ll3j4r28i362j	Zepto	ORDER_CONFIRMED	79	29	B-12, Shanti Nagar, Ahmedabad	2026-11-18 10:36:59.446	2026-11-18 10:36:59.446	\N	t	Order placed successfully	\N	cmwlzlbrh009ll3j4r28i362j	cmwlzlbrn009nl3j4mj72449t
+ord-1794998234295	user-demo-1	Blinkit	ORDER_CONFIRMED	90	25	123 Pilot Test St, Ahmedabad	2026-11-18 10:37:14.299	2026-11-18 10:37:14.299	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-gate-1794925610380-564	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.388	2026-11-17 14:26:50.388	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794998224534	cmwlzlegx00a4l3j4jmenjzct	DMart Ready	ORDER_CONFIRMED	83	49	Flat 901, Palm Court, Mumbai	2026-11-18 10:37:04.54	2026-11-18 10:37:04.54	\N	t	Order placed successfully	\N	cmwlzlegx00a4l3j4jmenjzct	cmwlzleh200a6l3j4a2jrdq98
+ord-gate-1794925853745-473	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.747	2026-11-17 14:30:53.747	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794999896490	user-demo-1	Blinkit	ORDER_CONFIRMED	90	25	123 Pilot Test St, Ahmedabad	2026-11-18 11:04:56.496	2026-11-18 11:04:56.496	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930778425	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 497, Test Residency, Bengaluru	2026-11-17 15:52:58.442	2026-11-17 15:52:58.442	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1795002904728	user-demo-1	Blinkit	CANCELLED	274	25	Suite 984, Test Residency, Bengaluru	2026-11-18 11:55:04.731	2026-11-18 11:55:04.749	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1795002904785	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 165, Test Residency, Bengaluru	2026-11-18 11:55:04.789	2026-11-18 11:55:04.789	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1795002886329	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 11:54:46.334	2026-11-18 11:54:46.424	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1795002886471	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 11:54:46.476	2026-11-18 11:54:46.476	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1795002886807	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-18 11:54:46.811	2026-11-18 11:54:46.811	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1795002894901	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-18 11:54:54.904	2026-11-18 11:54:55.026	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1795002895571	user-demo-1	Blinkit	HUB_PACKING	289	25	Flat 402, Sharma Residence, North Wing, Indiranagar, Bengaluru	2026-11-18 11:54:55.577	2026-11-18 11:54:55.599	\N	t	Store picking started	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1795002904211	user-demo-1	Blinkit	DELIVERED	274	25	Suite 111, Test Residency, Bengaluru	2026-11-18 11:55:04.215	2026-11-18 11:55:04.304	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-1795002904416	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 895, Test Residency, Bengaluru	2026-11-18 11:55:04.421	2026-11-18 11:55:04.421	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1795002904334	user-demo-1	Blinkit	CANCELLED	274	25	Suite 584, Test Residency, Bengaluru	2026-11-18 11:55:04.339	2026-11-18 11:55:04.465	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1795002904368	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 976, Test Residency, Bengaluru	2026-11-18 11:55:04.379	2026-11-18 11:55:04.484	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1795002904583	user-demo-1	Blinkit	CANCELLED	274	25	Suite 246, Test Residency, Bengaluru	2026-11-18 11:55:04.588	2026-11-18 11:55:04.64	\N	t	Store out of stock	\N	rogue.admin.mwj58z1h@test.in	hh-sharma-family
+ord-1795002904610	user-demo-1	Blinkit	CANCELLED	274	25	Suite 556, Test Residency, Bengaluru	2026-11-18 11:55:04.614	2026-11-18 11:55:04.657	\N	t	Damaged packaging during packing	\N	rogue.admin.mwj58z1h@test.in	hh-sharma-family
+ord-1795002904675	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-18 11:55:04.679	2026-11-18 11:55:04.679	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1795002904523	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 722, Test Residency, Bengaluru	2026-11-18 11:55:04.529	2026-11-18 11:55:04.707	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+cmwkx5pkj0001l3p8iwd2n01e	user-demo-1	Blinkit	DELIVERED	399	30	Bapunagar Ahmedabad	2026-11-17 16:41:02.131	2026-11-17 16:41:02.276	\N	t	Package delivered to doorstep	\N	system-worker	hh-sharma-family
+ord-1795002904943	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 268, Test Residency, Bengaluru	2026-11-18 11:55:04.949	2026-11-18 11:55:04.949	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794985978361	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-18 07:12:58.369	2026-11-18 07:12:58.369	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794990452394	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-18 08:27:32.401	2026-11-18 08:27:32.6	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794990453148	user-demo-1	Blinkit	HUB_PACKING	289	25	Flat 402, Sharma Residence, North Wing, Indiranagar, Bengaluru	2026-11-18 08:27:33.154	2026-11-18 08:27:33.181	\N	t	Store picking started	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794990461724	user-demo-1	Blinkit	DELIVERED	274	25	Suite 324, Test Residency, Bengaluru	2026-11-18 08:27:41.731	2026-11-18 08:27:41.859	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+cmwm2e01u0001l34wbz3lyqae	user-demo-1	Blinkit	DELIVERED	399	30	Bapunagar Ahmedabad	2026-11-18 11:55:13.217	2026-11-18 11:55:13.346	\N	t	Package delivered to doorstep	\N	system-worker	hh-sharma-family
+ord-1794990461903	user-demo-1	Blinkit	CANCELLED	274	25	Suite 512, Test Residency, Bengaluru	2026-11-18 08:27:41.909	2026-11-18 08:27:42.028	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+cmwm2e0680004l34wh6tqqehk	user-demo-1	Blinkit	HUB_PACKING	299	25	Navrangpura Ahmedabad	2026-11-18 11:55:13.376	2026-11-18 11:55:13.395	\N	t	Worker 1 packing	\N	system-worker	hh-sharma-family
+ord-1794990461936	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 580, Test Residency, Bengaluru	2026-11-18 08:27:41.942	2026-11-18 08:27:42.059	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794990462173	user-demo-1	Blinkit	CANCELLED	274	25	Suite 319, Test Residency, Bengaluru	2026-11-18 08:27:42.179	2026-11-18 08:27:42.262	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794990462209	user-demo-1	Blinkit	CANCELLED	274	25	Suite 836, Test Residency, Bengaluru	2026-11-18 08:27:42.215	2026-11-18 08:27:42.288	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794810679972	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794810679970)	2026-11-16 06:31:19.974	2026-11-16 06:31:19.974	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794810679985	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794810679970)	2026-11-16 06:31:19.986	2026-11-16 06:31:19.986	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794810680000	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794810679970)	2026-11-16 06:31:20.002	2026-11-16 06:31:20.002	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794810680007	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794810679970)	2026-11-16 06:31:20.008	2026-11-16 06:31:20.008	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794990462314	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-18 08:27:42.32	2026-11-18 08:27:42.32	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794990462103	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 407, Test Residency, Bengaluru	2026-11-18 08:27:42.108	2026-11-18 08:27:42.376	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794990462412	user-demo-1	Blinkit	CANCELLED	274	25	Suite 672, Test Residency, Bengaluru	2026-11-18 08:27:42.419	2026-11-18 08:27:42.453	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794990462513	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 516, Test Residency, Bengaluru	2026-11-18 08:27:42.519	2026-11-18 08:27:42.519	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794990462748	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 616, Test Residency, Bengaluru	2026-11-18 08:27:42.754	2026-11-18 08:27:42.754	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+cmwluzxu90001l3uco1wng70w	user-demo-1	Blinkit	DELIVERED	399	30	Bapunagar Ahmedabad	2026-11-18 08:28:19.857	2026-11-18 08:28:20.08	\N	t	Package delivered to doorstep	\N	system-worker	hh-sharma-family
+cmwluzy1e0004l3ucnu3cqgv1	user-demo-1	Blinkit	HUB_PACKING	299	25	Navrangpura Ahmedabad	2026-11-18 08:28:20.114	2026-11-18 08:28:20.14	\N	t	Worker 1 packing	\N	system-worker	hh-sharma-family
+ord-1794990461973	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 789, Test Residency, Bengaluru	2026-11-18 08:27:41.979	2026-11-18 08:27:41.979	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794990524132	cmwlv0470006sl378yxzqecwd	Blinkit	HUB_PACKING	0	25	710 Gujarat Housing Board, Bapunagar, Ahmedabad 380024	2026-11-18 08:28:44.138	2026-11-18 08:28:44.181	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	system-worker	cmwlv047a006ul378n56cjo5w
+ord-1794810680011	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794810679970)	2026-11-16 06:31:20.012	2026-11-16 06:31:20.012	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794810810125	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	0	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:33:30.129	2026-11-16 06:33:30.129	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794811550892	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	1563	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 06:45:50.898	2026-11-16 06:45:50.898	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794811560233	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	1976	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 06:46:00.239	2026-11-16 06:46:00.239	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794811560548	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794811560549)	2026-11-16 06:46:00.554	2026-11-16 06:46:00.554	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794811560557	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794811560549)	2026-11-16 06:46:00.563	2026-11-16 06:46:00.563	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794811560566	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794811560549)	2026-11-16 06:46:00.572	2026-11-16 06:46:00.572	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794811560574	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794811560549)	2026-11-16 06:46:00.58	2026-11-16 06:46:00.58	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794811560578	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794811560549)	2026-11-16 06:46:00.584	2026-11-16 06:46:00.584	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794811689362	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794811689362)	2026-11-16 06:48:09.365	2026-11-16 06:48:09.365	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794811689377	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794811689362)	2026-11-16 06:48:09.38	2026-11-16 06:48:09.38	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794811689387	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794811689362)	2026-11-16 06:48:09.389	2026-11-16 06:48:09.389	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794811689391	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794811689362)	2026-11-16 06:48:09.394	2026-11-16 06:48:09.394	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794811689396	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794811689362)	2026-11-16 06:48:09.399	2026-11-16 06:48:09.399	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794811885447	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2680	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 06:51:25.449	2026-11-16 06:51:25.449	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794814450004	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2680	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:34:10.007	2026-11-16 07:34:10.007	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794814456824	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2534	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 07:34:16.826	2026-11-16 07:34:16.826	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794814457196	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794814457182)	2026-11-16 07:34:17.198	2026-11-16 07:34:17.198	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794814457205	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794814457182)	2026-11-16 07:34:17.207	2026-11-16 07:34:17.207	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794814457219	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794814457182)	2026-11-16 07:34:17.22	2026-11-16 07:34:17.22	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794814457226	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794814457182)	2026-11-16 07:34:17.228	2026-11-16 07:34:17.228	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794814457232	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794814457182)	2026-11-16 07:34:17.233	2026-11-16 07:34:17.233	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794815003346	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2534	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:43:23.351	2026-11-16 07:43:23.351	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794815057256	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794815055188)	2026-11-16 07:44:17.269	2026-11-16 07:44:17.269	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794815058843	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794815055188)	2026-11-16 07:44:18.856	2026-11-16 07:44:18.856	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794815058852	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794815055188)	2026-11-16 07:44:18.864	2026-11-16 07:44:18.864	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794815058858	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794815055188)	2026-11-16 07:44:18.871	2026-11-16 07:44:18.871	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794815302442	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2502	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:48:22.444	2026-11-16 07:48:22.444	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794815751185	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2569	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 07:55:51.196	2026-11-16 07:55:51.196	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794815758045	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2775	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 07:55:58.057	2026-11-16 07:55:58.057	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794815758521	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794815758527)	2026-11-16 07:55:58.532	2026-11-16 07:55:58.532	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794815758535	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794815758527)	2026-11-16 07:55:58.546	2026-11-16 07:55:58.546	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794815758552	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794815758527)	2026-11-16 07:55:58.563	2026-11-16 07:55:58.563	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794815758562	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794815758527)	2026-11-16 07:55:58.573	2026-11-16 07:55:58.573	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794815758570	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794815758527)	2026-11-16 07:55:58.581	2026-11-16 07:55:58.581	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794817209291	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2852	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 08:20:09.293	2026-11-16 08:20:09.293	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794817219541	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2367	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 08:20:19.543	2026-11-16 08:20:19.543	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794817220036	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794817220033)	2026-11-16 08:20:20.038	2026-11-16 08:20:20.038	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794817220049	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794817220033)	2026-11-16 08:20:20.051	2026-11-16 08:20:20.051	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794817220070	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794817220033)	2026-11-16 08:20:20.072	2026-11-16 08:20:20.072	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794817220081	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794817220033)	2026-11-16 08:20:20.083	2026-11-16 08:20:20.083	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794817220088	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794817220033)	2026-11-16 08:20:20.09	2026-11-16 08:20:20.09	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794818318403	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2633	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 08:38:38.413	2026-11-16 08:38:38.413	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794818318851	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794818318854)	2026-11-16 08:38:38.861	2026-11-16 08:38:38.861	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794818318865	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794818318854)	2026-11-16 08:38:38.875	2026-11-16 08:38:38.875	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794818318881	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794818318854)	2026-11-16 08:38:38.891	2026-11-16 08:38:38.891	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794818318889	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794818318854)	2026-11-16 08:38:38.899	2026-11-16 08:38:38.899	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794818318898	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794818318854)	2026-11-16 08:38:38.908	2026-11-16 08:38:38.908	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794818554226	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2827	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 08:42:34.231	2026-11-16 08:42:34.231	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794818567353	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2342	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 08:42:47.355	2026-11-16 08:42:47.355	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794818567850	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794818567848)	2026-11-16 08:42:47.853	2026-11-16 08:42:47.853	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794818567865	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794818567848)	2026-11-16 08:42:47.867	2026-11-16 08:42:47.867	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794818567882	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794818567848)	2026-11-16 08:42:47.885	2026-11-16 08:42:47.885	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794818567891	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794818567848)	2026-11-16 08:42:47.894	2026-11-16 08:42:47.894	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794818567899	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794818567848)	2026-11-16 08:42:47.901	2026-11-16 08:42:47.901	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822041138	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822031100)	2026-11-16 09:40:41.139	2026-11-16 09:40:41.139	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822041797	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822031100)	2026-11-16 09:40:41.799	2026-11-16 09:40:41.799	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822041810	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822031100)	2026-11-16 09:40:41.812	2026-11-16 09:40:41.812	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822041822	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822031100)	2026-11-16 09:40:41.824	2026-11-16 09:40:41.824	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822678759	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794822678756)	2026-11-16 09:51:18.761	2026-11-16 09:51:18.761	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822678778	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822678756)	2026-11-16 09:51:18.781	2026-11-16 09:51:18.781	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822678800	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794822678756)	2026-11-16 09:51:18.802	2026-11-16 09:51:18.802	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822678810	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794822678756)	2026-11-16 09:51:18.812	2026-11-16 09:51:18.812	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822678820	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822678756)	2026-11-16 09:51:18.823	2026-11-16 09:51:18.823	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822740009	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2689	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 09:52:20.014	2026-11-16 09:52:20.014	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822741933	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2333	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 09:52:21.938	2026-11-16 09:52:21.938	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822742958	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794822742955)	2026-11-16 09:52:22.963	2026-11-16 09:52:22.963	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822742988	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794822742955)	2026-11-16 09:52:22.992	2026-11-16 09:52:22.992	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794822743054	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794822742955)	2026-11-16 09:52:23.058	2026-11-16 09:52:23.058	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823004627	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2372	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 09:56:44.631	2026-11-16 09:56:44.631	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823005755	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794823005753)	2026-11-16 09:56:45.758	2026-11-16 09:56:45.758	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823005766	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794823005753)	2026-11-16 09:56:45.769	2026-11-16 09:56:45.769	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823005785	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794823005753)	2026-11-16 09:56:45.788	2026-11-16 09:56:45.788	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823005793	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794823005753)	2026-11-16 09:56:45.796	2026-11-16 09:56:45.796	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823005800	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794823005753)	2026-11-16 09:56:45.803	2026-11-16 09:56:45.803	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823210498	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2350	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:00:10.503	2026-11-16 10:00:10.503	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823229199	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2350	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 10:00:29.203	2026-11-16 10:00:29.203	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823230317	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2505	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:00:30.323	2026-11-16 10:00:30.323	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823231293	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794823231286)	2026-11-16 10:00:31.301	2026-11-16 10:00:31.301	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823231322	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794823231286)	2026-11-16 10:00:31.327	2026-11-16 10:00:31.327	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823231353	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794823231286)	2026-11-16 10:00:31.357	2026-11-16 10:00:31.357	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823231370	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794823231286)	2026-11-16 10:00:31.374	2026-11-16 10:00:31.374	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794823231385	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794823231286)	2026-11-16 10:00:31.39	2026-11-16 10:00:31.39	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825684884	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2808	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 10:41:24.886	2026-11-16 10:41:24.886	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825691731	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2475	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:41:31.733	2026-11-16 10:41:31.733	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825692196	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794825692187)	2026-11-16 10:41:32.198	2026-11-16 10:41:32.198	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825692208	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794825692187)	2026-11-16 10:41:32.21	2026-11-16 10:41:32.21	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825692222	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794825692187)	2026-11-16 10:41:32.224	2026-11-16 10:41:32.224	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825692231	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794825692187)	2026-11-16 10:41:32.233	2026-11-16 10:41:32.233	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825692238	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794825692187)	2026-11-16 10:41:32.24	2026-11-16 10:41:32.24	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825806875	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2475	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 10:43:26.877	2026-11-16 10:43:26.877	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825812985	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2741	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:43:32.986	2026-11-16 10:43:32.986	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825813476	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794825813475)	2026-11-16 10:43:33.478	2026-11-16 10:43:33.478	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825813488	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794825813475)	2026-11-16 10:43:33.49	2026-11-16 10:43:33.49	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825813504	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794825813475)	2026-11-16 10:43:33.506	2026-11-16 10:43:33.506	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825813511	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794825813475)	2026-11-16 10:43:33.513	2026-11-16 10:43:33.513	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794825813518	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794825813475)	2026-11-16 10:43:33.519	2026-11-16 10:43:33.519	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794826657847	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2521	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 10:57:37.849	2026-11-16 10:57:37.849	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794826663981	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2309	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 10:57:43.983	2026-11-16 10:57:43.983	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794826664564	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794826664562)	2026-11-16 10:57:44.566	2026-11-16 10:57:44.566	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794826664579	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794826664562)	2026-11-16 10:57:44.581	2026-11-16 10:57:44.581	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794826664600	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794826664562)	2026-11-16 10:57:44.602	2026-11-16 10:57:44.602	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794826664611	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794826664562)	2026-11-16 10:57:44.613	2026-11-16 10:57:44.613	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794826664620	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794826664562)	2026-11-16 10:57:44.622	2026-11-16 10:57:44.622	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794828556986	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2689	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 11:29:16.992	2026-11-16 11:29:16.992	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794828578276	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794828578277)	2026-11-16 11:29:38.281	2026-11-16 11:29:38.281	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794828578290	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794828578277)	2026-11-16 11:29:38.296	2026-11-16 11:29:38.296	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794828578309	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794828578277)	2026-11-16 11:29:38.315	2026-11-16 11:29:38.315	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794828578319	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794828578277)	2026-11-16 11:29:38.325	2026-11-16 11:29:38.325	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794828578327	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794828578277)	2026-11-16 11:29:38.333	2026-11-16 11:29:38.333	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794829194615	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2990	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 11:39:54.619	2026-11-16 11:39:54.619	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794829205285	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	3324	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 11:40:05.289	2026-11-16 11:40:05.289	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794829205773	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794829205771)	2026-11-16 11:40:05.777	2026-11-16 11:40:05.777	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794829205786	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794829205771)	2026-11-16 11:40:05.79	2026-11-16 11:40:05.79	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794829205802	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794829205771)	2026-11-16 11:40:05.805	2026-11-16 11:40:05.805	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794829205811	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794829205771)	2026-11-16 11:40:05.814	2026-11-16 11:40:05.814	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794829205818	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794829205771)	2026-11-16 11:40:05.821	2026-11-16 11:40:05.821	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794830522879	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2474	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 12:02:02.881	2026-11-16 12:02:02.881	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794830529012	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2400	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 12:02:09.014	2026-11-16 12:02:09.014	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794830529396	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794830529394)	2026-11-16 12:02:09.397	2026-11-16 12:02:09.397	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794830529407	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794830529394)	2026-11-16 12:02:09.409	2026-11-16 12:02:09.409	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794830529421	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794830529394)	2026-11-16 12:02:09.423	2026-11-16 12:02:09.423	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794830529430	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794830529394)	2026-11-16 12:02:09.431	2026-11-16 12:02:09.431	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794830529436	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794830529394)	2026-11-16 12:02:09.437	2026-11-16 12:02:09.437	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794831828306	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2823	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-16 12:23:48.309	2026-11-16 12:23:48.309	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794831843727	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	2438	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 12:24:03.73	2026-11-16 12:24:03.73	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794831844117	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	940	25	Flat 402, Green Glen Layout, Bengaluru 560103 (1794831844117)	2026-11-16 12:24:04.12	2026-11-16 12:24:04.12	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794831844128	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	850	25	Flat 505, Idempotency Tower, Bengaluru 560103 (1794831844117)	2026-11-16 12:24:04.131	2026-11-16 12:24:04.131	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794831844141	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	320	25	Corrected Address, Bengaluru (1794831844117)	2026-11-16 12:24:04.145	2026-11-16 12:24:04.145	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794831844149	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr A (1794831844117)	2026-11-16 12:24:04.152	2026-11-16 12:24:04.152	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794831844155	user-demo-1	Zepto	DEMO ORDER CONFIRMED	500	29	Addr B (1794831844117)	2026-11-16 12:24:04.158	2026-11-16 12:24:04.158	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794833336175	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	290	25	Flat 402, Gokul Dham Society, Ahmedabad	2026-11-16 12:48:56.177	2026-11-16 12:48:56.177	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794833358492	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	385	25	Flat 402, Gokul Dham Society, Ahmedabad, Gujarat - 380015	2026-11-16 12:49:18.494	2026-11-16 12:49:18.494	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794833384571	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	385	25	Flat 402, Gokul Dham Society, Ahmedabad, Gujarat - 380015	2026-11-16 12:49:44.573	2026-11-16 12:49:44.573	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794841186732	user-demo-1	DMart Ready	DEMO ORDER CONFIRMED	1040	49	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103 (Karnataka)	2026-11-16 14:59:46.734	2026-11-16 14:59:46.734	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794908059569	user-demo-1	BigBasket	DEMO ORDER CONFIRMED	1034	35	710/7692 Gujarat housing board, Bapunagar, Ahmedabad 380024 (Gujarat)	2026-11-17 09:34:19.572	2026-11-17 09:34:19.572	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794908245545	user-demo-1	BigBasket	DEMO ORDER CONFIRMED	1034	35	710/7692 Gujarat housing board, Bapunagar, Ahmedabad 380024 (Gujarat)	2026-11-17 09:37:25.547	2026-11-17 09:37:25.547	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794908856280	user-demo-1	BigBasket	DEMO ORDER CONFIRMED	1034	35	710/7692 Gujarat housing board, Bapunagar, Ahmedabad 380024 (Gujarat)	2026-11-17 09:47:36.283	2026-11-17 09:47:36.283	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794908955462	user-demo-1	BigBasket	DEMO ORDER CONFIRMED	1034	35	710/7692 Gujarat housing board, Bapunagar, Ahmedabad 380024 (Gujarat)	2026-11-17 09:49:15.464	2026-11-17 09:49:15.464	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794913081396	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	1099	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 10:58:01.403	2026-11-17 10:58:01.403	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794914099179	user-demo-1	Blinkit	DEMO ORDER CONFIRMED	1372	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 11:14:59.193	2026-11-17 11:14:59.193	\N	t	\N	\N	\N	hh-sharma-family
+ord-1794917622550	user-demo-1	Blinkit	ORDER_CONFIRMED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:13:42.561	2026-11-17 12:13:42.561	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794917622641	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:13:42.648	2026-11-17 12:13:42.648	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794917843301	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:17:23.308	2026-11-17 12:17:23.308	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794917843143	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:17:23.153	2026-11-17 12:17:23.258	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794917972838	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:19:32.848	2026-11-17 12:19:32.956	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794917973005	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:19:33.012	2026-11-17 12:19:33.012	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794918009315	user-demo-1	Blinkit	ORDER_CONFIRMED	1283	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:20:09.324	2026-11-17 12:20:09.324	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794918948657	user-demo-1	Blinkit	ORDER_CONFIRMED	100	25	Bellandur, Bengaluru	2026-11-17 12:35:48.673	2026-11-17 12:35:48.673	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794919894545	user-demo-1	Blinkit	ORDER_CONFIRMED	99	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-17 12:51:34.582	2026-11-17 12:51:34.582	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794919894648	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-17 12:51:34.662	2026-11-17 12:51:34.849	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794919967980	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-17 12:52:47.991	2026-11-17 12:52:48.2	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794925558932	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 149, Test Residency, Bengaluru	2026-11-17 14:25:58.939	2026-11-17 14:25:58.939	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794919975935	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:52:55.943	2026-11-17 12:52:56.05	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794919976109	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:52:56.116	2026-11-17 12:52:56.116	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794921906849	user-demo-1	Blinkit	DELIVERED	274	25	Suite 282, Test Residency, Bengaluru	2026-11-17 13:25:06.859	2026-11-17 13:25:06.993	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-1794921812271	user-demo-1	Blinkit	CANCELLED	274	25	Suite 560, Test Residency, Bengaluru	2026-11-17 13:23:32.285	2026-11-17 13:23:32.361	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794920063541	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:54:23.562	2026-11-17 12:54:23.675	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794920063723	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:54:23.743	2026-11-17 12:54:23.743	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794920071749	user-demo-1	Blinkit	ORDER_CONFIRMED	1283	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:54:31.768	2026-11-17 12:54:31.768	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794920080388	user-demo-1	Blinkit	ORDER_CONFIRMED	1283	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 12:54:40.408	2026-11-17 12:54:40.408	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794921812302	user-demo-1	Blinkit	CANCELLED	274	25	Suite 495, Test Residency, Bengaluru	2026-11-17 13:23:32.314	2026-11-17 13:23:32.399	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794921812434	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-17 13:23:32.451	2026-11-17 13:23:32.451	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794921811821	user-demo-1	Blinkit	DELIVERED	274	25	Suite 815, Test Residency, Bengaluru	2026-11-17 13:23:31.839	2026-11-17 13:23:31.955	\N	t	Doorstep handover completed	\N	system-worker@internal.rasoiiq.in	hh-sharma-family
+ord-1794921811982	user-demo-1	Blinkit	CANCELLED	274	25	Suite 716, Test Residency, Bengaluru	2026-11-17 13:23:31.994	2026-11-17 13:23:32.112	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794921812016	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 578, Test Residency, Bengaluru	2026-11-17 13:23:32.03	2026-11-17 13:23:32.15	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker@internal.rasoiiq.in	hh-sharma-family
+ord-1794921812206	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 293, Test Residency, Bengaluru	2026-11-17 13:23:32.22	2026-11-17 13:23:32.521	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker@internal.rasoiiq.in	hh-sharma-family
+ord-1794921812554	user-demo-1	Blinkit	CANCELLED	274	25	Suite 529, Test Residency, Bengaluru	2026-11-17 13:23:32.569	2026-11-17 13:23:32.604	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794921812662	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 138, Test Residency, Bengaluru	2026-11-17 13:23:32.676	2026-11-17 13:23:32.676	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794921812947	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 675, Test Residency, Bengaluru	2026-11-17 13:23:32.966	2026-11-17 13:23:32.966	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794921907299	user-demo-1	Blinkit	CANCELLED	274	25	Suite 385, Test Residency, Bengaluru	2026-11-17 13:25:07.305	2026-11-17 13:25:07.389	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794921907042	user-demo-1	Blinkit	CANCELLED	274	25	Suite 792, Test Residency, Bengaluru	2026-11-17 13:25:07.049	2026-11-17 13:25:07.162	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794921907076	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 335, Test Residency, Bengaluru	2026-11-17 13:25:07.082	2026-11-17 13:25:07.189	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794921907534	user-demo-1	Blinkit	CANCELLED	274	25	Suite 946, Test Residency, Bengaluru	2026-11-17 13:25:07.541	2026-11-17 13:25:07.576	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794921907332	user-demo-1	Blinkit	CANCELLED	274	25	Suite 948, Test Residency, Bengaluru	2026-11-17 13:25:07.339	2026-11-17 13:25:07.414	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794921907441	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-17 13:25:07.448	2026-11-17 13:25:07.448	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794921907230	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 664, Test Residency, Bengaluru	2026-11-17 13:25:07.236	2026-11-17 13:25:07.498	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794921907638	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 231, Test Residency, Bengaluru	2026-11-17 13:25:07.644	2026-11-17 13:25:07.644	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794921907805	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 210, Test Residency, Bengaluru	2026-11-17 13:25:07.813	2026-11-17 13:25:07.813	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794921937128	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-17 13:25:37.136	2026-11-17 13:25:37.32	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794921937862	user-demo-1	Blinkit	HUB_PACKING	289	25	Flat 402, Sharma Residence, North Wing, Indiranagar, Bengaluru	2026-11-17 13:25:37.868	2026-11-17 13:25:37.896	\N	t	Store picking started	\N	admin@rasoiiq.in	hh-sharma-family
+ord-gate-1794925311035-615	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.039	2026-11-17 14:21:51.039	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925311174-611	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.177	2026-11-17 14:21:51.177	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794921943154	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 13:25:43.161	2026-11-17 13:25:43.248	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794921943306	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 13:25:43.312	2026-11-17 13:25:43.312	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-gate-1794925311193-507	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.196	2026-11-17 14:21:51.196	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794925893307	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 770, Test Residency, Bengaluru	2026-11-17 14:31:33.318	2026-11-17 14:31:33.318	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-gate-1794925311208-130	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.211	2026-11-17 14:21:51.211	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794921959937	user-demo-1	Blinkit	DELIVERED	274	25	Suite 483, Test Residency, Bengaluru	2026-11-17 13:25:59.943	2026-11-17 13:26:00.057	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-gate-1794925311225-285	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.228	2026-11-17 14:21:51.228	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794921960096	user-demo-1	Blinkit	CANCELLED	274	25	Suite 552, Test Residency, Bengaluru	2026-11-17 13:26:00.102	2026-11-17 13:26:00.215	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794921960133	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 424, Test Residency, Bengaluru	2026-11-17 13:26:00.139	2026-11-17 13:26:00.246	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-gate-1794925311239-591	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.242	2026-11-17 14:21:51.242	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794921960357	user-demo-1	Blinkit	CANCELLED	274	25	Suite 698, Test Residency, Bengaluru	2026-11-17 13:26:00.364	2026-11-17 13:26:00.438	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794921960393	user-demo-1	Blinkit	CANCELLED	274	25	Suite 997, Test Residency, Bengaluru	2026-11-17 13:26:00.399	2026-11-17 13:26:00.46	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794921960484	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-17 13:26:00.489	2026-11-17 13:26:00.489	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-gate-1794925311256-307	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.259	2026-11-17 14:21:51.259	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794921960289	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 670, Test Residency, Bengaluru	2026-11-17 13:26:00.295	2026-11-17 13:26:00.536	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794921960577	user-demo-1	Blinkit	CANCELLED	274	25	Suite 514, Test Residency, Bengaluru	2026-11-17 13:26:00.583	2026-11-17 13:26:00.619	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794921960678	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 910, Test Residency, Bengaluru	2026-11-17 13:26:00.684	2026-11-17 13:26:00.684	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794921960934	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 714, Test Residency, Bengaluru	2026-11-17 13:26:00.942	2026-11-17 13:26:00.942	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794921977462	user-demo-1	Blinkit	ORDER_CONFIRMED	1283	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 13:26:17.467	2026-11-17 13:26:17.467	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794922032085	user-demo-1	Blinkit	ORDER_CONFIRMED	1283	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 13:27:12.091	2026-11-17 13:27:12.091	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-gate-1794925311269-40	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.272	2026-11-17 14:21:51.272	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925311285-565	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.288	2026-11-17 14:21:51.288	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925311301-811	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.303	2026-11-17 14:21:51.303	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925311317-936	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.32	2026-11-17 14:21:51.32	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925311331-302	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.334	2026-11-17 14:21:51.334	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925311345-984	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.349	2026-11-17 14:21:51.349	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925311363-863	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.366	2026-11-17 14:21:51.366	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925311385-449	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.388	2026-11-17 14:21:51.388	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925311409-488	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.412	2026-11-17 14:21:51.412	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925311423-565	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:21:51.426	2026-11-17 14:21:51.426	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362309-531	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.312	2026-11-17 14:22:42.312	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362342-74	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.345	2026-11-17 14:22:42.345	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362357-318	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.36	2026-11-17 14:22:42.36	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362375-879	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.378	2026-11-17 14:22:42.378	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362391-623	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.393	2026-11-17 14:22:42.393	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362407-338	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.41	2026-11-17 14:22:42.41	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362439-216	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.442	2026-11-17 14:22:42.442	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362463-869	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.466	2026-11-17 14:22:42.512	\N	t	Admin manual status advance	\N	admin@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362532-763	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.535	2026-11-17 14:22:42.535	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362559-525	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.561	2026-11-17 14:22:42.561	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362576-930	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.578	2026-11-17 14:22:42.578	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362593-707	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.596	2026-11-17 14:22:42.596	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362613-978	user-demo-1	Blinkit	CANCELLED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.616	2026-11-17 14:22:42.662	\N	t	Customer wanting to cancel	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362674-622	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.677	2026-11-17 14:22:42.677	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362696-662	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.698	2026-11-17 14:22:42.698	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925362708-690	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:22:42.711	2026-11-17 14:22:42.711	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925462128-363	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.139	2026-11-17 14:24:22.139	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925462157-700	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.168	2026-11-17 14:24:22.168	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925462173-216	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.185	2026-11-17 14:24:22.185	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925462188-91	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.199	2026-11-17 14:24:22.229	\N	t	Internal worker began hub packing	\N	system-worker	hh-sharma-family
+ord-gate-1794925462238-165	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.25	2026-11-17 14:24:22.25	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925462255-915	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.266	2026-11-17 14:24:22.266	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925462273-964	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.284	2026-11-17 14:24:22.284	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925462306-281	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.318	2026-11-17 14:24:22.348	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	system-worker	hh-sharma-family
+ord-gate-1794925462352-240	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.364	2026-11-17 14:24:22.393	\N	t	Admin manual status advance	\N	admin@rasoiiq.in	hh-sharma-family
+ord-gate-1794925462397-840	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.408	2026-11-17 14:24:22.438	\N	t	Admin advancing with worker key	\N	admin@rasoiiq.in	hh-sharma-family
+ord-gate-1794925462442-31	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.453	2026-11-17 14:24:22.453	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925462457-903	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.469	2026-11-17 14:24:22.469	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925462479-662	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.49	2026-11-17 14:24:22.516	\N	t	Concurrent transition 1	\N	system-worker	hh-sharma-family
+ord-gate-1794925462670-315	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.682	2026-11-17 14:24:22.682	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925462533-697	user-demo-1	Blinkit	OUT_FOR_DELIVERY	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.544	2026-11-17 14:24:22.598	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-gate-1794925462603-107	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.614	2026-11-17 14:24:22.614	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925462711-553	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:24:22.723	2026-11-17 14:24:22.723	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794925558078	user-demo-1	Blinkit	HUB_PACKING	274	25	Suite 297, Test Residency, Bengaluru	2026-11-17 14:25:58.088	2026-11-17 14:25:58.161	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794925558281	user-demo-1	Blinkit	CANCELLED	274	25	Suite 807, Test Residency, Bengaluru	2026-11-17 14:25:58.289	2026-11-17 14:25:58.38	\N	t	Customer cancels too late	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794925558494	user-demo-1	Blinkit	CANCELLED	274	25	Suite 499, Test Residency, Bengaluru	2026-11-17 14:25:58.501	2026-11-17 14:25:58.575	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794925558531	user-demo-1	Blinkit	CANCELLED	274	25	Suite 886, Test Residency, Bengaluru	2026-11-17 14:25:58.539	2026-11-17 14:25:58.607	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794925558626	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-17 14:25:58.633	2026-11-17 14:25:58.633	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794925558425	user-demo-1	Blinkit	CANCELLED	274	25	Suite 441, Test Residency, Bengaluru	2026-11-17 14:25:58.432	2026-11-17 14:25:58.675	\N	t	Retailer cancel after dispatch	\N	partner@blinkit.com	hh-sharma-family
+ord-1794925558700	user-demo-1	Blinkit	CANCELLED	274	25	Suite 716, Test Residency, Bengaluru	2026-11-17 14:25:58.708	2026-11-17 14:25:58.744	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794925558796	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 328, Test Residency, Bengaluru	2026-11-17 14:25:58.804	2026-11-17 14:25:58.804	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794925585746	user-demo-1	Blinkit	CANCELLED	274	25	Suite 373, Test Residency, Bengaluru	2026-11-17 14:26:25.755	2026-11-17 14:26:25.792	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794925585069	user-demo-1	Blinkit	DELIVERED	274	25	Suite 971, Test Residency, Bengaluru	2026-11-17 14:26:25.079	2026-11-17 14:26:25.214	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-1794925585847	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 343, Test Residency, Bengaluru	2026-11-17 14:26:25.857	2026-11-17 14:26:25.857	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794925585256	user-demo-1	Blinkit	CANCELLED	274	25	Suite 298, Test Residency, Bengaluru	2026-11-17 14:26:25.265	2026-11-17 14:26:25.38	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794925585289	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 143, Test Residency, Bengaluru	2026-11-17 14:26:25.298	2026-11-17 14:26:25.412	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794925585991	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 813, Test Residency, Bengaluru	2026-11-17 14:26:26.004	2026-11-17 14:26:26.004	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794925585522	user-demo-1	Blinkit	CANCELLED	274	25	Suite 342, Test Residency, Bengaluru	2026-11-17 14:26:25.532	2026-11-17 14:26:25.614	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794925585558	user-demo-1	Blinkit	CANCELLED	274	25	Suite 302, Test Residency, Bengaluru	2026-11-17 14:26:25.567	2026-11-17 14:26:25.637	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794925585656	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-17 14:26:25.665	2026-11-17 14:26:25.665	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794925585455	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 482, Test Residency, Bengaluru	2026-11-17 14:26:25.463	2026-11-17 14:26:25.717	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-gate-1794925609989-979	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:49.997	2026-11-17 14:26:49.997	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925610012-326	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.02	2026-11-17 14:26:50.02	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925610029-127	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.038	2026-11-17 14:26:50.038	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925610047-80	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.055	2026-11-17 14:26:50.077	\N	t	Internal worker began hub packing	\N	system-worker	hh-sharma-family
+ord-gate-1794925610084-668	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.092	2026-11-17 14:26:50.092	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925610097-694	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.104	2026-11-17 14:26:50.104	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925610111-130	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.119	2026-11-17 14:26:50.119	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925610131-372	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.138	2026-11-17 14:26:50.138	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925610152-858	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.16	2026-11-17 14:26:50.188	\N	t	Admin manual status advance	\N	admin@rasoiiq.in	hh-sharma-family
+ord-gate-1794925610194-326	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.201	2026-11-17 14:26:50.227	\N	t	Admin advancing with worker key	\N	admin@rasoiiq.in	hh-sharma-family
+ord-gate-1794925610233-50	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.24	2026-11-17 14:26:50.24	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925610245-116	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.252	2026-11-17 14:26:50.252	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925610264-894	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.272	2026-11-17 14:26:50.295	\N	t	Concurrent transition 2	\N	system-worker	hh-sharma-family
+ord-gate-1794925610314-239	user-demo-1	Blinkit	OUT_FOR_DELIVERY	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.321	2026-11-17 14:26:50.373	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-gate-1794925610438-392	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.445	2026-11-17 14:26:50.445	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925610475-0	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:26:50.482	2026-11-17 14:26:50.482	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925734600-735	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:54.611	2026-11-17 14:28:54.611	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925734637-204	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:54.647	2026-11-17 14:28:54.647	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925734663-736	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:54.673	2026-11-17 14:28:54.673	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925734688-364	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:54.699	2026-11-17 14:28:54.751	\N	t	Internal worker began hub packing	\N	system-worker	hh-sharma-family
+ord-gate-1794925734765-281	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:54.775	2026-11-17 14:28:54.775	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925734786-433	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:54.796	2026-11-17 14:28:54.796	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925734812-214	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:54.823	2026-11-17 14:28:54.823	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794818572170	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:42:52.172	2026-11-16 08:42:52.172	\N	t	\N	\N	\N	hh-patel-family
+ord-gate-1794925734843-456	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:54.853	2026-11-17 14:28:54.853	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925734869-316	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:54.879	2026-11-17 14:28:54.919	\N	t	Admin manual status advance	\N	admin@rasoiiq.in	hh-sharma-family
+ord-gate-1794925734932-724	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:54.942	2026-11-17 14:28:54.978	\N	t	Admin advancing with worker key	\N	admin@rasoiiq.in	hh-sharma-family
+ord-gate-1794925734995-918	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:55.005	2026-11-17 14:28:55.005	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925735019-532	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:55.029	2026-11-17 14:28:55.029	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925735053-137	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:55.063	2026-11-17 14:28:55.093	\N	t	Concurrent transition 1	\N	system-worker	hh-sharma-family
+ord-gate-1794925853411-769	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.413	2026-11-17 14:30:53.413	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925735136-286	user-demo-1	Blinkit	OUT_FOR_DELIVERY	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:55.146	2026-11-17 14:28:55.218	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-gate-1794925735228-92	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:55.238	2026-11-17 14:28:55.238	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925735293-123	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:55.303	2026-11-17 14:28:55.303	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925735344-388	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:28:55.354	2026-11-17 14:28:55.354	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925853289-658	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.291	2026-11-17 14:30:53.291	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925853318-437	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.32	2026-11-17 14:30:53.32	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925853334-369	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.336	2026-11-17 14:30:53.336	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925853350-122	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.352	2026-11-17 14:30:53.381	\N	t	Internal worker began hub packing	\N	system-worker	hh-sharma-family
+ord-gate-1794925853397-593	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.398	2026-11-17 14:30:53.398	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925853428-522	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.43	2026-11-17 14:30:53.43	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925853460-518	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.462	2026-11-17 14:30:53.462	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925853481-45	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.483	2026-11-17 14:30:53.51	\N	t	Admin manual status advance	\N	admin@rasoiiq.in	hh-sharma-family
+ord-gate-1794925853521-434	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.523	2026-11-17 14:30:53.548	\N	t	Admin advancing with worker key	\N	admin@rasoiiq.in	hh-sharma-family
+ord-gate-1794925853559-180	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.56	2026-11-17 14:30:53.56	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925853572-638	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.574	2026-11-17 14:30:53.574	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925853591-483	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.593	2026-11-17 14:30:53.641	\N	t	Concurrent transition 1	\N	system-worker	hh-sharma-family
+ord-gate-1794925853678-274	user-demo-1	Blinkit	OUT_FOR_DELIVERY	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.68	2026-11-17 14:30:53.731	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-gate-1794925853813-258	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.815	2026-11-17 14:30:53.815	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794925853850-418	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 14:30:53.852	2026-11-17 14:30:53.852	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794925862543	user-demo-1	Blinkit	ORDER_CONFIRMED	1099	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 14:31:02.553	2026-11-17 14:31:02.553	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794925893095	user-demo-1	Blinkit	CANCELLED	274	25	Suite 310, Test Residency, Bengaluru	2026-11-17 14:31:33.104	2026-11-17 14:31:33.133	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794925875578	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 14:31:15.587	2026-11-17 14:31:15.677	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794925875728	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 14:31:15.738	2026-11-17 14:31:15.738	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794925884315	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-17 14:31:24.327	2026-11-17 14:31:24.488	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794925885034	user-demo-1	Blinkit	HUB_PACKING	289	25	Flat 402, Sharma Residence, North Wing, Indiranagar, Bengaluru	2026-11-17 14:31:25.046	2026-11-17 14:31:25.081	\N	t	Store picking started	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794925893180	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 720, Test Residency, Bengaluru	2026-11-17 14:31:33.19	2026-11-17 14:31:33.19	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794925892453	user-demo-1	Blinkit	DELIVERED	274	25	Suite 711, Test Residency, Bengaluru	2026-11-17 14:31:32.466	2026-11-17 14:31:32.592	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-1794928453173	user-demo-1	Blinkit	ORDER_CONFIRMED	1099	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 15:14:13.18	2026-11-17 15:14:13.18	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794925892632	user-demo-1	Blinkit	CANCELLED	274	25	Suite 572, Test Residency, Bengaluru	2026-11-17 14:31:32.644	2026-11-17 14:31:32.754	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794925892666	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 230, Test Residency, Bengaluru	2026-11-17 14:31:32.676	2026-11-17 14:31:32.783	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794925892887	user-demo-1	Blinkit	CANCELLED	274	25	Suite 660, Test Residency, Bengaluru	2026-11-17 14:31:32.898	2026-11-17 14:31:32.974	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794925892920	user-demo-1	Blinkit	CANCELLED	274	25	Suite 168, Test Residency, Bengaluru	2026-11-17 14:31:32.931	2026-11-17 14:31:32.997	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794925893015	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-17 14:31:33.024	2026-11-17 14:31:33.024	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794925892818	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 198, Test Residency, Bengaluru	2026-11-17 14:31:32.829	2026-11-17 14:31:33.07	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794928467495	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 15:14:27.5	2026-11-17 15:14:27.57	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794928467601	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 15:14:27.605	2026-11-17 15:14:27.605	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794928468816	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-17 15:14:28.822	2026-11-17 15:14:28.938	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794928469467	user-demo-1	Blinkit	HUB_PACKING	289	25	Flat 402, Sharma Residence, North Wing, Indiranagar, Bengaluru	2026-11-17 15:14:29.473	2026-11-17 15:14:29.494	\N	t	Store picking started	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794928477006	user-demo-1	Blinkit	DELIVERED	274	25	Suite 145, Test Residency, Bengaluru	2026-11-17 15:14:37.012	2026-11-17 15:14:37.092	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-1794928477119	user-demo-1	Blinkit	CANCELLED	274	25	Suite 560, Test Residency, Bengaluru	2026-11-17 15:14:37.125	2026-11-17 15:14:37.205	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794928477143	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 589, Test Residency, Bengaluru	2026-11-17 15:14:37.148	2026-11-17 15:14:37.23	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794928477451	user-demo-1	Blinkit	CANCELLED	274	25	Suite 149, Test Residency, Bengaluru	2026-11-17 15:14:37.456	2026-11-17 15:14:37.478	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794928477305	user-demo-1	Blinkit	CANCELLED	274	25	Suite 827, Test Residency, Bengaluru	2026-11-17 15:14:37.31	2026-11-17 15:14:37.356	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794928477319	user-demo-1	Blinkit	CANCELLED	274	25	Suite 132, Test Residency, Bengaluru	2026-11-17 15:14:37.324	2026-11-17 15:14:37.38	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794928477396	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-17 15:14:37.402	2026-11-17 15:14:37.402	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794928477266	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 990, Test Residency, Bengaluru	2026-11-17 15:14:37.272	2026-11-17 15:14:37.436	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794928477506	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 737, Test Residency, Bengaluru	2026-11-17 15:14:37.512	2026-11-17 15:14:37.512	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794928477616	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 303, Test Residency, Bengaluru	2026-11-17 15:14:37.622	2026-11-17 15:14:37.622	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-gate-1794928478626-631	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.63	2026-11-17 15:14:38.63	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794928478640-962	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.644	2026-11-17 15:14:38.644	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794928478648-347	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.651	2026-11-17 15:14:38.651	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794928478656-90	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.659	2026-11-17 15:14:38.671	\N	t	Internal worker began hub packing	\N	system-worker	hh-sharma-family
+ord-gate-1794928478677-108	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.68	2026-11-17 15:14:38.68	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794928478687-291	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.691	2026-11-17 15:14:38.691	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794928478701-903	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.705	2026-11-17 15:14:38.705	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794928478720-196	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.724	2026-11-17 15:14:38.724	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794928478737-246	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.741	2026-11-17 15:14:38.766	\N	t	Admin manual status advance	\N	admin@rasoiiq.in	hh-sharma-family
+ord-gate-1794928478774-953	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.778	2026-11-17 15:14:38.801	\N	t	Admin advancing with worker key	\N	admin@rasoiiq.in	hh-sharma-family
+ord-gate-1794928478809-739	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.813	2026-11-17 15:14:38.813	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794928478821-949	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.825	2026-11-17 15:14:38.825	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794928478839-881	user-demo-1	Blinkit	HUB_PACKING	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.843	2026-11-17 15:14:38.861	\N	t	Concurrent transition 1	\N	system-worker	hh-sharma-family
+ord-gate-1794928478876-970	user-demo-1	Blinkit	OUT_FOR_DELIVERY	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.88	2026-11-17 15:14:38.921	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-gate-1794928478929-170	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.933	2026-11-17 15:14:38.933	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794928478979-739	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:38.983	2026-11-17 15:14:38.983	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+ord-gate-1794928479008-306	user-demo-1	Blinkit	ORDER_CONFIRMED	450	25	Flat 101, Test Residency, Bengaluru 560103	2026-11-17 15:14:39.011	2026-11-17 15:14:39.011	\N	t	Gate test order creation	\N	demo@rasoiiq.in	hh-sharma-family
+cmwkv4gut0004l35ods0ph52u	user-demo-1	Blinkit	ORDER_CONFIRMED	299	25	Navrangpura Ahmedabad	2026-11-17 15:44:04.95	2026-11-17 15:44:04.95	\N	t	\N	\N	\N	hh-sharma-family
+cmwkv4n8w0004l3jc1zyrsens	user-demo-1	Blinkit	ORDER_CONFIRMED	299	25	Navrangpura Ahmedabad	2026-11-17 15:44:13.233	2026-11-17 15:44:13.233	\N	t	\N	\N	\N	hh-sharma-family
+cmwkv50jt0004l3f4ldbel1ab	user-demo-1	Blinkit	ORDER_CONFIRMED	299	25	Navrangpura Ahmedabad	2026-11-17 15:44:30.473	2026-11-17 15:44:30.473	\N	t	\N	\N	\N	hh-sharma-family
+cmwkv8v5h0004l3hsjjmt40v3	user-demo-1	Blinkit	HUB_PACKING	299	25	Navrangpura Ahmedabad	2026-11-17 15:47:30.102	2026-11-17 15:47:30.119	\N	t	Worker 1 packing	\N	system-worker	hh-sharma-family
+cmwkv8v0m0001l3hshvb7ahzt	user-demo-1	Blinkit	DELIVERED	399	30	Bapunagar Ahmedabad	2026-11-17 15:47:29.926	2026-11-17 15:47:30.07	\N	t	Package delivered to doorstep	\N	system-worker	hh-sharma-family
+cmwkvaxk00004l3ik78iujb9y	user-demo-1	Blinkit	HUB_PACKING	299	25	Navrangpura Ahmedabad	2026-11-17 15:49:06.529	2026-11-17 15:49:06.544	\N	t	Worker 1 packing	\N	system-worker	hh-sharma-family
+ord-1794930775223	user-demo-1	Blinkit	ORDER_CONFIRMED	1099	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 15:52:55.241	2026-11-17 15:52:55.241	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+cmwkva8o50001l3e8ln2prqvz	user-demo-1	Blinkit	DELIVERED	399	30	Bapunagar Ahmedabad	2026-11-17 15:48:34.277	2026-11-17 15:48:34.408	\N	t	Package delivered to doorstep	\N	system-worker	hh-sharma-family
+cmwkva8sg0004l3e8050kg2bn	user-demo-1	Blinkit	HUB_PACKING	299	25	Navrangpura Ahmedabad	2026-11-17 15:48:34.432	2026-11-17 15:48:34.449	\N	t	Worker 1 packing	\N	system-worker	hh-sharma-family
+ord-1794930776322	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 15:52:56.339	2026-11-17 15:52:56.391	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+cmwkvaxgb0001l3ikher0leef	user-demo-1	Blinkit	DELIVERED	399	30	Bapunagar Ahmedabad	2026-11-17 15:49:06.395	2026-11-17 15:49:06.508	\N	t	Package delivered to doorstep	\N	system-worker	hh-sharma-family
+ord-1794930777116	user-demo-1	Blinkit	HUB_PACKING	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-17 15:52:57.133	2026-11-17 15:52:57.274	\N	t	Trying to reopen cancelled order	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794930776409	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 15:52:56.426	2026-11-17 15:52:56.426	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930777796	user-demo-1	Blinkit	HUB_PACKING	289	25	Flat 402, Sharma Residence, North Wing, Indiranagar, Bengaluru	2026-11-17 15:52:57.816	2026-11-17 15:52:57.84	\N	t	Store picking started	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794930778282	user-demo-1	Blinkit	HUB_PACKING	274	25	Suite 716, Test Residency, Bengaluru	2026-11-17 15:52:58.299	2026-11-17 15:52:58.329	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794930778349	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 424, Test Residency, Bengaluru	2026-11-17 15:52:58.365	2026-11-17 15:52:58.365	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930778365	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 238, Test Residency, Bengaluru	2026-11-17 15:52:58.381	2026-11-17 15:52:58.381	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930778481	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 215, Test Residency, Bengaluru	2026-11-17 15:52:58.499	2026-11-17 15:52:58.499	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930778504	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 921, Test Residency, Bengaluru	2026-11-17 15:52:58.521	2026-11-17 15:52:58.521	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930778539	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-17 15:52:58.556	2026-11-17 15:52:58.556	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930778583	user-demo-1	Blinkit	CANCELLED	274	25	Suite 409, Test Residency, Bengaluru	2026-11-17 15:52:58.6	2026-11-17 15:52:58.627	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794930778656	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 669, Test Residency, Bengaluru	2026-11-17 15:52:58.675	2026-11-17 15:52:58.675	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930778829	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 650, Test Residency, Bengaluru	2026-11-17 15:52:58.85	2026-11-17 15:52:58.85	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930921403	user-demo-1	Blinkit	CANCELLED	274	25	Suite 462, Test Residency, Bengaluru	2026-11-17 15:55:21.42	2026-11-17 15:55:21.499	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794930921428	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 457, Test Residency, Bengaluru	2026-11-17 15:55:21.444	2026-11-17 15:55:21.52	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+cmwkvfxh80001l33kw20m16tl	user-demo-1	Blinkit	DELIVERED	399	30	Bapunagar Ahmedabad	2026-11-17 15:52:59.708	2026-11-17 15:52:59.817	\N	t	Package delivered to doorstep	\N	system-worker	hh-sharma-family
+cmwkvfxku0004l33kbvowvn7k	user-demo-1	Blinkit	HUB_PACKING	299	25	Navrangpura Ahmedabad	2026-11-17 15:52:59.838	2026-11-17 15:52:59.857	\N	t	Worker 1 packing	\N	system-worker	hh-sharma-family
+ord-1794930795585	user-demo-1	Blinkit	HUB_PACKING	274	25	Suite 775, Test Residency, Bengaluru	2026-11-17 15:53:15.605	2026-11-17 15:53:15.664	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794930795702	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 531, Test Residency, Bengaluru	2026-11-17 15:53:15.719	2026-11-17 15:53:15.719	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930795725	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 726, Test Residency, Bengaluru	2026-11-17 15:53:15.743	2026-11-17 15:53:15.743	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930795797	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 794, Test Residency, Bengaluru	2026-11-17 15:53:15.814	2026-11-17 15:53:15.814	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930795846	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 497, Test Residency, Bengaluru	2026-11-17 15:53:15.863	2026-11-17 15:53:15.863	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930795864	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 245, Test Residency, Bengaluru	2026-11-17 15:53:15.882	2026-11-17 15:53:15.882	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930795897	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-17 15:53:15.914	2026-11-17 15:53:15.914	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930795933	user-demo-1	Blinkit	CANCELLED	274	25	Suite 437, Test Residency, Bengaluru	2026-11-17 15:53:15.95	2026-11-17 15:53:15.972	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794930795995	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 594, Test Residency, Bengaluru	2026-11-17 15:53:16.012	2026-11-17 15:53:16.012	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930796217	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 926, Test Residency, Bengaluru	2026-11-17 15:53:16.235	2026-11-17 15:53:16.235	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930921273	user-demo-1	Blinkit	DELIVERED	274	25	Suite 212, Test Residency, Bengaluru	2026-11-17 15:55:21.291	2026-11-17 15:55:21.385	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-1794930921538	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 410, Test Residency, Bengaluru	2026-11-17 15:55:21.554	2026-11-17 15:55:21.76	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794930921593	user-demo-1	Blinkit	CANCELLED	274	25	Suite 992, Test Residency, Bengaluru	2026-11-17 15:55:21.612	2026-11-17 15:55:21.675	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794930921620	user-demo-1	Blinkit	CANCELLED	274	25	Suite 905, Test Residency, Bengaluru	2026-11-17 15:55:21.637	2026-11-17 15:55:21.696	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794930921703	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-17 15:55:21.72	2026-11-17 15:55:21.72	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930921770	user-demo-1	Blinkit	CANCELLED	274	25	Suite 806, Test Residency, Bengaluru	2026-11-17 15:55:21.786	2026-11-17 15:55:21.81	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794930921836	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 958, Test Residency, Bengaluru	2026-11-17 15:55:21.852	2026-11-17 15:55:21.852	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930922010	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 974, Test Residency, Bengaluru	2026-11-17 15:55:22.026	2026-11-17 15:55:22.026	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930960470	user-demo-1	Blinkit	DELIVERED	274	25	Suite 400, Test Residency, Bengaluru	2026-11-17 15:56:00.486	2026-11-17 15:56:00.551	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-1794930960561	user-demo-1	Blinkit	CANCELLED	274	25	Suite 362, Test Residency, Bengaluru	2026-11-17 15:56:00.577	2026-11-17 15:56:00.646	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794930960579	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 961, Test Residency, Bengaluru	2026-11-17 15:56:00.595	2026-11-17 15:56:00.664	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794930960677	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 223, Test Residency, Bengaluru	2026-11-17 15:56:00.693	2026-11-17 15:56:00.853	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794933657354	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 16:40:57.372	2026-11-17 16:40:57.462	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794930960719	user-demo-1	Blinkit	CANCELLED	274	25	Suite 905, Test Residency, Bengaluru	2026-11-17 15:56:00.735	2026-11-17 15:56:00.787	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794930960740	user-demo-1	Blinkit	CANCELLED	274	25	Suite 881, Test Residency, Bengaluru	2026-11-17 15:56:00.757	2026-11-17 15:56:00.801	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794930960804	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-17 15:56:00.821	2026-11-17 15:56:00.821	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930960865	user-demo-1	Blinkit	CANCELLED	274	25	Suite 888, Test Residency, Bengaluru	2026-11-17 15:56:00.881	2026-11-17 15:56:00.904	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794930960921	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 565, Test Residency, Bengaluru	2026-11-17 15:56:00.937	2026-11-17 15:56:00.937	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930961152	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 846, Test Residency, Bengaluru	2026-11-17 15:56:01.171	2026-11-17 15:56:01.171	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930977547	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-17 15:56:17.56	2026-11-17 15:56:17.747	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794930978283	user-demo-1	Blinkit	HUB_PACKING	289	25	Flat 402, Sharma Residence, North Wing, Indiranagar, Bengaluru	2026-11-17 15:56:18.296	2026-11-17 15:56:18.323	\N	t	Store picking started	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794933657499	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 16:40:57.516	2026-11-17 16:40:57.516	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794930986177	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 15:56:26.186	2026-11-17 15:56:26.252	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794930986286	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 15:56:26.295	2026-11-17 15:56:26.295	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794933656118	user-demo-1	Blinkit	ORDER_CONFIRMED	1283	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 16:40:56.136	2026-11-17 16:40:56.136	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794933658713	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-17 16:40:58.731	2026-11-17 16:40:58.942	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794933659482	user-demo-1	Blinkit	HUB_PACKING	289	25	Flat 402, Sharma Residence, North Wing, Indiranagar, Bengaluru	2026-11-17 16:40:59.499	2026-11-17 16:40:59.531	\N	t	Store picking started	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794933660560	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 768, Test Residency, Bengaluru	2026-11-17 16:41:00.577	2026-11-17 16:41:00.817	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794933660354	user-demo-1	Blinkit	CANCELLED	274	25	Suite 120, Test Residency, Bengaluru	2026-11-17 16:41:00.372	2026-11-17 16:41:00.499	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794933660190	user-demo-1	Blinkit	DELIVERED	274	25	Suite 658, Test Residency, Bengaluru	2026-11-17 16:41:00.208	2026-11-17 16:41:00.326	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-1794933660400	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 242, Test Residency, Bengaluru	2026-11-17 16:41:00.417	2026-11-17 16:41:00.529	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794933660623	user-demo-1	Blinkit	CANCELLED	274	25	Suite 905, Test Residency, Bengaluru	2026-11-17 16:41:00.64	2026-11-17 16:41:00.718	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794933660655	user-demo-1	Blinkit	CANCELLED	274	25	Suite 326, Test Residency, Bengaluru	2026-11-17 16:41:00.672	2026-11-17 16:41:00.741	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794933660753	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-17 16:41:00.77	2026-11-17 16:41:00.77	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794933660836	user-demo-1	Blinkit	CANCELLED	274	25	Suite 130, Test Residency, Bengaluru	2026-11-17 16:41:00.853	2026-11-17 16:41:00.887	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794933660929	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 458, Test Residency, Bengaluru	2026-11-17 16:41:00.946	2026-11-17 16:41:00.946	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794933661145	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 646, Test Residency, Bengaluru	2026-11-17 16:41:01.164	2026-11-17 16:41:01.164	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+cmwkx5pp80004l3p8d60f8qx9	user-demo-1	Blinkit	HUB_PACKING	299	25	Navrangpura Ahmedabad	2026-11-17 16:41:02.3	2026-11-17 16:41:02.321	\N	t	Worker 1 packing	\N	system-worker	hh-sharma-family
+ord-1794934225841	user-demo-1	Blinkit	ORDER_CONFIRMED	1563	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 16:50:25.851	2026-11-17 16:50:25.851	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794934230209	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 877, Test Residency, Bengaluru	2026-11-17 16:50:30.215	2026-11-17 16:50:30.447	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794934227091	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 16:50:27.096	2026-11-17 16:50:27.199	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794934227252	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-17 16:50:27.258	2026-11-17 16:50:27.258	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794934228403	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-17 16:50:28.408	2026-11-17 16:50:28.646	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794934229189	user-demo-1	Blinkit	HUB_PACKING	289	25	Flat 402, Sharma Residence, North Wing, Indiranagar, Bengaluru	2026-11-17 16:50:29.196	2026-11-17 16:50:29.227	\N	t	Store picking started	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794934230478	user-demo-1	Blinkit	CANCELLED	274	25	Suite 346, Test Residency, Bengaluru	2026-11-17 16:50:30.484	2026-11-17 16:50:30.522	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794934230578	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 344, Test Residency, Bengaluru	2026-11-17 16:50:30.584	2026-11-17 16:50:30.584	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794934229872	user-demo-1	Blinkit	DELIVERED	274	25	Suite 583, Test Residency, Bengaluru	2026-11-17 16:50:29.879	2026-11-17 16:50:29.992	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-1794934230861	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 524, Test Residency, Bengaluru	2026-11-17 16:50:30.869	2026-11-17 16:50:30.869	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794934230030	user-demo-1	Blinkit	CANCELLED	274	25	Suite 285, Test Residency, Bengaluru	2026-11-17 16:50:30.036	2026-11-17 16:50:30.14	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794934230059	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 770, Test Residency, Bengaluru	2026-11-17 16:50:30.065	2026-11-17 16:50:30.169	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794934230274	user-demo-1	Blinkit	CANCELLED	274	25	Suite 785, Test Residency, Bengaluru	2026-11-17 16:50:30.279	2026-11-17 16:50:30.351	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794934230302	user-demo-1	Blinkit	CANCELLED	274	25	Suite 496, Test Residency, Bengaluru	2026-11-17 16:50:30.308	2026-11-17 16:50:30.374	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794934230396	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-17 16:50:30.402	2026-11-17 16:50:30.402	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794985329974	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 07:02:09.982	2026-11-18 07:02:10.08	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794985330127	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 07:02:10.135	2026-11-18 07:02:10.135	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+cmwkxhx6n0001l3fody7eb22x	user-demo-1	Blinkit	DELIVERED	399	30	Bapunagar Ahmedabad	2026-11-17 16:50:31.871	2026-11-17 16:50:32.012	\N	t	Package delivered to doorstep	\N	system-worker	hh-sharma-family
+cmwkxhxba0004l3fo7crf660a	user-demo-1	Blinkit	HUB_PACKING	299	25	Navrangpura Ahmedabad	2026-11-17 16:50:32.039	2026-11-17 16:50:32.06	\N	t	Worker 1 packing	\N	system-worker	hh-sharma-family
+ord-1794985328628	user-demo-1	Blinkit	ORDER_CONFIRMED	1563	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 07:02:08.65	2026-11-18 07:02:08.65	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794985913178	user-demo-1	Blinkit	HUB_PACKING	289	25	Flat 402, Sharma Residence, North Wing, Indiranagar, Bengaluru	2026-11-18 07:11:53.196	2026-11-18 07:11:53.229	\N	t	Store picking started	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794985331270	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-18 07:02:11.278	2026-11-18 07:02:11.488	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794985912347	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-18 07:11:52.368	2026-11-18 07:11:52.631	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794985977419	user-demo-1	Blinkit	DELIVERED	274	25	Suite 543, Test Residency, Bengaluru	2026-11-18 07:12:57.442	2026-11-18 07:12:57.652	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-1794985977717	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 504, Test Residency, Bengaluru	2026-11-18 07:12:57.726	2026-11-18 07:12:57.894	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794985978114	user-demo-1	Blinkit	CANCELLED	274	25	Suite 709, Test Residency, Bengaluru	2026-11-18 07:12:58.126	2026-11-18 07:12:58.279	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794985978184	user-demo-1	Blinkit	CANCELLED	274	25	Suite 644, Test Residency, Bengaluru	2026-11-18 07:12:58.199	2026-11-18 07:12:58.319	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794985977951	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 891, Test Residency, Bengaluru	2026-11-18 07:12:57.969	2026-11-18 07:12:58.437	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794985978500	user-demo-1	Blinkit	CANCELLED	274	25	Suite 943, Test Residency, Bengaluru	2026-11-18 07:12:58.512	2026-11-18 07:12:58.566	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794985978659	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 584, Test Residency, Bengaluru	2026-11-18 07:12:58.668	2026-11-18 07:12:58.668	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794985979093	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 926, Test Residency, Bengaluru	2026-11-18 07:12:59.105	2026-11-18 07:12:59.105	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794986019058	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 100, Test Residency, Bengaluru	2026-11-18 07:13:39.064	2026-11-18 07:13:39.064	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794986033061	user-demo-1	Blinkit	DELIVERED	274	25	Suite 501, Test Residency, Bengaluru	2026-11-18 07:13:53.07	2026-11-18 07:13:53.226	\N	t	Doorstep handover completed	\N	system-worker	hh-sharma-family
+ord-1794986669287	user-demo-1	Blinkit	CANCELLED	274	25	Flat 402, Sharma Residence, Indiranagar, Bengaluru	2026-11-18 07:24:29.301	2026-11-18 07:24:29.523	\N	t	Customer changed meal plan and no longer needs this grocery order	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794986033280	user-demo-1	Blinkit	CANCELLED	274	25	Suite 717, Test Residency, Bengaluru	2026-11-18 07:13:53.288	2026-11-18 07:13:53.416	\N	t	Customer self-cancellation in confirmed state	\N	demo@rasoiiq.in	hh-sharma-family
+ord-1794986033315	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 992, Test Residency, Bengaluru	2026-11-18 07:13:53.322	2026-11-18 07:13:53.449	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794986033583	user-demo-1	Blinkit	CANCELLED	274	25	Suite 662, Test Residency, Bengaluru	2026-11-18 07:13:53.59	2026-11-18 07:13:53.672	\N	t	Store out of stock	\N	partner@blinkit.com	hh-sharma-family
+ord-1794986033616	user-demo-1	Blinkit	CANCELLED	274	25	Suite 586, Test Residency, Bengaluru	2026-11-18 07:13:53.623	2026-11-18 07:13:53.698	\N	t	Damaged packaging during packing	\N	partner@blinkit.com	hh-sharma-family
+ord-1794986033740	user-demo-1	Zepto	ORDER_CONFIRMED	199	29	Flat 402, Sharma Residence, Bengaluru	2026-11-18 07:13:53.751	2026-11-18 07:13:53.751	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794986670063	user-demo-1	Blinkit	HUB_PACKING	289	25	Flat 402, Sharma Residence, North Wing, Indiranagar, Bengaluru	2026-11-18 07:24:30.075	2026-11-18 07:24:30.104	\N	t	Store picking started	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794986033500	user-demo-1	Blinkit	OUT_FOR_DELIVERY	274	25	Suite 848, Test Residency, Bengaluru	2026-11-18 07:13:53.509	2026-11-18 07:13:53.846	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	hh-sharma-family
+ord-1794986033903	user-demo-1	Blinkit	CANCELLED	274	25	Suite 340, Test Residency, Bengaluru	2026-11-18 07:13:53.911	2026-11-18 07:13:53.955	\N	t	Administrative operational cancellation	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794986034032	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 837, Test Residency, Bengaluru	2026-11-18 07:13:54.041	2026-11-18 07:13:54.041	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794986034460	user-demo-1	Blinkit	ORDER_CONFIRMED	274	25	Suite 466, Test Residency, Bengaluru	2026-11-18 07:13:54.469	2026-11-18 07:13:54.469	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+cmwlscgiy0001l3kobdfj4m2s	user-demo-1	Blinkit	DELIVERED	399	30	Bapunagar Ahmedabad	2026-11-18 07:14:05.098	2026-11-18 07:14:05.269	\N	t	Package delivered to doorstep	\N	system-worker	hh-sharma-family
+cmwlscgol0004l3kowstuqgqv	user-demo-1	Blinkit	HUB_PACKING	299	25	Navrangpura Ahmedabad	2026-11-18 07:14:05.301	2026-11-18 07:14:05.319	\N	t	Worker 1 packing	\N	system-worker	hh-sharma-family
+ord-1794986818541	user-demo-1	DMart Ready	ORDER_CONFIRMED	2067	49	710/7692 Gujarat housing board, Bapunagar, Ahmedabad 380024 (Gujarat)	2026-11-18 07:26:58.548	2026-11-18 07:26:58.548	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794990443113	user-demo-1	Blinkit	DELIVERED	540	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 08:27:23.12	2026-11-18 08:27:23.225	\N	t	Handed over at doorstep with OTP confirmation.	\N	admin@rasoiiq.in	hh-sharma-family
+ord-1794990443284	user-demo-1	Blinkit	ORDER_CONFIRMED	200	25	Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103	2026-11-18 08:27:23.29	2026-11-18 08:27:23.29	\N	t	Order placed successfully	\N	user-demo-1	hh-sharma-family
+ord-1794810685357	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 06:31:25.359	2026-11-16 06:31:25.359	\N	t	\N	\N	\N	hh-patel-family
+ord-1794810807797	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	0	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:33:27.801	2026-11-16 06:33:27.801	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811140988	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:39:00.996	2026-11-16 06:39:00.996	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811143232	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:39:03.238	2026-11-16 06:39:03.238	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811385019	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:05.021	2026-11-16 06:43:05.021	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811387312	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:07.314	2026-11-16 06:43:07.314	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811429516	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:49.518	2026-11-16 06:43:49.518	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811431745	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:43:51.747	2026-11-16 06:43:51.747	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811560837	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 06:46:00.843	2026-11-16 06:46:00.843	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811561424	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:46:01.43	2026-11-16 06:46:01.43	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811563666	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:46:03.672	2026-11-16 06:46:03.672	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811709720	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:48:29.723	2026-11-16 06:48:29.723	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811711940	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:48:31.942	2026-11-16 06:48:31.942	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811739645	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:48:59.647	2026-11-16 06:48:59.647	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811741991	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:49:01.992	2026-11-16 06:49:01.992	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811929962	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:52:09.966	2026-11-16 06:52:09.966	\N	t	\N	\N	\N	hh-patel-family
+ord-1794811932183	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 06:52:12.186	2026-11-16 06:52:12.186	\N	t	\N	\N	\N	hh-patel-family
+ord-1794814457483	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 07:34:17.485	2026-11-16 07:34:17.485	\N	t	\N	\N	\N	hh-patel-family
+ord-1794814458050	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:34:18.052	2026-11-16 07:34:18.052	\N	t	\N	\N	\N	hh-patel-family
+ord-1794814460343	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:34:20.345	2026-11-16 07:34:20.345	\N	t	\N	\N	\N	hh-patel-family
+ord-1794814626095	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:37:06.104	2026-11-16 07:37:06.104	\N	t	\N	\N	\N	hh-patel-family
+ord-1794814628341	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:37:08.35	2026-11-16 07:37:08.35	\N	t	\N	\N	\N	hh-patel-family
+ord-1794814892625	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:41:32.635	2026-11-16 07:41:32.635	\N	t	\N	\N	\N	hh-patel-family
+ord-1794815059257	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 07:44:19.269	2026-11-16 07:44:19.269	\N	t	\N	\N	\N	hh-patel-family
+ord-1794815061238	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:44:21.25	2026-11-16 07:44:21.25	\N	t	\N	\N	\N	hh-patel-family
+ord-1794815063531	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:44:23.543	2026-11-16 07:44:23.543	\N	t	\N	\N	\N	hh-patel-family
+ord-1794815064076	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:44:24.088	2026-11-16 07:44:24.088	\N	t	\N	\N	\N	hh-patel-family
+ord-1794815434576	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:50:34.578	2026-11-16 07:50:34.578	\N	t	\N	\N	\N	hh-patel-family
+ord-1794815436819	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:50:36.821	2026-11-16 07:50:36.821	\N	t	\N	\N	\N	hh-patel-family
+ord-1794815437417	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:50:37.418	2026-11-16 07:50:37.418	\N	t	\N	\N	\N	hh-patel-family
+ord-1794815758893	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 07:55:58.904	2026-11-16 07:55:58.904	\N	t	\N	\N	\N	hh-patel-family
+ord-1794815759614	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:55:59.625	2026-11-16 07:55:59.625	\N	t	\N	\N	\N	hh-patel-family
+ord-1794815761985	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 07:56:01.996	2026-11-16 07:56:01.996	\N	t	\N	\N	\N	hh-patel-family
+ord-1794815762738	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 07:56:02.749	2026-11-16 07:56:02.749	\N	t	\N	\N	\N	hh-patel-family
+ord-1794817220427	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 08:20:20.429	2026-11-16 08:20:20.429	\N	t	\N	\N	\N	hh-patel-family
+ord-1794817221225	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:20:21.227	2026-11-16 08:20:21.227	\N	t	\N	\N	\N	hh-patel-family
+ord-1794817223639	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:20:23.641	2026-11-16 08:20:23.641	\N	t	\N	\N	\N	hh-patel-family
+ord-1794817224528	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:20:24.53	2026-11-16 08:20:24.53	\N	t	\N	\N	\N	hh-patel-family
+ord-1794817822270	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:30:22.278	2026-11-16 08:30:22.278	\N	t	\N	\N	\N	hh-patel-family
+ord-1794818154448	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:35:54.451	2026-11-16 08:35:54.451	\N	t	\N	\N	\N	hh-patel-family
+ord-1794818319229	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 08:38:39.238	2026-11-16 08:38:39.238	\N	t	\N	\N	\N	hh-patel-family
+ord-1794818320015	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:38:40.024	2026-11-16 08:38:40.024	\N	t	\N	\N	\N	hh-patel-family
+ord-1794818322341	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:38:42.351	2026-11-16 08:38:42.351	\N	t	\N	\N	\N	hh-patel-family
+ord-1794818323039	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:38:43.049	2026-11-16 08:38:43.049	\N	t	\N	\N	\N	hh-patel-family
+ord-1794818323463	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:38:43.473	2026-11-16 08:38:43.473	\N	t	\N	\N	\N	hh-patel-family
+ord-1794818377176	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 08:39:37.18	2026-11-16 08:39:37.18	\N	t	\N	\N	\N	hh-patel-family
+ord-1794818568267	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 08:42:48.27	2026-11-16 08:42:48.27	\N	t	\N	\N	\N	hh-patel-family
+ord-1794818569015	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:42:49.017	2026-11-16 08:42:49.017	\N	t	\N	\N	\N	hh-patel-family
+ord-1794818571364	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 08:42:51.367	2026-11-16 08:42:51.367	\N	t	\N	\N	\N	hh-patel-family
+ord-1794818572579	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 08:42:52.582	2026-11-16 08:42:52.582	\N	t	\N	\N	\N	hh-patel-family
+ord-1794822743811	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:52:23.816	2026-11-16 09:52:23.816	\N	t	\N	\N	\N	hh-patel-family
+ord-1794822745019	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:52:25.023	2026-11-16 09:52:25.023	\N	t	\N	\N	\N	hh-patel-family
+ord-1794822747527	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:52:27.531	2026-11-16 09:52:27.531	\N	t	\N	\N	\N	hh-patel-family
+ord-1794822748460	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:52:28.464	2026-11-16 09:52:28.464	\N	t	\N	\N	\N	hh-patel-family
+ord-1794822748988	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:52:28.992	2026-11-16 09:52:28.992	\N	t	\N	\N	\N	hh-patel-family
+ord-1794822915943	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:55:15.947	2026-11-16 09:55:15.947	\N	t	\N	\N	\N	hh-patel-family
+ord-1794822931859	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:55:31.862	2026-11-16 09:55:31.862	\N	t	\N	\N	\N	hh-patel-family
+ord-1794822934281	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:55:34.284	2026-11-16 09:55:34.284	\N	t	\N	\N	\N	hh-patel-family
+ord-1794822948567	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:55:48.571	2026-11-16 09:55:48.571	\N	t	\N	\N	\N	hh-patel-family
+ord-1794822958891	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:55:58.894	2026-11-16 09:55:58.894	\N	t	\N	\N	\N	hh-patel-family
+ord-1794823006121	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 09:56:46.124	2026-11-16 09:56:46.124	\N	t	\N	\N	\N	hh-patel-family
+ord-1794823007828	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:56:47.831	2026-11-16 09:56:47.831	\N	t	\N	\N	\N	hh-patel-family
+ord-1794823010273	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 09:56:50.276	2026-11-16 09:56:50.276	\N	t	\N	\N	\N	hh-patel-family
+ord-1794823010988	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 09:56:50.992	2026-11-16 09:56:50.992	\N	t	\N	\N	\N	hh-patel-family
+ord-1794823011360	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 09:56:51.363	2026-11-16 09:56:51.363	\N	t	\N	\N	\N	hh-patel-family
+ord-1794823231891	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 10:00:31.895	2026-11-16 10:00:31.895	\N	t	\N	\N	\N	hh-patel-family
+ord-1794823233090	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:00:33.094	2026-11-16 10:00:33.094	\N	t	\N	\N	\N	hh-patel-family
+ord-1794823235686	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:00:35.691	2026-11-16 10:00:35.691	\N	t	\N	\N	\N	hh-patel-family
+ord-1794823236933	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 10:00:36.938	2026-11-16 10:00:36.938	\N	t	\N	\N	\N	hh-patel-family
+ord-1794823237743	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 10:00:37.748	2026-11-16 10:40:20.806	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in	hh-patel-family
+ord-1794825692587	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 10:41:32.588	2026-11-16 10:41:32.588	\N	t	\N	\N	\N	hh-patel-family
+ord-1794825693372	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:41:33.374	2026-11-16 10:41:33.374	\N	t	\N	\N	\N	hh-patel-family
+ord-1794825695792	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:41:35.794	2026-11-16 10:41:35.794	\N	t	\N	\N	\N	hh-patel-family
+ord-1794825696510	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 10:41:36.512	2026-11-16 10:41:36.512	\N	t	\N	\N	\N	hh-patel-family
+ord-1794825696926	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 10:41:36.928	2026-11-16 10:41:42.556	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in	hh-patel-family
+ord-1794825813845	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 10:43:33.847	2026-11-16 10:43:33.847	\N	t	\N	\N	\N	hh-patel-family
+ord-1794825814586	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:43:34.587	2026-11-16 10:43:34.587	\N	t	\N	\N	\N	hh-patel-family
+ord-1794825816965	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:43:36.967	2026-11-16 10:43:36.967	\N	t	\N	\N	\N	hh-patel-family
+ord-1794825817840	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 10:43:37.842	2026-11-16 10:43:37.842	\N	t	\N	\N	\N	hh-patel-family
+ord-1794826668288	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:57:48.293	2026-11-16 10:57:48.293	\N	t	\N	\N	\N	hh-patel-family
+ord-1794825818247	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 10:43:38.249	2026-11-16 10:55:54.097	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in	hh-patel-family
+ord-1794826665029	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 10:57:45.034	2026-11-16 10:57:45.034	\N	t	\N	\N	\N	hh-patel-family
+ord-1794826665872	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 10:57:45.877	2026-11-16 10:57:45.877	\N	t	\N	\N	\N	hh-patel-family
+ord-1794826669098	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 10:57:49.103	2026-11-16 10:57:49.103	\N	t	\N	\N	\N	hh-patel-family
+ord-1794826669508	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 10:57:49.513	2026-11-16 11:10:22.945	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in	hh-patel-family
+ord-1794828578703	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 11:29:38.708	2026-11-16 11:29:38.708	\N	t	\N	\N	\N	hh-patel-family
+ord-1794828579392	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 11:29:39.398	2026-11-16 11:29:39.398	\N	t	\N	\N	\N	hh-patel-family
+ord-1794828581838	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 11:29:41.844	2026-11-16 11:29:41.844	\N	t	\N	\N	\N	hh-patel-family
+ord-1794828582592	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 11:29:42.598	2026-11-16 11:29:42.598	\N	t	\N	\N	\N	hh-patel-family
+ord-1794828583074	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 11:29:43.08	2026-11-16 11:29:51.081	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in	hh-patel-family
+ord-1794829206192	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 11:40:06.196	2026-11-16 11:40:06.196	\N	t	\N	\N	\N	hh-patel-family
+ord-1794829206975	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 11:40:06.979	2026-11-16 11:40:06.979	\N	t	\N	\N	\N	hh-patel-family
+ord-1794829209422	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 11:40:09.426	2026-11-16 11:40:09.426	\N	t	\N	\N	\N	hh-patel-family
+ord-1794829210232	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 11:40:10.236	2026-11-16 11:40:10.236	\N	t	\N	\N	\N	hh-patel-family
+ord-1794829210692	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 11:40:10.696	2026-11-16 11:40:19.734	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in	hh-patel-family
+ord-1794830529702	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 12:02:09.703	2026-11-16 12:02:09.703	\N	t	\N	\N	\N	hh-patel-family
+ord-1794830530346	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 12:02:10.348	2026-11-16 12:02:10.348	\N	t	\N	\N	\N	hh-patel-family
+ord-1794830532714	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 12:02:12.716	2026-11-16 12:02:12.716	\N	t	\N	\N	\N	hh-patel-family
+ord-1794830533345	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 12:02:13.346	2026-11-16 12:02:13.346	\N	t	\N	\N	\N	hh-patel-family
+ord-1794830533631	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 12:02:13.633	2026-11-16 12:02:20.389	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in	hh-patel-family
+ord-1794831844437	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	85	25	402, Shivalik Highstreet, Bodakdev, Ahmedabad	2026-11-16 12:24:04.44	2026-11-16 12:24:04.44	\N	t	\N	\N	\N	hh-patel-family
+ord-1794831845044	user-demo-patel	Zepto	DEMO ORDER CONFIRMED	290	29	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 12:24:05.047	2026-11-16 12:24:05.047	\N	t	\N	\N	\N	hh-patel-family
+ord-1794831847389	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	340	25	304 Shivalik Highstreet, Bodakdev, Ahmedabad - 380054	2026-11-16 12:24:07.392	2026-11-16 12:24:07.392	\N	t	\N	\N	\N	hh-patel-family
+ord-1794831847947	user-demo-patel	Blinkit	DEMO ORDER CONFIRMED	1259	25	Bodakdev, Ahmedabad, Gujarat 380054	2026-11-16 12:24:07.95	2026-11-16 12:24:07.95	\N	t	\N	\N	\N	hh-patel-family
+ord-1794831848260	user-demo-patel	DMart Ready	DISPATCHED	130	49	Flat 402, Bodakdev, Ahmedabad	2026-11-16 12:24:08.263	2026-11-16 12:24:14.93	Customer requested contactless delivery at doorstep	t	Out with delivery executive	Substituted organic coriander with standard coriander	operations@rasoiiq.in	hh-patel-family
+ord-1794917622969	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-17 12:13:42.975	2026-11-17 12:13:42.975	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794917843807	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-17 12:17:23.814	2026-11-17 12:17:23.814	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794917973387	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-17 12:19:33.395	2026-11-17 12:19:33.395	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794920064125	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-17 12:54:24.144	2026-11-17 12:54:24.144	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794921812052	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 421, Test Residency, Bengaluru	2026-11-17 13:23:32.067	2026-11-17 13:23:32.067	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794921907109	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 911, Test Residency, Bengaluru	2026-11-17 13:25:07.115	2026-11-17 13:25:07.115	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794921943737	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-17 13:25:43.744	2026-11-17 13:25:43.744	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794921960165	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 203, Test Residency, Bengaluru	2026-11-17 13:26:00.17	2026-11-17 13:26:00.17	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794925558315	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 302, Test Residency, Bengaluru	2026-11-17 14:25:58.322	2026-11-17 14:25:58.322	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794925585321	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 473, Test Residency, Bengaluru	2026-11-17 14:26:25.33	2026-11-17 14:26:25.33	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794925876094	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-17 14:31:16.103	2026-11-17 14:31:16.103	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794925892697	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 465, Test Residency, Bengaluru	2026-11-17 14:31:32.707	2026-11-17 14:31:32.707	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794928477165	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 244, Test Residency, Bengaluru	2026-11-17 15:14:37.171	2026-11-17 15:14:37.171	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794928467889	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-17 15:14:27.894	2026-11-17 15:14:27.894	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794930776656	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-17 15:52:56.673	2026-11-17 15:52:56.673	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794930778379	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 508, Test Residency, Bengaluru	2026-11-17 15:52:58.396	2026-11-17 15:52:58.396	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794930795749	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 399, Test Residency, Bengaluru	2026-11-17 15:53:15.766	2026-11-17 15:53:15.766	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794930921450	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 673, Test Residency, Bengaluru	2026-11-17 15:55:21.466	2026-11-17 15:55:21.466	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794930960600	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 162, Test Residency, Bengaluru	2026-11-17 15:56:00.616	2026-11-17 15:56:00.616	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794933657902	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-17 16:40:57.92	2026-11-17 16:40:57.92	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794930986603	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-17 15:56:26.614	2026-11-17 15:56:26.614	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794933660433	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 910, Test Residency, Bengaluru	2026-11-17 16:41:00.451	2026-11-17 16:41:00.451	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794934227662	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-17 16:50:27.668	2026-11-17 16:50:27.668	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794934230089	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 383, Test Residency, Bengaluru	2026-11-17 16:50:30.095	2026-11-17 16:50:30.095	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794985330514	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-18 07:02:10.522	2026-11-18 07:02:10.522	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794985977782	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 563, Test Residency, Bengaluru	2026-11-18 07:12:57.795	2026-11-18 07:12:57.795	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794986033351	user-demo-patel	Blinkit	ORDER_CONFIRMED	274	25	Suite 748, Test Residency, Bengaluru	2026-11-18 07:13:53.359	2026-11-18 07:13:53.359	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794990443741	user-demo-patel	Blinkit	ORDER_CONFIRMED	250	25	Navrangpura, Ahmedabad 380009	2026-11-18 08:27:23.746	2026-11-18 08:27:23.746	\N	t	Order placed successfully	\N	user-demo-patel	hh-patel-family
+ord-1794811387318	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:43:07.32	2026-11-16 06:43:07.32	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794811431751	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:43:51.753	2026-11-16 06:43:51.753	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794811563674	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:46:03.68	2026-11-16 06:46:03.68	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794811711945	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:48:31.947	2026-11-16 06:48:31.947	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794811742003	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:49:02.005	2026-11-16 06:49:02.005	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794811932190	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 06:52:12.193	2026-11-16 06:52:12.193	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794814460351	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:34:20.353	2026-11-16 07:34:20.353	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794814628348	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:37:08.357	2026-11-16 07:37:08.357	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794815063536	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:44:23.549	2026-11-16 07:44:23.549	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794815436826	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:50:36.828	2026-11-16 07:50:36.828	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794815761995	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 07:56:02.006	2026-11-16 07:56:02.006	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794817223649	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 08:20:23.651	2026-11-16 08:20:23.651	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794818322350	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 08:38:42.359	2026-11-16 08:38:42.359	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794818571375	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 08:42:51.378	2026-11-16 08:42:51.378	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794822747540	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:52:27.544	2026-11-16 09:52:27.544	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794822934290	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:55:34.293	2026-11-16 09:55:34.293	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794823010285	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 09:56:50.288	2026-11-16 09:56:50.288	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794823235701	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 10:00:35.706	2026-11-16 10:00:35.706	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794825695802	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 10:41:35.804	2026-11-16 10:41:35.804	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794825816972	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 10:43:36.974	2026-11-16 10:43:36.974	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794826668301	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 10:57:48.306	2026-11-16 10:57:48.306	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794828581849	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 11:29:41.855	2026-11-16 11:29:41.855	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794829209434	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 11:40:09.438	2026-11-16 11:40:09.438	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794830532722	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 12:02:12.724	2026-11-16 12:02:12.724	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794831847395	user-demo-mehta	DMart Ready	DEMO ORDER CONFIRMED	255	49	B-702 Palm Court, Malabar Hill, Mumbai - 400006	2026-11-16 12:24:07.398	2026-11-16 12:24:07.398	\N	t	\N	\N	\N	hh-mehta-family
+ord-1794828325799	cmwj6fyg50032l3rcif9xvg5z	Blinkit	DEMO ORDER CONFIRMED	240	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103	2026-11-16 11:25:25.803	2026-11-16 11:25:25.803	\N	t	\N	\N	\N	cmwj6fyrf003cl3rc1n58062c
+ord-1794828431545	cmwj6i80g0032l3y87a4qyxrq	Blinkit	DEMO ORDER CONFIRMED	240	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103	2026-11-16 11:27:11.56	2026-11-16 11:27:11.56	\N	t	\N	\N	\N	cmwj6i8ct003cl3y81vk7pkjq
+ord-1794829138982	cmwj6xdtd00bdl3y825vovtmm	Blinkit	DEMO ORDER CONFIRMED	240	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103	2026-11-16 11:38:58.984	2026-11-16 11:38:58.984	\N	t	\N	\N	\N	cmwj6xe6k00bnl3y8iyefsg3n
+ord-1794829230784	cmwj6zcpy00i7l3y8vp2u3gdx	Blinkit	DEMO ORDER CONFIRMED	240	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103	2026-11-16 11:40:30.788	2026-11-16 11:40:30.788	\N	t	\N	\N	\N	cmwj6zd1y00ihl3y8tizaztne
+ord-1794830546658	cmwj7rklp00cul3jspzl5jack	Blinkit	DEMO ORDER CONFIRMED	240	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103	2026-11-16 12:02:26.665	2026-11-16 12:02:26.665	\N	t	\N	\N	\N	cmwj7rkrc00d4l3js9nan98p0
+ord-1794831861555	cmwj8jr48007pl3o0yv3oqxwz	Blinkit	DEMO ORDER CONFIRMED	240	25	Flat 402, Green Glen Layout, Outer Ring Road, Bellandur, Bengaluru 560103	2026-11-16 12:24:21.558	2026-11-16 12:24:21.558	\N	t	\N	\N	\N	cmwj8jran007zl3o0uqprlq2n
+ord-1794908959985	cmwjb5fej003ql3gghywo88u2	BigBasket	DEMO ORDER CONFIRMED	2689	35	710/7692 Gujarat housing board, Bapunagar, Ahmedabad 380024 (Gujarat)	2026-11-17 09:49:19.987	2026-11-17 09:49:19.987	\N	t	\N	\N	\N	cmwjbo8tb0001l3rks9ymiw4i
+ord-1794932850873	cmwjb5fej003ql3gghywo88u2	Blinkit	ORDER_CONFIRMED	2835	25	710/7692 Gujarat housing board, Bapunagar, Ahmedabad 380024 (Gujarat)	2026-11-17 16:27:30.882	2026-11-17 16:27:30.882	\N	t	Order placed successfully	\N	cmwjb5fej003ql3gghywo88u2	cmwjbo8tb0001l3rks9ymiw4i
+ord-1794839868892	cmwjcyiro0009l3rc132yjnvt	DMart Ready	DEMO ORDER CONFIRMED	2209	49	710/7692 Gujarat Housing Board, Bapunagar, Ahmedabad 380024 (Gujarat)	2026-11-16 14:37:48.896	2026-11-16 14:37:48.896	\N	t	\N	\N	\N	cmwjcyirx000bl3rckkkstrp5
+ord-1794933281956	cmwkwxauo008ll3mos42pjnr3	Blinkit	ORDER_CONFIRMED	0	25	710 Gujarat Housing Board, Bapunagar, Ahmedabad 380024	2026-11-17 16:34:41.964	2026-11-17 16:34:41.964	\N	t	Order placed successfully	\N	cmwkwxauo008ll3mos42pjnr3	cmwkwxauv008nl3mo5l2d0629
+ord-1794933364452	cmwkwz25k00adl3mo0v3y8ki4	Blinkit	ORDER_CONFIRMED	0	25	710 Gujarat Housing Board, Bapunagar, Ahmedabad 380024	2026-11-17 16:36:04.463	2026-11-17 16:36:04.463	\N	t	Order placed successfully	\N	cmwkwz25k00adl3mo0v3y8ki4	cmwkwz25t00afl3moeo5umkob
+ord-1794933513074	cmwkx29l300c5l3moeug8a2rp	Blinkit	HUB_PACKING	0	25	710 Gujarat Housing Board, Bapunagar, Ahmedabad 380024	2026-11-17 16:38:33.086	2026-11-17 16:38:33.136	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	system-worker	cmwkx29lc00c7l3moi17x898p
+ord-1794933559775	cmwkx396g00dnl3mo5cxmw396	Blinkit	HUB_PACKING	0	25	710 Gujarat Housing Board, Bapunagar, Ahmedabad 380024	2026-11-17 16:39:19.788	2026-11-17 16:39:19.832	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	system-worker	cmwkx396p00dpl3mo7yy1ch6b
+ord-1794933614796	cmwkx4fa200f5l3moxe9iari8	Blinkit	HUB_PACKING	0	25	710 Gujarat Housing Board, Bapunagar, Ahmedabad 380024	2026-11-17 16:40:14.813	2026-11-17 16:40:14.853	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	system-worker	cmwkx4fa900f7l3mowzylibzd
+ord-1794933697479	cmwkx5wxd00l1l3mowf771xh9	Blinkit	HUB_PACKING	0	25	710 Gujarat Housing Board, Bapunagar, Ahmedabad 380024	2026-11-17 16:41:37.498	2026-11-17 16:41:37.545	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	system-worker	cmwkx5wxm00l3l3momrnagw31
+ord-1794934263793	cmwkxi4jr004el3ocoa8hht1u	Blinkit	HUB_PACKING	0	25	710 Gujarat Housing Board, Bapunagar, Ahmedabad 380024	2026-11-17 16:51:03.799	2026-11-17 16:51:03.842	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	system-worker	cmwkxi4k0004gl3oc0hmsrvqj
+ord-1794986065397	cmwlscmb6004ml37sgp4x2ldl	Blinkit	HUB_PACKING	0	25	710 Gujarat Housing Board, Bapunagar, Ahmedabad 380024	2026-11-18 07:14:25.404	2026-11-18 07:14:25.469	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	system-worker	cmwlscmbg004ol37s42zumhpx
+ord-1794986690109	cmwlsq12h006kl37semulwczh	Blinkit	HUB_PACKING	0	25	710 Gujarat Housing Board, Bapunagar, Ahmedabad 380024	2026-11-18 07:24:50.117	2026-11-18 07:24:50.162	\N	t	Transitioned from ORDER_CONFIRMED to HUB_PACKING	\N	system-worker	cmwlsq12q006ml37sptnbdhhv
+ord-1794989422650	cmwlucrnx00axl37s08ria2ta	Blinkit	OUT_FOR_DELIVERY	84	25	Flat 402, Sharma Heights, Bengaluru	2026-11-18 08:10:22.658	2026-11-18 08:10:22.715	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	cmwlucro600azl37sz4w9fps8
+ord-1794989426619	cmwlucuz600bkl37sxjs47if5	Zepto	ORDER_CONFIRMED	79	29	B-12, Shanti Nagar, Ahmedabad	2026-11-18 08:10:26.626	2026-11-18 08:10:26.626	\N	t	Order placed successfully	\N	cmwlucuz600bkl37sxjs47if5	cmwlucuze00bml37s9rmwcska
+ord-1794989433123	cmwlucy0b00c3l37sjoa9xngk	DMart Ready	ORDER_CONFIRMED	83	49	Flat 901, Palm Court, Mumbai	2026-11-18 08:10:33.13	2026-11-18 08:10:33.13	\N	t	Order placed successfully	\N	cmwlucy0b00c3l37sjoa9xngk	cmwlucy0i00c5l37splggahhg
+ord-1794990201116	cmwluteid0000l3788hcz6990	Blinkit	OUT_FOR_DELIVERY	84	25	Flat 402, Sharma Heights, Bengaluru	2026-11-18 08:23:21.134	2026-11-18 08:23:21.185	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	cmwluteiz0002l378ii2cu7na
+ord-1794990206805	cmwlutjlb000nl378o8jmwhbc	Zepto	ORDER_CONFIRMED	79	29	B-12, Shanti Nagar, Ahmedabad	2026-11-18 08:23:26.825	2026-11-18 08:23:26.825	\N	t	Order placed successfully	\N	cmwlutjlb000nl378o8jmwhbc	cmwlutjli000pl378r3jvt2a5
+ord-1794990211307	cmwlutnyu0016l378xwczb3pb	DMart Ready	ORDER_CONFIRMED	83	49	Flat 901, Palm Court, Mumbai	2026-11-18 08:23:31.326	2026-11-18 08:23:31.326	\N	t	Order placed successfully	\N	cmwlutnyu0016l378xwczb3pb	cmwlutnz00018l3788q5s2dqr
+ord-1794990306702	cmwluvp8d001pl378lv9i8eqm	Blinkit	OUT_FOR_DELIVERY	84	25	Flat 402, Sharma Heights, Bengaluru	2026-11-18 08:25:06.717	2026-11-18 08:25:06.765	\N	t	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	\N	system-worker	cmwluvp8m001rl378wus9b8wg
+ord-1794990310797	cmwluvt42002cl378qx2ivo25	Zepto	ORDER_CONFIRMED	79	29	B-12, Shanti Nagar, Ahmedabad	2026-11-18 08:25:10.813	2026-11-18 08:25:10.813	\N	t	Order placed successfully	\N	cmwluvt42002cl378qx2ivo25	cmwluvt49002el378sqok1hr7
+ord-1794990317294	cmwluvw8q002vl378oiuhuj8x	DMart Ready	ORDER_CONFIRMED	83	49	Flat 901, Palm Court, Mumbai	2026-11-18 08:25:17.311	2026-11-18 08:25:17.311	\N	t	Order placed successfully	\N	cmwluvw8q002vl378oiuhuj8x	cmwluvw8w002xl378zyff0mno
+cmwm2gaxo0001l324gsm2kxls	user-demo-1	Blinkit	DELIVERED	399	30	Bapunagar Ahmedabad	2026-11-18 11:57:00.636	2026-11-18 11:57:00.754	\N	t	Package delivered to doorstep	\N	system-worker	hh-sharma-family
+cmwm2gb1l0004l324a09ik95h	user-demo-1	Blinkit	HUB_PACKING	299	25	Navrangpura Ahmedabad	2026-11-18 11:57:00.777	2026-11-18 11:57:00.792	\N	t	Worker 1 packing	\N	system-worker	hh-sharma-family
 \.
 
 
@@ -1987,7 +3675,1628 @@ ord-1794831848260	user-demo-patel	DMart Ready	DEMO ORDER CONFIRMED	130	49	Flat 4
 -- Data for Name: OrderItem; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."OrderItem" (id, "orderId", "productVariantId", "quantityPacks", "unitPriceInr") FROM stdin;
+COPY public."OrderItem" (id, "orderId", "productVariantId", "quantityPacks", "unitPriceInr", brand, "packSize", "productName") FROM stdin;
+cmwknlxd10007l3donl2wgg32	ord-1794917622550	\N	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwknlxd70009l3dolxgs2obo	ord-1794917622550	\N	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta
+cmwknlxff000dl3dofq1emr9v	ord-1794917622641	\N	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwknlxfh000fl3dogppq98pp	ord-1794917622641	\N	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta
+cmwknlxoi000jl3do4d17k5gh	ord-1794917622969	\N	2	66	Amul	1L	Amul Gold Milk
+cmwknqnkl0015l3dopkyiu24r	ord-1794917843143	\N	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwknqnkp0017l3doixxzkf6l	ord-1794917843143	\N	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta
+cmwknqnou001hl3dov9h2h5g5	ord-1794917843301	\N	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwknqnox001jl3do3klnm91i	ord-1794917843301	\N	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta
+cmwknqo2w001nl3domjvctw9k	ord-1794917843807	\N	2	66	Amul	1L	Amul Gold Milk
+cmwkntfnc0005l37gv3thqp6m	ord-1794917972838	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkntfnj0007l37gx6z9x885	ord-1794917972838	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkntfrv000hl37gzbadkhl1	ord-1794917973005	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkntfrz000jl37g6wenbqyn	ord-1794917973005	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkntg2h000nl37g1sw8cq5z	ord-1794917973387	\N	2	66	Amul	1L	Amul Gold Milk
+cmwkntrgu000rl37gq5o0qywi	ord-1794917988158	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwkntrh0000tl37gkszqmx4n	ord-1794917988158	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkntrh4000vl37gxtjtj2b1	ord-1794917988158	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkntrh9000xl37g0r0mtg2e	ord-1794917988158	var-fresh-coriander-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwkntrhe000zl37gm6kwucmg	ord-1794917988158	var-fresh-curry-1b	2	0	Farm Fresh	Standard	Farm Fresh
+cmwkntrhj0011l37gf6wn1yyr	ord-1794917988158	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkntrho0013l37g2ok2v44q	ord-1794917988158	var-fresh-surti-papdi-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkntrhu0015l37g4tbv983s	ord-1794917988158	var-fresh-tuver-lilva-250	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkntrhz0017l37g51yyvpxc	ord-1794917988158	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkntri40019l37gnwgfca28	ord-1794917988158	var-fresh-raw-banana-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkntri9001bl37gh2itypm9	ord-1794917988158	var-fresh-purple-yam-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkntrid001dl37gd11tz6a8	ord-1794917988158	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkntrii001fl37gulf7wd5n	ord-1794917988158	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkntriq001hl37ga5os0eu4	ord-1794917988158	var-fresh-baingan-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkntriv001jl37g8gs9x1pl	ord-1794917988158	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkntrj0001ll37gxq8dmn12	ord-1794917988158	var-tata-sesame-200	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkntrj5001nl37gb87t2nxz	ord-1794917988158	var-mother-paneer-200	2	0	Mother Dairy	Standard	Mother Dairy
+cmwknu7so001rl37gdq8yyr3t	ord-1794918009315	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwknu7sw001tl37gig3jappb	ord-1794918009315	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwknu7t1001vl37g8tzs98cm	ord-1794918009315	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwknu7t5001xl37gzvcgs0hw	ord-1794918009315	var-fresh-coriander-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwknu7tb001zl37gg506van6	ord-1794918009315	var-fresh-curry-1b	2	0	Farm Fresh	Standard	Farm Fresh
+cmwknu7th0021l37g2u1aqq9j	ord-1794918009315	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwknu7tn0023l37g7ivez9lt	ord-1794918009315	var-fresh-surti-papdi-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwknu7tu0025l37gxz2tojua	ord-1794918009315	var-fresh-tuver-lilva-250	1	0	Farm Fresh	Standard	Farm Fresh
+cmwknu7u10027l37gvx4pald0	ord-1794918009315	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwknu7u50029l37gfjvhnsy4	ord-1794918009315	var-fresh-raw-banana-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwknu7u9002bl37gml7lbfii	ord-1794918009315	var-fresh-purple-yam-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwknu7ue002dl37gff45hrfa	ord-1794918009315	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwknu7ui002fl37g8wbufaqd	ord-1794918009315	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwknu7ul002hl37gyy2865ib	ord-1794918009315	var-fresh-baingan-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwknu7up002jl37ga6r5mgyy	ord-1794918009315	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwknu7ut002ll37g6g7guvi4	ord-1794918009315	var-tata-sesame-200	1	0	Tata Sampann	Standard	Tata Sampann
+cmwknu7ux002nl37glhikba2q	ord-1794918009315	var-mother-paneer-200	2	0	Mother Dairy	Standard	Mother Dairy
+cmwkoecll002rl37gzk130j2z	ord-1794918948657	var-mother-paneer-200	1	95	Fresh Produce	Standard	Pantry Essential
+cmwkoymh10005l3o09bdysw6g	ord-1794919894545	\N	1	99	Fresh Produce	Standard	Pantry Essential
+cmwkoymiz0009l3o0gqh2yzmv	ord-1794919894648	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkp07410005l3o0ubtpch5g	ord-1794919967980	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkp0d8u000fl3o0wcicw37t	ord-1794919975935	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkp0d90000hl3o08ap0elyn	ord-1794919975935	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkp0ddl000rl3o0afxnok9w	ord-1794919976109	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkp0ddr000tl3o0gvarjpog	ord-1794919976109	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkp28uo0011l3o0c2n0onq0	ord-1794920063541	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkp28uv0013l3o0s4w9kru1	ord-1794920063541	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkp28zo001dl3o0wvzyc9ja	ord-1794920063723	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkp28zt001fl3o0w8a7ifdr	ord-1794920063723	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkp29at001jl3o0lnz1p1ti	ord-1794920064125	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkp2f6m001nl3o02jfbtzqx	ord-1794920071749	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwkp2f6s001pl3o077ejqgsq	ord-1794920071749	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkp2f6y001rl3o0le4kbf2b	ord-1794920071749	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2f73001tl3o0x760hkvy	ord-1794920071749	var-fresh-coriander-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2f77001vl3o0uimlm7g6	ord-1794920071749	var-fresh-curry-1b	2	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2f7b001xl3o0xk03knvz	ord-1794920071749	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2f7g001zl3o0ekpqavsj	ord-1794920071749	var-fresh-surti-papdi-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2f7l0021l3o08m3w7483	ord-1794920071749	var-fresh-tuver-lilva-250	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2f7p0023l3o09x76femd	ord-1794920071749	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2f7t0025l3o0astxwc32	ord-1794920071749	var-fresh-raw-banana-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2f7z0027l3o0v8lngafl	ord-1794920071749	var-fresh-purple-yam-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2f830029l3o0125rucsn	ord-1794920071749	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2f88002bl3o0tylfrsft	ord-1794920071749	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2f8d002dl3o0up7qzx0b	ord-1794920071749	var-fresh-baingan-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2f8h002fl3o063sjvejn	ord-1794920071749	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2f8m002hl3o0irvk9rzw	ord-1794920071749	var-tata-sesame-200	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkp2f8q002jl3o0viiulwbc	ord-1794920071749	var-mother-paneer-200	2	0	Mother Dairy	Standard	Mother Dairy
+cmwkp2lul002nl3o00gtzx2ku	ord-1794920080388	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwkp2lur002pl3o0paui31hi	ord-1794920080388	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkp2luw002rl3o0y1uiie1x	ord-1794920080388	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2lv1002tl3o0pxvj4m2f	ord-1794920080388	var-fresh-coriander-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2lv5002vl3o0qs1kfo5t	ord-1794920080388	var-fresh-curry-1b	2	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2lvb002xl3o0b1w2z3eo	ord-1794920080388	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2lvg002zl3o0vr45ihe6	ord-1794920080388	var-fresh-surti-papdi-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2lvl0031l3o0dshn3gne	ord-1794920080388	var-fresh-tuver-lilva-250	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2lvr0033l3o0fyvlaoki	ord-1794920080388	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2lvw0035l3o003n58i5o	ord-1794920080388	var-fresh-raw-banana-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2lw20037l3o0n0el3zlh	ord-1794920080388	var-fresh-purple-yam-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2lw70039l3o0prggnzq8	ord-1794920080388	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2lwd003bl3o0l2y604sr	ord-1794920080388	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2lwh003dl3o0akg4dhog	ord-1794920080388	var-fresh-baingan-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2lwm003fl3o03coe6740	ord-1794920080388	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkp2lws003hl3o0zfwhm7ts	ord-1794920080388	var-tata-sesame-200	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkp2lwx003jl3o0ue9zrk8x	ord-1794920080388	var-mother-paneer-200	2	0	Mother Dairy	Standard	Mother Dairy
+cmwkq3pty0007l3v0ut20ahzp	ord-1794921811821	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq3py6000hl3v0x33t1ead	ord-1794921811982	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq3pz9000ll3v0cn58ilw4	ord-1794921812016	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq3q08000pl3v07tdwo1u4	ord-1794921812052	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq3q4h000zl3v0yjfm1sfb	ord-1794921812206	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq3q6a0013l3v0hbrcn90r	ord-1794921812271	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq3q730017l3v0l6vh1tco	ord-1794921812302	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq3qb5001hl3v04yaelh1y	ord-1794921812434	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq3qe8001pl3v0c29nm0ie	ord-1794921812554	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq3qh7001vl3v0baq76st3	ord-1794921812662	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq3qpj001zl3v02smt04w0	ord-1794921812947	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq5r5e0005l3zw98nfjsvv	ord-1794921906849	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq5ram000fl3zwy7vhlsrz	ord-1794921907042	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq5rbk000jl3zwxysj4uuw	ord-1794921907076	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq5rcg000nl3zwlh5fc7c5	ord-1794921907109	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq5rft000xl3zwe3e4lgen	ord-1794921907230	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq5rhr0011l3zwr2m1rxeh	ord-1794921907299	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq5rip0015l3zwd4rwejal	ord-1794921907332	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq5rlq001fl3zwjj76nr20	ord-1794921907441	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq5rob001nl3zwspfkt9o0	ord-1794921907534	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq5rr6001tl3zw97yx1y7o	ord-1794921907638	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq5rvw001xl3zwj84as74q	ord-1794921907805	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq6eig0025l3zweu3yanju	ord-1794921937128	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq6f2q002bl3zwxkt1jdyo	ord-1794921937862	var-fortune-atta-5k	1	260	Fresh Produce	Standard	Pantry Essential
+cmwkq6j5q002ll3zwmcw3874p	ord-1794921943154	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkq6j5v002nl3zwm7hm3qv6	ord-1794921943154	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkq6j9w002xl3zwjy0v5iac	ord-1794921943306	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkq6ja1002zl3zwmpy8a1wf	ord-1794921943306	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkq6jlx0033l3zw809gyqys	ord-1794921943737	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkq6w3y003bl3zwn2kw4v7t	ord-1794921959937	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq6w8c003ll3zw35gdz7sk	ord-1794921960096	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq6w9d003pl3zwqd8bhc5b	ord-1794921960133	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq6wa9003tl3zwn8vuty5e	ord-1794921960165	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq6wdn0043l3zwbsqkz0ks	ord-1794921960289	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq6wfl0047l3zw0niylk08	ord-1794921960357	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq6wgj004bl3zw46fvbgf4	ord-1794921960393	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq6wj3004ll3zwihspewoe	ord-1794921960484	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq6wlp004tl3zw3f6fdufi	ord-1794921960577	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq6woi004zl3zw60sunqq3	ord-1794921960678	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq6wvq0053l3zwng7pt5ny	ord-1794921960934	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkq79mo0057l3zwxz4a78dv	ord-1794921977462	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwkq79mu0059l3zw3a1rgpel	ord-1794921977462	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkq79mz005bl3zwwcpy1kel	ord-1794921977462	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq79n3005dl3zwqo1z9wt1	ord-1794921977462	var-fresh-coriander-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwkq79n8005fl3zwxfge072u	ord-1794921977462	var-fresh-curry-1b	2	0	Farm Fresh	Standard	Farm Fresh
+cmwkq79nc005hl3zw0sn8wnp8	ord-1794921977462	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq79nh005jl3zwbj74mk1f	ord-1794921977462	var-fresh-surti-papdi-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq79nl005ll3zwx1siy3yp	ord-1794921977462	var-fresh-tuver-lilva-250	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq79nq005nl3zwt63abhoq	ord-1794921977462	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq79nu005pl3zw0kmk4rw4	ord-1794921977462	var-fresh-raw-banana-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq79nz005rl3zwe7abr2xf	ord-1794921977462	var-fresh-purple-yam-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq79o4005tl3zwggi25j7v	ord-1794921977462	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq79o8005vl3zwbiicarka	ord-1794921977462	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq79oc005xl3zww20ol3jk	ord-1794921977462	var-fresh-baingan-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq79og005zl3zwqmb47yv0	ord-1794921977462	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq79ol0061l3zwzxtj40me	ord-1794921977462	var-tata-sesame-200	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkq79oq0063l3zw3r4ytuda	ord-1794921977462	var-mother-paneer-200	2	0	Mother Dairy	Standard	Mother Dairy
+cmwkq8fs00067l3zwz0rdfroz	ord-1794922032085	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwkq8fs50069l3zwesntbzw2	ord-1794922032085	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkq8fs9006bl3zwm89gaf39	ord-1794922032085	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq8fse006dl3zwqjwvsb4s	ord-1794922032085	var-fresh-coriander-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwkq8fsi006fl3zw5mmhe44t	ord-1794922032085	var-fresh-curry-1b	2	0	Farm Fresh	Standard	Farm Fresh
+cmwkq8fsm006hl3zw0zv5hldl	ord-1794922032085	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq8fss006jl3zw542sfivf	ord-1794922032085	var-fresh-surti-papdi-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq8fsw006ll3zwb78ax1ci	ord-1794922032085	var-fresh-tuver-lilva-250	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq8ft1006nl3zwp6svxir4	ord-1794922032085	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq8ft6006pl3zw64d4s5zm	ord-1794922032085	var-fresh-raw-banana-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq8fta006rl3zw3h41u6i9	ord-1794922032085	var-fresh-purple-yam-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq8ftf006tl3zw9nxlenk3	ord-1794922032085	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq8ftk006vl3zwya18r5ho	ord-1794922032085	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq8fto006xl3zwd8osnkgw	ord-1794922032085	var-fresh-baingan-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq8ftu006zl3zwgvu32q1y	ord-1794922032085	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkq8ftz0071l3zwbdtr2r7n	ord-1794922032085	var-tata-sesame-200	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkq8fu50073l3zwapagh4pi	ord-1794922032085	var-mother-paneer-200	2	0	Mother Dairy	Standard	Mother Dairy
+cmwks6ptq0000l3g8y6i4x3da	ord-gate-1794925311035-615	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6pxl0002l3g8dmg0238q	ord-gate-1794925311174-611	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6py40004l3g8gqyhl5ki	ord-gate-1794925311193-507	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6pyj0006l3g8nidiey48	ord-gate-1794925311208-130	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6pz00008l3g8oyj77x6c	ord-gate-1794925311225-285	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6pze000al3g8muob60o0	ord-gate-1794925311239-591	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6pzv000cl3g804v3u6h3	ord-gate-1794925311256-307	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6q08000el3g8ufyl077x	ord-gate-1794925311269-40	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6q0o000gl3g87wbbwl7m	ord-gate-1794925311285-565	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6q13000il3g8zz009fm8	ord-gate-1794925311301-811	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6q1j000kl3g8vn1rjth4	ord-gate-1794925311317-936	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6q1y000ml3g8nyb0k60i	ord-gate-1794925311331-302	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6q2d000ol3g8ff3t6eqe	ord-gate-1794925311345-984	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6q2u000ql3g8zdvk8ufk	ord-gate-1794925311363-863	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6q3g000sl3g835kfjlk1	ord-gate-1794925311385-449	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6q44000ul3g82lmwpeeg	ord-gate-1794925311409-488	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks6q4i000wl3g8p61hiu42	ord-gate-1794925311423-565	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7te00000l3robniwmmgz	ord-gate-1794925362309-531	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7tek0002l3rob96oix40	ord-gate-1794925362330-841	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7tex0004l3rodlc5ushb	ord-gate-1794925362342-74	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7tfc0006l3root8ra3il	ord-gate-1794925362357-318	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7tft0008l3rom44e8hm2	ord-gate-1794925362375-879	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7tg9000al3ro5hfh31g1	ord-gate-1794925362391-623	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7tgp000cl3ro9wtq27c9	ord-gate-1794925362407-338	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7thm000el3roww7kirke	ord-gate-1794925362439-216	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7tia000gl3rol3p6x9za	ord-gate-1794925362463-869	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7tk7000il3roup8azs17	ord-gate-1794925362532-763	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7tky000kl3rojysf3bfs	ord-gate-1794925362559-525	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7tle000ml3ro312i2hup	ord-gate-1794925362576-930	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7tlw000ol3rosxoruh6s	ord-gate-1794925362593-707	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7tmg000ql3ro77y70o7b	ord-gate-1794925362613-978	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7to5000sl3roqqztdise	ord-gate-1794925362674-622	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7toq000ul3rojkhgs9og	ord-gate-1794925362696-662	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks7tp3000wl3roon8ffozl	ord-gate-1794925362708-690	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9yez0000l358vgabukrv	ord-gate-1794925462128-363	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9yfs0002l358qvcjbdob	ord-gate-1794925462157-700	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9yg80004l3585bmb5cam	ord-gate-1794925462173-216	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9ygn0006l3580eetx039	ord-gate-1794925462188-91	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9yi10008l3582op7r07y	ord-gate-1794925462238-165	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9yii000al3580f1mvqzi	ord-gate-1794925462255-915	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9yj0000cl3583yjz98q0	ord-gate-1794925462273-964	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9yjy000el358ssburuzs	ord-gate-1794925462306-281	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9yl8000gl3580cf3rgku	ord-gate-1794925462352-240	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9ymg000il3582afaxg5e	ord-gate-1794925462397-840	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9ynp000kl3586do7u1zv	ord-gate-1794925462442-31	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9yo5000ml358u0w371at	ord-gate-1794925462457-903	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9yoq000ol358l06vwt1q	ord-gate-1794925462479-662	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9yq8000ql358r589qjq8	ord-gate-1794925462533-697	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9ys6000sl358yhfg6kzg	ord-gate-1794925462603-107	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9yu2000ul358d1nlnh4a	ord-gate-1794925462670-315	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwks9yv7000wl358yt8de3xy	ord-gate-1794925462711-553	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksc0gg000tl30gbq9wmog1	ord-1794925558078	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksc0kz000zl30g0zp38726	ord-1794925558244	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksc0ly0013l30ghaero742	ord-1794925558281	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksc0mv0017l30gwnje0nam	ord-1794925558315	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksc0px001fl30gpaw9zhd5	ord-1794925558425	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksc0rv001jl30gnn4sj9o7	ord-1794925558494	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksc0sx001nl30gqhzhh0sa	ord-1794925558531	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksc0vi001vl30gbcqcfolv	ord-1794925558626	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksc0xk0021l30gspye0k1v	ord-1794925558700	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksc1090027l30glt9g15za	ord-1794925558796	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksc142002bl30g6x0f5xj2	ord-1794925558932	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkscla5002jl30g1pxxsjoq	ord-1794925585069	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksclfa002tl30gti87tyf6	ord-1794925585256	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksclg7002xl30gxpamq5br	ord-1794925585289	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksclh40031l30gun3bzltb	ord-1794925585321	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksclks003bl30ghy8ni2p0	ord-1794925585455	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksclmr003fl30gyw1b7mwb	ord-1794925585522	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksclno003jl30gr5vqf56n	ord-1794925585558	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksclqe003tl30gii6p1993	ord-1794925585656	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksclsw0041l30gjvmv4un8	ord-1794925585746	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksclvr0047l30gumv4lfaq	ord-1794925585847	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksclzw004bl30g62u81i4d	ord-1794925585991	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksd4i50000l3k46mhsg65b	ord-gate-1794925609989-979	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4is0002l3k491pygccu	ord-gate-1794925610012-326	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4ja0004l3k4zaodcwyw	ord-gate-1794925610029-127	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4jq0006l3k4vtgwkeyk	ord-gate-1794925610047-80	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4kr0008l3k43x2hjooc	ord-gate-1794925610084-668	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4l4000al3k48armqnuv	ord-gate-1794925610097-694	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4lj000cl3k4qll34ynm	ord-gate-1794925610111-130	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4m2000el3k4votnm5ol	ord-gate-1794925610131-372	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4mo000gl3k40n7qucju	ord-gate-1794925610152-858	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4nt000il3k4097qpkjh	ord-gate-1794925610194-326	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4ow000kl3k4qyx2t21l	ord-gate-1794925610233-50	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4p8000ml3k4oc9a2l9h	ord-gate-1794925610245-116	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4pr000ol3k439q6zoxg	ord-gate-1794925610264-894	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4r5000ql3k455au57i2	ord-gate-1794925610314-239	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4t0000sl3k4iw1w3lpf	ord-gate-1794925610380-564	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4ul000ul3k4xij4xl9s	ord-gate-1794925610438-392	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksd4vm000wl3k4wlujv49q	ord-gate-1794925610475-0	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksfsnn0000l3dcvkil04bb	ord-gate-1794925734600-735	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksfson0002l3dcbbr206ii	ord-gate-1794925734637-204	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksfspd0004l3dc165kox0q	ord-gate-1794925734663-736	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksfsq30006l3dcdei640xh	ord-gate-1794925734688-364	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksfss70008l3dc1c5s7d7k	ord-gate-1794925734765-281	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksfsss000al3dcj2o94w2k	ord-gate-1794925734786-433	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksfsti000cl3dctl5rk8gb	ord-gate-1794925734812-214	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksfsud000el3dcmlfqxi0x	ord-gate-1794925734843-456	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksfsv3000gl3dcz88g9d0w	ord-gate-1794925734869-316	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksfswu000il3dcnvxurby1	ord-gate-1794925734932-724	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksfsyl000kl3dcvfk56ekq	ord-gate-1794925734995-918	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksfsz9000ml3dcjdb29yo7	ord-gate-1794925735019-532	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksft07000ol3dcblqbx11r	ord-gate-1794925735053-137	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksft2i000ql3dcgho2izzm	ord-gate-1794925735136-286	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksft52000sl3dc5dvh3fgp	ord-gate-1794925735228-92	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksft6v000ul3dc3jsq7ms1	ord-gate-1794925735293-123	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksft8a000wl3dcijitdb5g	ord-gate-1794925735344-388	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksic8b0000l36otmc8hkps	ord-gate-1794925853289-658	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksic940002l36osilp9inp	ord-gate-1794925853318-437	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksic9k0004l36o6c9zy7qw	ord-gate-1794925853334-369	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksic9z0006l36oy5au12iu	ord-gate-1794925853350-122	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksicba0008l36obu0ccr04	ord-gate-1794925853397-593	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksicbo000al36odqpq2ldu	ord-gate-1794925853411-769	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksicc6000cl36ovs88zjdy	ord-gate-1794925853428-522	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksicd2000el36oow21yki1	ord-gate-1794925853460-518	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksicdn000gl36oncrrxhpv	ord-gate-1794925853481-45	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksiceq000il36ow2yu1ftw	ord-gate-1794925853521-434	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksicfs000kl36o99h0x3xv	ord-gate-1794925853559-180	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksicg5000ml36o67th35mo	ord-gate-1794925853572-638	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksicgp000ol36o5k43gjxu	ord-gate-1794925853591-483	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksicj4000ql36ob2p9698z	ord-gate-1794925853678-274	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksickz000sl36o6pm58mqq	ord-gate-1794925853745-473	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksicmv000ul36oyyah1r58	ord-gate-1794925853813-258	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksicnw000wl36o6h6y3vbu	ord-gate-1794925853850-418	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwksijdq000hl3z0nlux6eq0	ord-1794925862543	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwksijdv000jl3z01rzjeeev	ord-1794925862543	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwksijdy000ll3z03epkjqsl	ord-1794925862543	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwksije1000nl3z0onufdb77	ord-1794925862543	var-fresh-coriander-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwksije4000pl3z0tmxyvvbq	ord-1794925862543	var-fresh-curry-1b	2	0	Farm Fresh	Standard	Farm Fresh
+cmwksije9000rl3z0psnvoegy	ord-1794925862543	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwksijed000tl3z0fj6f9bzt	ord-1794925862543	var-fresh-surti-papdi-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwksijeg000vl3z060qqln6y	ord-1794925862543	var-fresh-tuver-lilva-250	1	0	Farm Fresh	Standard	Farm Fresh
+cmwksijej000xl3z0xz4iaovt	ord-1794925862543	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwksijen000zl3z0exhqa1dp	ord-1794925862543	var-fresh-raw-banana-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwksijer0011l3z006r3cgwc	ord-1794925862543	var-fresh-purple-yam-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwksijew0013l3z0c3xo7zd2	ord-1794925862543	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwksijf10015l3z030c2s6rz	ord-1794925862543	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwksijf50017l3z0phhz6ibp	ord-1794925862543	var-fresh-baingan-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwksijfa0019l3z0fx7ihl9z	ord-1794925862543	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwksijfe001bl3z0fyjwfbes	ord-1794925862543	var-tata-sesame-200	1	0	Tata Sampann	Standard	Tata Sampann
+cmwksitfq001jl3z0ge1drhhl	ord-1794925875578	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwksitfv001ll3z0lz2sbgqa	ord-1794925875578	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwksitjy001vl3z04hkfuns3	ord-1794925875728	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwksitk4001xl3z0sisf8g2c	ord-1794925875728	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwksitu40021l3z0r1by9r8r	ord-1794925876094	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwksj06l0029l3z0qtjanluv	ord-1794925884315	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksj0qk002fl3z0ou3z0stf	ord-1794925885034	var-fortune-atta-5k	1	260	Fresh Produce	Standard	Pantry Essential
+cmwksj6go002pl3z0ysqox13y	ord-1794925892453	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksj6lm002zl3z0f7lvdv88	ord-1794925892632	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksj6mh0033l3z0z93ta2k9	ord-1794925892666	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksj6nc0037l3z04blrjhld	ord-1794925892697	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksj6qq003hl3z0byjtnp6x	ord-1794925892818	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksj6sm003ll3z0iftoj0m3	ord-1794925892887	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksj6tj003pl3z0z8kuuhy7	ord-1794925892920	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksj6w5003zl3z0g9jifgbb	ord-1794925893015	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksj6yc0047l3z0cy6bbi0k	ord-1794925893095	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksj70q004dl3z0dmyxhilk	ord-1794925893180	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwksj74b004hl3z005ybqz9s	ord-1794925893307	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwku22bk0001l3cwxlj19b2o	ord-1794928453173	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwku22bn0003l3cw87jrrf73	ord-1794928453173	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwku22bp0005l3cwop7a32ho	ord-1794928453173	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwku22bs0007l3cw6gku43bf	ord-1794928453173	var-fresh-coriander-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwku22bv0009l3cwukkx57dy	ord-1794928453173	var-fresh-curry-1b	2	0	Farm Fresh	Standard	Farm Fresh
+cmwku22by000bl3cw3ujmjri2	ord-1794928453173	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwku22c1000dl3cwfu135git	ord-1794928453173	var-fresh-surti-papdi-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwku22c4000fl3cw2o4h0dm7	ord-1794928453173	var-fresh-tuver-lilva-250	1	0	Farm Fresh	Standard	Farm Fresh
+cmwku22c8000hl3cwofzd68o7	ord-1794928453173	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwku22cc000jl3cwfykfpaeg	ord-1794928453173	var-fresh-raw-banana-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwku22cg000ll3cwvoisl085	ord-1794928453173	var-fresh-purple-yam-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwku22ci000nl3cw2ihx5qh5	ord-1794928453173	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwku22cl000pl3cwlli1emgg	ord-1794928453173	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwku22co000rl3cwezw3cs2q	ord-1794928453173	var-fresh-baingan-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwku22cs000tl3cw3fksr0z6	ord-1794928453173	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwku22cv000vl3cwcnjrym26	ord-1794928453173	var-tata-sesame-200	1	0	Tata Sampann	Standard	Tata Sampann
+cmwku2dda0013l3cwdxa3lndd	ord-1794928467495	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwku2ddc0015l3cw5rjfi3ke	ord-1794928467495	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwku2dg8001fl3cwvvrc6srg	ord-1794928467601	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwku2dga001hl3cw7o83qfz4	ord-1794928467601	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwku2do9001ll3cwity1geb9	ord-1794928467889	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwku2ee0001tl3cw80abuodo	ord-1794928468816	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwku2ew4001zl3cw94omryt5	ord-1794928469467	var-fortune-atta-5k	1	260	Fresh Produce	Standard	Pantry Essential
+cmwku2kpk0029l3cw94rfxz3p	ord-1794928477006	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwku2kso002jl3cwp85n6ylq	ord-1794928477119	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwku2ktc002nl3cwtx12abcp	ord-1794928477143	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwku2kty002rl3cwziux0x20	ord-1794928477165	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwku2kws0031l3cwnzqw4abm	ord-1794928477266	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwku2kxs0035l3cwpbu2p07i	ord-1794928477305	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwku2ky60039l3cwl22scw49	ord-1794928477319	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwku2l0e003jl3cwrn7pqkxo	ord-1794928477396	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwku2l1u003rl3cwgsdjlbtw	ord-1794928477451	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwku2l3e003xl3cwnnsd0nh9	ord-1794928477506	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwku2l6j0041l3cwdxwynttf	ord-1794928477616	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwku2lyd0000l3k8fmbwc8at	ord-gate-1794928478626-631	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2lyr0002l3k8ykjmh3wo	ord-gate-1794928478640-962	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2lyz0004l3k8w8wb3hay	ord-gate-1794928478648-347	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2lz70006l3k8bj79lso6	ord-gate-1794928478656-90	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2lzs0008l3k8ogfeblig	ord-gate-1794928478677-108	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2m03000al3k8ynwupcb2	ord-gate-1794928478687-291	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2m0h000cl3k8ssikilya	ord-gate-1794928478701-903	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2m0z000el3k89nd98jcq	ord-gate-1794928478720-196	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2m1h000gl3k8a3bv4wo3	ord-gate-1794928478737-246	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2m2i000il3k8s0eip6au	ord-gate-1794928478774-953	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2m3h000kl3k817g3eii5	ord-gate-1794928478809-739	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2m3t000ml3k8j7fvtdw7	ord-gate-1794928478821-949	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2m4a000ol3k8js8wm9hd	ord-gate-1794928478839-881	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2m5c000ql3k8rdkpfeqw	ord-gate-1794928478876-970	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2m6t000sl3k8roemwtrw	ord-gate-1794928478929-170	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2m87000ul3k8iyrbr9l1	ord-gate-1794928478979-739	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwku2m8z000wl3k8g50r1jpv	ord-gate-1794928479008-306	\N	1	95	Mother Dairy	200g	Mother Dairy Paneer 200g
+cmwkv4gut0005l35ot77fa9io	cmwkv4gut0004l35ods0ph52u	\N	2	66	\N	1L	Milk 1L
+cmwkv4n8x0005l3jc56lv24av	cmwkv4n8w0004l3jc1zyrsens	\N	2	66	\N	1L	Milk 1L
+cmwkv50jt0005l3f4fe7hy18a	cmwkv50jt0004l3f4ldbel1ab	\N	2	66	\N	1L	Milk 1L
+cmwkv8v0m0002l3hst0cdmq0i	cmwkv8v0m0001l3hshvb7ahzt	\N	1	275	\N	500g	Amul Butter
+cmwkv8v5h0005l3hs1ajx0pv4	cmwkv8v5h0004l3hsjjmt40v3	\N	2	66	\N	1L	Milk 1L
+cmwkva8o50002l3e8kqbnx11d	cmwkva8o50001l3e8ln2prqvz	\N	1	275	\N	500g	Amul Butter
+cmwkva8sg0005l3e8z9n1v5pg	cmwkva8sg0004l3e8050kg2bn	\N	2	66	\N	1L	Milk 1L
+cmwkvaxgb0002l3iklj4rsfu1	cmwkvaxgb0001l3ikher0leef	\N	1	275	\N	500g	Amul Butter
+cmwkvaxk00005l3ikl9px1k3h	cmwkvaxk00004l3ik78iujb9y	\N	2	66	\N	1L	Milk 1L
+cmwkvfu19000pl3cg3ayvsvr9	ord-1794930775223	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwkvfu1d000rl3cgfldidnhw	ord-1794930775223	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkvfu1g000tl3cgudkkgmbp	ord-1794930775223	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkvfu1j000vl3cgyikpq22u	ord-1794930775223	var-fresh-coriander-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwkvfu1m000xl3cgc975nbyv	ord-1794930775223	var-fresh-curry-1b	2	0	Farm Fresh	Standard	Farm Fresh
+cmwkvfu1q000zl3cgnxkpoyvj	ord-1794930775223	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkvfu1t0011l3cg50l4wups	ord-1794930775223	var-fresh-surti-papdi-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkvfu1w0013l3cg4agtg5pj	ord-1794930775223	var-fresh-tuver-lilva-250	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkvfu1z0015l3cgzthj6pnk	ord-1794930775223	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkvfu220017l3cg1lxkcm9s	ord-1794930775223	var-fresh-raw-banana-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkvfu250019l3cgstdivigd	ord-1794930775223	var-fresh-purple-yam-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkvfu28001bl3cgf7o54tj8	ord-1794930775223	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkvfu2a001dl3cghs8l35fn	ord-1794930775223	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkvfu2d001fl3cgmtau9awc	ord-1794930775223	var-fresh-baingan-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkvfu2f001hl3cgiufbhuio	ord-1794930775223	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkvfu2i001jl3cgtv4zc8v8	ord-1794930775223	var-tata-sesame-200	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkvfuvo001rl3cg6d2xbkxo	ord-1794930776322	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkvfuvq001tl3cgrtmzkfkh	ord-1794930776322	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkvfuy50023l3cgfi3awnj4	ord-1794930776409	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkvfuy80025l3cglwpnk3zq	ord-1794930776409	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkvfv510029l3cgmve6fb8i	ord-1794930776656	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkvfvhr002hl3cg696gbw4x	ord-1794930777116	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvfw0t002nl3cg5yxdtlds	ord-1794930777796	var-fortune-atta-5k	1	260	Fresh Produce	Standard	Pantry Essential
+cmwkvfwe6002xl3cg24i56m5t	ord-1794930778282	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvfwfz0033l3cg4035otl2	ord-1794930778349	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvfwgf0037l3cg9ypc5lo0	ord-1794930778365	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvfwgv003bl3cggu432tha	ord-1794930778379	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvfwi6003fl3cgfw5f5zpe	ord-1794930778425	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvfwjr003jl3cglqtifs3g	ord-1794930778481	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvfwkc003nl3cgksrrte5i	ord-1794930778504	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvfwlb003rl3cgky0x11cu	ord-1794930778539	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvfwmk003vl3cgmcjn4pc9	ord-1794930778583	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvfwon0041l3cgez25bj76	ord-1794930778656	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvfwtk0045l3cgikgrxbxz	ord-1794930778829	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvfxh80002l33knud0iuv6	cmwkvfxh80001l33kw20m16tl	\N	1	275	\N	500g	Amul Butter
+cmwkvfxku0005l33ka86lt3eu	cmwkvfxku0004l33kbvowvn7k	\N	2	66	\N	1L	Milk 1L
+cmwkvg9r0004ll3cg2fj0ao45	ord-1794930795585	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvg9u2004rl3cg0oigfuo1	ord-1794930795702	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvg9ur004vl3cg55l6445y	ord-1794930795725	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvg9vd004zl3cg29vt8rn3	ord-1794930795749	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvg9wp0053l3cg2g8dh8p1	ord-1794930795797	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvg9y10057l3cg4wpukv9v	ord-1794930795846	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvg9yl005bl3cgdv36lnce	ord-1794930795864	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvg9zh005fl3cgblf98213	ord-1794930795897	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvga0h005jl3cgnzidcstd	ord-1794930795933	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvga26005pl3cg9iy5ak0s	ord-1794930795995	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvga8f005tl3cghqa8bx5c	ord-1794930796217	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkviyq90005l3mou4uw640h	ord-1794930921273	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkviytr000fl3mox7ksxhaf	ord-1794930921403	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkviyug000jl3moyarwipig	ord-1794930921428	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkviyv2000nl3mozuywmm7p	ord-1794930921450	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkviyxh000xl3mojicksfgy	ord-1794930921538	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkviyz40011l3mou3976jrv	ord-1794930921593	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkviyzt0015l3mozdn129xz	ord-1794930921620	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkviz23001fl3moelmo1a8m	ord-1794930921703	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkviz3x001nl3mox84c3064	ord-1794930921770	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkviz5s001tl3monxt0k11v	ord-1794930921836	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvizal001xl3mophcrxydb	ord-1794930922010	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvjsyx0025l3mo6wkkifuv	ord-1794930960470	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvjt1f002fl3mo4w1xgqf1	ord-1794930960561	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvjt1y002jl3mohjcb2o94	ord-1794930960579	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvjt2j002nl3mokqaxub6g	ord-1794930960600	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvjt4o002xl3moz3cnzs82	ord-1794930960677	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvjt5u0031l3mobqsw0fsf	ord-1794930960719	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvjt6g0035l3mo578uvhi5	ord-1794930960740	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvjt88003fl3mot09ewae4	ord-1794930960804	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvjt9w003nl3mooapp2l8w	ord-1794930960865	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvjtbf003tl3moo1zn28ck	ord-1794930960921	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvjti1003xl3mo46k08dgr	ord-1794930961152	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvk65a0045l3mo3lycg171	ord-1794930977547	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkvk6pp004bl3mov0brqvhn	ord-1794930978283	var-fortune-atta-5k	1	260	Fresh Produce	Standard	Pantry Essential
+cmwkvkcss004ll3moffx1i3us	ord-1794930986177	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkvkcsu004nl3moqu87v71j	ord-1794930986177	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkvkcvu004xl3moye2t9d7x	ord-1794930986286	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkvkcvy004zl3moivi00uh6	ord-1794930986286	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkvkd4r0053l3mozdp7kwxu	ord-1794930986603	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkwobm20059l3momv4k6k0o	ord-1794932850873	var-amul-paneer-200	2	0	Amul	Standard	Amul
+cmwkwobmb005bl3monsu3wq1q	ord-1794932850873	var-amul-butter-100	1	0	Amul	Standard	Amul
+cmwkwobmi005dl3mo5zq1vmqq	ord-1794932850873	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwkwobmp005fl3motavgr5mp	ord-1794932850873	var-id-dosa-batter-1kg	1	0	iD Fresh	Standard	iD Fresh
+cmwkwobmv005hl3mo6zwod4u6	ord-1794932850873	var-tata-rava-500	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkwobn3005jl3mofi1ec1cw	ord-1794932850873	var-aashirvaad-atta-5k	1	0	Aashirvaad	Standard	Aashirvaad
+cmwkwobna005ll3modxwg6una	ord-1794932850873	var-tata-chana-500	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkwobnh005nl3moy8jq7qwi	ord-1794932850873	var-tata-rajma-500	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkwobno005pl3momou8xdf2	ord-1794932850873	var-tata-toor-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkwobnv005rl3mone0fid1f	ord-1794932850873	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkwobo3005tl3motl3u7919	ord-1794932850873	var-fortune-oil-1l	1	0	Fortune	Standard	Fortune
+cmwkwobo8005vl3mobvqxykfp	ord-1794932850873	var-amul-ghee-500	1	0	Amul	Standard	Amul
+cmwkwobof005xl3moneuplaze	ord-1794932850873	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobom005zl3moew2s3brm	ord-1794932850873	var-fresh-coriander-1b	2	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobor0061l3mosgtyq4ah	ord-1794932850873	var-fresh-curry-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobox0063l3mo8wbtvt7g	ord-1794932850873	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobp30065l3modp2t2rtq	ord-1794932850873	var-fresh-bhindi-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobp70067l3mos2vdlnjz	ord-1794932850873	var-fresh-palak-250	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobpe0069l3mojjuf1osf	ord-1794932850873	var-fresh-surti-papdi-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobpi006bl3moj6olcnsi	ord-1794932850873	var-fresh-tuver-lilva-250	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobpn006dl3mosxs0ag8s	ord-1794932850873	var-fresh-garlic-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobpu006fl3morlcyfmjd	ord-1794932850873	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobq1006hl3mokyspih2h	ord-1794932850873	var-fresh-raw-banana-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobq7006jl3monrec592r	ord-1794932850873	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobqe006ll3mo80bnyqrp	ord-1794932850873	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobqi006nl3mogbcxe10i	ord-1794932850873	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkwobqp006pl3modpid17y7	ord-1794932850873	var-everest-chole-100	1	0	Everest	Standard	Everest
+cmwkwobqs006rl3moe6xxbg0a	ord-1794932850873	var-everest-garam-100	1	0	Everest	Standard	Everest
+cmwkwobqx006tl3moai6214sy	ord-1794932850873	var-everest-sambar-100	1	0	Everest	Standard	Everest
+cmwkwobr1006vl3mo036ag1zn	ord-1794932850873	var-tata-turmeric-200	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkwobr8006xl3mopoxwfzvh	ord-1794932850873	var-tata-sesame-200	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkwxk8i00aal3moa3piesjs	ord-1794933281956	var-mother-paneer-200	2	120	Fresh Produce	Standard	Mother Dairy Classic Paneer, 200g
+cmwkwzbw900c2l3mot67vugm2	ord-1794933364452	var-mother-paneer-200	2	120	Fresh Produce	Standard	Mother Dairy Classic Paneer, 200g
+cmwkx2ikl00dil3mo4e6azu35	ord-1794933513074	var-mother-paneer-200	2	120	Fresh Produce	Standard	Mother Dairy Classic Paneer, 200g
+cmwkx3ilu00f0l3mo6uoqohgw	ord-1794933559775	var-mother-paneer-200	2	120	Fresh Produce	Standard	Mother Dairy Classic Paneer, 200g
+cmwkx4p2b00gil3monkozb3lj	ord-1794933614796	var-mother-paneer-200	2	120	Fresh Produce	Standard	Mother Dairy Classic Paneer, 200g
+cmwkx5ky500gol3moxlwj6wvg	ord-1794933656118	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwkx5kya00gql3mo5hm6opfe	ord-1794933656118	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkx5kyf00gsl3mo19hyqjco	ord-1794933656118	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkx5kyk00gul3mo34hft9kf	ord-1794933656118	var-fresh-coriander-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwkx5kyq00gwl3moci4e30ob	ord-1794933656118	var-fresh-curry-1b	2	0	Farm Fresh	Standard	Farm Fresh
+cmwkx5kyu00gyl3mog3x2jg3k	ord-1794933656118	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkx5kyz00h0l3mob1d8vc39	ord-1794933656118	var-fresh-surti-papdi-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkx5kz400h2l3moj01zoasb	ord-1794933656118	var-fresh-tuver-lilva-250	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkx5kz900h4l3mocb2h192h	ord-1794933656118	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkx5kzd00h6l3modbfrjt1n	ord-1794933656118	var-fresh-raw-banana-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkx5kzi00h8l3mo4i1tpeu9	ord-1794933656118	var-fresh-purple-yam-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkx5kzn00hal3mo753jyz3i	ord-1794933656118	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkx5kzr00hcl3mobzsbrwn8	ord-1794933656118	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkx5kzv00hel3mo8890l4lx	ord-1794933656118	var-fresh-baingan-500	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkx5l0000hgl3moyssgrpt9	ord-1794933656118	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkx5l0500hil3moasgrj08m	ord-1794933656118	var-tata-sesame-200	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkx5l0900hkl3mokyhxlykg	ord-1794933656118	var-mother-paneer-200	2	0	Mother Dairy	Standard	Mother Dairy
+cmwkx5lwg00hsl3mofop6zfsx	ord-1794933657354	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkx5lwk00hul3movcfggyr5	ord-1794933657354	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkx5m0i00i4l3motalckh7a	ord-1794933657499	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkx5m0o00i6l3moumge8ksj	ord-1794933657499	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkx5mbq00ial3moeja4ouki	ord-1794933657902	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkx5my700iil3mofcv26l2v	ord-1794933658713	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkx5njl00iol3moqif49t9v	ord-1794933659482	var-fortune-atta-5k	1	260	Fresh Produce	Standard	Pantry Essential
+cmwkx5o3a00iyl3mouf36yb8d	ord-1794933660190	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkx5o7t00j8l3mojdbes1le	ord-1794933660354	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkx5o9300jcl3molhgjuet5	ord-1794933660400	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkx5oa000jgl3modiqsqom7	ord-1794933660433	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkx5odi00jql3mozbf9zuik	ord-1794933660560	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkx5of900jul3mo1711nexy	ord-1794933660623	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkx5og500jyl3mo7fb55vnd	ord-1794933660655	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkx5oiv00k8l3mogs8y0lw1	ord-1794933660753	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkx5ol600kgl3mohz60u2yz	ord-1794933660836	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkx5onq00kml3mokteuc0dr	ord-1794933660929	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkx5otw00kql3mof9a6he8r	ord-1794933661145	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkx5pkj0002l3p8llr6frf0	cmwkx5pkj0001l3p8iwd2n01e	\N	1	275	\N	500g	Amul Butter
+cmwkx5pp80005l3p8x6b9t00x	cmwkx5pp80004l3p8d60f8qx9	\N	2	66	\N	1L	Milk 1L
+cmwkx6gv500mel3moqed4qab8	ord-1794933697479	var-mother-paneer-200	2	120	Fresh Produce	Standard	Mother Dairy Classic Paneer, 200g
+cmwkxhsjm0001l3ocl830a19d	ord-1794934225841	var-amul-paneer-200	3	0	Amul	Standard	Amul
+cmwkxhsjt0003l3ocvdegnm2p	ord-1794934225841	var-amul-butter-100	1	0	Amul	Standard	Amul
+cmwkxhsjy0005l3ocxwjw58vd	ord-1794934225841	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwkxhsk30007l3oc9sg6nfyu	ord-1794934225841	var-id-dosa-batter-1kg	1	0	iD Fresh	Standard	iD Fresh
+cmwkxhsk80009l3ocqo3bigng	ord-1794934225841	var-tata-rajma-500	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkxhskd000bl3oc7qz8o56j	ord-1794934225841	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwkxhskj000dl3ocbblgygyl	ord-1794934225841	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkxhskn000fl3oc5j858o72	ord-1794934225841	var-fresh-coriander-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwkxhskt000hl3ocxd2hntrr	ord-1794934225841	var-fresh-curry-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwkxhsky000jl3oc242cemr7	ord-1794934225841	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkxhsl2000ll3oczjbkur4i	ord-1794934225841	var-fresh-palak-250	2	0	Farm Fresh	Standard	Farm Fresh
+cmwkxhsl7000nl3oclyztwg99	ord-1794934225841	var-fresh-garlic-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkxhslc000pl3oc9k6xmy2d	ord-1794934225841	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkxhslh000rl3oc6vsrkewu	ord-1794934225841	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkxhsll000tl3oczs19q5jy	ord-1794934225841	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkxhslq000vl3oct2ddzwqz	ord-1794934225841	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwkxhslv000xl3ocr5igk7w8	ord-1794934225841	var-everest-garam-100	1	0	Everest	Standard	Everest
+cmwkxhti60015l3ocoa4kcomy	ord-1794934227091	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkxhtia0017l3occ9oug2p7	ord-1794934227091	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkxhtmm001hl3oclxemsiu7	ord-1794934227252	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkxhtmr001jl3ocgibqmdvg	ord-1794934227252	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwkxhty3001nl3ocerakg5kx	ord-1794934227662	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwkxhuil001vl3octz0pjr1p	ord-1794934228403	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkxhv4j0021l3oc8vhemcua	ord-1794934229189	var-fortune-atta-5k	1	260	Fresh Produce	Standard	Pantry Essential
+cmwkxhvnh002bl3octz2oaosk	ord-1794934229872	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkxhvrs002ll3oc1tonrkt9	ord-1794934230030	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkxhvsm002pl3ocd9xqblpd	ord-1794934230059	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkxhvtf002tl3ocjj30wniv	ord-1794934230089	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkxhvwr0033l3ocfht7kehh	ord-1794934230209	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkxhvyk0037l3occboce4g0	ord-1794934230274	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkxhvzc003bl3ocrne7z7zr	ord-1794934230302	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkxhw1y003ll3ocke9lmw67	ord-1794934230396	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkxhw49003tl3oc3kldp8e9	ord-1794934230478	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkxhw71003zl3occyu8wmpy	ord-1794934230578	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkxhwf10043l3oc5t7yq9tz	ord-1794934230861	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwkxhx6n0002l3fo3d8ncif4	cmwkxhx6n0001l3fody7eb22x	\N	1	275	\N	500g	Amul Butter
+cmwkxhxba0005l3fo1x4nmfg4	cmwkxhxba0004l3fo7crf660a	\N	2	66	\N	1L	Milk 1L
+cmwkxiltp005rl3ocmzrgcc49	ord-1794934263793	var-mother-paneer-200	2	120	Fresh Produce	Standard	Mother Dairy Classic Paneer, 200g
+cmwlrx3qm0001l3wotd6flez6	ord-1794985328628	var-amul-paneer-200	3	0	Amul	Standard	Amul
+cmwlrx3qu0003l3wojiirulxq	ord-1794985328628	var-amul-butter-100	1	0	Amul	Standard	Amul
+cmwlrx3qz0005l3woxjhgide9	ord-1794985328628	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwlrx3r40007l3wop9o1vkjp	ord-1794985328628	var-id-dosa-batter-1kg	1	0	iD Fresh	Standard	iD Fresh
+cmwlrx3r80009l3wofcbt6cg7	ord-1794985328628	var-tata-rajma-500	1	0	Tata Sampann	Standard	Tata Sampann
+cmwlrx3rc000bl3wonhqk1jmg	ord-1794985328628	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwlrx3rh000dl3wonrvng05l	ord-1794985328628	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlrx3rl000fl3wofvh2hz7e	ord-1794985328628	var-fresh-coriander-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwlrx3rq000hl3woek4y4gd5	ord-1794985328628	var-fresh-curry-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwlrx3ru000jl3wo8vh4ywqg	ord-1794985328628	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlrx3rz000ll3wo97o1epx6	ord-1794985328628	var-fresh-palak-250	2	0	Farm Fresh	Standard	Farm Fresh
+cmwlrx3s3000nl3wothytkhp4	ord-1794985328628	var-fresh-garlic-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlrx3s7000pl3woum4gsioc	ord-1794985328628	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlrx3sb000rl3woqcv805ou	ord-1794985328628	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlrx3sf000tl3wo0vuhktf1	ord-1794985328628	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlrx3sk000vl3wosemwvhv2	ord-1794985328628	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlrx3so000xl3wofpjnm8e8	ord-1794985328628	var-everest-garam-100	1	0	Everest	Standard	Everest
+cmwlrx4qq0015l3wo9nn989jt	ord-1794985329974	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlrx4qv0017l3wod7brojbe	ord-1794985329974	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwlrx4uz001hl3wov1c7qrvd	ord-1794985330127	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlrx4v4001jl3wosdm1i4tm	ord-1794985330127	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwlrx55q001nl3wo3dpf03pr	ord-1794985330514	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlrx5qr001vl3wo69cikvt3	ord-1794985331270	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwls9m490005l37s2gdqke3c	ord-1794985912347	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwls9mr6000bl37sy2vkatme	ord-1794985913178	var-fortune-atta-5k	1	260	Fresh Produce	Standard	Pantry Essential
+cmwlsb0c1000ll37ssgn0wjd7	ord-1794985977419	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsb0jt000vl37sbevhrudu	ord-1794985977717	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsb0lo000zl37ssvrydoyb	ord-1794985977782	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsb0qm0017l37s45tckc0x	ord-1794985977951	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsb0uw001bl37s1kich7xl	ord-1794985978114	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsb0x1001fl37s3e8u8ai9	ord-1794985978184	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsb11m001pl37s5w7t6bwj	ord-1794985978361	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsb15m001xl37s1eh74n8a	ord-1794985978500	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsb19z0023l37sjmsrvnc7	ord-1794985978659	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsb1m30027l37s13r4ud4y	ord-1794985979093	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsbwg1002bl37sgvwl8z66	ord-1794986019058	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsc792002jl37surmicoc9	ord-1794986033061	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsc7f2002tl37sv1dzem88	ord-1794986033280	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsc7fz002xl37sdbpi3b56	ord-1794986033315	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsc7h20031l37sxw18ggdl	ord-1794986033351	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsc7l8003bl37sl13rl0pk	ord-1794986033500	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsc7ng003fl37s57356ivw	ord-1794986033583	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsc7oc003jl37sh5kw3l4k	ord-1794986033616	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsc7s3003tl37s1dxf7fy1	ord-1794986033740	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsc7wc0041l37s6b2ogqr7	ord-1794986033903	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsc7zz0047l37s3yqavfy1	ord-1794986034032	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlsc8bz004bl37sg9fhg375	ord-1794986034460	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlscgiy0002l3koyqiqbdyw	cmwlscgiy0001l3kobdfj4m2s	\N	1	275	\N	500g	Amul Butter
+cmwlscgol0005l3ko1cssidvo	cmwlscgol0004l3kowstuqgqv	\N	2	66	\N	1L	Milk 1L
+cmwlscw76005zl37sl6ccqard	ord-1794986065397	var-mother-paneer-200	2	120	Fresh Produce	Standard	Mother Dairy Classic Paneer, 200g
+cmwlspu630069l37s90hi1dhy	ord-1794986669287	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlspurk006fl37sdctg1egk	ord-1794986670063	var-fortune-atta-5k	1	260	Fresh Produce	Standard	Pantry Essential
+cmwlsqa8c007xl37s0wz6norz	ord-1794986690109	var-mother-paneer-200	2	120	Fresh Produce	Standard	Mother Dairy Classic Paneer, 200g
+cmwlst1bu0083l37s92mwry57	ord-1794986818541	var-amul-paneer-200	3	0	Amul	Standard	Amul
+cmwlst1c00085l37swc867z63	ord-1794986818541	var-amul-butter-100	1	0	Amul	Standard	Amul
+cmwlst1c30087l37sj3ivf3ar	ord-1794986818541	var-daawat-rice-5k	1	0	Daawat	Standard	Daawat
+cmwlst1c70089l37sk62jniz6	ord-1794986818541	var-id-dosa-batter-1kg	1	0	iD Fresh	Standard	iD Fresh
+cmwlst1cd008bl37scqgwb14n	ord-1794986818541	var-tata-rajma-500	1	0	Tata Sampann	Standard	Tata Sampann
+cmwlst1ci008dl37sjwsbamp5	ord-1794986818541	var-tata-moong-1k	1	0	Tata Sampann	Standard	Tata Sampann
+cmwlst1cl008fl37ssuvkxgh7	ord-1794986818541	var-fresh-potato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlst1cu008hl37saq54kqey	ord-1794986818541	var-fresh-coriander-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwlst1cz008jl37sbw70xi69	ord-1794986818541	var-fresh-curry-1b	3	0	Farm Fresh	Standard	Farm Fresh
+cmwlst1d4008ll37sde78k62m	ord-1794986818541	var-fresh-ginger-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlst1da008nl37savxwkfgx	ord-1794986818541	var-fresh-palak-250	2	0	Farm Fresh	Standard	Farm Fresh
+cmwlst1df008pl37sy2z8pex1	ord-1794986818541	var-fresh-garlic-200	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlst1dk008rl37sq6nzm4ei	ord-1794986818541	var-fresh-lemon-4pc	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlst1dq008tl37s5yc5jny6	ord-1794986818541	var-fresh-onion-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlst1dv008vl37s582hrunj	ord-1794986818541	var-fresh-tomato-1k	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlst1e0008xl37sf1paunhk	ord-1794986818541	var-fresh-chilli-100	1	0	Farm Fresh	Standard	Farm Fresh
+cmwlst1e7008zl37sytn87w5u	ord-1794986818541	var-everest-garam-100	1	0	Everest	Standard	Everest
+cmwlst1ec0091l37s5fh2a1cf	ord-1794986818541	var-vim-gel-750ml	1	0	Vim	Standard	Vim
+cmwlst1eh0093l37s0pzubmw1	ord-1794986818541	var-tata-gold-500g	2	0	Tata Tea	Standard	Tata Tea
+cmwlucuoa00bdl37s3x1bof8g	ord-1794989422650	var-jhn-soap-75g	2	59	Fresh Produce	Standard	Pantry Essential
+cmwlucxqh00c0l37swe4z555u	ord-1794989426619	var-jhn-soap-75g	1	59	Fresh Produce	Standard	Pantry Essential
+cmwlud2r300cjl37shy7uoipc	ord-1794989433123	var-jhn-soap-75g	1	53	Fresh Produce	Standard	Pantry Essential
+cmwlutjcj000gl3782ammdppi	ord-1794990201116	var-jhn-soap-75g	2	59	Fresh Produce	Standard	Pantry Essential
+cmwlutnqp0013l3781gpfmic4	ord-1794990206805	var-jhn-soap-75g	1	59	Fresh Produce	Standard	Pantry Essential
+cmwlutr7o001ml378t7eqhsev	ord-1794990211307	var-jhn-soap-75g	1	53	Fresh Produce	Standard	Pantry Essential
+cmwluvstf0025l3784zkvqt1v	ord-1794990306702	var-jhn-soap-75g	2	59	Fresh Produce	Standard	Pantry Essential
+cmwluvvz9002sl37825isjn5m	ord-1794990310797	var-jhn-soap-75g	1	59	Fresh Produce	Standard	Pantry Essential
+cmwluw0zo003bl378rs0mf8ye	ord-1794990317294	var-jhn-soap-75g	1	53	Fresh Produce	Standard	Pantry Essential
+cmwluyq2d003jl378r8458bxs	ord-1794990443113	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwluyq2h003ll3783l38jxn8	ord-1794990443113	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwluyq73003vl378l5anecf1	ord-1794990443284	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwluyq78003xl378i8hhs650	ord-1794990443284	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwluyqjs0041l378ts8p34ai	ord-1794990443741	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwluyx860049l378bkwr1g0m	ord-1794990452394	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwluyxt3004fl378jqny6n72	ord-1794990453148	var-fortune-atta-5k	1	260	Fresh Produce	Standard	Pantry Essential
+cmwluz4fd004pl378y9zql532	ord-1794990461724	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwluz4ka004zl378crjy29d4	ord-1794990461903	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwluz4l80053l3788d6tl561	ord-1794990461936	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwluz4ma0057l378as87ofxi	ord-1794990461973	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwluz4pu005hl37889uy3lq1	ord-1794990462103	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwluz4ru005ll378k3g56nwp	ord-1794990462173	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwluz4ss005pl3780k1yqkpu	ord-1794990462209	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwluz4vq005zl3784kxa6jlq	ord-1794990462314	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwluz4yf0067l378dszjb5ju	ord-1794990462412	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwluz518006dl37880flyvgq	ord-1794990462513	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwluz57s006hl378qd8bnb0e	ord-1794990462748	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwluzxu90002l3uckiipwzju	cmwluzxu90001l3uco1wng70w	\N	1	275	\N	500g	Amul Butter
+cmwluzy1e0005l3ucozniuw7k	cmwluzy1e0004l3ucnu3cqgv1	\N	2	66	\N	1L	Milk 1L
+cmwlv0gkw0085l3785mv6xebt	ord-1794990524132	var-mother-paneer-200	2	120	Fresh Produce	Standard	Mother Dairy Classic Paneer, 200g
+cmwlyyex20003l3soo062m4yr	ord-1794997147103	var-mother-paneer-200	1	90	Fresh Produce	Standard	Pantry Essential
+cmwlz6kzh0001l33cceuij5ju	ord-1794997528174	var-mother-paneer-200	1	90	Fresh Produce	Standard	Pantry Essential
+cmwlz81x0000fl33ccxau4wr6	ord-1794997596836	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlz81x6000hl33c5zr6eorv	ord-1794997596836	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwlz9nch0005l3j448zbb380	ord-1794997671231	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlz9nd80007l3j4lahnnsnc	ord-1794997671231	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwlz9nhp000hl3j45ef49img	ord-1794997671462	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlz9nhs000jl3j4rxlyxz7d	ord-1794997671462	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwlz9nqo000nl3j402uac6lh	ord-1794997671786	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlzah85000vl3j46ugf5i1f	ord-1794997709990	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlzah89000xl3j4qo4excgi	ord-1794997709990	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwlzahdm0017l3j412e1nu99	ord-1794997710191	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlzahdq0019l3j49ys71qy5	ord-1794997710191	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwlzahpg001dl3j4p6fntflq	ord-1794997710618	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlzcu37001ll3j4li57rzha	ord-1794997819971	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlzcu3c001nl3j4gr07ug5y	ord-1794997819971	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwlzcu8k001xl3j4a11nvkh8	ord-1794997820160	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlzcu8o001zl3j4hz0dif2e	ord-1794997820160	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwlzcujf0023l3j44xhlw9to	ord-1794997820549	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlzdjv3002bl3j4kzunt1dr	ord-1794997853380	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlzdjv7002dl3j4dqf95ig9	ord-1794997853380	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwlzdjzy002nl3j4o0ixs6o4	ord-1794997853552	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlzdk0a002pl3j4wij539gd	ord-1794997853552	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwlzdkaa002tl3j4qd5yp2bi	ord-1794997853927	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwlzeffh0031l3j4enyurndq	ord-1794997894288	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzeg3j0037l3j49ohyi9rp	ord-1794997895140	var-fortune-atta-5k	1	260	Fresh Produce	Standard	Pantry Essential
+cmwlzg44y003hl3j44z131ukm	ord-1794997972967	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzg49v003rl3j43a7ryk9s	ord-1794997973146	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzg4ap003vl3j4qilf9qgz	ord-1794997973175	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzg4bk003zl3j4qrn83dd7	ord-1794997973206	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzg4fa0049l3j48mm38y63	ord-1794997973341	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzg4h2004dl3j4i9j02mhw	ord-1794997973405	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzg4hu004hl3j4x2ozk783	ord-1794997973435	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzg4j9004nl3j4f5duh2l2	ord-1794997973486	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzg4lr004vl3j4aa6kavjs	ord-1794997973571	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzg4od0051l3j4o8lwz5xb	ord-1794997973669	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzg4u70055l3j4jfic1be2	ord-1794997973876	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzh7ox005dl3j4yh5wpix0	ord-1794998024229	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzh7uo005nl3j4sgk4ym4u	ord-1794998024437	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzh7vl005rl3j4pov7tq3e	ord-1794998024469	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzh7xf005vl3j4klmx9yy0	ord-1794998024508	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzh81o0065l3j4cw0ahse8	ord-1794998024682	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzh83d0069l3j4zo1xznze	ord-1794998024753	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzh842006dl3j4jo936q00	ord-1794998024779	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzh86b006nl3j4n1vetsw8	ord-1794998024860	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzh881006vl3j45d9i9aly	ord-1794998024922	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzh8a40071l3j4crrsg5om	ord-1794998024997	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzh8h80075l3j4j859w1q3	ord-1794998025251	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwlzjmps0002l3scma8zhs34	cmwlzjmps0001l3sc2uty2fgi	\N	1	275	\N	500g	Amul Butter
+cmwlzjmwx0005l3sca3xqrzf1	cmwlzjmwx0004l3scvmbw6x7y	\N	2	66	\N	1L	Milk 1L
+cmwlzk1or008tl3j4qxk32r62	ord-1794998156415	var-mother-paneer-200	2	120	Fresh Produce	Standard	Mother Dairy Classic Paneer, 200g
+cmwlzlbkb009el3j4jkj4lrxz	ord-1794998215869	var-jhn-soap-75g	2	59	Fresh Produce	Standard	Pantry Essential
+cmwlzlebd00a1l3j4oq8nbgmz	ord-1794998219440	var-jhn-soap-75g	1	59	Fresh Produce	Standard	Pantry Essential
+cmwlzli8w00akl3j4cehibogx	ord-1794998224534	var-jhn-soap-75g	1	53	Fresh Produce	Standard	Pantry Essential
+cmwlzlprx00aol3j4b3i7i3a0	ord-1794998234295	var-mother-paneer-200	1	90	Fresh Produce	Standard	Pantry Essential
+cmwm0lcc70001l3lkr1089jr6	ord-1794999896490	var-mother-paneer-200	1	90	Fresh Produce	Standard	Pantry Essential
+cmwm2dfb70009l3oo81pazpkd	ord-1795002886329	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwm2dfbc000bl3oo9zowl7eq	ord-1795002886329	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwm2dff3000ll3oobg1rsa83	ord-1795002886471	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwm2dff6000nl3oon3o0fj3j	ord-1795002886471	var-aashirvaad-atta-5k	1	325	Aashirvaad	5kg	Aashirvaad Shudh Chakki Atta, 5 kg
+cmwm2dfoe000rl3oogkyrlq5g	ord-1795002886807	var-mother-paneer-200	2	95	Mother Dairy	200g	Mother Dairy Classic Paneer
+cmwm2dlx6000zl3ooegvsqhmk	ord-1795002894901	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwm2dmfw0015l3oo1wdjb11c	ord-1795002895571	var-fortune-atta-5k	1	260	Fresh Produce	Standard	Pantry Essential
+cmwm2dt3t001fl3oolntbk9h1	ord-1795002904211	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwm2dt7a001pl3oo75d0pzsz	ord-1795002904334	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwm2dt8j001tl3oocnjikhi4	ord-1795002904368	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwm2dt9m001xl3ooo4wqjbvh	ord-1795002904416	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwm2dtcn0027l3oow3jdixhd	ord-1795002904523	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwm2dte8002bl3ooijhd1n6n	ord-1795002904583	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwm2dtex002fl3ooqqoyuzh5	ord-1795002904610	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwm2dtgo002pl3ooplt73vvo	ord-1795002904675	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwm2dti5002xl3oo69rjy4ih	ord-1795002904728	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwm2dtjs0033l3ooyoc6297s	ord-1795002904785	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwm2dtoa0037l3oo9dm4ycck	ord-1795002904943	var-aashirvaad-atta-5k	1	245	Fresh Produce	Standard	Pantry Essential
+cmwm2e01u0002l34wbmiicguz	cmwm2e01u0001l34wbz3lyqae	\N	1	275	\N	500g	Amul Butter
+cmwm2e0680005l34wvcsnacoi	cmwm2e0680004l34wh6tqqehk	\N	2	66	\N	1L	Milk 1L
+cmwm2gaxo0002l3244e343s1m	cmwm2gaxo0001l324gsm2kxls	\N	1	275	\N	500g	Amul Butter
+cmwm2gb1l0005l3245j1oidd9	cmwm2gb1l0004l324a09ik95h	\N	2	66	\N	1L	Milk 1L
+cmwm2gt5u0053l3oo7wok4yio	ord-1795003044245	var-mother-paneer-200	2	120	Fresh Produce	Standard	Mother Dairy Classic Paneer, 200g
+cmwm2hjm5005ol3oow2h09hr9	ord-1795003078531	var-jhn-soap-75g	2	59	Fresh Produce	Standard	Pantry Essential
+cmwm2hnhe006bl3oouckdoiss	ord-1795003083543	var-jhn-soap-75g	1	59	Fresh Produce	Standard	Pantry Essential
+cmwm2htiy006ul3ooqbbtxgz7	ord-1795003091382	var-jhn-soap-75g	1	53	Fresh Produce	Standard	Pantry Essential
+cmwm2iais006yl3oooylwci5q	ord-1795003113407	var-mother-paneer-200	1	90	Fresh Produce	Standard	Pantry Essential
+cmwm2jcjq0074l3oomn0qjw4x	ord-1795003162681	var-mother-paneer-200	1	90	Fresh Produce	Standard	Pantry Essential
+cmwm2pv1o0001l3y0ost54wbc	ord-1795003466593	var-mother-paneer-200	1	0	Mother Dairy	200 g	Mother Dairy Classic Paneer, 200g
+cmwm2rez80005l3y04fw842xa	ord-1795003539079	var-mother-paneer-200	1	0	Mother Dairy	200 g	Mother Dairy Classic Paneer, 200g
+cmwm2spni0009l3y0d2jubdlb	ord-1795003599575	var-mother-paneer-200	1	0	Mother Dairy	200 g	Mother Dairy Classic Paneer, 200g
+cmwm2uh8u000dl3y0goqdes14	ord-1795003681990	var-mother-paneer-200	1	0	Mother Dairy	200 g	Mother Dairy Classic Paneer, 200g
+\.
+
+
+--
+-- Data for Name: OrderStatusHistory; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public."OrderStatusHistory" (id, "orderId", "fromStatus", "toStatus", reason, "changedBy", "createdAt") FROM stdin;
+cmwknlxd9000bl3doiknm59mc	ord-1794917622550	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:13:42.574
+cmwknlxfj000hl3doi69nnkev	ord-1794917622641	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:13:42.655
+cmwknlxok000ll3do39m17kqi	ord-1794917622969	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 12:13:42.98
+cmwknqnkr0019l3doe3gv83po	ord-1794917843143	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:17:23.164
+cmwknqnly001bl3do6hxn9vpv	ord-1794917843143	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-17 12:17:23.207
+cmwknqnmr001dl3dompee81jl	ord-1794917843143	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-17 12:17:23.235
+cmwknqnnh001fl3domu462cju	ord-1794917843143	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-17 12:17:23.261
+cmwknqnoz001ll3doftwjy4bs	ord-1794917843301	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:17:23.316
+cmwknqo2y001pl3dop5613gj9	ord-1794917843807	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 12:17:23.819
+cmwkntfnl0009l37gvda649qt	ord-1794917972838	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:19:32.866
+cmwkntfoo000bl37guv3lkn9v	ord-1794917972838	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-17 12:19:32.905
+cmwkntfpi000dl37gvfsm164v	ord-1794917972838	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-17 12:19:32.934
+cmwkntfq7000fl37gtu7jl4k3	ord-1794917972838	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-17 12:19:32.959
+cmwkntfs2000ll37gsvsq5fid	ord-1794917973005	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:19:33.026
+cmwkntg2k000pl37gqsl5vbp3	ord-1794917973387	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 12:19:33.404
+cmwkntrj7001pl37gcivf7ppj	ord-1794917988158	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:19:48.26
+cmwknu7v0002pl37goo428y71	ord-1794918009315	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:20:09.421
+cmwkoeclp002tl37gkrpj6dj4	ord-1794918948657	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:35:48.685
+cmwkoymh70007l3o0pf6yvtfe	ord-1794919894545	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:51:34.604
+cmwkoymj2000bl3o00hr71694	ord-1794919894648	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:51:34.67
+cmwkoymo5000dl3o0cnefrtvq	ord-1794919894648	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-17 12:51:34.853
+cmwkp07470007l3o06mpz47oy	ord-1794919967980	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:52:48.007
+cmwkp079p0009l3o0aoj4h8dz	ord-1794919967980	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-17 12:52:48.206
+cmwkp0d93000jl3o0bxuaiuvb	ord-1794919975935	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:52:55.959
+cmwkp0da4000ll3o04ndglc93	ord-1794919975935	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-17 12:52:55.996
+cmwkp0daz000nl3o0zdggel5w	ord-1794919975935	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-17 12:52:56.028
+cmwkp0dbp000pl3o0qakdn0yc	ord-1794919975935	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-17 12:52:56.053
+cmwkp0ddu000vl3o0cxcobhtp	ord-1794919976109	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:52:56.13
+cmwkp28uz0015l3o0q2nk9thr	ord-1794920063541	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:54:23.579
+cmwkp28w40017l3o032zqtshj	ord-1794920063541	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-17 12:54:23.621
+cmwkp28wz0019l3o0xtnqqkxw	ord-1794920063541	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-17 12:54:23.651
+cmwkp28xr001bl3o0g3keizav	ord-1794920063541	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-17 12:54:23.679
+cmwkp28zw001hl3o01cd10r4y	ord-1794920063723	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:54:23.757
+cmwkp29aw001ll3o051xqniii	ord-1794920064125	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 12:54:24.152
+cmwkp2f8t002ll3o0wy3bke0s	ord-1794920071749	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:54:31.853
+cmwkp2lwz003ll3o03sbxfuju	ord-1794920080388	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 12:54:40.5
+cmwkq3pu20009l3v0xfpj063b	ord-1794921811821	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:23:31.85
+cmwkq3pvn000bl3v021h2a2qp	ord-1794921811821	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-17 13:23:31.907
+cmwkq3pwj000dl3v0f17824mu	ord-1794921811821	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker@internal.rasoiiq.in	2026-11-17 13:23:31.94
+cmwkq3px1000fl3v0m0s4my4a	ord-1794921811821	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker@internal.rasoiiq.in	2026-11-17 13:23:31.957
+cmwkq3py9000jl3v0u25ays0h	ord-1794921811982	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:23:32.002
+cmwkq3pzc000nl3v01yuzoqlu	ord-1794921812016	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:23:32.04
+cmwkq3q0b000rl3v02p15n9pd	ord-1794921812052	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 13:23:32.075
+cmwkq3q0q000tl3v0b50lqaqm	ord-1794921812016	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker@internal.rasoiiq.in	2026-11-17 13:23:32.09
+cmwkq3q1g000vl3v0f7mkyk0n	ord-1794921811982	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-17 13:23:32.116
+cmwkq3q2i000xl3v0gxjphia1	ord-1794921812016	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker@internal.rasoiiq.in	2026-11-17 13:23:32.155
+cmwkq3q4j0011l3v0rfsmkeo5	ord-1794921812206	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:23:32.227
+cmwkq3q6d0015l3v0fpix294d	ord-1794921812271	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:23:32.294
+cmwkq3q740019l3v0vqnlf94b	ord-1794921812302	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:23:32.321
+cmwkq3q7i001bl3v03kgl5qk1	ord-1794921812302	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker@internal.rasoiiq.in	2026-11-17 13:23:32.335
+cmwkq3q8c001dl3v0nk66oajt	ord-1794921812271	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-17 13:23:32.364
+cmwkq3q9e001fl3v0jkzrleue	ord-1794921812302	HUB_PACKING	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-17 13:23:32.403
+cmwkq3qba001jl3v0bjo8u58z	ord-1794921812434	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:23:32.47
+cmwkq3qc7001ll3v0i72kn69v	ord-1794921812206	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker@internal.rasoiiq.in	2026-11-17 13:23:32.503
+cmwkq3qct001nl3v0s1yze99g	ord-1794921812206	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker@internal.rasoiiq.in	2026-11-17 13:23:32.525
+cmwkq3qea001rl3v0sauhp5b0	ord-1794921812554	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:23:32.578
+cmwkq3qf2001tl3v0e8vcd0sy	ord-1794921812554	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-17 13:23:32.606
+cmwkq3qha001xl3v0bfdi0qie	ord-1794921812662	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:23:32.686
+cmwkq3qpq0021l3v0eprmns8i	ord-1794921812947	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:23:32.99
+cmwkq5r5i0007l3zwa2m24vdu	ord-1794921906849	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:06.871
+cmwkq5r780009l3zwapy4u47r	ord-1794921906849	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-17 13:25:06.932
+cmwkq5r8c000bl3zw08p1m254	ord-1794921906849	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-17 13:25:06.972
+cmwkq5r93000dl3zwcs27dxr0	ord-1794921906849	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-17 13:25:06.999
+cmwkq5rap000hl3zws95leaxn	ord-1794921907042	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:07.058
+cmwkq5rbm000ll3zw2kiri5z9	ord-1794921907076	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:07.091
+cmwkq5rcj000pl3zw4zkbwwa2	ord-1794921907109	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 13:25:07.123
+cmwkq5rd0000rl3zw3r3fp0ul	ord-1794921907076	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 13:25:07.14
+cmwkq5rdo000tl3zw23jfvl4f	ord-1794921907042	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-17 13:25:07.165
+cmwkq5ref000vl3zwcwbn8djo	ord-1794921907076	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 13:25:07.192
+cmwkq5rfv000zl3zwv2satb78	ord-1794921907230	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:07.244
+cmwkq5rhu0013l3zwmj172v56	ord-1794921907299	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:07.314
+cmwkq5ris0017l3zwh7ujzhzm	ord-1794921907332	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:07.348
+cmwkq5rj90019l3zwmb2ow0v5	ord-1794921907332	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 13:25:07.365
+cmwkq5rk0001bl3zwk0phqy06	ord-1794921907299	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-17 13:25:07.393
+cmwkq5rkp001dl3zwemolpdn6	ord-1794921907332	HUB_PACKING	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-17 13:25:07.418
+cmwkq5rlt001hl3zwfuj1qqsr	ord-1794921907441	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:07.457
+cmwkq5rmh001jl3zwl8if9d88	ord-1794921907230	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 13:25:07.482
+cmwkq5rn1001ll3zwcwe9mltq	ord-1794921907230	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 13:25:07.501
+cmwkq5roe001pl3zw0bh6ktxk	ord-1794921907534	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:07.55
+cmwkq5rp8001rl3zwkdqxa7ep	ord-1794921907534	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-17 13:25:07.58
+cmwkq5rr8001vl3zwhkjcxlfa	ord-1794921907638	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:07.653
+cmwkq5rw0001zl3zwvy7bamj4	ord-1794921907805	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:07.824
+cmwkq6eil0027l3zwi7mwo3ha	ord-1794921937128	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:37.149
+cmwkq6eng0029l3zwmxzqiqqi	ord-1794921937128	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-17 13:25:37.325
+cmwkq6f2t002dl3zwp88atv4j	ord-1794921937862	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:37.877
+cmwkq6f3f002fl3zwksd2i994	ord-1794921937862	ORDER_CONFIRMED	HUB_PACKING	Store picking started	admin@rasoiiq.in	2026-11-17 13:25:37.899
+cmwkq6j5x002pl3zwee1fg6ew	ord-1794921943154	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:43.174
+cmwkq6j6s002rl3zwp9ugfgnf	ord-1794921943154	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-17 13:25:43.205
+cmwkq6j7e002tl3zwzm0rxykz	ord-1794921943154	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-17 13:25:43.226
+cmwkq6j83002vl3zwbp4zyqs8	ord-1794921943154	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-17 13:25:43.251
+cmwkq6ja30031l3zw55dmx1re	ord-1794921943306	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:43.324
+cmwkq6jm00035l3zwhro7p3af	ord-1794921943737	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 13:25:43.752
+cmwkq6w41003dl3zwqi80jdpq	ord-1794921959937	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:25:59.953
+cmwkq6w5b003fl3zwa196rk63	ord-1794921959937	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-17 13:25:59.999
+cmwkq6w6f003hl3zwmd42v2pu	ord-1794921959937	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-17 13:26:00.039
+cmwkq6w70003jl3zw3vmtq1ue	ord-1794921959937	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-17 13:26:00.06
+cmwkq6w8f003nl3zwgvvb5cim	ord-1794921960096	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:26:00.111
+cmwkq6w9f003rl3zwpq4iv1it	ord-1794921960133	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:26:00.147
+cmwkq6wac003vl3zw2in8u7et	ord-1794921960165	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 13:26:00.18
+cmwkq6waq003xl3zwlth89r9g	ord-1794921960133	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 13:26:00.195
+cmwkq6wbe003zl3zw0kb6ty3w	ord-1794921960096	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-17 13:26:00.218
+cmwkq6wc90041l3zwijrg9vnt	ord-1794921960133	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 13:26:00.25
+cmwkq6wdq0045l3zwifpvkk1t	ord-1794921960289	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:26:00.302
+cmwkq6wfp0049l3zwqnnzoijf	ord-1794921960357	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:26:00.373
+cmwkq6wgm004dl3zw44skr9t9	ord-1794921960393	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:26:00.406
+cmwkq6wh0004fl3zwp38mzpns	ord-1794921960393	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 13:26:00.42
+cmwkq6whk004hl3zwnxvrrt0k	ord-1794921960357	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-17 13:26:00.441
+cmwkq6wi6004jl3zwcsj7obag	ord-1794921960393	HUB_PACKING	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-17 13:26:00.463
+cmwkq6wj5004nl3zwvr9hlm8g	ord-1794921960484	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:26:00.497
+cmwkq6wjs004pl3zwg8zlef2q	ord-1794921960289	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 13:26:00.521
+cmwkq6wkb004rl3zwo2s79rzp	ord-1794921960289	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 13:26:00.54
+cmwkq6wlt004vl3zwti90htd9	ord-1794921960577	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:26:00.593
+cmwkq6wmm004xl3zwg8j2asyg	ord-1794921960577	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-17 13:26:00.622
+cmwkq6wom0051l3zwb5e0qixf	ord-1794921960678	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:26:00.694
+cmwkq6wvu0055l3zwcvo7rk0x	ord-1794921960934	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:26:00.955
+cmwkq79os0065l3zww144fdn5	ord-1794921977462	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:26:17.548
+cmwkq8fu70075l3zwb7ypbncr	ord-1794922032085	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 13:27:12.176
+cmwks6ptr0001l3g8596n7qij	ord-gate-1794925311035-615	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.039
+cmwks6pxl0003l3g8u5tw7q8f	ord-gate-1794925311174-611	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.177
+cmwks6py40005l3g8d7v9smkk	ord-gate-1794925311193-507	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.196
+cmwks6pyj0007l3g82q6k73or	ord-gate-1794925311208-130	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.211
+cmwks6pz00009l3g8j1lpf2u4	ord-gate-1794925311225-285	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.228
+cmwks6pze000bl3g8l6qiwvfx	ord-gate-1794925311239-591	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.242
+cmwks6pzv000dl3g8ywiafgw0	ord-gate-1794925311256-307	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.259
+cmwks6q08000fl3g8cvlwmq11	ord-gate-1794925311269-40	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.272
+cmwks6q0o000hl3g8s251iexx	ord-gate-1794925311285-565	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.288
+cmwks6q13000jl3g8fx60qw1y	ord-gate-1794925311301-811	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.303
+cmwks6q1j000ll3g8gsvl2uhd	ord-gate-1794925311317-936	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.32
+cmwks6q1y000nl3g8vigkn8xd	ord-gate-1794925311331-302	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.334
+cmwks6q2d000pl3g81wxtsmbj	ord-gate-1794925311345-984	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.349
+cmwks6q2u000rl3g8oi83fbuj	ord-gate-1794925311363-863	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.366
+cmwks6q3g000tl3g8ucwswvn8	ord-gate-1794925311385-449	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.388
+cmwks6q44000vl3g87hy2ywpn	ord-gate-1794925311409-488	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.412
+cmwks6q4i000xl3g8valj7col	ord-gate-1794925311423-565	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:21:51.426
+cmwks7te00001l3rok2x1tght	ord-gate-1794925362309-531	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.312
+cmwks7tek0003l3roi1y9skrt	ord-gate-1794925362330-841	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.332
+cmwks7tex0005l3rosnppkmny	ord-gate-1794925362342-74	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.345
+cmwks7tfc0007l3ro2i4mlk0z	ord-gate-1794925362357-318	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.36
+cmwks7tft0009l3rov7izrrvy	ord-gate-1794925362375-879	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.378
+cmwks7tg9000bl3rojheqbh0a	ord-gate-1794925362391-623	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.393
+cmwks7tgp000dl3rofe83lamg	ord-gate-1794925362407-338	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.41
+cmwks7thm000fl3ro01nl9iu5	ord-gate-1794925362439-216	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.442
+cmwks7tia000hl3ro6xr82iul	ord-gate-1794925362463-869	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.466
+cmwks7tjq0005l354m30lzptn	ord-gate-1794925362463-869	ORDER_CONFIRMED	HUB_PACKING	Admin manual status advance	admin@rasoiiq.in	2026-11-17 14:22:42.518
+cmwks7tk7000jl3roxwg81ea9	ord-gate-1794925362532-763	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.535
+cmwks7tky000ll3rop947ycgk	ord-gate-1794925362559-525	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.561
+cmwks7tle000nl3roibv7xkq4	ord-gate-1794925362576-930	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.578
+cmwks7tlw000pl3roqrpzdpyv	ord-gate-1794925362593-707	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.596
+cmwks7tmg000rl3ro5jye0d9p	ord-gate-1794925362613-978	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.616
+cmwks7tnu0007l354r96z28cx	ord-gate-1794925362613-978	ORDER_CONFIRMED	CANCELLED	Customer wanting to cancel	demo@rasoiiq.in	2026-11-17 14:22:42.666
+cmwks7to5000tl3roovtqopke	ord-gate-1794925362674-622	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.677
+cmwks7toq000vl3ro4u3kqjxw	ord-gate-1794925362696-662	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.698
+cmwks7tp3000xl3ron05h8dpf	ord-gate-1794925362708-690	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:22:42.711
+cmwks9yf00001l358pqk65lsf	ord-gate-1794925462128-363	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.139
+cmwks9yfs0003l3581gyipyaa	ord-gate-1794925462157-700	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.168
+cmwks9yg90005l358eu8yutnu	ord-gate-1794925462173-216	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.185
+cmwks9ygn0007l358htsux2sm	ord-gate-1794925462188-91	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.199
+cmwks9yhm0005l30gjwf1r6jr	ord-gate-1794925462188-91	ORDER_CONFIRMED	HUB_PACKING	Internal worker began hub packing	system-worker	2026-11-17 14:24:22.234
+cmwks9yi10009l3584g9ahfp3	ord-gate-1794925462238-165	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.25
+cmwks9yii000bl358u51cfngs	ord-gate-1794925462255-915	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.266
+cmwks9yj0000dl358u588v9ag	ord-gate-1794925462273-964	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.284
+cmwks9yjy000fl358ic7u0tpn	ord-gate-1794925462306-281	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.318
+cmwks9yku0007l30g5p8vad3e	ord-gate-1794925462306-281	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 14:24:22.35
+cmwks9yl8000hl358i9qlnucb	ord-gate-1794925462352-240	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.364
+cmwks9ym50009l30gedp6vygh	ord-gate-1794925462352-240	ORDER_CONFIRMED	HUB_PACKING	Admin manual status advance	admin@rasoiiq.in	2026-11-17 14:24:22.397
+cmwks9ymg000jl3585atku8p5	ord-gate-1794925462397-840	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.408
+cmwks9ync000bl30ggwr2nlwc	ord-gate-1794925462397-840	ORDER_CONFIRMED	HUB_PACKING	Admin advancing with worker key	admin@rasoiiq.in	2026-11-17 14:24:22.44
+cmwks9ynp000ll3582qj5qx67	ord-gate-1794925462442-31	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.453
+cmwks9yo5000nl358o196jyhh	ord-gate-1794925462457-903	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.469
+cmwks9yoq000pl358pybljkyk	ord-gate-1794925462479-662	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.49
+cmwks9ypj000dl30gyq99z6p8	ord-gate-1794925462479-662	ORDER_CONFIRMED	HUB_PACKING	Concurrent transition 1	system-worker	2026-11-17 14:24:22.519
+cmwks9yq8000rl3581ajf2gky	ord-gate-1794925462533-697	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.544
+cmwks9yr0000fl30gzsnns01z	ord-gate-1794925462533-697	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 14:24:22.572
+cmwks9yrt000hl30gt61e4fvw	ord-gate-1794925462533-697	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 14:24:22.601
+cmwks9ys6000tl358bb317rdj	ord-gate-1794925462603-107	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.614
+cmwks9yu2000vl358tvvg74gt	ord-gate-1794925462670-315	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.682
+cmwks9yv7000xl35861eqvi75	ord-gate-1794925462711-553	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:24:22.723
+cmwksc0gl000vl30gsl33anoh	ord-1794925558078	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:25:58.102
+cmwksc0id000xl30gdbapiocg	ord-1794925558078	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-17 14:25:58.165
+cmwksc0l20011l30g5ztgwz9y	ord-1794925558244	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:25:58.263
+cmwksc0m10015l30g92mthkds	ord-1794925558281	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:25:58.298
+cmwksc0my0019l30g63uydugi	ord-1794925558315	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 14:25:58.33
+cmwksc0no001bl30g7d4g4g08	ord-1794925558244	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-17 14:25:58.356
+cmwksc0oe001dl30g1biumn2l	ord-1794925558281	ORDER_CONFIRMED	CANCELLED	Customer cancels too late	demo@rasoiiq.in	2026-11-17 14:25:58.383
+cmwksc0q0001hl30g1i1khit1	ord-1794925558425	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:25:58.44
+cmwksc0ry001ll30gwgo1de4c	ord-1794925558494	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:25:58.51
+cmwksc0t0001pl30g278nd4qk	ord-1794925558531	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:25:58.548
+cmwksc0tw001rl30g63lftwc0	ord-1794925558494	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-17 14:25:58.58
+cmwksc0up001tl30gbjrsl2fl	ord-1794925558531	ORDER_CONFIRMED	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-17 14:25:58.61
+cmwksc0vl001xl30gg7law6t4	ord-1794925558626	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:25:58.641
+cmwksc0wm001zl30gnsw9f7a5	ord-1794925558425	ORDER_CONFIRMED	CANCELLED	Retailer cancel after dispatch	partner@blinkit.com	2026-11-17 14:25:58.679
+cmwksc0xn0023l30gghcx26lw	ord-1794925558700	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:25:58.715
+cmwksc0yj0025l30g1wisdx6f	ord-1794925558700	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-17 14:25:58.747
+cmwksc10c0029l30gmzjmkzvs	ord-1794925558796	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:25:58.812
+cmwksc146002dl30geqpfl48c	ord-1794925558932	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:25:58.95
+cmwksclaa002ll30g7vnlmh37	ord-1794925585069	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:26:25.09
+cmwksclby002nl30g99a8khtu	ord-1794925585069	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-17 14:26:25.15
+cmwkscld1002pl30gbscdhqo9	ord-1794925585069	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-17 14:26:25.189
+cmwkscldu002rl30g1jvfn2ms	ord-1794925585069	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-17 14:26:25.219
+cmwksclfd002vl30grksz7svw	ord-1794925585256	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:26:25.273
+cmwksclga002zl30gwo93knkn	ord-1794925585289	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:26:25.306
+cmwksclh60033l30gtfimu3ez	ord-1794925585321	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 14:26:25.339
+cmwksclho0035l30ge34c0woc	ord-1794925585289	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 14:26:25.356
+cmwksclif0037l30gwty39b1d	ord-1794925585256	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-17 14:26:25.383
+cmwkscljb0039l30gi5t8k0kx	ord-1794925585289	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 14:26:25.416
+cmwksclkv003dl30gvzoro470	ord-1794925585455	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:26:25.471
+cmwksclmu003hl30gxey2ltkv	ord-1794925585522	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:26:25.543
+cmwksclnq003ll30gbib4dam3	ord-1794925585558	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:26:25.575
+cmwksclo8003nl30gpc5lyqxn	ord-1794925585558	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 14:26:25.592
+cmwksclow003pl30gv3rdz823	ord-1794925585522	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-17 14:26:25.616
+cmwksclpk003rl30glq4yd53y	ord-1794925585558	HUB_PACKING	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-17 14:26:25.64
+cmwksclqh003vl30ghltx62ne	ord-1794925585656	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:26:25.673
+cmwksclr8003xl30gevutj3bs	ord-1794925585455	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 14:26:25.701
+cmwksclrr003zl30gsjialld9	ord-1794925585455	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 14:26:25.72
+cmwksclsz0043l30gq8o17a26	ord-1794925585746	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:26:25.763
+cmwkscltv0045l30g4fu7wg2v	ord-1794925585746	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-17 14:26:25.795
+cmwksclvt0049l30g08cbk3zp	ord-1794925585847	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:26:25.866
+cmwkscm00004dl30g41i9yqb2	ord-1794925585991	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:26:26.016
+cmwksd4i50001l3k4s6kq1mj6	ord-gate-1794925609989-979	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:49.997
+cmwksd4is0003l3k4j4w2v8iw	ord-gate-1794925610012-326	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.02
+cmwksd4ja0005l3k4wbk7up78	ord-gate-1794925610029-127	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.038
+cmwksd4jq0007l3k4yhuaz3tj	ord-gate-1794925610047-80	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.055
+cmwksd4kg004jl30gweh2cg87	ord-gate-1794925610047-80	ORDER_CONFIRMED	HUB_PACKING	Internal worker began hub packing	system-worker	2026-11-17 14:26:50.08
+cmwksd4kr0009l3k44vec2e61	ord-gate-1794925610084-668	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.092
+cmwksd4l4000bl3k4dhhdlgil	ord-gate-1794925610097-694	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.104
+cmwksd4lj000dl3k43yxpfchr	ord-gate-1794925610111-130	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.119
+cmwksd4m2000fl3k4d9zd6peo	ord-gate-1794925610131-372	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.138
+cmwksd4mo000hl3k48t831ald	ord-gate-1794925610152-858	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.16
+cmwksd4nj004ll30gqakpllq0	ord-gate-1794925610152-858	ORDER_CONFIRMED	HUB_PACKING	Admin manual status advance	admin@rasoiiq.in	2026-11-17 14:26:50.191
+cmwksd4nt000jl3k4nwqwwp3g	ord-gate-1794925610194-326	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.201
+cmwksd4ol004nl30g54gwd1ud	ord-gate-1794925610194-326	ORDER_CONFIRMED	HUB_PACKING	Admin advancing with worker key	admin@rasoiiq.in	2026-11-17 14:26:50.229
+cmwksd4ow000ll3k48o5zblii	ord-gate-1794925610233-50	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.24
+cmwksd4p8000nl3k4hrqmyuz5	ord-gate-1794925610245-116	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.252
+cmwksd4pr000pl3k4mgxpkv5c	ord-gate-1794925610264-894	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.272
+cmwksd4qh004pl30gl2frpuqj	ord-gate-1794925610264-894	ORDER_CONFIRMED	HUB_PACKING	Concurrent transition 1	system-worker	2026-11-17 14:26:50.298
+cmwksd4qp004rl30g47v7y7wr	ord-gate-1794925610264-894	ORDER_CONFIRMED	HUB_PACKING	Concurrent transition 2	system-worker	2026-11-17 14:26:50.305
+cmwksd4r5000rl3k42cv0ivr0	ord-gate-1794925610314-239	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.321
+cmwksd4rw004tl30g9tvuc7dy	ord-gate-1794925610314-239	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 14:26:50.348
+cmwksd4so004vl30gejx6zouy	ord-gate-1794925610314-239	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 14:26:50.376
+cmwksd4t0000tl3k443shw1d4	ord-gate-1794925610380-564	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.388
+cmwksd4ul000vl3k47ilinzk9	ord-gate-1794925610438-392	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.445
+cmwksd4vn000xl3k40lsm13hs	ord-gate-1794925610475-0	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:26:50.482
+cmwksfsnn0001l3dck4igr8oo	ord-gate-1794925734600-735	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:54.611
+cmwksfson0003l3dcrqguhyho	ord-gate-1794925734637-204	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:54.647
+cmwksfspd0005l3dc8xb1hp9b	ord-gate-1794925734663-736	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:54.673
+cmwksfsq30007l3dcs6nb1hn6	ord-gate-1794925734688-364	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:54.699
+cmwksfsrn0005l34oatoj7wjc	ord-gate-1794925734688-364	ORDER_CONFIRMED	HUB_PACKING	Internal worker began hub packing	system-worker	2026-11-17 14:28:54.755
+cmwksfss70009l3dcyhpmrfcz	ord-gate-1794925734765-281	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:54.775
+cmwksfsss000bl3dc13l69ivq	ord-gate-1794925734786-433	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:54.796
+cmwksfsti000dl3dcibd8phx6	ord-gate-1794925734812-214	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:54.823
+cmwksfsud000fl3dcctg3vnmt	ord-gate-1794925734843-456	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:54.853
+cmwksfsv3000hl3dc84j0uyb1	ord-gate-1794925734869-316	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:54.879
+cmwksfswa0007l34obpjaf8mp	ord-gate-1794925734869-316	ORDER_CONFIRMED	HUB_PACKING	Admin manual status advance	admin@rasoiiq.in	2026-11-17 14:28:54.923
+cmwksfswu000jl3dckgvdg7v0	ord-gate-1794925734932-724	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:54.942
+cmwksfsxx0009l34ot0zsb75w	ord-gate-1794925734932-724	ORDER_CONFIRMED	HUB_PACKING	Admin advancing with worker key	admin@rasoiiq.in	2026-11-17 14:28:54.982
+cmwksfsyl000ll3dcpqbp3ii4	ord-gate-1794925734995-918	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:55.005
+cmwksfsz9000nl3dccna1b1it	ord-gate-1794925735019-532	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:55.029
+cmwksft07000pl3dc0jvq16cx	ord-gate-1794925735053-137	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:55.063
+cmwksft2i000rl3dcefpnyx5r	ord-gate-1794925735136-286	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:55.146
+cmwksft52000tl3dcxavf8kl7	ord-gate-1794925735228-92	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:55.238
+cmwksft6v000vl3dcra3x7zwm	ord-gate-1794925735293-123	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:55.303
+cmwksft8a000xl3dcck9uv6bn	ord-gate-1794925735344-388	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:28:55.354
+cmwksft15000bl34oozunjr9z	ord-gate-1794925735053-137	ORDER_CONFIRMED	HUB_PACKING	Concurrent transition 1	system-worker	2026-11-17 14:28:55.097
+cmwksft3l000dl34osodxw2ts	ord-gate-1794925735136-286	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 14:28:55.186
+cmwksft4l000fl34oghuusu9e	ord-gate-1794925735136-286	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 14:28:55.221
+cmwksic8c0001l36o3uoik5r5	ord-gate-1794925853289-658	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.291
+cmwksic940003l36onvdc5tds	ord-gate-1794925853318-437	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.32
+cmwksic9k0005l36ogiy1zbml	ord-gate-1794925853334-369	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.336
+cmwksica00007l36o2rgglx0i	ord-gate-1794925853350-122	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.352
+cmwksicax0005l3z0wz97zty0	ord-gate-1794925853350-122	ORDER_CONFIRMED	HUB_PACKING	Internal worker began hub packing	system-worker	2026-11-17 14:30:53.385
+cmwksicba0009l36orties9yw	ord-gate-1794925853397-593	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.398
+cmwksicbo000bl36od5pnvytm	ord-gate-1794925853411-769	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.413
+cmwksicc6000dl36oo7opbq2t	ord-gate-1794925853428-522	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.43
+cmwksicd2000fl36o91ffpgcs	ord-gate-1794925853460-518	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.462
+cmwksicdn000hl36ohu7h20ag	ord-gate-1794925853481-45	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.483
+cmwksiceg0007l3z04g0609gb	ord-gate-1794925853481-45	ORDER_CONFIRMED	HUB_PACKING	Admin manual status advance	admin@rasoiiq.in	2026-11-17 14:30:53.512
+cmwksiceq000jl36oty7h3syj	ord-gate-1794925853521-434	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.523
+cmwksicfi0009l3z0l2vx6etn	ord-gate-1794925853521-434	ORDER_CONFIRMED	HUB_PACKING	Admin advancing with worker key	admin@rasoiiq.in	2026-11-17 14:30:53.55
+cmwksicfs000ll36on6ehb7bx	ord-gate-1794925853559-180	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.56
+cmwksicg5000nl36onblzauyn	ord-gate-1794925853572-638	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.574
+cmwksicgp000pl36o2jyz58ii	ord-gate-1794925853591-483	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.593
+cmwksici6000bl3z09a9z3krg	ord-gate-1794925853591-483	ORDER_CONFIRMED	HUB_PACKING	Concurrent transition 1	system-worker	2026-11-17 14:30:53.646
+cmwksicj4000rl36ohkx694b6	ord-gate-1794925853678-274	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.68
+cmwksicjt000dl3z0u0qk154v	ord-gate-1794925853678-274	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 14:30:53.706
+cmwksickm000fl3z0qrsqj41t	ord-gate-1794925853678-274	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 14:30:53.735
+cmwksickz000tl36oy9bov2rv	ord-gate-1794925853745-473	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.747
+cmwksicmv000vl36otgmc602l	ord-gate-1794925853813-258	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.815
+cmwksicnw000xl36oxahlaubt	ord-gate-1794925853850-418	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 14:30:53.852
+cmwksijfg001dl3z0a1yih05a	ord-1794925862543	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:02.62
+cmwksitfx001nl3z02ajzzb77	ord-1794925875578	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:15.597
+cmwksitgu001pl3z0v52ae2v0	ord-1794925875578	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-17 14:31:15.631
+cmwksithh001rl3z0tzo9s9zm	ord-1794925875578	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-17 14:31:15.653
+cmwksiti7001tl3z061xdtvcy	ord-1794925875578	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-17 14:31:15.68
+cmwksitk6001zl3z0ywcvrdnd	ord-1794925875728	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:15.75
+cmwksitu60023l3z06k8pynxm	ord-1794925876094	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 14:31:16.11
+cmwksj06n002bl3z05ru9a4j0	ord-1794925884315	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:24.336
+cmwksj0b0002dl3z0i12kh3pe	ord-1794925884315	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-17 14:31:24.492
+cmwksj0qo002hl3z0x6lpueiq	ord-1794925885034	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:25.057
+cmwksj0rf002jl3z04puwsrm7	ord-1794925885034	ORDER_CONFIRMED	HUB_PACKING	Store picking started	admin@rasoiiq.in	2026-11-17 14:31:25.083
+cmwksj6gs002rl3z0g40pqkv7	ord-1794925892453	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:32.476
+cmwksj6ig002tl3z0m4bpo88g	ord-1794925892453	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-17 14:31:32.536
+cmwksj6jg002vl3z0nzc5ce9m	ord-1794925892453	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-17 14:31:32.572
+cmwksj6k3002xl3z0p6j3utyf	ord-1794925892453	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-17 14:31:32.595
+cmwksj6lo0031l3z0qxa6i0v6	ord-1794925892632	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:32.652
+cmwksj6mj0035l3z0pjyl1el7	ord-1794925892666	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:32.684
+cmwksj6ne0039l3z0gc1jixk1	ord-1794925892697	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 14:31:32.715
+cmwksj6nv003bl3z0c8dd80ut	ord-1794925892666	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 14:31:32.731
+cmwksj6ol003dl3z0hoy3kx9o	ord-1794925892632	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-17 14:31:32.757
+cmwksj6pe003fl3z0tmk7no6r	ord-1794925892666	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 14:31:32.786
+cmwksj6qt003jl3z0uo56y61n	ord-1794925892818	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:32.837
+cmwksj6so003nl3z0w4sf4kl7	ord-1794925892887	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:32.905
+cmwksj6tl003rl3z0st433ld8	ord-1794925892920	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:32.938
+cmwksj6u0003tl3z022lwi1fw	ord-1794925892920	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 14:31:32.953
+cmwksj6uq003vl3z0jbyyncin	ord-1794925892887	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-17 14:31:32.978
+cmwksj6vb003xl3z07qstmyfb	ord-1794925892920	HUB_PACKING	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-17 14:31:33
+cmwksj6w70041l3z01g2hnxf0	ord-1794925893015	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:33.031
+cmwksj6wu0043l3z0r6rqce4v	ord-1794925892818	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 14:31:33.054
+cmwksj6xc0045l3z0s3bprjxk	ord-1794925892818	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 14:31:33.072
+cmwksj6ye0049l3z0klxnd0zk	ord-1794925893095	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:33.11
+cmwksj6z2004bl3z0ukj9jylh	ord-1794925893095	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-17 14:31:33.134
+cmwksj70s004fl3z06nlu9u5e	ord-1794925893180	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:33.197
+cmwksj74e004jl3z0mkb9dqih	ord-1794925893307	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 14:31:33.326
+cmwku22cx000xl3cwf0wjq5y3	ord-1794928453173	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:13.234
+cmwku2dde0017l3cw5orb7sg9	ord-1794928467495	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:27.507
+cmwku2de50019l3cw5ipm8ihj	ord-1794928467495	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-17 15:14:27.534
+cmwku2des001bl3cwb5aal2r4	ord-1794928467495	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-17 15:14:27.557
+cmwku2df7001dl3cwhgyhmog9	ord-1794928467495	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-17 15:14:27.572
+cmwku2dgb001jl3cwf08zkcca	ord-1794928467601	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:27.612
+cmwku2doa001nl3cwrpr6ck3x	ord-1794928467889	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 15:14:27.898
+cmwku2ee2001vl3cw4wope2fs	ord-1794928468816	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:28.826
+cmwku2eh8001xl3cwo7mzbqmq	ord-1794928468816	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-17 15:14:28.94
+cmwku2ew70021l3cw8u314rfi	ord-1794928469467	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:29.479
+cmwku2ewn0023l3cwqvvxfk4c	ord-1794928469467	ORDER_CONFIRMED	HUB_PACKING	Store picking started	admin@rasoiiq.in	2026-11-17 15:14:29.496
+cmwku2kpn002bl3cwpwaid1m6	ord-1794928477006	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:37.019
+cmwku2kqm002dl3cwkqyj2s0i	ord-1794928477006	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-17 15:14:37.055
+cmwku2kr9002fl3cwivk2lir0	ord-1794928477006	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-17 15:14:37.078
+cmwku2krq002hl3cwomis0hhd	ord-1794928477006	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-17 15:14:37.094
+cmwku2ksq002ll3cwgxx4svxf	ord-1794928477119	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:37.13
+cmwku2ktd002pl3cwzkk5xv3o	ord-1794928477143	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:37.154
+cmwku2ktz002tl3cwa0gql711	ord-1794928477165	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 15:14:37.176
+cmwku2kuc002vl3cwozhxyza0	ord-1794928477143	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 15:14:37.189
+cmwku2kuv002xl3cwj3p8c0tt	ord-1794928477119	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-17 15:14:37.208
+cmwku2kvl002zl3cwuqrda0c8	ord-1794928477143	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 15:14:37.233
+cmwku2kwu0033l3cw2mkfe2t8	ord-1794928477266	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:37.278
+cmwku2kxs0037l3cwhirkja5o	ord-1794928477305	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:37.313
+cmwku2ky7003bl3cwrk04mfi9	ord-1794928477319	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:37.328
+cmwku2kyh003dl3cwr87mld5a	ord-1794928477319	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 15:14:37.337
+cmwku2kz3003fl3cwos1qhpl0	ord-1794928477305	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-17 15:14:37.36
+cmwku2kzp003hl3cwrbhfa5gk	ord-1794928477319	HUB_PACKING	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-17 15:14:37.382
+cmwku2l0g003ll3cwllpqdjh9	ord-1794928477396	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:37.409
+cmwku2l0z003nl3cws1kxeju3	ord-1794928477266	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 15:14:37.428
+cmwku2l19003pl3cwzo5lfv6i	ord-1794928477266	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 15:14:37.438
+cmwku2l1v003tl3cwb3u3jr0w	ord-1794928477451	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:37.46
+cmwku2l2f003vl3cw7ae2d0fz	ord-1794928477451	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-17 15:14:37.479
+cmwku2l3g003zl3cwjegt4yts	ord-1794928477506	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:37.516
+cmwku2l6l0043l3cwr3vxkjd4	ord-1794928477616	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:14:37.63
+cmwku2lye0001l3k817cyeppg	ord-gate-1794928478626-631	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.63
+cmwku2lyr0003l3k866vlbjzb	ord-gate-1794928478640-962	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.644
+cmwku2lyz0005l3k81qwiakld	ord-gate-1794928478648-347	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.651
+cmwku2lz70007l3k8kam8yxya	ord-gate-1794928478656-90	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.659
+cmwku2lzk0049l3cw3q30x2eg	ord-gate-1794928478656-90	ORDER_CONFIRMED	HUB_PACKING	Internal worker began hub packing	system-worker	2026-11-17 15:14:38.672
+cmwku2lzs0009l3k88j2ptnx9	ord-gate-1794928478677-108	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.68
+cmwku2m03000bl3k8dzmct4ua	ord-gate-1794928478687-291	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.691
+cmwku2m0h000dl3k8cfupg2zu	ord-gate-1794928478701-903	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.705
+cmwku2m0z000fl3k8x3fbkk9o	ord-gate-1794928478720-196	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.724
+cmwku2m1h000hl3k8sxz956ej	ord-gate-1794928478737-246	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.741
+cmwku2m2i000jl3k8fyo0b6c1	ord-gate-1794928478774-953	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.778
+cmwku2m3h000ll3k8o3nhcuvy	ord-gate-1794928478809-739	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.813
+cmwku2m3t000nl3k8aridcchw	ord-gate-1794928478821-949	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.825
+cmwku2m4a000pl3k85n75rabh	ord-gate-1794928478839-881	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.843
+cmwku2m5c000rl3k8rfcdhf3j	ord-gate-1794928478876-970	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.88
+cmwku2m6t000tl3k85gyosye7	ord-gate-1794928478929-170	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.933
+cmwku2m87000vl3k8f7jz8ywq	ord-gate-1794928478979-739	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:38.983
+cmwku2m8z000xl3k8bvm6wt87	ord-gate-1794928479008-306	START	ORDER_CONFIRMED	Order placed by test suite	demo@rasoiiq.in	2026-11-17 15:14:39.011
+cmwku2m28004bl3cwh61gdreu	ord-gate-1794928478737-246	ORDER_CONFIRMED	HUB_PACKING	Admin manual status advance	admin@rasoiiq.in	2026-11-17 15:14:38.768
+cmwku2m36004dl3cwrtgjhhj1	ord-gate-1794928478774-953	ORDER_CONFIRMED	HUB_PACKING	Admin advancing with worker key	admin@rasoiiq.in	2026-11-17 15:14:38.802
+cmwku2m4v004fl3cwf2s47uh5	ord-gate-1794928478839-881	ORDER_CONFIRMED	HUB_PACKING	Concurrent transition 1	system-worker	2026-11-17 15:14:38.863
+cmwku2m6i004jl3cwj1erqnlt	ord-gate-1794928478876-970	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 15:14:38.923
+cmwku2m5x004hl3cw8s1e5r2i	ord-gate-1794928478876-970	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 15:14:38.902
+cmwkv8v1x0001l3cg2ujy0g4g	cmwkv8v0m0001l3hshvb7ahzt	ORDER_CONFIRMED	HUB_PACKING	Dark store started packing items	system-worker	2026-11-17 15:47:29.974
+cmwkv8v330003l3cg2kpnllhh	cmwkv8v0m0001l3hshvb7ahzt	HUB_PACKING	OUT_FOR_DELIVERY	Admin dispatched rider	admin@rasoiiq.in	2026-11-17 15:47:30.016
+cmwkv8v4o0005l3cgi87lycry	cmwkv8v0m0001l3hshvb7ahzt	OUT_FOR_DELIVERY	DELIVERED	Package delivered to doorstep	system-worker	2026-11-17 15:47:30.073
+cmwkv8v610007l3cgifdglhfg	cmwkv8v5h0004l3hsjjmt40v3	ORDER_CONFIRMED	HUB_PACKING	Worker 1 packing	system-worker	2026-11-17 15:47:30.121
+cmwkva8p60009l3cgmgy9qjgq	cmwkva8o50001l3e8ln2prqvz	ORDER_CONFIRMED	HUB_PACKING	Dark store started packing items	system-worker	2026-11-17 15:48:34.315
+cmwkva8qc000bl3cghqwhhuyz	cmwkva8o50001l3e8ln2prqvz	HUB_PACKING	OUT_FOR_DELIVERY	Admin dispatched rider	admin@rasoiiq.in	2026-11-17 15:48:34.356
+cmwkva8ru000dl3cgzz91g22q	cmwkva8o50001l3e8ln2prqvz	OUT_FOR_DELIVERY	DELIVERED	Package delivered to doorstep	system-worker	2026-11-17 15:48:34.411
+cmwkva8sz000fl3cgf7y07ep3	cmwkva8sg0004l3e8050kg2bn	ORDER_CONFIRMED	HUB_PACKING	Worker 1 packing	system-worker	2026-11-17 15:48:34.452
+cmwkvaxh8000hl3cgqbwkzsv4	cmwkvaxgb0001l3ikher0leef	ORDER_CONFIRMED	HUB_PACKING	Dark store started packing items	system-worker	2026-11-17 15:49:06.428
+cmwkvaxia000jl3cg50grqcnn	cmwkvaxgb0001l3ikher0leef	HUB_PACKING	OUT_FOR_DELIVERY	Admin dispatched rider	admin@rasoiiq.in	2026-11-17 15:49:06.466
+cmwkvaxji000ll3cgdr0h7ovn	cmwkvaxgb0001l3ikher0leef	OUT_FOR_DELIVERY	DELIVERED	Package delivered to doorstep	system-worker	2026-11-17 15:49:06.51
+cmwkvaxki000nl3cga8dc0hy1	cmwkvaxk00004l3ik78iujb9y	ORDER_CONFIRMED	HUB_PACKING	Worker 1 packing	system-worker	2026-11-17 15:49:06.546
+cmwkvfu2j001ll3cg0eeyfv1f	ord-1794930775223	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:55.291
+cmwkvfuvs001vl3cgiodarnef	ord-1794930776322	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:56.344
+cmwkvfuwc001xl3cgsfuokahu	ord-1794930776322	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-17 15:52:56.364
+cmwkvfuwq001zl3cg3p2zphqx	ord-1794930776322	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-17 15:52:56.379
+cmwkvfux40021l3cgtdd2ra0z	ord-1794930776322	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-17 15:52:56.392
+cmwkvfuya0027l3cgq2ul5hjt	ord-1794930776409	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:56.434
+cmwkvfv53002bl3cghvl3ytv0	ord-1794930776656	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 15:52:56.679
+cmwkvfvhs002jl3cgwy4d3m8l	ord-1794930777116	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:57.137
+cmwkvfvlp002ll3cgfqgggd7w	ord-1794930777116	ORDER_CONFIRMED	HUB_PACKING	Trying to reopen cancelled order	admin@rasoiiq.in	2026-11-17 15:52:57.278
+cmwkvfw0w002pl3cgq0lxgpgl	ord-1794930777796	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:57.825
+cmwkvfw1e002rl3cgfweqzk2u	ord-1794930777796	ORDER_CONFIRMED	HUB_PACKING	Store picking started	admin@rasoiiq.in	2026-11-17 15:52:57.843
+cmwkvfwe7002zl3cgrynjourf	ord-1794930778282	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:58.303
+cmwkvfwey0031l3cg3sz50h5o	ord-1794930778282	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-17 15:52:58.331
+cmwkvfwg00035l3cgpa2ni6es	ord-1794930778349	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:58.369
+cmwkvfwgg0039l3cgvrqyoc4o	ord-1794930778365	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:58.385
+cmwkvfwgw003dl3cgokp645yz	ord-1794930778379	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 15:52:58.401
+cmwkvfwi8003hl3cgkd74phod	ord-1794930778425	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:58.449
+cmwkvfwjs003ll3cg68f218kn	ord-1794930778481	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:58.505
+cmwkvfwke003pl3cgebjfrgyv	ord-1794930778504	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:58.526
+cmwkvfwld003tl3cgx13rs414	ord-1794930778539	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:58.561
+cmwkvfwmm003xl3cgplqxjd15	ord-1794930778583	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:58.607
+cmwkvfwna003zl3cghuz57g8o	ord-1794930778583	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-17 15:52:58.63
+cmwkvfwop0043l3cgyi5zqdo3	ord-1794930778656	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:58.681
+cmwkvfwto0047l3cgnimfl67g	ord-1794930778829	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:52:58.861
+cmwkvfxi80049l3cgy48z71zx	cmwkvfxh80001l33kw20m16tl	ORDER_CONFIRMED	HUB_PACKING	Dark store started packing items	system-worker	2026-11-17 15:52:59.745
+cmwkvfxj4004bl3cg4ua6tz87	cmwkvfxh80001l33kw20m16tl	HUB_PACKING	OUT_FOR_DELIVERY	Admin dispatched rider	admin@rasoiiq.in	2026-11-17 15:52:59.776
+cmwkvfxkb004dl3cgl3yr04lk	cmwkvfxh80001l33kw20m16tl	OUT_FOR_DELIVERY	DELIVERED	Package delivered to doorstep	system-worker	2026-11-17 15:52:59.819
+cmwkvfxlf004fl3cgf6ju67u5	cmwkvfxku0004l33kbvowvn7k	ORDER_CONFIRMED	HUB_PACKING	Worker 1 packing	system-worker	2026-11-17 15:52:59.859
+cmwkvg9r4004nl3cgfhirexc4	ord-1794930795585	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:53:15.616
+cmwkvg9sj004pl3cgwfrd4h05	ord-1794930795585	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-17 15:53:15.668
+cmwkvg9u4004tl3cgb1kybdpp	ord-1794930795702	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:53:15.724
+cmwkvg9ut004xl3cgv1ewbxl5	ord-1794930795725	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:53:15.749
+cmwkvg9ve0051l3cgbmdomu5h	ord-1794930795749	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 15:53:15.771
+cmwkvg9wr0055l3cgu1pk9i8t	ord-1794930795797	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:53:15.819
+cmwkvg9y20059l3cgucnf52si	ord-1794930795846	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:53:15.867
+cmwkvg9yn005dl3cgpgcbn9g7	ord-1794930795864	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:53:15.887
+cmwkvg9zi005hl3cg78p34toj	ord-1794930795897	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:53:15.918
+cmwkvga0i005ll3cg3eeupiio	ord-1794930795933	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:53:15.955
+cmwkvga11005nl3cgo3hffzjj	ord-1794930795933	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-17 15:53:15.974
+cmwkvga27005rl3cgqci93gw9	ord-1794930795995	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:53:16.016
+cmwkvga8i005vl3cg9nq842rh	ord-1794930796217	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:53:16.242
+cmwkviyqb0007l3mocmzxhwiz	ord-1794930921273	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:55:21.299
+cmwkviyrf0009l3mou545fezt	ord-1794930921273	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-17 15:55:21.339
+cmwkviys9000bl3moztimh03g	ord-1794930921273	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-17 15:55:21.37
+cmwkviysr000dl3moomqlihkt	ord-1794930921273	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-17 15:55:21.388
+cmwkviytt000hl3moblgib4fe	ord-1794930921403	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:55:21.426
+cmwkviyui000ll3mosq8034bb	ord-1794930921428	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:55:21.45
+cmwkviyv3000pl3mo8pg8q958	ord-1794930921450	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 15:55:21.472
+cmwkviyvf000rl3mo0i3m19cz	ord-1794930921428	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 15:55:21.484
+cmwkviyvx000tl3mos98t6k7p	ord-1794930921403	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-17 15:55:21.501
+cmwkviywi000vl3mountymod1	ord-1794930921428	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 15:55:21.522
+cmwkviyxj000zl3mo94dl3f4i	ord-1794930921538	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:55:21.56
+cmwkviyz60013l3mo7mbu4pss	ord-1794930921593	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:55:21.618
+cmwkviyzv0017l3mo8h5eshsm	ord-1794930921620	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:55:21.644
+cmwkviz090019l3mowyebonxu	ord-1794930921620	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 15:55:21.657
+cmwkviz0t001bl3mo7pdpgmu2	ord-1794930921593	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-17 15:55:21.677
+cmwkviz1d001dl3mouwmuocpn	ord-1794930921620	HUB_PACKING	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-17 15:55:21.698
+cmwkviz25001hl3mo2ymrw6o5	ord-1794930921703	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:55:21.726
+cmwkviz2q001jl3mo1o99w4er	ord-1794930921538	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 15:55:21.747
+cmwkviz35001ll3morit408ph	ord-1794930921538	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 15:55:21.762
+cmwkviz3z001pl3moa2nk7skh	ord-1794930921770	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:55:21.791
+cmwkviz4k001rl3mopgrlyky7	ord-1794930921770	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-17 15:55:21.812
+cmwkviz5u001vl3moxybqxnr9	ord-1794930921836	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:55:21.858
+cmwkvizam001zl3mo5m47b19z	ord-1794930922010	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:55:22.03
+cmwkvjsz00027l3motu4s66d6	ord-1794930960470	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:00.493
+cmwkvjszu0029l3mot0uejr36	ord-1794930960470	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-17 15:56:00.522
+cmwkvjt0d002bl3mod685i2jv	ord-1794930960470	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-17 15:56:00.541
+cmwkvjt0o002dl3mo6vkluqq3	ord-1794930960470	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-17 15:56:00.553
+cmwkvjt1g002hl3mosxt347j1	ord-1794930960561	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:00.581
+cmwkvjt1z002ll3moxuqnqka3	ord-1794930960579	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:00.6
+cmwkvjt2l002pl3molurbimut	ord-1794930960600	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 15:56:00.622
+cmwkvjt2x002rl3mod0phlxjb	ord-1794930960579	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 15:56:00.633
+cmwkvjt3b002tl3moz8uhbfa5	ord-1794930960561	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-17 15:56:00.647
+cmwkvjt3t002vl3mo5rmvdn3z	ord-1794930960579	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 15:56:00.666
+cmwkvjt4q002zl3mosxfknzq0	ord-1794930960677	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:00.698
+cmwkvjt5w0033l3moli292njs	ord-1794930960719	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:00.74
+cmwkvjt6h0037l3moea63vl9r	ord-1794930960740	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:00.762
+cmwkvjt6t0039l3mopj56enaz	ord-1794930960740	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 15:56:00.773
+cmwkvjt79003bl3moa2pxlxbo	ord-1794930960719	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-17 15:56:00.789
+cmwkvjt7n003dl3moljjlbtlu	ord-1794930960740	HUB_PACKING	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-17 15:56:00.803
+cmwkvjt89003hl3mox9z50fws	ord-1794930960804	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:00.825
+cmwkvjt8r003jl3mowjagktgx	ord-1794930960677	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 15:56:00.844
+cmwkvjt93003ll3moi2is43em	ord-1794930960677	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 15:56:00.855
+cmwkvjt9x003pl3mo9ty5bmce	ord-1794930960865	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:00.886
+cmwkvjtah003rl3mo4e7y1ect	ord-1794930960865	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-17 15:56:00.906
+cmwkvjtbh003vl3moltrcrjy5	ord-1794930960921	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:00.941
+cmwkvjti5003zl3mou3pw78r8	ord-1794930961152	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:01.181
+cmwkvk65d0047l3moe4a1itp0	ord-1794930977547	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:17.57
+cmwkvk6ad0049l3mooqad0cy6	ord-1794930977547	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-17 15:56:17.75
+cmwkvk6pt004dl3molf63rs07	ord-1794930978283	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:18.306
+cmwkvk6qd004fl3mogxsslorv	ord-1794930978283	ORDER_CONFIRMED	HUB_PACKING	Store picking started	admin@rasoiiq.in	2026-11-17 15:56:18.326
+cmwkvkcsv004pl3moetvyjh8i	ord-1794930986177	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:26.192
+cmwkvkctl004rl3moxhzt2miz	ord-1794930986177	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-17 15:56:26.217
+cmwkvkcu3004tl3mofpi6jfs8	ord-1794930986177	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-17 15:56:26.235
+cmwkvkcum004vl3moq5u9740y	ord-1794930986177	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-17 15:56:26.254
+cmwkvkcvz0051l3mo33n83az7	ord-1794930986286	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 15:56:26.304
+cmwkvkd4t0055l3mo8by0e36d	ord-1794930986603	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 15:56:26.621
+cmwkwobrb006zl3mofjfjn0mr	ord-1794932850873	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwjb5fej003ql3gghywo88u2	2026-11-17 16:27:31.079
+cmwkwxk8o00acl3moupxxo7jh	ord-1794933281956	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwkwxauo008ll3mos42pjnr3	2026-11-17 16:34:41.976
+cmwkwzbwj00c4l3moqau9zxlx	ord-1794933364452	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwkwz25k00adl3mo0v3y8ki4	2026-11-17 16:36:04.483
+cmwkx2ikp00dkl3moad5qy2ft	ord-1794933513074	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwkx29l300c5l3moeug8a2rp	2026-11-17 16:38:33.098
+cmwkx2ilv00dml3mofrqkt5ia	ord-1794933513074	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 16:38:33.14
+cmwkx3ily00f2l3mo4l23drry	ord-1794933559775	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwkx396g00dnl3mo5cxmw396	2026-11-17 16:39:19.798
+cmwkx3in000f4l3mosggs5ohl	ord-1794933559775	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 16:39:19.836
+cmwkx4p2e00gkl3mo07iljt7m	ord-1794933614796	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwkx4fa200f5l3moxe9iari8	2026-11-17 16:40:14.823
+cmwkx4p3b00gml3mo163csvbk	ord-1794933614796	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 16:40:14.855
+cmwkx5l0d00hml3moja6e4cnc	ord-1794933656118	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:40:56.221
+cmwkx5lwm00hwl3moy8yxuadc	ord-1794933657354	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:40:57.383
+cmwkx5lxj00hyl3moq8gh7dyj	ord-1794933657354	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-17 16:40:57.415
+cmwkx5ly800i0l3monuue10rq	ord-1794933657354	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-17 16:40:57.441
+cmwkx5lyw00i2l3mob9t3rh1f	ord-1794933657354	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-17 16:40:57.464
+cmwkx5m0r00i8l3mopj390x7t	ord-1794933657499	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:40:57.532
+cmwkx5mbs00icl3moj77yasry	ord-1794933657902	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 16:40:57.928
+cmwkx5mya00ikl3moa94df2ot	ord-1794933658713	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:40:58.738
+cmwkx5n4100iml3mosbz0bujt	ord-1794933658713	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-17 16:40:58.945
+cmwkx5njp00iql3moqqbnpwrd	ord-1794933659482	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:40:59.509
+cmwkx5nke00isl3mokh7jrsrg	ord-1794933659482	ORDER_CONFIRMED	HUB_PACKING	Store picking started	admin@rasoiiq.in	2026-11-17 16:40:59.535
+cmwkx5o3d00j0l3mo756c864s	ord-1794933660190	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:41:00.217
+cmwkx5o4u00j2l3mosonk07xi	ord-1794933660190	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-17 16:41:00.27
+cmwkx5o5w00j4l3mo01tgk1v3	ord-1794933660190	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-17 16:41:00.308
+cmwkx5o6g00j6l3mogsnlms8h	ord-1794933660190	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-17 16:41:00.329
+cmwkx5o7w00jal3mooemkfulr	ord-1794933660354	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:41:00.38
+cmwkx5o9600jel3moh21390rj	ord-1794933660400	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:41:00.426
+cmwkx5oa300jil3moax0akeee	ord-1794933660433	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 16:41:00.459
+cmwkx5oak00jkl3mozrrnf6fl	ord-1794933660400	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 16:41:00.476
+cmwkx5oba00jml3mot103fye3	ord-1794933660354	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-17 16:41:00.502
+cmwkx5oc400jol3momm2762m7	ord-1794933660400	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 16:41:00.532
+cmwkx5odl00jsl3mo8fyu1tll	ord-1794933660560	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:41:00.585
+cmwkx5ofb00jwl3moqcdxz3u9	ord-1794933660623	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:41:00.647
+cmwkx5og700k0l3mo72b78ff7	ord-1794933660655	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:41:00.679
+cmwkx5ogo00k2l3mocv75j5e7	ord-1794933660655	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 16:41:00.696
+cmwkx5ohd00k4l3mo18gcj5g8	ord-1794933660623	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-17 16:41:00.721
+cmwkx5oi000k6l3mor7r1zy7q	ord-1794933660655	HUB_PACKING	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-17 16:41:00.744
+cmwkx5oix00kal3mo0pr1q9ak	ord-1794933660753	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:41:00.778
+cmwkx5ojm00kcl3mowvwnx35f	ord-1794933660560	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 16:41:00.802
+cmwkx5ok400kel3mog3c3nl3e	ord-1794933660560	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 16:41:00.82
+cmwkx5ol800kil3mobkg9idvh	ord-1794933660836	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:41:00.861
+cmwkx5om200kkl3mo8irjkp7w	ord-1794933660836	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-17 16:41:00.89
+cmwkx5ons00kol3mo2x2fklcq	ord-1794933660929	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:41:00.953
+cmwkx5ou000ksl3mojov9vygq	ord-1794933661145	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:41:01.177
+cmwkx5plw00kul3mohhjucuu3	cmwkx5pkj0001l3p8iwd2n01e	ORDER_CONFIRMED	HUB_PACKING	Dark store started packing items	system-worker	2026-11-17 16:41:02.18
+cmwkx5pn400kwl3mo41xef3cq	cmwkx5pkj0001l3p8iwd2n01e	HUB_PACKING	OUT_FOR_DELIVERY	Admin dispatched rider	admin@rasoiiq.in	2026-11-17 16:41:02.224
+cmwkx5pom00kyl3monfgnre81	cmwkx5pkj0001l3p8iwd2n01e	OUT_FOR_DELIVERY	DELIVERED	Package delivered to doorstep	system-worker	2026-11-17 16:41:02.278
+cmwkx5ppv00l0l3moy7kqit8e	cmwkx5pp80004l3p8d60f8qx9	ORDER_CONFIRMED	HUB_PACKING	Worker 1 packing	system-worker	2026-11-17 16:41:02.324
+cmwkx6gv800mgl3mohcvlxznr	ord-1794933697479	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwkx5wxd00l1l3mowf771xh9	2026-11-17 16:41:37.508
+cmwkx6gwd00mil3mo56cwfo4i	ord-1794933697479	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 16:41:37.549
+cmwkxhslx000zl3ocfuf29ckf	ord-1794934225841	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:25.942
+cmwkxhtid0019l3oc1fga3t0o	ord-1794934227091	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:27.109
+cmwkxhtjg001bl3ocfg4wac7f	ord-1794934227091	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-17 16:50:27.149
+cmwkxhtk8001dl3oc5ut80ell	ord-1794934227091	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-17 16:50:27.176
+cmwkxhtky001fl3oclvrnxjd5	ord-1794934227091	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-17 16:50:27.202
+cmwkxhtmt001ll3ocd59mntko	ord-1794934227252	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:27.27
+cmwkxhty6001pl3ocfqj9soty	ord-1794934227662	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 16:50:27.678
+cmwkxhuio001xl3ocybc8oqz3	ord-1794934228403	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:28.416
+cmwkxhup6001zl3ocgvzup9q2	ord-1794934228403	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-17 16:50:28.651
+cmwkxhv4m0023l3ocfe6r2zqh	ord-1794934229189	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:29.207
+cmwkxhv5b0025l3ocnxifxbii	ord-1794934229189	ORDER_CONFIRMED	HUB_PACKING	Store picking started	admin@rasoiiq.in	2026-11-17 16:50:29.231
+cmwkxhvnk002dl3ocdbbuffp0	ord-1794934229872	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:29.888
+cmwkxhvoz002fl3ocdqxa9mn0	ord-1794934229872	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-17 16:50:29.94
+cmwkxhvpy002hl3ocvg7qn89e	ord-1794934229872	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-17 16:50:29.974
+cmwkxhvqi002jl3oce4fk0jc0	ord-1794934229872	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-17 16:50:29.995
+cmwkxhvru002nl3oclnhz12cx	ord-1794934230030	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:30.043
+cmwkxhvso002rl3ocdaea8cl4	ord-1794934230059	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:30.073
+cmwkxhvti002vl3oc2gah0q32	ord-1794934230089	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-17 16:50:30.102
+cmwkxhvty002xl3ocdpxz8zig	ord-1794934230059	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 16:50:30.118
+cmwkxhvun002zl3ocptohb45r	ord-1794934230030	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-17 16:50:30.143
+cmwkxhvvf0031l3ocqz2z7d84	ord-1794934230059	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 16:50:30.171
+cmwkxhvwu0035l3ocquexygzz	ord-1794934230209	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:30.222
+cmwkxhvym0039l3oc7p47oer6	ord-1794934230274	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:30.286
+cmwkxhvzf003dl3oc72ryugwk	ord-1794934230302	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:30.315
+cmwkxhvzw003fl3ocfzl9tr4t	ord-1794934230302	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 16:50:30.332
+cmwkxhw0i003hl3ocvghk7fis	ord-1794934230274	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-17 16:50:30.354
+cmwkxhw14003jl3ockspj7nph	ord-1794934230302	HUB_PACKING	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-17 16:50:30.376
+cmwkxhw20003nl3ocwzczb0x8	ord-1794934230396	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:30.409
+cmwkxhw2o003pl3ocforpg6a7	ord-1794934230209	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 16:50:30.432
+cmwkxhw36003rl3ock9pgvbhu	ord-1794934230209	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-17 16:50:30.45
+cmwkxhw4b003vl3oc93dh9kjm	ord-1794934230478	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:30.492
+cmwkxhw5a003xl3ocal4zg34p	ord-1794934230478	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-17 16:50:30.526
+cmwkxhw730041l3ocgpptkrl2	ord-1794934230578	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:30.592
+cmwkxhwf50045l3ocraqh49i3	ord-1794934230861	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-17 16:50:30.881
+cmwkxhx7w0047l3oc97dqywpz	cmwkxhx6n0001l3fody7eb22x	ORDER_CONFIRMED	HUB_PACKING	Dark store started packing items	system-worker	2026-11-17 16:50:31.917
+cmwkxhx950049l3ocj4u0lzbg	cmwkxhx6n0001l3fody7eb22x	HUB_PACKING	OUT_FOR_DELIVERY	Admin dispatched rider	admin@rasoiiq.in	2026-11-17 16:50:31.962
+cmwkxhxan004bl3oceivlvpac	cmwkxhx6n0001l3fody7eb22x	OUT_FOR_DELIVERY	DELIVERED	Package delivered to doorstep	system-worker	2026-11-17 16:50:32.015
+cmwkxhxby004dl3ocxj8zpj6x	cmwkxhxba0004l3fo7crf660a	ORDER_CONFIRMED	HUB_PACKING	Worker 1 packing	system-worker	2026-11-17 16:50:32.062
+cmwkxilts005tl3ocbqoaco5n	ord-1794934263793	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwkxi4jr004el3ocoa8hht1u	2026-11-17 16:51:03.808
+cmwkxiluu005vl3ocar7ogb1w	ord-1794934263793	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-17 16:51:03.846
+cmwlrx3sq000zl3wogqvhshhj	ord-1794985328628	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:02:08.762
+cmwlrx4qx0019l3woawvurma9	ord-1794985329974	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:02:09.994
+cmwlrx4s0001bl3woxq5jd1zh	ord-1794985329974	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-18 07:02:10.033
+cmwlrx4sq001dl3wo8e6rc9u9	ord-1794985329974	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-18 07:02:10.058
+cmwlrx4te001fl3woxhvu9pom	ord-1794985329974	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-18 07:02:10.083
+cmwlrx4v6001ll3wocd7ux9fc	ord-1794985330127	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:02:10.146
+cmwlrx55s001pl3woups8rc96	ord-1794985330514	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-18 07:02:10.529
+cmwlrx5qu001xl3wozaxwmk3q	ord-1794985331270	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:02:11.286
+cmwlrx5wj001zl3wol9d80u90	ord-1794985331270	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-18 07:02:11.492
+cmwls9m4f0007l37sa9x2i2g9	ord-1794985912347	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:11:52.383
+cmwls9mbl0009l37sakoxf2xd	ord-1794985912347	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-18 07:11:52.641
+cmwls9mr9000dl37s4saj0449	ord-1794985913178	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:11:53.205
+cmwls9mrz000fl37si8mznt6m	ord-1794985913178	ORDER_CONFIRMED	HUB_PACKING	Store picking started	admin@rasoiiq.in	2026-11-18 07:11:53.232
+cmwlsb0cb000nl37semqma8om	ord-1794985977419	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:12:57.468
+cmwlsb0f9000pl37sp28t82dq	ord-1794985977419	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-18 07:12:57.573
+cmwlsb0gv000rl37si32gzq1x	ord-1794985977419	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-18 07:12:57.631
+cmwlsb0hl000tl37s6zr9rgg8	ord-1794985977419	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-18 07:12:57.658
+cmwlsb0k0000xl37szdltbsym	ord-1794985977717	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:12:57.744
+cmwlsb0lt0011l37skkuldgez	ord-1794985977782	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-18 07:12:57.809
+cmwlsb0mj0013l37szhfgif6h	ord-1794985977717	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 07:12:57.835
+cmwlsb0oa0015l37s9is8odyi	ord-1794985977717	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 07:12:57.898
+cmwlsb0qs0019l37sdkj2rn48	ord-1794985977951	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:12:57.988
+cmwlsb0v4001dl37sfq4vlvxn	ord-1794985978114	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:12:58.145
+cmwlsb0x6001hl37szuizq5kp	ord-1794985978184	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:12:58.218
+cmwlsb0xy001jl37sdez9dh1t	ord-1794985978184	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 07:12:58.246
+cmwlsb0yz001ll37sb3z2tagd	ord-1794985978114	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-18 07:12:58.283
+cmwlsb106001nl37ste3zc3ul	ord-1794985978184	HUB_PACKING	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-18 07:12:58.327
+cmwlsb11q001rl37srusmec6u	ord-1794985978361	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:12:58.382
+cmwlsb12o001tl37spy7wiyem	ord-1794985977951	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 07:12:58.416
+cmwlsb13e001vl37s01osxss1	ord-1794985977951	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 07:12:58.442
+cmwlsb15s001zl37sc00fucv5	ord-1794985978500	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:12:58.528
+cmwlsb16x0021l37snw781qjw	ord-1794985978500	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-18 07:12:58.569
+cmwlsb1a30025l37ss5epsjc7	ord-1794985978659	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:12:58.683
+cmwlsb1m80029l37s1000mmrh	ord-1794985979093	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:12:59.12
+cmwlsbwg5002dl37sj51q3ps6	ord-1794986019058	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:13:39.078
+cmwlsc797002ll37s7jm6wrf4	ord-1794986033061	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:13:53.083
+cmwlsc7b5002nl37smgvwke1c	ord-1794986033061	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-18 07:13:53.153
+cmwlsc7ch002pl37sf0kdxv4m	ord-1794986033061	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-18 07:13:53.201
+cmwlsc7d9002rl37sv0zp1aku	ord-1794986033061	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-18 07:13:53.229
+cmwlsc7f5002vl37sn7q9xcf5	ord-1794986033280	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:13:53.297
+cmwlsc7g2002zl37spi0nst1i	ord-1794986033315	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:13:53.331
+cmwlsc7h70033l37se46ur3uo	ord-1794986033351	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-18 07:13:53.371
+cmwlsc7hr0035l37s482u6jvz	ord-1794986033315	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 07:13:53.392
+cmwlsc7ik0037l37s3h0xjt1t	ord-1794986033280	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-18 07:13:53.42
+cmwlsc7jh0039l37skgyvrlom	ord-1794986033315	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 07:13:53.453
+cmwlsc7ld003dl37st6r0ywwn	ord-1794986033500	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:13:53.521
+cmwlsc7ni003hl37s2s0bvys7	ord-1794986033583	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:13:53.598
+cmwlsc7of003ll37sjubv57zm	ord-1794986033616	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:13:53.631
+cmwlsc7ov003nl37sd9y4y0mp	ord-1794986033616	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 07:13:53.648
+cmwlsc7pn003pl37s9lb9jkxa	ord-1794986033583	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-18 07:13:53.676
+cmwlsc7qg003rl37slfzyejas	ord-1794986033616	HUB_PACKING	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-18 07:13:53.705
+cmwlsc7s7003vl37spgss6lqc	ord-1794986033740	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:13:53.768
+cmwlsc7tm003xl37shopzt9ik	ord-1794986033500	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 07:13:53.818
+cmwlsc7uk003zl37sl3lzceef	ord-1794986033500	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 07:13:53.852
+cmwlsc7wf0043l37segv5paay	ord-1794986033903	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:13:53.919
+cmwlsc7xj0045l37s4cg6ak91	ord-1794986033903	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-18 07:13:53.96
+cmwlsc8030049l37sc1xm8qbu	ord-1794986034032	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:13:54.052
+cmwlsc8c8004dl37shgymzg9k	ord-1794986034460	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:13:54.488
+cmwlscgk9004fl37sroae3k3n	cmwlscgiy0001l3kobdfj4m2s	ORDER_CONFIRMED	HUB_PACKING	Dark store started packing items	system-worker	2026-11-18 07:14:05.146
+cmwlscgli004hl37sw99nnjjq	cmwlscgiy0001l3kobdfj4m2s	HUB_PACKING	OUT_FOR_DELIVERY	Admin dispatched rider	admin@rasoiiq.in	2026-11-18 07:14:05.191
+cmwlscgns004jl37sb8j5tx9h	cmwlscgiy0001l3kobdfj4m2s	OUT_FOR_DELIVERY	DELIVERED	Package delivered to doorstep	system-worker	2026-11-18 07:14:05.272
+cmwlscgp6004ll37s76fkts5s	cmwlscgol0004l3kowstuqgqv	ORDER_CONFIRMED	HUB_PACKING	Worker 1 packing	system-worker	2026-11-18 07:14:05.322
+cmwlscw7v0061l37sxfyuar1b	ord-1794986065397	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwlscmb6004ml37sgp4x2ldl	2026-11-18 07:14:25.436
+cmwlscw8w0063l37sqnff60qm	ord-1794986065397	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 07:14:25.472
+cmwlspu68006bl37sgr05dxfk	ord-1794986669287	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:24:29.312
+cmwlspuc8006dl37ss39ia0z5	ord-1794986669287	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-18 07:24:29.528
+cmwlspurn006hl37s500x0l3s	ord-1794986670063	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:24:30.083
+cmwlspusa006jl37sui7dby8p	ord-1794986670063	ORDER_CONFIRMED	HUB_PACKING	Store picking started	admin@rasoiiq.in	2026-11-18 07:24:30.107
+cmwlsqa8g007zl37sx8b8non1	ord-1794986690109	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwlsq12h006kl37semulwczh	2026-11-18 07:24:50.128
+cmwlsqa9h0081l37sl3v4wekl	ord-1794986690109	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 07:24:50.166
+cmwlst1ek0095l37shaxdj98p	ord-1794986818541	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 07:26:58.653
+cmwlucuoe00bfl37s8rmeu5wd	ord-1794989422650	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwlucrnx00axl37s08ria2ta	2026-11-18 08:10:22.67
+cmwlucup100bhl37sxv30c72h	ord-1794989422650	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 08:10:22.693
+cmwlucupp00bjl37sgf0uznso	ord-1794989422650	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 08:10:22.717
+cmwlucxql00c2l37scr3domlf	ord-1794989426619	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwlucuz600bkl37sxjs47if5	2026-11-18 08:10:26.637
+cmwlud2r700cll37sn994b22g	ord-1794989433123	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwlucy0b00c3l37sjoa9xngk	2026-11-18 08:10:33.139
+cmwlutjcn000il3787sleg65y	ord-1794990201116	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwluteid0000l3788hcz6990	2026-11-18 08:23:21.143
+cmwlutjdb000kl378fmxj3hb2	ord-1794990201116	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 08:23:21.168
+cmwlutjdw000ml378sur9blqk	ord-1794990201116	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 08:23:21.189
+cmwlutnqs0015l378ujkuq8rh	ord-1794990206805	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwlutjlb000nl378o8jmwhbc	2026-11-18 08:23:26.837
+cmwlutr7s001ol3786ml5otiy	ord-1794990211307	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwlutnyu0016l378xwczb3pb	2026-11-18 08:23:31.336
+cmwluvsti0027l378fryxrhof	ord-1794990306702	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwluvp8d001pl378lv9i8eqm	2026-11-18 08:25:06.726
+cmwluvsu30029l378y5edx4ma	ord-1794990306702	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 08:25:06.747
+cmwluvsun002bl378ee1emgss	ord-1794990306702	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 08:25:06.768
+cmwluvvzb002ul37861pfafg4	ord-1794990310797	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwluvt42002cl378qx2ivo25	2026-11-18 08:25:10.823
+cmwluw0zr003dl37803zuvvgz	ord-1794990317294	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwluvw8q002vl378oiuhuj8x	2026-11-18 08:25:17.32
+cmwluyq2l003nl378fobofazz	ord-1794990443113	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:23.133
+cmwluyq3j003pl378yq3jmfaz	ord-1794990443113	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-18 08:27:23.168
+cmwluyq49003rl378dxnvtaln	ord-1794990443113	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-18 08:27:23.194
+cmwluyq59003tl3789t75gvo9	ord-1794990443113	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-18 08:27:23.229
+cmwluyq7b003zl378m8smm8wi	ord-1794990443284	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:23.303
+cmwluyqjv0043l378rqsbfc5o	ord-1794990443741	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-18 08:27:23.755
+cmwluyx89004bl378qc4qkqet	ord-1794990452394	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:32.409
+cmwluyxdn004dl378rsgfgh18	ord-1794990452394	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-18 08:27:32.603
+cmwluyxt5004hl37893djq34j	ord-1794990453148	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:33.162
+cmwluyxtt004jl3781k9dfflv	ord-1794990453148	ORDER_CONFIRMED	HUB_PACKING	Store picking started	admin@rasoiiq.in	2026-11-18 08:27:33.185
+cmwluz4fg004rl378pked0xhn	ord-1794990461724	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:41.741
+cmwluz4h2004tl378kw7ll0pw	ord-1794990461724	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-18 08:27:41.798
+cmwluz4i4004vl378ve4v4rnl	ord-1794990461724	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-18 08:27:41.836
+cmwluz4iu004xl378p19wd4m8	ord-1794990461724	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-18 08:27:41.862
+cmwluz4kc0051l378i87htq4s	ord-1794990461903	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:41.917
+cmwluz4lc0055l378phklrhzy	ord-1794990461936	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:41.952
+cmwluz4mc0059l378f03z2m8t	ord-1794990461973	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-18 08:27:41.989
+cmwluz4mt005bl378cx9ca08g	ord-1794990461936	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 08:27:42.005
+cmwluz4nj005dl378qn1vpsll	ord-1794990461903	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-18 08:27:42.031
+cmwluz4od005fl378q38env3x	ord-1794990461936	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 08:27:42.061
+cmwluz4px005jl378o64t6qgj	ord-1794990462103	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:42.117
+cmwluz4rx005nl37884y5l5xu	ord-1794990462173	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:42.19
+cmwluz4sv005rl378tywvrufd	ord-1794990462209	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:42.223
+cmwluz4tc005tl3785fr5ooah	ord-1794990462209	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 08:27:42.24
+cmwluz4u2005vl3789qcpy64f	ord-1794990462173	ORDER_CONFIRMED	CANCELLED	Store out of stock	partner@blinkit.com	2026-11-18 08:27:42.266
+cmwluz4ur005xl378w9v438ro	ord-1794990462209	HUB_PACKING	CANCELLED	Damaged packaging during packing	partner@blinkit.com	2026-11-18 08:27:42.291
+cmwluz4vt0061l378z2szyirk	ord-1794990462314	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:42.329
+cmwluz4wn0063l37887696rxt	ord-1794990462103	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 08:27:42.359
+cmwluz4x70065l378t7hnaw0u	ord-1794990462103	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 08:27:42.379
+cmwluz4yh0069l378mfducb5e	ord-1794990462412	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:42.426
+cmwluz4zb006bl378essq4z6j	ord-1794990462412	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-18 08:27:42.456
+cmwluz51b006fl378ukv83zcl	ord-1794990462513	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:42.527
+cmwluz57x006jl378miri4hxw	ord-1794990462748	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 08:27:42.765
+cmwluzxvk006ll378ackgv7p0	cmwluzxu90001l3uco1wng70w	ORDER_CONFIRMED	HUB_PACKING	Dark store started packing items	system-worker	2026-11-18 08:28:19.904
+cmwluzxwu006nl378w56wggk2	cmwluzxu90001l3uco1wng70w	HUB_PACKING	OUT_FOR_DELIVERY	Admin dispatched rider	admin@rasoiiq.in	2026-11-18 08:28:19.95
+cmwluzy0j006pl378mu6qtl1u	cmwluzxu90001l3uco1wng70w	OUT_FOR_DELIVERY	DELIVERED	Package delivered to doorstep	system-worker	2026-11-18 08:28:20.084
+cmwluzy26006rl378uqspxl4j	cmwluzy1e0004l3ucnu3cqgv1	ORDER_CONFIRMED	HUB_PACKING	Worker 1 packing	system-worker	2026-11-18 08:28:20.143
+cmwlv0gl00087l378yihg41f4	ord-1794990524132	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwlv0470006sl378yxzqecwd	2026-11-18 08:28:44.148
+cmwlv0gm10089l378agxvfo02	ord-1794990524132	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 08:28:44.186
+cmwlyyexb0005l3soaqn9075p	ord-1794997147103	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:19:07.151
+cmwlz6kzw0003l33c8f4u0lq8	ord-1794997528174	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:25:28.268
+cmwlz81xf000jl33czdw1wph5	ord-1794997596836	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:26:36.867
+cmwlz81yu000ll33cgxulcrox	ord-1794997596836	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-18 10:26:36.919
+cmwlz820i000nl33c9mp5d7dr	ord-1794997596836	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-18 10:26:36.979
+cmwlz821b000pl33cv84sdetd	ord-1794997596836	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-18 10:26:37.008
+cmwlz9nde0009l3j4uhxw7siz	ord-1794997671231	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:27:51.315
+cmwlz9nex000bl3j44e7kcfnh	ord-1794997671231	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-18 10:27:51.37
+cmwlz9nfp000dl3j4z177uwn7	ord-1794997671231	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-18 10:27:51.397
+cmwlz9ng8000fl3j4eejjmy4n	ord-1794997671231	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-18 10:27:51.417
+cmwlz9nhu000ll3j4048n3p40	ord-1794997671462	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:27:51.474
+cmwlz9nqp000pl3j47nm9vwrb	ord-1794997671786	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-18 10:27:51.794
+cmwlzah8c000zl3j42lqkd8bo	ord-1794997709990	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:28:30.013
+cmwlzah9g0011l3j44wgcte6n	ord-1794997709990	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-18 10:28:30.052
+cmwlzahat0013l3j4bseyk8jq	ord-1794997709990	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-18 10:28:30.101
+cmwlzahbp0015l3j4pirh3b4t	ord-1794997709990	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-18 10:28:30.133
+cmwlzahds001bl3j43ftdjynb	ord-1794997710191	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:28:30.209
+cmwlzahpj001fl3j48021s86i	ord-1794997710618	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-18 10:28:30.631
+cmwlzcu3e001pl3j41a7k1cnv	ord-1794997819971	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:30:19.995
+cmwlzcu4l001rl3j41r04o7mc	ord-1794997819971	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-18 10:30:20.037
+cmwlzcu5i001tl3j4ex3falcf	ord-1794997819971	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-18 10:30:20.071
+cmwlzcu6g001vl3j429mext9o	ord-1794997819971	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-18 10:30:20.104
+cmwlzcu8r0021l3j4ayg0jdlv	ord-1794997820160	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:30:20.188
+cmwlzcujj0025l3j4v99366ub	ord-1794997820549	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-18 10:30:20.576
+cmwlzdjv8002fl3j4wd4dfsur	ord-1794997853380	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:30:53.397
+cmwlzdjw6002hl3j4pwb9uyk1	ord-1794997853380	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-18 10:30:53.431
+cmwlzdjx3002jl3j4vudfy6pj	ord-1794997853380	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-18 10:30:53.464
+cmwlzdjxr002ll3j46877o868	ord-1794997853380	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-18 10:30:53.488
+cmwlzdk0c002rl3j474hw9z69	ord-1794997853552	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:30:53.581
+cmwlzdkac002vl3j4e8i029p7	ord-1794997853927	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-18 10:30:53.94
+cmwlzeffk0033l3j4muaozmvw	ord-1794997894288	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:31:34.305
+cmwlzefnn0035l3j40v5x3rwq	ord-1794997894288	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-18 10:31:34.596
+cmwlzeg3q0039l3j4clidb1pp	ord-1794997895140	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:31:35.174
+cmwlzeg4v003bl3j4gpzh4q00	ord-1794997895140	ORDER_CONFIRMED	HUB_PACKING	Store picking started	admin@rasoiiq.in	2026-11-18 10:31:35.215
+cmwlzg452003jl3j4ebs55ybz	ord-1794997972967	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:32:52.982
+cmwlzg46s003ll3j449s6orzt	ord-1794997972967	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-18 10:32:53.045
+cmwlzg47n003nl3j4pvdeh0d9	ord-1794997972967	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-18 10:32:53.076
+cmwlzg48i003pl3j4gbi9n77c	ord-1794997972967	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-18 10:32:53.106
+cmwlzg49w003tl3j4x6pjegw2	ord-1794997973146	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:32:53.157
+cmwlzg4ar003xl3j4ibs10ymm	ord-1794997973175	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:32:53.187
+cmwlzg4bm0041l3j4u3b975oy	ord-1794997973206	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-18 10:32:53.218
+cmwlzg4by0043l3j4cnmjrm21	ord-1794997973175	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 10:32:53.23
+cmwlzg4cw0045l3j4cex4y8oj	ord-1794997973146	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-18 10:32:53.265
+cmwlzg4du0047l3j4epbebplt	ord-1794997973175	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 10:32:53.298
+cmwlzg4fc004bl3j45rbdznut	ord-1794997973341	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:32:53.353
+cmwlzg4h4004fl3j498qb4ob8	ord-1794997973405	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:32:53.417
+cmwlzg4hw004jl3j4mxgfbtg5	ord-1794997973435	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:32:53.444
+cmwlzg4i7004ll3j47ri8j5oj	ord-1794997973435	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 10:32:53.455
+cmwlzg4jb004pl3j4c4n0dk9u	ord-1794997973486	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:32:53.495
+cmwlzg4jv004rl3j4osp0ueau	ord-1794997973341	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 10:32:53.515
+cmwlzg4kh004tl3j4k0wqb33t	ord-1794997973341	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 10:32:53.537
+cmwlzg4lt004xl3j4nm6wfn5u	ord-1794997973571	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:32:53.586
+cmwlzg4mu004zl3j4aucuqc90	ord-1794997973571	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-18 10:32:53.622
+cmwlzg4oe0053l3j4to1krabo	ord-1794997973669	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:32:53.679
+cmwlzg4u90057l3j40e4rpof6	ord-1794997973876	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:32:53.89
+cmwlzh7p2005fl3j4i6b6il8h	ord-1794998024229	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:33:44.247
+cmwlzh7qw005hl3j4sp9vxpqh	ord-1794998024229	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-18 10:33:44.313
+cmwlzh7ru005jl3j4evinlagl	ord-1794998024229	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-18 10:33:44.346
+cmwlzh7sh005ll3j42udj17ub	ord-1794998024229	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-18 10:33:44.37
+cmwlzh7uq005pl3j49xdis4bv	ord-1794998024437	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:33:44.45
+cmwlzh7vo005tl3j4vmni5855	ord-1794998024469	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:33:44.485
+cmwlzh7xi005xl3j4vxy2fey4	ord-1794998024508	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-18 10:33:44.551
+cmwlzh7y3005zl3j431namerq	ord-1794998024469	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 10:33:44.571
+cmwlzh7yv0061l3j48i2j9ttt	ord-1794998024437	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-18 10:33:44.6
+cmwlzh7zv0063l3j4fbdeqxt3	ord-1794998024469	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 10:33:44.635
+cmwlzh81r0067l3j4ww8dtimt	ord-1794998024682	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:33:44.703
+cmwlzh83f006bl3j42pd5nno0	ord-1794998024753	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:33:44.763
+cmwlzh843006fl3j4tfxxkos1	ord-1794998024779	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:33:44.787
+cmwlzh84h006hl3j4b90asti2	ord-1794998024779	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 10:33:44.802
+cmwlzh84z006jl3j4zsqwe92u	ord-1794998024753	ORDER_CONFIRMED	CANCELLED	Store out of stock	rogue.admin.mwj58z1h@test.in	2026-11-18 10:33:44.82
+cmwlzh85n006ll3j4rw2yclto	ord-1794998024779	HUB_PACKING	CANCELLED	Damaged packaging during packing	rogue.admin.mwj58z1h@test.in	2026-11-18 10:33:44.844
+cmwlzh86c006pl3j48pjefcbr	ord-1794998024860	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:33:44.869
+cmwlzh86u006rl3j4x9piu26t	ord-1794998024682	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 10:33:44.886
+cmwlzh877006tl3j4ox3xt5jj	ord-1794998024682	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 10:33:44.899
+cmwlzh883006xl3j46lsdmt4g	ord-1794998024922	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:33:44.931
+cmwlzh88o006zl3j4w599eqzx	ord-1794998024922	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-18 10:33:44.952
+cmwlzh8a60073l3j4i0cai7j6	ord-1794998024997	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:33:45.006
+cmwlzh8hb0077l3j4abumxi8e	ord-1794998025251	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:33:45.263
+cmwlzjmqu0079l3j4xg6i937q	cmwlzjmps0001l3sc2uty2fgi	ORDER_CONFIRMED	HUB_PACKING	Dark store started packing items	system-worker	2026-11-18 10:35:37.062
+cmwlzjmrz007bl3j4y45hzdl9	cmwlzjmps0001l3sc2uty2fgi	HUB_PACKING	OUT_FOR_DELIVERY	Admin dispatched rider	admin@rasoiiq.in	2026-11-18 10:35:37.103
+cmwlzjmwe007dl3j44bgy36qc	cmwlzjmps0001l3sc2uty2fgi	OUT_FOR_DELIVERY	DELIVERED	Package delivered to doorstep	system-worker	2026-11-18 10:35:37.262
+cmwlzjmxc007fl3j4y1pjabyu	cmwlzjmwx0004l3scvmbw6x7y	ORDER_CONFIRMED	HUB_PACKING	Worker 1 packing	system-worker	2026-11-18 10:35:37.296
+cmwlzk1ot008vl3j4hlapi7zq	ord-1794998156415	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwlzjs7m007gl3j4xmuko7ij	2026-11-18 10:35:56.43
+cmwlzk1pl008xl3j4spsk31sy	ord-1794998156415	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 10:35:56.457
+cmwlzlbke009gl3j4v3vllp22	ord-1794998215869	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwlzl7zs008yl3j4de7xmrom	2026-11-18 10:36:55.887
+cmwlzlbkx009il3j4mvlazdwd	ord-1794998215869	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 10:36:55.905
+cmwlzlblf009kl3j4jgwevt38	ord-1794998215869	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 10:36:55.923
+cmwlzlebf00a3l3j4n82foio4	ord-1794998219440	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwlzlbrh009ll3j4r28i362j	2026-11-18 10:36:59.452
+cmwlzli8y00aml3j4jzsugqh6	ord-1794998224534	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwlzlegx00a4l3j4jmenjzct	2026-11-18 10:37:04.546
+cmwlzlprz00aql3j4yl1f8fhs	ord-1794998234295	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 10:37:14.303
+cmwm0lccb0003l3lkdviguf8m	ord-1794999896490	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:04:56.507
+cmwm2dfbd000dl3ooqpao1w7p	ord-1795002886329	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:54:46.346
+cmwm2dfcf000fl3ooj4mofkd5	ord-1795002886329	ORDER_CONFIRMED	HUB_PACKING	Dark store associate assigned; bagging staples.	admin@rasoiiq.in	2026-11-18 11:54:46.384
+cmwm2dfd1000hl3ooiomxtdeu	ord-1795002886329	HUB_PACKING	OUT_FOR_DELIVERY	Dispatched with delivery rider Ravi K.	admin@rasoiiq.in	2026-11-18 11:54:46.406
+cmwm2dfdm000jl3oovtfztxbn	ord-1795002886329	OUT_FOR_DELIVERY	DELIVERED	Handed over at doorstep with OTP confirmation.	admin@rasoiiq.in	2026-11-18 11:54:46.426
+cmwm2dff8000pl3oo2hqd1nu5	ord-1795002886471	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:54:46.484
+cmwm2dfog000tl3oo74l21qh2	ord-1795002886807	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-18 11:54:46.816
+cmwm2dlx80011l3oowotttbyq	ord-1795002894901	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:54:54.908
+cmwm2dm0j0013l3oodejpzi19	ord-1795002894901	ORDER_CONFIRMED	CANCELLED	Customer changed meal plan and no longer needs this grocery order	demo@rasoiiq.in	2026-11-18 11:54:55.028
+cmwm2dmfy0017l3oogz2jj0f1	ord-1795002895571	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:54:55.582
+cmwm2dmgh0019l3oovt9vfdnf	ord-1795002895571	ORDER_CONFIRMED	HUB_PACKING	Store picking started	admin@rasoiiq.in	2026-11-18 11:54:55.601
+cmwm2dt3u001hl3ooqrqdx4mx	ord-1795002904211	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:55:04.218
+cmwm2dt50001jl3oossejcsc6	ord-1795002904211	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	admin@rasoiiq.in	2026-11-18 11:55:04.261
+cmwm2dt5s001ll3oo5nzj5w3j	ord-1795002904211	HUB_PACKING	OUT_FOR_DELIVERY	Internal simulation rider dispatch	system-worker	2026-11-18 11:55:04.289
+cmwm2dt6a001nl3oomn2sbwnc	ord-1795002904211	OUT_FOR_DELIVERY	DELIVERED	Doorstep handover completed	system-worker	2026-11-18 11:55:04.306
+cmwm2dt7c001rl3oo49wnxl3y	ord-1795002904334	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:55:04.344
+cmwm2dt8n001vl3ooj35wfn03	ord-1795002904368	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:55:04.391
+cmwm2dt9r001zl3oolen5ri4c	ord-1795002904416	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-patel	2026-11-18 11:55:04.431
+cmwm2dta60021l3oo6cdey0o4	ord-1795002904368	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 11:55:04.446
+cmwm2dtaq0023l3ooh3wrdboc	ord-1795002904334	ORDER_CONFIRMED	CANCELLED	Customer self-cancellation in confirmed state	demo@rasoiiq.in	2026-11-18 11:55:04.467
+cmwm2dtba0025l3ooyprzmlj8	ord-1795002904368	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 11:55:04.486
+cmwm2dtcp0029l3oo1bmh5gnw	ord-1795002904523	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:55:04.537
+cmwm2dte9002dl3ooau20h461	ord-1795002904583	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:55:04.594
+cmwm2dtey002hl3ooc1aif2lh	ord-1795002904610	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:55:04.618
+cmwm2dtf8002jl3oo4ninnqa4	ord-1795002904610	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 11:55:04.628
+cmwm2dtfl002ll3ooupy78j6h	ord-1795002904583	ORDER_CONFIRMED	CANCELLED	Store out of stock	rogue.admin.mwj58z1h@test.in	2026-11-18 11:55:04.642
+cmwm2dtg3002nl3ooguxpyhko	ord-1795002904610	HUB_PACKING	CANCELLED	Damaged packaging during packing	rogue.admin.mwj58z1h@test.in	2026-11-18 11:55:04.659
+cmwm2dtgq002rl3ooplo92cxi	ord-1795002904675	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:55:04.682
+cmwm2dth4002tl3ooepxslts0	ord-1795002904523	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 11:55:04.697
+cmwm2dthh002vl3oon4esngy5	ord-1795002904523	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 11:55:04.709
+cmwm2dti6002zl3oo29h8toun	ord-1795002904728	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:55:04.734
+cmwm2dtim0031l3oogifh48s6	ord-1795002904728	ORDER_CONFIRMED	CANCELLED	Administrative operational cancellation	admin@rasoiiq.in	2026-11-18 11:55:04.751
+cmwm2dtjt0035l3ooyj232klt	ord-1795002904785	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:55:04.793
+cmwm2dtoe0039l3oorga1sv0r	ord-1795002904943	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:55:04.958
+cmwm2e033003bl3oosmjuromn	cmwm2e01u0001l34wbz3lyqae	ORDER_CONFIRMED	HUB_PACKING	Dark store started packing items	system-worker	2026-11-18 11:55:13.264
+cmwm2e043003dl3oofmz9x591	cmwm2e01u0001l34wbz3lyqae	HUB_PACKING	OUT_FOR_DELIVERY	Admin dispatched rider	adm-1794828022272@rasoi.internal	2026-11-18 11:55:13.299
+cmwm2e05g003fl3oopdg7udyy	cmwm2e01u0001l34wbz3lyqae	OUT_FOR_DELIVERY	DELIVERED	Package delivered to doorstep	system-worker	2026-11-18 11:55:13.348
+cmwm2e06s003hl3oo0yae16fx	cmwm2e0680004l34wh6tqqehk	ORDER_CONFIRMED	HUB_PACKING	Worker 1 packing	system-worker	2026-11-18 11:55:13.397
+cmwm2gayp003jl3ooz7dysj4l	cmwm2gaxo0001l324gsm2kxls	ORDER_CONFIRMED	HUB_PACKING	Dark store started packing items	system-worker	2026-11-18 11:57:00.674
+cmwm2gazo003ll3oo48bwtm96	cmwm2gaxo0001l324gsm2kxls	HUB_PACKING	OUT_FOR_DELIVERY	Admin dispatched rider	adm-1794828022272@rasoi.internal	2026-11-18 11:57:00.709
+cmwm2gb10003nl3oosh0npxxy	cmwm2gaxo0001l324gsm2kxls	OUT_FOR_DELIVERY	DELIVERED	Package delivered to doorstep	system-worker	2026-11-18 11:57:00.756
+cmwm2gb21003pl3ool221tfbm	cmwm2gb1l0004l324a09ik95h	ORDER_CONFIRMED	HUB_PACKING	Worker 1 packing	system-worker	2026-11-18 11:57:00.794
+cmwm2gt5y0055l3oov556jwjv	ord-1795003044245	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwm2gikc003ql3ooztalvyqf	2026-11-18 11:57:24.262
+cmwm2gt720057l3oozg92i9p9	ord-1795003044245	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 11:57:24.303
+cmwm2hjm6005ql3oovhfjfd3f	ord-1795003078531	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwm2hgoz0058l3oo1vidsq7g	2026-11-18 11:57:58.543
+cmwm2hjmj005sl3oom3fe56tq	ord-1795003078531	ORDER_CONFIRMED	HUB_PACKING	Transitioned from ORDER_CONFIRMED to HUB_PACKING	system-worker	2026-11-18 11:57:58.555
+cmwm2hjmz005ul3oozrunhxb1	ord-1795003078531	HUB_PACKING	OUT_FOR_DELIVERY	Transitioned from HUB_PACKING to OUT_FOR_DELIVERY	system-worker	2026-11-18 11:57:58.571
+cmwm2hnhh006dl3oo2xu6atrn	ord-1795003083543	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwm2hjsu005vl3oou3jeub9w	2026-11-18 11:58:03.557
+cmwm2htiz006wl3oos6oh0lfo	ord-1795003091382	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwm2hnny006el3oovgstr3jy	2026-11-18 11:58:11.388
+cmwm2iait0070l3oo1fvvs3g9	ord-1795003113407	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:58:33.413
+cmwm2jcjr0076l3oolan38z8h	ord-1795003162681	\N	ORDER_CONFIRMED	Initial order placement by customer	user-demo-1	2026-11-18 11:59:22.696
+cmwm2pv1r0003l3y0y3z84nvt	ord-1795003466593	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwjb5fej003ql3gghywo88u2	2026-11-18 12:04:26.607
+cmwm2rezd0007l3y0mlzggncn	ord-1795003539079	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwjb5fej003ql3gghywo88u2	2026-11-18 12:05:39.097
+cmwm2spnl000bl3y0grajiyqp	ord-1795003599575	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwjb5fej003ql3gghywo88u2	2026-11-18 12:06:39.585
+cmwm2uh8x000fl3y0ai33o2sv	ord-1795003681990	\N	ORDER_CONFIRMED	Initial order placement by customer	cmwjb5fej003ql3gghywo88u2	2026-11-18 12:08:02.002
 \.
 
 
@@ -2023,6 +5332,8 @@ pantry-1794817791932	hh-mehta-family	ing-raw-banana	1500	g	f	\N	2026-11-16 12:24
 
 COPY public."PasswordResetToken" (id, "userId", "tokenHash", "expiresAt", "consumedAt", "createdAt") FROM stdin;
 cmwj7rdvy007ql3jsckvecwff	cmwj7rddt0078l3js99qnh5nu	f0218e57e27f935f7aa165392edba64e53c5bf49129bec3610077cbe6f594f83	2026-11-16 12:17:17.23	2026-11-16 12:02:17.451	2026-11-16 12:02:17.231
+cmwj8jkf7002ll3o0vdzbz86q	cmwj8jjxp0023l3o00bvthbh8	2c325339069a49959ffafc5e034b3f6851ce04167c1ea2582e381348fc6a9ff6	2026-11-16 12:39:12.064	2026-11-16 12:24:12.302	2026-11-16 12:24:12.067
+cmwltod3z00a5l37skphrc52l	cmwkawlu40000l3f8zugqrfgy	9c774f8cad55579f1286c56055e19a91a15fb0b8d843c0103e445dc237e876d9	2026-11-18 08:06:20.155	\N	2026-11-18 07:51:20.159
 \.
 
 
@@ -2038,51 +5349,129 @@ COPY public."Payment" (id, "orderId", "amountInr", status, "paymentMethod", "tra
 -- Data for Name: Product; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."Product" (id, brand, title, category, "imageUrl", description) FROM stdin;
-prod-Mother Dairy-ing-paneer	Mother Dairy	Mother Dairy Classic Paneer, 200g	Grocery	https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=200&q=80	\N
-prod-Fortune-ing-atta	Fortune	Fortune Chakki Fresh 100% Whole Wheat Atta, 5kg	Grocery	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80	\N
-prod-Daawat-ing-basmati-rice	Daawat	Daawat Super Basmati Rice, 1kg	Grocery	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80	\N
-prod-Amul-ing-butter	Amul	Amul Pasteurized Table Butter, 500g	Grocery	https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=200&q=80	\N
-prod-Fortune-ing-toor-dal	Fortune	Fortune Unpolished Arhar Toor Dal, 1kg	Grocery	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80	\N
-prod-India Gate-ing-basmati-rice	India Gate	India Gate Feast Rozana Basmati Rice, 1kg	Grocery	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80	\N
-prod-Aashirvaad-ing-atta	Aashirvaad	Aashirvaad Select 100% Sharbati Wheat Atta, 1kg	Grocery	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80	\N
-prod-Amul-ing-ghee	Amul	Amul Pure Cow Ghee, 500ml	Grocery	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=200&q=80	\N
-prod-Gowardhan-ing-ghee	Gowardhan	Gowardhan 100% Pure Cow Ghee Jar, 500ml	Grocery	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=200&q=80	\N
-prod-Tata Sampann-ing-moong-dal	Tata Sampann	Tata Sampann Unpolished Moong Dal, 1kg	Grocery	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80	\N
-prod-Tata Sampann-ing-toor-dal	Tata Sampann	Tata Sampann Unpolished Toor Dal, 500g	Grocery	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80	\N
-prod-Fortune-ing-moong-dal	Fortune	Fortune Mogar Yellow Moong Dal, 1kg	Grocery	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80	\N
-prod-Tata Sampann-ing-rajma	Tata Sampann	Tata Sampann Kashmiri Rajma, 500g	Grocery	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-onion	Farm Fresh	Fresh Nashik Red Onion, 1kg	Grocery	https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-tomato	Farm Fresh	Fresh Country Desi Tomato, 1kg	Grocery	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-potato	Farm Fresh	Fresh Agra New Crop Potatoes, 1kg	Grocery	https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-palak	Farm Fresh	Hydroponic Clean Palak (Spinach), 250g	Grocery	https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-ginger	Farm Fresh	Fresh Washed Ginger, 200g	Grocery	https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-garlic	Farm Fresh	Fresh Madhya Pradesh Garlic, 200g	Grocery	https://images.unsplash.com/photo-1615477550926-105260f8976b?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-green-chilli	Farm Fresh	Fresh Dark Green Chillies, 100g	Grocery	https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-coriander	Farm Fresh	Fresh Coriander Leaves Bunch, 1 pc	Grocery	https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-curry-leaves	Farm Fresh	Fresh Aromatic Curry Leaves Bunch, 1 pc	Grocery	https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-lemon	Farm Fresh	Juicy Yellow Nimbu (Lemons), 4 pcs	Grocery	https://images.unsplash.com/photo-1590502593747-42a996133562?auto=format&fit=crop&w=200&q=80	\N
-prod-Everest-ing-garam-masala	Everest	Everest Royal Garam Masala, 100g	Grocery	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80	\N
-prod-Tata Sampann-ing-turmeric	Tata Sampann	Tata Sampann Turmeric Powder, 200g	Grocery	https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=200&q=80	\N
-prod-Fortune-ing-oil	Fortune	Fortune Sunlite Refined Sunflower Oil, 1L	Grocery	https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=200&q=80	\N
-prod-iD Fresh-ing-dosa-batter	iD Fresh	iD Fresh Idli & Dosa Batter, 1kg	Grocery	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=200&q=80	\N
-prod-Tata Sampann-ing-kabuli-chana	Tata Sampann	Tata Sampann White Kabuli Chana, 500g	Grocery	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80	\N
-prod-Fortune-ing-kabuli-chana	Fortune	Fortune Classic Kabuli Chana, 500g	Grocery	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-cauliflower	Farm Fresh	Fresh Clean Cauliflower (Gobi), 1 pc (~500g)	Grocery	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-bhindi	Farm Fresh	Fresh Tender Ladyfinger (Bhindi), 500g	Grocery	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-baingan	Farm Fresh	Fresh Purple Bharta Baingan, 500g (1-2 pcs)	Grocery	https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=200&q=80	\N
-prod-Everest-ing-sambar-powder	Everest	Everest Madras Sambar Masala, 100g	Grocery	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80	\N
-prod-Everest-ing-chole-masala	Everest	Everest Chhole Masala, 100g	Grocery	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80	\N
-prod-Tata Sampann-ing-rava	Tata Sampann	Tata Sampann Roasted Sooji / Rava, 500g	Grocery	https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=200&q=80	\N
-prod-Balaji-ing-sev	Balaji	Balaji Nylon Sev, 200g	Grocery	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80	\N
-prod-Fortune-ing-bajra-flour	Fortune	Fortune Desi Bajra Flour, 1kg	Grocery	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80	\N
-prod-Amul-ing-paneer	Amul	Amul Fresh Malai Paneer, 500g	Grocery	https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-surti-papdi	Farm Fresh	Fresh Surti Papdi Beans, 500g	Grocery	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-tuver-lilva	Farm Fresh	Fresh Green Tuver Lilva, 250g	Grocery	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-purple-yam	Farm Fresh	Fresh Purple Yam (Kand), 500g	Grocery	https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=200&q=80	\N
-prod-Farm Fresh-ing-raw-banana	Farm Fresh	Fresh Green Raw Plantain (Kacha Kela), 500g	Grocery	https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=200&q=80	\N
-prod-Amul-ing-buttermilk	Amul	Amul Masti Spiced Buttermilk, 500ml	Grocery	https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=200&q=80	\N
-prod-Tata Sampann-ing-sesame-seeds	Tata Sampann	Tata Sampann White Sesame Seeds (Til), 200g	Grocery	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80	\N
+COPY public."Product" (id, brand, title, category, "imageUrl", description, "createdAt", "isSampleData", slug, status, tags, "updatedAt") FROM stdin;
+prod-Fortune-ing-atta	Fortune	Fortune Chakki Fresh 100% Whole Wheat Atta, 5kg	Grocery	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	fortune-fortune-chakki-fresh-100-whole-wheat-atta-5kg	ACTIVE	{}	2026-11-17 10:46:22.072
+prod-Amul-ing-butter	Amul	Amul Pasteurized Table Butter, 500g	Grocery	https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	amul-amul-pasteurized-table-butter-500g	ACTIVE	{}	2026-11-17 10:46:22.086
+prod-Fortune-ing-toor-dal	Fortune	Fortune Unpolished Arhar Toor Dal, 1kg	Grocery	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	fortune-fortune-unpolished-arhar-toor-dal-1kg	ACTIVE	{}	2026-11-17 10:46:22.093
+prod-Aashirvaad-ing-atta	Aashirvaad	Aashirvaad Select 100% Sharbati Wheat Atta, 1kg	Grocery	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	aashirvaad-aashirvaad-select-100-sharbati-wheat-atta-1kg	ACTIVE	{}	2026-11-17 10:46:22.105
+prod-Amul-ing-ghee	Amul	Amul Pure Cow Ghee, 500ml	Grocery	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	amul-amul-pure-cow-ghee-500ml	ACTIVE	{}	2026-11-17 10:46:22.111
+prod-Tata Sampann-ing-moong-dal	Tata Sampann	Tata Sampann Unpolished Moong Dal, 1kg	Grocery	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	tata-sampann-tata-sampann-unpolished-moong-dal-1kg	ACTIVE	{}	2026-11-17 10:46:22.123
+prod-Tata Sampann-ing-toor-dal	Tata Sampann	Tata Sampann Unpolished Toor Dal, 500g	Grocery	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	tata-sampann-tata-sampann-unpolished-toor-dal-500g	ACTIVE	{}	2026-11-17 10:46:22.129
+prod-Tata Sampann-ing-rajma	Tata Sampann	Tata Sampann Kashmiri Rajma, 500g	Grocery	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	tata-sampann-tata-sampann-kashmiri-rajma-500g	ACTIVE	{}	2026-11-17 10:46:22.141
+prod-Farm Fresh-ing-onion	Farm Fresh	Fresh Nashik Red Onion, 1kg	Grocery	https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-nashik-red-onion-1kg	ACTIVE	{}	2026-11-17 10:46:22.147
+prod-Farm Fresh-ing-tomato	Farm Fresh	Fresh Country Desi Tomato, 1kg	Grocery	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-country-desi-tomato-1kg	ACTIVE	{}	2026-11-17 10:46:22.154
+prod-Farm Fresh-ing-palak	Farm Fresh	Hydroponic Clean Palak (Spinach), 250g	Grocery	https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-hydroponic-clean-palak-spinach-250g	ACTIVE	{}	2026-11-17 10:46:22.165
+prod-Farm Fresh-ing-ginger	Farm Fresh	Fresh Washed Ginger, 200g	Grocery	https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-washed-ginger-200g	ACTIVE	{}	2026-11-17 10:46:22.17
+prod-Farm Fresh-ing-green-chilli	Farm Fresh	Fresh Dark Green Chillies, 100g	Grocery	https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-dark-green-chillies-100g	ACTIVE	{}	2026-11-17 10:46:22.181
+prod-Farm Fresh-ing-coriander	Farm Fresh	Fresh Coriander Leaves Bunch, 1 pc	Grocery	https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-coriander-leaves-bunch-1-pc	ACTIVE	{}	2026-11-17 10:46:22.186
+prod-Farm Fresh-ing-lemon	Farm Fresh	Juicy Yellow Nimbu (Lemons), 4 pcs	Grocery	https://images.unsplash.com/photo-1590502593747-42a996133562?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-juicy-yellow-nimbu-lemons-4-pcs	ACTIVE	{}	2026-11-17 10:46:22.198
+prod-Everest-ing-garam-masala	Everest	Everest Royal Garam Masala, 100g	Grocery	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	everest-everest-royal-garam-masala-100g	ACTIVE	{}	2026-11-17 10:46:22.204
+prod-Fortune-ing-oil	Fortune	Fortune Sunlite Refined Sunflower Oil, 1L	Grocery	https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	fortune-fortune-sunlite-refined-sunflower-oil-1l	ACTIVE	{}	2026-11-17 10:46:22.216
+prod-iD Fresh-ing-dosa-batter	iD Fresh	iD Fresh Idli & Dosa Batter, 1kg	Grocery	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	id-fresh-id-fresh-idli-dosa-batter-1kg	ACTIVE	{}	2026-11-17 10:46:22.222
+prod-Fortune-ing-kabuli-chana	Fortune	Fortune Classic Kabuli Chana, 500g	Grocery	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	fortune-fortune-classic-kabuli-chana-500g	ACTIVE	{}	2026-11-17 10:46:22.233
+prod-Farm Fresh-ing-cauliflower	Farm Fresh	Fresh Clean Cauliflower (Gobi), 1 pc (~500g)	Grocery	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-clean-cauliflower-gobi-1-pc-500g	ACTIVE	{}	2026-11-17 10:46:22.238
+prod-Farm Fresh-ing-baingan	Farm Fresh	Fresh Purple Bharta Baingan, 500g (1-2 pcs)	Grocery	https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-purple-bharta-baingan-500g-1-2-pcs	ACTIVE	{}	2026-11-17 10:46:22.248
+prod-Everest-ing-sambar-powder	Everest	Everest Madras Sambar Masala, 100g	Grocery	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	everest-everest-madras-sambar-masala-100g	ACTIVE	{}	2026-11-17 10:46:22.253
+prod-Everest-ing-chole-masala	Everest	Everest Chhole Masala, 100g	Grocery	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	everest-everest-chhole-masala-100g	ACTIVE	{}	2026-11-17 10:46:22.259
+prod-Balaji-ing-sev	Balaji	Balaji Nylon Sev, 200g	Grocery	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	balaji-balaji-nylon-sev-200g	ACTIVE	{}	2026-11-17 10:46:22.269
+prod-Fortune-ing-bajra-flour	Fortune	Fortune Desi Bajra Flour, 1kg	Grocery	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	fortune-fortune-desi-bajra-flour-1kg	ACTIVE	{}	2026-11-17 10:46:22.275
+prod-Farm Fresh-ing-surti-papdi	Farm Fresh	Fresh Surti Papdi Beans, 500g	Grocery	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-surti-papdi-beans-500g	ACTIVE	{}	2026-11-17 10:46:22.286
+prod-Mother Dairy-ing-paneer	Mother Dairy	Mother Dairy Classic Paneer, 200g	Grocery	https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	mother-dairy-mother-dairy-classic-paneer-200g	ACTIVE	{}	2026-11-17 10:46:22.057
+prod-Daawat-ing-basmati-rice	Daawat	Daawat Super Basmati Rice, 1kg	Grocery	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	daawat-daawat-super-basmati-rice-1kg	ACTIVE	{}	2026-11-17 10:46:22.079
+prod-India Gate-ing-basmati-rice	India Gate	India Gate Feast Rozana Basmati Rice, 1kg	Grocery	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	india-gate-india-gate-feast-rozana-basmati-rice-1kg	ACTIVE	{}	2026-11-17 10:46:22.099
+prod-Gowardhan-ing-ghee	Gowardhan	Gowardhan 100% Pure Cow Ghee Jar, 500ml	Grocery	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	gowardhan-gowardhan-100-pure-cow-ghee-jar-500ml	ACTIVE	{}	2026-11-17 10:46:22.117
+prod-Fortune-ing-moong-dal	Fortune	Fortune Mogar Yellow Moong Dal, 1kg	Grocery	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	fortune-fortune-mogar-yellow-moong-dal-1kg	ACTIVE	{}	2026-11-17 10:46:22.135
+prod-Farm Fresh-ing-potato	Farm Fresh	Fresh Agra New Crop Potatoes, 1kg	Grocery	https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-agra-new-crop-potatoes-1kg	ACTIVE	{}	2026-11-17 10:46:22.16
+prod-Farm Fresh-ing-garlic	Farm Fresh	Fresh Madhya Pradesh Garlic, 200g	Grocery	https://images.unsplash.com/photo-1615477550926-105260f8976b?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-madhya-pradesh-garlic-200g	ACTIVE	{}	2026-11-17 10:46:22.175
+prod-Farm Fresh-ing-curry-leaves	Farm Fresh	Fresh Aromatic Curry Leaves Bunch, 1 pc	Grocery	https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-aromatic-curry-leaves-bunch-1-pc	ACTIVE	{}	2026-11-17 10:46:22.192
+prod-Tata Sampann-ing-turmeric	Tata Sampann	Tata Sampann Turmeric Powder, 200g	Grocery	https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	tata-sampann-tata-sampann-turmeric-powder-200g	ACTIVE	{}	2026-11-17 10:46:22.21
+prod-Tata Sampann-ing-kabuli-chana	Tata Sampann	Tata Sampann White Kabuli Chana, 500g	Grocery	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	tata-sampann-tata-sampann-white-kabuli-chana-500g	ACTIVE	{}	2026-11-17 10:46:22.227
+prod-Farm Fresh-ing-bhindi	Farm Fresh	Fresh Tender Ladyfinger (Bhindi), 500g	Grocery	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-tender-ladyfinger-bhindi-500g	ACTIVE	{}	2026-11-17 10:46:22.243
+prod-Tata Sampann-ing-rava	Tata Sampann	Tata Sampann Roasted Sooji / Rava, 500g	Grocery	https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	tata-sampann-tata-sampann-roasted-sooji-rava-500g	ACTIVE	{}	2026-11-17 10:46:22.265
+prod-Amul-ing-paneer	Amul	Amul Fresh Malai Paneer, 500g	Grocery	https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	amul-amul-fresh-malai-paneer-500g	ACTIVE	{}	2026-11-17 10:46:22.281
+prod-Farm Fresh-ing-tuver-lilva	Farm Fresh	Fresh Green Tuver Lilva, 250g	Grocery	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-green-tuver-lilva-250g	ACTIVE	{}	2026-11-17 10:46:22.291
+prod-Farm Fresh-ing-purple-yam	Farm Fresh	Fresh Purple Yam (Kand), 500g	Grocery	https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-purple-yam-kand-500g	ACTIVE	{}	2026-11-17 10:46:22.297
+prod-Farm Fresh-ing-raw-banana	Farm Fresh	Fresh Green Raw Plantain (Kacha Kela), 500g	Grocery	https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	farm-fresh-fresh-green-raw-plantain-kacha-kela-500g	ACTIVE	{}	2026-11-17 10:46:22.302
+prod-Amul-ing-buttermilk	Amul	Amul Masti Spiced Buttermilk, 500ml	Grocery	https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	amul-amul-masti-spiced-buttermilk-500ml	ACTIVE	{}	2026-11-17 10:46:22.307
+prod-Tata Sampann-ing-sesame-seeds	Tata Sampann	Tata Sampann White Sesame Seeds (Til), 200g	Grocery	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80	\N	2026-11-17 10:44:51.392	t	tata-sampann-tata-sampann-white-sesame-seeds-til-200g	ACTIVE	{}	2026-11-17 10:46:22.314
+prod-farm-fresh-fresh-alphonso-mangoes-hapus	Farm Fresh	Fresh Alphonso Mangoes (Hapus)	Fruits	https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=400&q=80	Naturally ripened, sweet and aromatic Ratnagiri Alphonso mangoes.	2026-11-17 10:49:08.384	t	farm-fresh-fresh-alphonso-mangoes-hapus	ACTIVE	{Seasonal,Sweet,Fruit}	2026-11-17 10:49:08.384
+prod-farm-fresh-fresh-robusta-bananas-kela	Farm Fresh	Fresh Robusta Bananas (Kela)	Fruits	https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=400&q=80	Energy-rich premium Robusta bananas, perfectly ripe and sweet.	2026-11-17 10:49:08.434	t	farm-fresh-fresh-robusta-bananas-kela	ACTIVE	{"Daily Essential",Potassium,Fruit}	2026-11-17 10:49:08.434
+prod-farm-fresh-shimla-royal-delicious-apples	Farm Fresh	Shimla Royal Delicious Apples	Fruits	https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=400&q=80	Crisp, juicy and sweet Shimla apples packed with dietary fiber.	2026-11-17 10:49:08.484	t	farm-fresh-shimla-royal-delicious-apples	ACTIVE	{Crisp,"Vitamin C",Fruit}	2026-11-17 10:49:08.484
+prod-farm-fresh-nagpur-sweet-oranges-santra	Farm Fresh	Nagpur Sweet Oranges (Santra)	Fruits	https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?auto=format&fit=crop&w=400&q=80	Juicy Nagpur oranges with tangy-sweet citrus burst.	2026-11-17 10:49:08.511	t	farm-fresh-nagpur-sweet-oranges-santra	ACTIVE	{Citrus,"Vitamin C",Fruit}	2026-11-17 10:49:08.511
+prod-farm-fresh-fresh-ruby-red-pomegranate-anar	Farm Fresh	Fresh Ruby Red Pomegranate (Anar)	Fruits	https://images.unsplash.com/photo-1541344999736-83eca872f241?auto=format&fit=crop&w=400&q=80	Plump ruby red pearls rich in antioxidants and iron.	2026-11-17 10:49:08.54	t	farm-fresh-fresh-ruby-red-pomegranate-anar	ACTIVE	{Antioxidant,"Iron Rich",Fruit}	2026-11-17 10:49:08.54
+prod-farm-fresh-juicy-sweet-lime-mosambi	Farm Fresh	Juicy Sweet Lime (Mosambi)	Fruits	https://images.unsplash.com/photo-1582979512210-99b6a53386f9?auto=format&fit=crop&w=400&q=80	Fresh Indian sweet lime, ideal for cold-pressed juices.	2026-11-17 10:49:08.57	t	farm-fresh-juicy-sweet-lime-mosambi	ACTIVE	{Hydrating,Juice,Fruit}	2026-11-17 10:49:08.57
+prod-farm-fresh-fresh-seedless-green-grapes-angoor	Farm Fresh	Fresh Seedless Green Grapes (Angoor)	Fruits	https://images.unsplash.com/photo-1537640538966-79f369143f8f?auto=format&fit=crop&w=400&q=80	Crisp and sweet seedless green grapes from Nashik vineyards.	2026-11-17 10:49:08.598	t	farm-fresh-fresh-seedless-green-grapes-angoor	ACTIVE	{Seedless,Snack,Fruit}	2026-11-17 10:49:08.598
+prod-farm-fresh-fresh-sweet-papaya-papita	Farm Fresh	Fresh Sweet Papaya (Papita)	Fruits	https://images.unsplash.com/photo-1517282009859-f000ec3b26fe?auto=format&fit=crop&w=400&q=80	Rich orange-fleshed sweet papaya, excellent for digestion.	2026-11-17 10:49:08.625	t	farm-fresh-fresh-sweet-papaya-papita	ACTIVE	{Digestive,"Vitamin A",Fruit}	2026-11-17 10:49:08.625
+prod-farm-fresh-fresh-country-desi-tomato-tamatar	Farm Fresh	Fresh Country Desi Tomato (Tamatar)	Vegetables	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80	Tangy and firm desi tomatoes essential for Indian curries and rasam.	2026-11-17 10:49:08.652	t	farm-fresh-fresh-country-desi-tomato-tamatar	ACTIVE	{"Daily Essential","Curry Base",Vegetable}	2026-11-17 10:49:08.652
+prod-farm-fresh-fresh-nashik-red-onion-pyaz	Farm Fresh	Fresh Nashik Red Onion (Pyaz)	Vegetables	https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=400&q=80	Pungent and crisp Nashik red onions for everyday tadka.	2026-11-17 10:49:08.7	t	farm-fresh-fresh-nashik-red-onion-pyaz	ACTIVE	{"Daily Essential",Pungent,Vegetable}	2026-11-17 10:49:08.7
+prod-farm-fresh-fresh-agra-new-crop-potatoes-aloo	Farm Fresh	Fresh Agra New Crop Potatoes (Aloo)	Vegetables	https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80	Thin-skinned earthy potatoes, perfect for boiling, roasting and curries.	2026-11-17 10:49:08.751	t	farm-fresh-fresh-agra-new-crop-potatoes-aloo	ACTIVE	{"Daily Essential",Versatile,Vegetable}	2026-11-17 10:49:08.751
+prod-farm-fresh-fresh-tender-ladyfinger-bhindi	Farm Fresh	Fresh Tender Ladyfinger (Bhindi)	Vegetables	https://images.unsplash.com/photo-1425543103986-22abb7d7e8d2?auto=format&fit=crop&w=400&q=80	Tender, bright green bhindi ideal for bhindi masala and crispy kurkuri bhindi.	2026-11-17 10:49:08.8	t	farm-fresh-fresh-tender-ladyfinger-bhindi	ACTIVE	{Tender,Homestyle,Vegetable}	2026-11-17 10:49:08.8
+prod-farm-fresh-fresh-clean-cauliflower-gobi	Farm Fresh	Fresh Clean Cauliflower (Gobi)	Vegetables	https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?auto=format&fit=crop&w=400&q=80	Tight white florets, pesticide-checked and cleaned.	2026-11-17 10:49:08.824	t	farm-fresh-fresh-clean-cauliflower-gobi	ACTIVE	{"Winter Special",Gobi,Vegetable}	2026-11-17 10:49:08.824
+prod-farm-fresh-fresh-purple-bharta-baingan-eggplant	Farm Fresh	Fresh Purple Bharta Baingan (Eggplant)	Vegetables	https://images.unsplash.com/photo-1628773822503-930a84e27f2f?auto=format&fit=crop&w=400&q=80	Round purple eggplants with soft flesh, ideal for roasting for Baingan Bharta.	2026-11-17 10:49:08.853	t	farm-fresh-fresh-purple-bharta-baingan-eggplant	ACTIVE	{Smoked,Bharta,Vegetable}	2026-11-17 10:49:08.853
+prod-farm-fresh-hydroponic-clean-palak-spinach	Farm Fresh	Hydroponic Clean Palak (Spinach)	Vegetables	https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=400&q=80	Cleaned tender green spinach leaves for palak paneer and dal palak.	2026-11-17 10:49:08.881	t	farm-fresh-hydroponic-clean-palak-spinach	ACTIVE	{Iron,"Leafy Green",Vegetable}	2026-11-17 10:49:08.881
+prod-farm-fresh-fresh-ginger-adrak	Farm Fresh	Fresh Ginger (Adrak)	Vegetables	https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=400&q=80	Pungent, washed fresh ginger roots for masala chai and cooking pastes.	2026-11-17 10:49:08.909	t	farm-fresh-fresh-ginger-adrak	ACTIVE	{Aromatic,Ginger,Vegetable}	2026-11-17 10:49:08.909
+prod-farm-fresh-fresh-mp-garlic-lahsun	Farm Fresh	Fresh MP Garlic (Lahsun)	Vegetables	https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&w=400&q=80	Aromatic garlic bulbs with high pungency and distinct flavor.	2026-11-17 10:49:08.937	t	farm-fresh-fresh-mp-garlic-lahsun	ACTIVE	{Pungent,Garlic,Vegetable}	2026-11-17 10:49:08.937
+prod-farm-fresh-fresh-dark-green-chillies-hari-mirch	Farm Fresh	Fresh Dark Green Chillies (Hari Mirch)	Vegetables	https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&w=400&q=80	Spicy and crisp dark green chillies for daily tadka and chutney.	2026-11-17 10:49:08.966	t	farm-fresh-fresh-dark-green-chillies-hari-mirch	ACTIVE	{Spicy,Tadka,Vegetable}	2026-11-17 10:49:08.966
+prod-farm-fresh-fresh-surti-papdi-beans-valor	Farm Fresh	Fresh Surti Papdi Beans (Valor)	Vegetables	https://images.unsplash.com/photo-1597362925123-77861d3fbac7?auto=format&fit=crop&w=400&q=80	Authentic tender Surti Papdi flat beans, essential for Gujarati Undhiyu.	2026-11-17 10:49:08.995	t	farm-fresh-fresh-surti-papdi-beans-valor	ACTIVE	{Gujarati,"Undhiyu Special",Winter}	2026-11-17 10:49:08.995
+prod-farm-fresh-fresh-green-tuver-lilva-pigeon-pea-pods	Farm Fresh	Fresh Green Tuver Lilva (Pigeon Pea Pods)	Vegetables	https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&w=400&q=80	Fresh seasonal green tuver pods for Gujarati kachori, muthia and undhiyu.	2026-11-17 10:49:09.023	t	farm-fresh-fresh-green-tuver-lilva-pigeon-pea-pods	ACTIVE	{Gujarati,Seasonal,Tuver}	2026-11-17 10:49:09.023
+prod-amul-amul-taaza-homogenised-toned-milk	Amul	Amul Taaza Homogenised Toned Milk	Dairy & Bakery	https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80	Pure, fresh and nutritious pasteurized toned milk from Amul.	2026-11-17 10:49:09.053	t	amul-amul-taaza-homogenised-toned-milk	ACTIVE	{"Daily Essential",Milk,Dairy}	2026-11-17 10:49:09.053
+prod-amul-amul-fresh-malai-paneer	Amul	Amul Fresh Malai Paneer	Dairy & Bakery	https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=400&q=80	Soft, creamy and rich protein-packed Malai Paneer made from pure cow milk.	2026-11-17 10:49:09.102	t	amul-amul-fresh-malai-paneer	ACTIVE	{"High Protein",Paneer,Dairy}	2026-11-17 10:49:09.102
+prod-amul-amul-pasteurized-table-butter	Amul	Amul Pasteurized Table Butter	Dairy & Bakery	https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=400&q=80	Utterly butterly delicious salted table butter loved across India.	2026-11-17 10:49:09.153	t	amul-amul-pasteurized-table-butter	ACTIVE	{Butter,Breakfast,Dairy}	2026-11-17 10:49:09.153
+prod-mother-dairy-mother-dairy-classic-dahi-curd	Mother Dairy	Mother Dairy Classic Dahi (Curd)	Dairy & Bakery	https://images.unsplash.com/photo-1571212515416-fef01fc43637?auto=format&fit=crop&w=400&q=80	Thick, creamy and traditionally set curd rich in natural probiotics.	2026-11-17 10:49:09.209	t	mother-dairy-mother-dairy-classic-dahi-curd	ACTIVE	{Probiotic,Curd,Dairy}	2026-11-17 10:49:09.209
+prod-amul-amul-masti-spiced-buttermilk-chhaas	Amul	Amul Masti Spiced Buttermilk (Chhaas)	Dairy & Bakery	https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80	Refreshing spiced chaas with roasted jeera and mint notes.	2026-11-17 10:49:09.237	t	amul-amul-masti-spiced-buttermilk-chhaas	ACTIVE	{Gujarati,Refreshing,Probiotic}	2026-11-17 10:49:09.237
+prod-modern-modern-100-whole-wheat-bread	Modern	Modern 100% Whole Wheat Bread	Dairy & Bakery	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80	Soft and healthy whole wheat brown bread with zero maida.	2026-11-17 10:49:09.263	t	modern-modern-100-whole-wheat-bread	ACTIVE	{"Whole Wheat",Breakfast,Bakery}	2026-11-17 10:49:09.263
+prod-amul-amul-processed-cheese-slices	Amul	Amul Processed Cheese Slices	Dairy & Bakery	https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=400&q=80	Classic rich cheese slices, perfect for breakfast sandwiches and parathas.	2026-11-17 10:49:09.291	t	amul-amul-processed-cheese-slices	ACTIVE	{Cheese,Sandwich,Dairy}	2026-11-17 10:49:09.291
+prod-aashirvaad-aashirvaad-superior-mp-shudh-chakki-atta	Aashirvaad	Aashirvaad Superior MP Shudh Chakki Atta	Rice, Atta & Grains	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80	100% pure whole wheat stone-ground chakki flour that makes soft rotis.	2026-11-17 10:49:09.317	t	aashirvaad-aashirvaad-superior-mp-shudh-chakki-atta	ACTIVE	{"Daily Essential","Whole Wheat",Atta}	2026-11-17 10:49:09.317
+prod-india-gate-india-gate-super-basmati-rice	India Gate	India Gate Super Basmati Rice	Rice, Atta & Grains	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80	Aged long-grain basmati rice with royal aroma and slender fluffy grains.	2026-11-17 10:49:09.397	t	india-gate-india-gate-super-basmati-rice	ACTIVE	{Aged,Basmati,"Biryani Special"}	2026-11-17 10:49:09.397
+prod-daawat-daawat-rozana-super-basmati-rice	Daawat	Daawat Rozana Super Basmati Rice	Rice, Atta & Grains	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80	High-yield everyday basmati rice suitable for dal chawal and pulav.	2026-11-17 10:49:09.448	t	daawat-daawat-rozana-super-basmati-rice	ACTIVE	{Everyday,Basmati,Rice}	2026-11-17 10:49:09.448
+prod-fortune-fortune-desi-bajra-pearl-millet-flour	Fortune	Fortune Desi Bajra (Pearl Millet) Flour	Rice, Atta & Grains	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80	Wholesome gluten-free Bajra flour, ideal for winter Bajra na Rotla.	2026-11-17 10:49:09.493	t	fortune-fortune-desi-bajra-pearl-millet-flour	ACTIVE	{Gujarati,"Gluten Free",Millet}	2026-11-17 10:49:09.493
+prod-tata-sampann-tata-sampann-roasted-sooji-rava	Tata Sampann	Tata Sampann Roasted Sooji / Rava	Rice, Atta & Grains	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80	Granular roasted semolina for quick upma, halwa and rava dosa.	2026-11-17 10:49:09.522	t	tata-sampann-tata-sampann-roasted-sooji-rava	ACTIVE	{Breakfast,Rava,Grain}	2026-11-17 10:49:09.522
+prod-tata-sampann-tata-sampann-thick-poha-flattened-rice	Tata Sampann	Tata Sampann Thick Poha (Flattened Rice)	Rice, Atta & Grains	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80	Thick, unpolished rice flakes that make fluffy Kanda Batata Poha.	2026-11-17 10:49:09.55	t	tata-sampann-tata-sampann-thick-poha-flattened-rice	ACTIVE	{Breakfast,Poha,Grain}	2026-11-17 10:49:09.55
+prod-tata-sampann-tata-sampann-unpolished-toor-arhar-dal	Tata Sampann	Tata Sampann Unpolished Toor (Arhar) Dal	Pulses & Lentils	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80	Naturally nutritious unpolished Toor Dal without artificial polishing or moisture.	2026-11-17 10:49:09.577	t	tata-sampann-tata-sampann-unpolished-toor-arhar-dal	ACTIVE	{"High Protein",Unpolished,Dal}	2026-11-17 10:49:09.577
+prod-tata-sampann-tata-sampann-unpolished-yellow-moong-dal	Tata Sampann	Tata Sampann Unpolished Yellow Moong Dal	Pulses & Lentils	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80	Light on the stomach, quick-cooking split yellow moong dal.	2026-11-17 10:49:09.623	t	tata-sampann-tata-sampann-unpolished-yellow-moong-dal	ACTIVE	{"Easy Digest","Moong Dal",Pulse}	2026-11-17 10:49:09.623
+prod-tata-sampann-tata-sampann-unpolished-chana-dal	Tata Sampann	Tata Sampann Unpolished Chana Dal	Pulses & Lentils	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80	Rich in dietary fiber and protein, perfect for dal tadka and Gujarati handvo.	2026-11-17 10:49:09.65	t	tata-sampann-tata-sampann-unpolished-chana-dal	ACTIVE	{Gujarati,Handvo,"High Fiber"}	2026-11-17 10:49:09.65
+prod-tata-sampann-tata-sampann-white-kabuli-chana-chickpeas	Tata Sampann	Tata Sampann White Kabuli Chana (Chickpeas)	Pulses & Lentils	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80	Large grain white chickpeas that cook soft and creamy for Punjabi Chhole.	2026-11-17 10:49:09.674	t	tata-sampann-tata-sampann-white-kabuli-chana-chickpeas	ACTIVE	{"Punjabi Chhole","High Protein",Pulse}	2026-11-17 10:49:09.674
+prod-tata-sampann-tata-sampann-kashmiri-rajma-kidney-beans	Tata Sampann	Tata Sampann Kashmiri Rajma (Kidney Beans)	Pulses & Lentils	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80	Deep red Kashmiri rajma that cooks into thick homestyle gravy.	2026-11-17 10:49:09.727	t	tata-sampann-tata-sampann-kashmiri-rajma-kidney-beans	ACTIVE	{"Rajma Chawal","North Indian",Pulse}	2026-11-17 10:49:09.727
+prod-fortune-fortune-pure-besan-gram-flour	Fortune	Fortune Pure Besan (Gram Flour)	Pulses & Lentils	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80	Fine milled gram flour from pure chana dal for dhokla, pakodas and kadhi.	2026-11-17 10:49:09.75	t	fortune-fortune-pure-besan-gram-flour	ACTIVE	{Gujarati,"Dhokla Special",Besan}	2026-11-17 10:49:09.75
+prod-everest-everest-turmeric-haldi-powder	Everest	Everest Turmeric (Haldi) Powder	Spices & Masalas	https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=400&q=80	High curcumin golden turmeric powder made from Salem rhizomes.	2026-11-17 10:49:09.798	t	everest-everest-turmeric-haldi-powder	ACTIVE	{Curcumin,"Daily Essential",Spice}	2026-11-17 10:49:09.798
+prod-mdh-mdh-deggi-mirch-kashmiri-red-chilli-powder	MDH	MDH Deggi Mirch (Kashmiri Red Chilli Powder)	Spices & Masalas	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80	Vibrant natural red color with gentle warmth for rich curry gravies.	2026-11-17 10:49:09.845	t	mdh-mdh-deggi-mirch-kashmiri-red-chilli-powder	ACTIVE	{Color,Kashmiri,Spice}	2026-11-17 10:49:09.845
+prod-everest-everest-coriander-dhania-powder	Everest	Everest Coriander (Dhania) Powder	Spices & Masalas	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80	Freshly ground aromatic coriander powder that thickens gravies.	2026-11-17 10:49:09.873	t	everest-everest-coriander-dhania-powder	ACTIVE	{Aromatic,Dhania,Spice}	2026-11-17 10:49:09.873
+prod-everest-everest-royal-garam-masala	Everest	Everest Royal Garam Masala	Spices & Masalas	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80	Master blend of 13 roasted whole spices for finishing Indian curries.	2026-11-17 10:49:09.899	t	everest-everest-royal-garam-masala	ACTIVE	{"Warm Blend",Finishing,Masala}	2026-11-17 10:49:09.899
+prod-everest-everest-pav-bhaji-masala	Everest	Everest Pav Bhaji Masala	Spices & Masalas	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80	Iconic Mumbai street-style pav bhaji masala blend.	2026-11-17 10:49:09.93	t	everest-everest-pav-bhaji-masala	ACTIVE	{"Street Food","Pav Bhaji",Masala}	2026-11-17 10:49:09.93
+prod-tata-salt-tata-salt-vacuum-evaporated-iodized-salt	Tata Salt	Tata Salt Vacuum Evaporated Iodized Salt	Spices & Masalas	https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?auto=format&fit=crop&w=400&q=80	Desh ka Namak. Pure vacuum evaporated iodized table salt.	2026-11-17 10:49:09.954	t	tata-salt-tata-salt-vacuum-evaporated-iodized-salt	ACTIVE	{"Daily Essential",Iodized,Salt}	2026-11-17 10:49:09.954
+prod-lg-lg-compounded-asafoetida-hing-powder	LG	LG Compounded Asafoetida (Hing) Powder	Spices & Masalas	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80	Aromatic digestive hing for tempering dals, kadhi and sabjis.	2026-11-17 10:49:09.98	t	lg-lg-compounded-asafoetida-hing-powder	ACTIVE	{Digestive,"Jain Essential",Spice}	2026-11-17 10:49:09.98
+prod-amul-amul-pure-cow-ghee	Amul	Amul Pure Cow Ghee	Oil & Ghee	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=400&q=80	Golden, granular and fragrant pure cow ghee for rotis, dal and sweets.	2026-11-17 10:49:10.011	t	amul-amul-pure-cow-ghee	ACTIVE	{"Pure Desi Ghee",Ayurvedic,Dairy}	2026-11-17 10:49:10.011
+prod-fortune-fortune-sunlite-refined-sunflower-oil	Fortune	Fortune Sunlite Refined Sunflower Oil	Oil & Ghee	https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80	Light, clear and heart-friendly sunflower oil enriched with Vitamin A & D.	2026-11-17 10:49:10.063	t	fortune-fortune-sunlite-refined-sunflower-oil	ACTIVE	{"Heart Friendly","Light Oil","Cooking Oil"}	2026-11-17 10:49:10.063
+prod-dhara-dhara-filtered-groundnut-oil-sing-tel	Dhara	Dhara Filtered Groundnut Oil (Sing Tel)	Oil & Ghee	https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80	Traditional Gujarati groundnut oil with natural nutty aroma and high smoke point.	2026-11-17 10:49:10.117	t	dhara-dhara-filtered-groundnut-oil-sing-tel	ACTIVE	{"Gujarati Favorite","Sing Tel","Peanut Oil"}	2026-11-17 10:49:10.117
+prod-fortune-fortune-kachi-ghani-pure-mustard-oil-sarson-tel	Fortune	Fortune Kachi Ghani Pure Mustard Oil (Sarson Tel)	Oil & Ghee	https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80	Cold-pressed strong pungent mustard oil for authentic North Indian dishes and pickles.	2026-11-17 10:49:10.171	t	fortune-fortune-kachi-ghani-pure-mustard-oil-sarson-tel	ACTIVE	{Pungent,"Kachi Ghani","North Indian"}	2026-11-17 10:49:10.171
+prod-balaji-balaji-crunchy-nylon-sev	Balaji	Balaji Crunchy Nylon Sev	Snacks & Biscuits	https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=400&q=80	Zero-size crisp golden sev, an absolute must for sev tameta and chaat.	2026-11-17 10:49:10.201	t	balaji-balaji-crunchy-nylon-sev	ACTIVE	{Gujarati,"Chaat Sev",Namkeen}	2026-11-17 10:49:10.201
+prod-haldirams-haldirams-nagpur-aloo-bhujia	Haldirams	Haldirams Nagpur Aloo Bhujia	Snacks & Biscuits	https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=400&q=80	Crispy spicy potato and gram flour sev flavored with mint and spices.	2026-11-17 10:49:10.258	t	haldirams-haldirams-nagpur-aloo-bhujia	ACTIVE	{Teatime,Bhujia,Namkeen}	2026-11-17 10:49:10.258
+prod-shreeji-shreeji-crispy-methi-khakhra	Shreeji	Shreeji Crispy Methi Khakhra	Snacks & Biscuits	https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=400&q=80	Handcrafted roasted whole wheat thin khakhra with fenugreek leaves.	2026-11-17 10:49:10.286	t	shreeji-shreeji-crispy-methi-khakhra	ACTIVE	{Gujarati,"Healthy Snack",Roasted}	2026-11-17 10:49:10.286
+prod-parle-parle-g-original-glucose-biscuits	Parle	Parle-G Original Glucose Biscuits	Snacks & Biscuits	https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80	India's favorite teatime energy biscuit with milk and wheat goodness.	2026-11-17 10:49:10.314	t	parle-parle-g-original-glucose-biscuits	ACTIVE	{Classic,Teatime,Biscuit}	2026-11-17 10:49:10.314
+prod-britannia-britannia-good-day-butter-cookies	Britannia	Britannia Good Day Butter Cookies	Snacks & Biscuits	https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80	Rich buttery cookies with cheerful smile pattern and crunchy bite.	2026-11-17 10:49:10.34	t	britannia-britannia-good-day-butter-cookies	ACTIVE	{"Butter Cookie",Teatime,Sweet}	2026-11-17 10:49:10.34
+prod-wagh-bakri-wagh-bakri-premium-ctc-leaf-tea	Wagh Bakri	Wagh Bakri Premium CTC Leaf Tea	Beverages	https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80	Gujarat's beloved strong and aromatic CTC tea that brews a rich golden cup.	2026-11-17 10:49:10.37	t	wagh-bakri-wagh-bakri-premium-ctc-leaf-tea	ACTIVE	{"Gujarati Favorite","Strong Chai",Tea}	2026-11-17 10:49:10.37
+prod-tata-tea-tata-tea-gold	Tata Tea	Tata Tea Gold	Beverages	https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80	Unique blend of fine Assam CTC tea with 15% gently rolled long leaves for aroma.	2026-11-17 10:49:10.423	t	tata-tea-tata-tea-gold	ACTIVE	{"Assam Tea","Aromatic Chai",Tea}	2026-11-17 10:49:10.423
+prod-nescafe-nescafe-classic-100-pure-instant-coffee	Nescafe	Nescafe Classic 100% Pure Instant Coffee	Beverages	https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=400&q=80	Rich and dark roasted instant coffee granules for instant morning freshness.	2026-11-17 10:49:10.452	t	nescafe-nescafe-classic-100-pure-instant-coffee	ACTIVE	{"Instant Coffee","Morning Energy",Coffee}	2026-11-17 10:49:10.452
+prod-hamdard-hamdard-rooh-afza-rose-sharbat	Hamdard	Hamdard Rooh Afza Rose Sharbat	Beverages	https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80	Traditional cooling herbal rose syrup for milkshakes, lassi and falooda.	2026-11-17 10:49:10.501	t	hamdard-hamdard-rooh-afza-rose-sharbat	ACTIVE	{Cooling,"Summer Sharbat",Drink}	2026-11-17 10:49:10.501
+prod-kelloggs-kelloggs-original-corn-flakes-with-real-almond-honey	Kelloggs	Kelloggs Original Corn Flakes with Real Almond & Honey	Breakfast & Cereals	https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=400&q=80	Crisp golden corn flakes enriched with iron and 8 essential vitamins.	2026-11-17 10:49:10.531	t	kelloggs-kelloggs-original-corn-flakes-with-real-almond-honey	ACTIVE	{"High Iron","Quick Breakfast",Cereal}	2026-11-17 10:49:10.531
+prod-quaker-quaker-100-whole-grain-rolled-oats	Quaker	Quaker 100% Whole Grain Rolled Oats	Breakfast & Cereals	https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=400&q=80	Soluble fiber beta-glucan rich rolled oats for heart health and morning porridge.	2026-11-17 10:49:10.556	t	quaker-quaker-100-whole-grain-rolled-oats	ACTIVE	{"Beta Glucan","Heart Healthy",Oats}	2026-11-17 10:49:10.556
+prod-mtr-mtr-ready-3-minute-khatta-meetha-poha	MTR	MTR Ready 3-Minute Khatta Meetha Poha	Breakfast & Cereals	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80	Instant poha breakfast cup: just add hot water and enjoy in 3 minutes.	2026-11-17 10:49:10.586	t	mtr-mtr-ready-3-minute-khatta-meetha-poha	ACTIVE	{"Instant Breakfast","Ready to Eat",Poha}	2026-11-17 10:49:10.586
+prod-nestle-maggi-maggi-2-minute-masala-instant-noodles	Nestle Maggi	Maggi 2-Minute Masala Instant Noodles	Breakfast & Cereals	https://images.unsplash.com/photo-1612927601601-6638404737ce?auto=format&fit=crop&w=400&q=80	India's favorite 2-minute snack noodles with the authentic tastemaker.	2026-11-17 10:49:10.615	t	nestle-maggi-maggi-2-minute-masala-instant-noodles	ACTIVE	{"Instant Noodles",Snack,"Quick Meal"}	2026-11-17 10:49:10.615
+prod-mccain-mccain-french-fries-crispy-masala	McCain	McCain French Fries Crispy Masala	Frozen & Packaged Foods	https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=400&q=80	Crunchy golden potato fries, ready in 3 minutes by air frying or shallow frying.	2026-11-17 10:49:10.668	t	mccain-mccain-french-fries-crispy-masala	ACTIVE	{"Crispy Fries","Quick Snack",Frozen}	2026-11-17 10:49:10.668
+prod-safal-safal-select-frozen-green-peas-matar	Safal	Safal Select Frozen Green Peas (Matar)	Frozen & Packaged Foods	https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&w=400&q=80	Naturally sweet and tender green peas, IQF frozen within hours of harvest.	2026-11-17 10:49:10.7	t	safal-safal-select-frozen-green-peas-matar	ACTIVE	{"Sweet Peas","Ready to Cook",Frozen}	2026-11-17 10:49:10.7
+prod-kissan-kissan-fresh-tomato-ketchup	Kissan	Kissan Fresh Tomato Ketchup	Frozen & Packaged Foods	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80	100% real ripe tomato puree blended into sweet and tangy sauce.	2026-11-17 10:49:10.764	t	kissan-kissan-fresh-tomato-ketchup	ACTIVE	{Condiment,"Tomato Sauce","Snack Partner"}	2026-11-17 10:49:10.764
+prod-chings-chings-secret-schezwan-chutney	Chings	Chings Secret Schezwan Chutney	Frozen & Packaged Foods	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80	Desi Chinese spicy garlic schezwan dip for fried rice, noodles and snacks.	2026-11-17 10:49:10.796	t	chings-chings-secret-schezwan-chutney	ACTIVE	{"Desi Chinese","Spicy Dip",Sauce}	2026-11-17 10:49:10.796
+prod-dettol-dettol-original-germ-protection-bathing-soap	Dettol	Dettol Original Germ Protection Bathing Soap	Personal Care	https://images.unsplash.com/photo-1607006314595-36427d14251a?auto=format&fit=crop&w=400&q=80	Classic pine fragrance soap providing 99.9% protection from illness-causing germs.	2026-11-17 10:49:10.825	t	dettol-dettol-original-germ-protection-bathing-soap	ACTIVE	{Hygiene,"Germ Protection",Soap}	2026-11-17 10:49:10.825
+prod-colgate-colgate-strong-teeth-dental-cream-toothpaste	Colgate	Colgate Strong Teeth Dental Cream Toothpaste	Personal Care	https://images.unsplash.com/photo-1559591937-e106093498cb?auto=format&fit=crop&w=400&q=80	Calcium boost formula that strengthens tooth enamel against daily cavities.	2026-11-17 10:49:10.855	t	colgate-colgate-strong-teeth-dental-cream-toothpaste	ACTIVE	{"Oral Hygiene","Cavity Protection",Toothpaste}	2026-11-17 10:49:10.855
+prod-head-shoulders-head-shoulders-anti-dandruff-cool-menthol-shampoo	Head & Shoulders	Head & Shoulders Anti-Dandruff Cool Menthol Shampoo	Personal Care	https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&w=400&q=80	Invigorating cool menthol formula removes visible dandruff flakes from first wash.	2026-11-17 10:49:10.886	t	head-shoulders-head-shoulders-anti-dandruff-cool-menthol-shampoo	ACTIVE	{"Hair Care","Cool Menthol",Shampoo}	2026-11-17 10:49:10.886
+prod-parachute-parachute-100-pure-coconut-hair-oil	Parachute	Parachute 100% Pure Coconut Hair Oil	Personal Care	https://images.unsplash.com/photo-1608248597359-21629851610c?auto=format&fit=crop&w=400&q=80	Pure edible grade unadulterated coconut oil made from sun-dried coconuts.	2026-11-17 10:49:10.917	t	parachute-parachute-100-pure-coconut-hair-oil	ACTIVE	{"100% Pure",Nourishment,"Hair Oil"}	2026-11-17 10:49:10.917
+prod-surf-excel-surf-excel-easy-wash-detergent-powder	Surf Excel	Surf Excel Easy Wash Detergent Powder	Household Cleaning	https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&w=400&q=80	Superior stain removal formula that tackles stubborn collar and grease stains effortlessly.	2026-11-17 10:49:10.951	t	surf-excel-surf-excel-easy-wash-detergent-powder	ACTIVE	{Laundry,"Stain Removal",Detergent}	2026-11-17 10:49:10.951
+prod-vim-vim-lemon-dishwash-gel-with-real-lime	Vim	Vim Lemon Dishwash Gel with Real Lime	Household Cleaning	https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?auto=format&fit=crop&w=400&q=80	Deep grease cutting formula that leaves stainless steel and glassware sparkling clean.	2026-11-17 10:49:11.009	t	vim-vim-lemon-dishwash-gel-with-real-lime	ACTIVE	{Dishwash,"Lemon Fresh","Grease Cut"}	2026-11-17 10:49:11.009
+prod-harpic-harpic-power-plus-disinfectant-toilet-cleaner	Harpic	Harpic Power Plus Disinfectant Toilet Cleaner	Household Cleaning	https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?auto=format&fit=crop&w=400&q=80	10x better limescale and stain removal with 99.9% germ kill certification.	2026-11-17 10:49:11.037	t	harpic-harpic-power-plus-disinfectant-toilet-cleaner	ACTIVE	{Sanitation,"Toilet Cleaner",Disinfectant}	2026-11-17 10:49:11.037
+prod-lizol-lizol-disinfectant-surface-floor-cleaner-citrus	Lizol	Lizol Disinfectant Surface & Floor Cleaner Citrus	Household Cleaning	https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?auto=format&fit=crop&w=400&q=80	India's No. 1 floor cleaner that removes 100 types of stains and kills 99.9% germs.	2026-11-17 10:49:11.069	t	lizol-lizol-disinfectant-surface-floor-cleaner-citrus	ACTIVE	{"Floor Cleaner","Citrus Fresh",Hygiene}	2026-11-17 10:49:11.069
+prod-pampers-pampers-all-round-protection-baby-diaper-pants	Pampers	Pampers All Round Protection Baby Diaper Pants	Baby Care	https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80	Magic gel core provides up to 12 hours of leakage lock and dryness for baby skin.	2026-11-17 10:49:11.098	t	pampers-pampers-all-round-protection-baby-diaper-pants	ACTIVE	{"Baby Care",Diapers,"Gentle Care"}	2026-11-17 10:49:11.098
+prod-himalaya-himalaya-gentle-baby-wipes-with-aloe-vera-indian-lotus	Himalaya	Himalaya Gentle Baby Wipes with Aloe Vera & Indian Lotus	Baby Care	https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80	Alcohol-free and hypoallergenic baby wipes enriched with soothing herbs.	2026-11-17 10:49:11.126	t	himalaya-himalaya-gentle-baby-wipes-with-aloe-vera-indian-lotus	ACTIVE	{Hypoallergenic,Wipes,"Baby Skin"}	2026-11-17 10:49:11.126
+prod-johnsons-johnsons-baby-gentle-bathing-soap	Johnsons	Johnsons Baby Gentle Bathing Soap	Baby Care	https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80	No more tears formula, enriched with 1/4th baby lotion to keep delicate skin soft.	2026-11-17 10:49:11.154	t	johnsons-johnsons-baby-gentle-bathing-soap	ACTIVE	{"No More Tears","Mild Care","Baby Soap"}	2026-11-17 10:49:11.154
 \.
 
 
@@ -2090,56 +5479,148 @@ prod-Tata Sampann-ing-sesame-seeds	Tata Sampann	Tata Sampann White Sesame Seeds 
 -- Data for Name: ProductVariant; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."ProductVariant" (id, "productId", "ingredientId", sku, brand, title, "packQuantity", "packUnit", "mrpInr", "sellingPriceInr", "imageUrl") FROM stdin;
-var-amul-paneer-500	prod-Amul-ing-paneer	ing-paneer	AMUL-PAN-500G	Amul	Amul Fresh Malai Paneer, 500g	500	g	230	215	https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=200&q=80
-var-mother-paneer-200	prod-Mother Dairy-ing-paneer	ing-paneer	MD-PAN-200G	Mother Dairy	Mother Dairy Classic Paneer, 200g	200	g	95	90	https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=200&q=80
-var-aashirvaad-atta-5k	prod-Aashirvaad-ing-atta	ing-atta	AASH-ATTA-5KG	Aashirvaad	Aashirvaad Superior MP Shudh Chakki Atta, 5kg	5000	g	285	265	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80
-var-fortune-atta-5k	prod-Fortune-ing-atta	ing-atta	FORT-ATTA-5KG	Fortune	Fortune Chakki Fresh 100% Whole Wheat Atta, 5kg	5000	g	270	249	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80
-var-aashirvaad-atta-1k	prod-Aashirvaad-ing-atta	ing-atta	AASH-ATTA-1KG	Aashirvaad	Aashirvaad Select 100% Sharbati Wheat Atta, 1kg	1000	g	72	68	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80
-var-daawat-rice-5k	prod-Daawat-ing-basmati-rice	ing-basmati-rice	DAAWAT-RICE-5KG	Daawat	Daawat Rozana Gold Basmati Rice, 5kg	5000	g	499	449	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80
-var-daawat-rice-1k	prod-Daawat-ing-basmati-rice	ing-basmati-rice	DAAWAT-RICE-1KG	Daawat	Daawat Super Basmati Rice, 1kg	1000	g	160	139	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80
-var-indiagate-rice-1k	prod-India Gate-ing-basmati-rice	ing-basmati-rice	IG-RICE-1KG	India Gate	India Gate Feast Rozana Basmati Rice, 1kg	1000	g	155	132	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80
-var-amul-ghee-500	prod-Amul-ing-ghee	ing-ghee	AMUL-GHEE-500ML	Amul	Amul Pure Cow Ghee, 500ml	500	g	340	320	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=200&q=80
-var-gowardhan-ghee-500	prod-Gowardhan-ing-ghee	ing-ghee	GOW-GHEE-500ML	Gowardhan	Gowardhan 100% Pure Cow Ghee Jar, 500ml	500	g	350	335	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=200&q=80
-var-amul-butter-100	prod-Amul-ing-butter	ing-butter	AMUL-BUT-100G	Amul	Amul Pasteurized Butter, 100g	100	g	60	58	https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=200&q=80
-var-amul-butter-500	prod-Amul-ing-butter	ing-butter	AMUL-BUT-500G	Amul	Amul Pasteurized Table Butter, 500g	500	g	285	275	https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=200&q=80
-var-tata-toor-1k	prod-Tata Sampann-ing-toor-dal	ing-toor-dal	TATA-TOOR-1KG	Tata Sampann	Tata Sampann Unpolished Toor Dal, 1kg	1000	g	195	175	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80
-var-fortune-toor-1k	prod-Fortune-ing-toor-dal	ing-toor-dal	FORT-TOOR-1KG	Fortune	Fortune Unpolished Arhar Toor Dal, 1kg	1000	g	190	168	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80
-var-tata-moong-1k	prod-Tata Sampann-ing-moong-dal	ing-moong-dal	TATA-MOONG-1KG	Tata Sampann	Tata Sampann Unpolished Moong Dal, 1kg	1000	g	180	165	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80
-var-fortune-moong-1k	prod-Fortune-ing-moong-dal	ing-moong-dal	FORT-MOONG-1KG	Fortune	Fortune Mogar Yellow Moong Dal, 1kg	1000	g	175	158	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80
-var-tata-rajma-500	prod-Tata Sampann-ing-rajma	ing-rajma	TATA-RAJMA-500G	Tata Sampann	Tata Sampann Kashmiri Rajma, 500g	500	g	110	99	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80
-var-fresh-onion-1k	prod-Farm Fresh-ing-onion	ing-onion	PROD-ONION-1KG	Farm Fresh	Fresh Nashik Red Onion, 1kg	1000	g	45	38	https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=200&q=80
-var-fresh-tomato-1k	prod-Farm Fresh-ing-tomato	ing-tomato	PROD-TOM-1KG	Farm Fresh	Fresh Country Desi Tomato, 1kg	1000	g	40	32	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80
-var-fresh-potato-1k	prod-Farm Fresh-ing-potato	ing-potato	PROD-POT-1KG	Farm Fresh	Fresh Agra New Crop Potatoes, 1kg	1000	g	35	28	https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=200&q=80
-var-fresh-palak-250	prod-Farm Fresh-ing-palak	ing-palak	PROD-PALAK-250G	Farm Fresh	Hydroponic Clean Palak (Spinach), 250g	250	g	30	24	https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=200&q=80
-var-fresh-ginger-200	prod-Farm Fresh-ing-ginger	ing-ginger	PROD-GING-200G	Farm Fresh	Fresh Washed Ginger, 200g	200	g	35	29	https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=200&q=80
-var-fresh-garlic-200	prod-Farm Fresh-ing-garlic	ing-garlic	PROD-GAR-200G	Farm Fresh	Fresh Madhya Pradesh Garlic, 200g	200	g	50	42	https://images.unsplash.com/photo-1615477550926-105260f8976b?auto=format&fit=crop&w=200&q=80
-var-fresh-chilli-100	prod-Farm Fresh-ing-green-chilli	ing-green-chilli	PROD-CHIL-100G	Farm Fresh	Fresh Dark Green Chillies, 100g	100	g	15	12	https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&w=200&q=80
-var-fresh-coriander-1b	prod-Farm Fresh-ing-coriander	ing-coriander	PROD-COR-1B	Farm Fresh	Fresh Coriander Leaves Bunch, 1 pc	1	piece	20	15	https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&w=200&q=80
-var-fresh-curry-1b	prod-Farm Fresh-ing-curry-leaves	ing-curry-leaves	PROD-CUR-1B	Farm Fresh	Fresh Aromatic Curry Leaves Bunch, 1 pc	1	piece	15	10	https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=200&q=80
-var-fresh-lemon-4pc	prod-Farm Fresh-ing-lemon	ing-lemon	PROD-LEM-4PC	Farm Fresh	Juicy Yellow Nimbu (Lemons), 4 pcs	4	piece	30	24	https://images.unsplash.com/photo-1590502593747-42a996133562?auto=format&fit=crop&w=200&q=80
-var-amul-paneer-200	prod-Amul-ing-paneer	ing-paneer	AMUL-PAN-200G	Amul	Amul Fresh Malai Paneer, 200g	200	g	95	89	https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=200&q=80
-var-tata-toor-500	prod-Tata Sampann-ing-toor-dal	ing-toor-dal	TATA-TOOR-500G	Tata Sampann	Tata Sampann Unpolished Toor Dal, 500g	500	g	105	92	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80
-var-everest-garam-100	prod-Everest-ing-garam-masala	ing-garam-masala	EVER-GAR-100G	Everest	Everest Royal Garam Masala, 100g	100	g	88	82	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80
-var-tata-turmeric-200	prod-Tata Sampann-ing-turmeric	ing-turmeric	TATA-TURM-200G	Tata Sampann	Tata Sampann Turmeric Powder, 200g	200	g	65	58	https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=200&q=80
-var-fortune-oil-1l	prod-Fortune-ing-oil	ing-oil	FORT-OIL-1L	Fortune	Fortune Sunlite Refined Sunflower Oil, 1L	1000	ml	155	139	https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=200&q=80
-var-id-dosa-batter-1kg	prod-iD Fresh-ing-dosa-batter	ing-dosa-batter	ID-BATTER-1KG	iD Fresh	iD Fresh Idli & Dosa Batter, 1kg	1000	ml	95	85	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=200&q=80
-var-tata-chana-500	prod-Tata Sampann-ing-kabuli-chana	ing-kabuli-chana	TATA-CHANA-500G	Tata Sampann	Tata Sampann White Kabuli Chana, 500g	500	g	120	105	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80
-var-fortune-chana-500	prod-Fortune-ing-kabuli-chana	ing-kabuli-chana	FORT-CHANA-500G	Fortune	Fortune Classic Kabuli Chana, 500g	500	g	115	99	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80
-var-fresh-gobi-500	prod-Farm Fresh-ing-cauliflower	ing-cauliflower	PROD-GOBI-500G	Farm Fresh	Fresh Clean Cauliflower (Gobi), 1 pc (~500g)	500	g	40	32	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=200&q=80
-var-fresh-bhindi-500	prod-Farm Fresh-ing-bhindi	ing-bhindi	PROD-BHINDI-500G	Farm Fresh	Fresh Tender Ladyfinger (Bhindi), 500g	500	g	45	36	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80
-var-fresh-baingan-500	prod-Farm Fresh-ing-baingan	ing-baingan	PROD-BAINGAN-500G	Farm Fresh	Fresh Purple Bharta Baingan, 500g (1-2 pcs)	500	g	35	28	https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=200&q=80
-var-everest-sambar-100	prod-Everest-ing-sambar-powder	ing-sambar-powder	EVER-SAMBAR-100G	Everest	Everest Madras Sambar Masala, 100g	100	g	42	38	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80
-var-everest-chole-100	prod-Everest-ing-chole-masala	ing-chole-masala	EVER-CHOLE-100G	Everest	Everest Chhole Masala, 100g	100	g	45	40	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80
-var-tata-rava-500	prod-Tata Sampann-ing-rava	ing-rava	TATA-RAVA-500G	Tata Sampann	Tata Sampann Roasted Sooji / Rava, 500g	500	g	40	35	https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=200&q=80
-var-balaji-sev-200	prod-Balaji-ing-sev	ing-sev	BAL-SEV-200G	Balaji	Balaji Nylon Sev, 200g	200	g	45	42	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80
-var-fortune-bajra-1k	prod-Fortune-ing-bajra-flour	ing-bajra-flour	FORT-BAJRA-1KG	Fortune	Fortune Desi Bajra Flour, 1kg	1000	g	65	59	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80
-var-fresh-surti-papdi-500	prod-Farm Fresh-ing-surti-papdi	ing-surti-papdi	PROD-PAPDI-500G	Farm Fresh	Fresh Surti Papdi Beans, 500g	500	g	40	35	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80
-var-fresh-tuver-lilva-250	prod-Farm Fresh-ing-tuver-lilva	ing-tuver-lilva	PROD-TUVER-250G	Farm Fresh	Fresh Green Tuver Lilva, 250g	250	g	55	48	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80
-var-fresh-purple-yam-500	prod-Farm Fresh-ing-purple-yam	ing-purple-yam	PROD-YAM-500G	Farm Fresh	Fresh Purple Yam (Kand), 500g	500	g	50	45	https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=200&q=80
-var-fresh-raw-banana-500	prod-Farm Fresh-ing-raw-banana	ing-raw-banana	PROD-BANANA-500G	Farm Fresh	Fresh Green Raw Plantain (Kacha Kela), 500g	500	g	30	25	https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=200&q=80
-var-amul-buttermilk-500	prod-Amul-ing-buttermilk	ing-buttermilk	AMUL-CHHAAS-500ML	Amul	Amul Masti Spiced Buttermilk, 500ml	500	ml	20	18	https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=200&q=80
-var-tata-sesame-200	prod-Tata Sampann-ing-sesame-seeds	ing-sesame-seeds	TATA-SES-200G	Tata Sampann	Tata Sampann White Sesame Seeds (Til), 200g	200	g	60	54	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80
+COPY public."ProductVariant" (id, "productId", "ingredientId", sku, brand, title, "packQuantity", "packUnit", "mrpInr", "sellingPriceInr", "imageUrl", "inStock") FROM stdin;
+var-mother-paneer-200	prod-Mother Dairy-ing-paneer	ing-paneer	MD-PAN-200G	Mother Dairy	Mother Dairy Classic Paneer, 200g	200	g	95	90	https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=200&q=80	t
+var-fortune-atta-5k	prod-Fortune-ing-atta	ing-atta	FORT-ATTA-5KG	Fortune	Fortune Chakki Fresh 100% Whole Wheat Atta, 5kg	5000	g	270	249	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80	t
+var-daawat-rice-5k	prod-Daawat-ing-basmati-rice	ing-basmati-rice	DAAWAT-RICE-5KG	Daawat	Daawat Rozana Gold Basmati Rice, 5kg	5000	g	499	449	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80	t
+var-daawat-rice-1k	prod-Daawat-ing-basmati-rice	ing-basmati-rice	DAAWAT-RICE-1KG	Daawat	Daawat Super Basmati Rice, 1kg	1000	g	160	139	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80	t
+var-indiagate-rice-1k	prod-India Gate-ing-basmati-rice	ing-basmati-rice	IG-RICE-1KG	India Gate	India Gate Feast Rozana Basmati Rice, 1kg	1000	g	155	132	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80	t
+var-gowardhan-ghee-500	prod-Gowardhan-ing-ghee	ing-ghee	GOW-GHEE-500ML	Gowardhan	Gowardhan 100% Pure Cow Ghee Jar, 500ml	500	g	350	335	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=200&q=80	t
+var-fortune-toor-1k	prod-Fortune-ing-toor-dal	ing-toor-dal	FORT-TOOR-1KG	Fortune	Fortune Unpolished Arhar Toor Dal, 1kg	1000	g	190	168	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80	t
+var-tata-moong-1k	prod-Tata Sampann-ing-moong-dal	ing-moong-dal	TATA-MOONG-1KG	Tata Sampann	Tata Sampann Unpolished Moong Dal, 1kg	1000	g	180	165	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80	t
+var-fortune-moong-1k	prod-Fortune-ing-moong-dal	ing-moong-dal	FORT-MOONG-1KG	Fortune	Fortune Mogar Yellow Moong Dal, 1kg	1000	g	175	158	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80	t
+var-tata-rajma-500	prod-Tata Sampann-ing-rajma	ing-rajma	TATA-RAJMA-500G	Tata Sampann	Tata Sampann Kashmiri Rajma, 500g	500	g	110	99	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80	t
+var-fresh-onion-1k	prod-Farm Fresh-ing-onion	ing-onion	PROD-ONION-1KG	Farm Fresh	Fresh Nashik Red Onion, 1kg	1000	g	45	38	https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=200&q=80	t
+var-fresh-tomato-1k	prod-Farm Fresh-ing-tomato	ing-tomato	PROD-TOM-1KG	Farm Fresh	Fresh Country Desi Tomato, 1kg	1000	g	40	32	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80	t
+var-fresh-potato-1k	prod-Farm Fresh-ing-potato	ing-potato	PROD-POT-1KG	Farm Fresh	Fresh Agra New Crop Potatoes, 1kg	1000	g	35	28	https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=200&q=80	t
+var-fresh-palak-250	prod-Farm Fresh-ing-palak	ing-palak	PROD-PALAK-250G	Farm Fresh	Hydroponic Clean Palak (Spinach), 250g	250	g	30	24	https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=200&q=80	t
+var-fresh-ginger-200	prod-Farm Fresh-ing-ginger	ing-ginger	PROD-GING-200G	Farm Fresh	Fresh Washed Ginger, 200g	200	g	35	29	https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=200&q=80	t
+var-fresh-garlic-200	prod-Farm Fresh-ing-garlic	ing-garlic	PROD-GAR-200G	Farm Fresh	Fresh Madhya Pradesh Garlic, 200g	200	g	50	42	https://images.unsplash.com/photo-1615477550926-105260f8976b?auto=format&fit=crop&w=200&q=80	t
+var-fresh-chilli-100	prod-Farm Fresh-ing-green-chilli	ing-green-chilli	PROD-CHIL-100G	Farm Fresh	Fresh Dark Green Chillies, 100g	100	g	15	12	https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&w=200&q=80	t
+var-fresh-coriander-1b	prod-Farm Fresh-ing-coriander	ing-coriander	PROD-COR-1B	Farm Fresh	Fresh Coriander Leaves Bunch, 1 pc	1	piece	20	15	https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&w=200&q=80	t
+var-fresh-curry-1b	prod-Farm Fresh-ing-curry-leaves	ing-curry-leaves	PROD-CUR-1B	Farm Fresh	Fresh Aromatic Curry Leaves Bunch, 1 pc	1	piece	15	10	https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=200&q=80	t
+var-fresh-lemon-4pc	prod-Farm Fresh-ing-lemon	ing-lemon	PROD-LEM-4PC	Farm Fresh	Juicy Yellow Nimbu (Lemons), 4 pcs	4	piece	30	24	https://images.unsplash.com/photo-1590502593747-42a996133562?auto=format&fit=crop&w=200&q=80	t
+var-amul-paneer-500	prod-amul-amul-fresh-malai-paneer	ing-paneer	AMUL-PAN-500G	Amul	Amul Fresh Malai Paneer, 500g	500	g	230	215	https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=400&q=80	t
+var-amul-butter-100	prod-amul-amul-pasteurized-table-butter	ing-butter	AMUL-BUT-100G	Amul	Amul Salted Table Butter, 100g	100	g	60	58	https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=400&q=80	t
+var-amul-butter-500	prod-amul-amul-pasteurized-table-butter	ing-butter	AMUL-BUT-500G	Amul	Amul Salted Table Butter, 500g	500	g	285	275	https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=400&q=80	t
+var-aashirvaad-atta-1k	prod-aashirvaad-aashirvaad-superior-mp-shudh-chakki-atta	ing-atta	AASH-ATTA-1KG	Aashirvaad	Aashirvaad Shudh Chakki Atta, 1 kg	1000	g	72	68	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80	t
+var-tata-toor-1k	prod-tata-sampann-tata-sampann-unpolished-toor-arhar-dal	ing-toor-dal	TATA-TOOR-1KG	Tata Sampann	Tata Sampann Toor Dal, 1 kg	1000	g	195	172	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80	t
+var-tata-toor-500	prod-tata-sampann-tata-sampann-unpolished-toor-arhar-dal	ing-toor-dal	TATA-TOOR-500G	Tata Sampann	Tata Sampann Toor Dal, 500g	500	g	105	92	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80	t
+var-amul-ghee-500	prod-amul-amul-pure-cow-ghee	ing-ghee	AMUL-GHEE-500ML	Amul	Amul Pure Cow Ghee Tin, 500ml	500	g	340	320	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=400&q=80	t
+var-everest-garam-100	prod-Everest-ing-garam-masala	ing-garam-masala	EVER-GAR-100G	Everest	Everest Royal Garam Masala, 100g	100	g	88	82	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80	t
+var-tata-turmeric-200	prod-Tata Sampann-ing-turmeric	ing-turmeric	TATA-TURM-200G	Tata Sampann	Tata Sampann Turmeric Powder, 200g	200	g	65	58	https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=200&q=80	t
+var-fortune-oil-1l	prod-Fortune-ing-oil	ing-oil	FORT-OIL-1L	Fortune	Fortune Sunlite Refined Sunflower Oil, 1L	1000	ml	155	139	https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=200&q=80	t
+var-id-dosa-batter-1kg	prod-iD Fresh-ing-dosa-batter	ing-dosa-batter	ID-BATTER-1KG	iD Fresh	iD Fresh Idli & Dosa Batter, 1kg	1000	ml	95	85	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=200&q=80	t
+var-tata-chana-500	prod-Tata Sampann-ing-kabuli-chana	ing-kabuli-chana	TATA-CHANA-500G	Tata Sampann	Tata Sampann White Kabuli Chana, 500g	500	g	120	105	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80	t
+var-fortune-chana-500	prod-Fortune-ing-kabuli-chana	ing-kabuli-chana	FORT-CHANA-500G	Fortune	Fortune Classic Kabuli Chana, 500g	500	g	115	99	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80	t
+var-fresh-gobi-500	prod-Farm Fresh-ing-cauliflower	ing-cauliflower	PROD-GOBI-500G	Farm Fresh	Fresh Clean Cauliflower (Gobi), 1 pc (~500g)	500	g	40	32	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=200&q=80	t
+var-fresh-bhindi-500	prod-Farm Fresh-ing-bhindi	ing-bhindi	PROD-BHINDI-500G	Farm Fresh	Fresh Tender Ladyfinger (Bhindi), 500g	500	g	45	36	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80	t
+var-fresh-baingan-500	prod-Farm Fresh-ing-baingan	ing-baingan	PROD-BAINGAN-500G	Farm Fresh	Fresh Purple Bharta Baingan, 500g (1-2 pcs)	500	g	35	28	https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=200&q=80	t
+var-everest-sambar-100	prod-Everest-ing-sambar-powder	ing-sambar-powder	EVER-SAMBAR-100G	Everest	Everest Madras Sambar Masala, 100g	100	g	42	38	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80	t
+var-everest-chole-100	prod-Everest-ing-chole-masala	ing-chole-masala	EVER-CHOLE-100G	Everest	Everest Chhole Masala, 100g	100	g	45	40	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80	t
+var-tata-rava-500	prod-Tata Sampann-ing-rava	ing-rava	TATA-RAVA-500G	Tata Sampann	Tata Sampann Roasted Sooji / Rava, 500g	500	g	40	35	https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=200&q=80	t
+var-fortune-bajra-1k	prod-Fortune-ing-bajra-flour	ing-bajra-flour	FORT-BAJRA-1KG	Fortune	Fortune Desi Bajra Flour, 1kg	1000	g	65	59	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=200&q=80	t
+var-fresh-surti-papdi-500	prod-Farm Fresh-ing-surti-papdi	ing-surti-papdi	PROD-PAPDI-500G	Farm Fresh	Fresh Surti Papdi Beans, 500g	500	g	40	35	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80	t
+var-fresh-tuver-lilva-250	prod-Farm Fresh-ing-tuver-lilva	ing-tuver-lilva	PROD-TUVER-250G	Farm Fresh	Fresh Green Tuver Lilva, 250g	250	g	55	48	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=200&q=80	t
+var-fresh-purple-yam-500	prod-Farm Fresh-ing-purple-yam	ing-purple-yam	PROD-YAM-500G	Farm Fresh	Fresh Purple Yam (Kand), 500g	500	g	50	45	https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=200&q=80	t
+var-fresh-raw-banana-500	prod-Farm Fresh-ing-raw-banana	ing-raw-banana	PROD-BANANA-500G	Farm Fresh	Fresh Green Raw Plantain (Kacha Kela), 500g	500	g	30	25	https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=200&q=80	t
+var-amul-buttermilk-500	prod-Amul-ing-buttermilk	ing-buttermilk	AMUL-CHHAAS-500ML	Amul	Amul Masti Spiced Buttermilk, 500ml	500	ml	20	18	https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=200&q=80	t
+var-tata-sesame-200	prod-Tata Sampann-ing-sesame-seeds	ing-sesame-seeds	TATA-SES-200G	Tata Sampann	Tata Sampann White Sesame Seeds (Til), 200g	200	g	60	54	https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&w=200&q=80	t
+var-ff-mng-alph-1kg	prod-farm-fresh-fresh-alphonso-mangoes-hapus	\N	FF-MNG-ALPH-1KG	Farm Fresh	Alphonso Mangoes, 1 kg (~3-4 pcs)	1000	g	450	399	https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=400&q=80	t
+var-ff-ban-rob-1kg	prod-farm-fresh-fresh-robusta-bananas-kela	\N	FF-BAN-ROB-1KG	Farm Fresh	Robusta Bananas, 1 kg (~6-8 pcs)	1000	g	60	49	https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=400&q=80	t
+var-ff-ban-rob-500g	prod-farm-fresh-fresh-robusta-bananas-kela	\N	FF-BAN-ROB-500G	Farm Fresh	Robusta Bananas, 500g (~3-4 pcs)	500	g	35	28	https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=400&q=80	t
+var-ff-app-shim-4pcs	prod-farm-fresh-shimla-royal-delicious-apples	\N	FF-APP-SHIM-4PCS	Farm Fresh	Shimla Royal Apples, 4 pcs (~600g)	600	g	160	135	https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=400&q=80	t
+var-ff-org-nag-1kg	prod-farm-fresh-nagpur-sweet-oranges-santra	\N	FF-ORG-NAG-1KG	Farm Fresh	Nagpur Oranges, 1 kg (~4-5 pcs)	1000	g	110	89	https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?auto=format&fit=crop&w=400&q=80	t
+var-ff-pom-red-4pcs	prod-farm-fresh-fresh-ruby-red-pomegranate-anar	\N	FF-POM-RED-4PCS	Farm Fresh	Ruby Pomegranate, 4 pcs (~800g)	800	g	180	155	https://images.unsplash.com/photo-1541344999736-83eca872f241?auto=format&fit=crop&w=400&q=80	t
+var-ff-mos-1kg	prod-farm-fresh-juicy-sweet-lime-mosambi	\N	FF-MOS-1KG	Farm Fresh	Fresh Mosambi, 1 kg (~5-6 pcs)	1000	g	90	75	https://images.unsplash.com/photo-1582979512210-99b6a53386f9?auto=format&fit=crop&w=400&q=80	t
+var-ff-grp-grn-500g	prod-farm-fresh-fresh-seedless-green-grapes-angoor	\N	FF-GRP-GRN-500G	Farm Fresh	Seedless Green Grapes, 500g	500	g	85	69	https://images.unsplash.com/photo-1537640538966-79f369143f8f?auto=format&fit=crop&w=400&q=80	t
+var-ff-pap-1pc	prod-farm-fresh-fresh-sweet-papaya-papita	\N	FF-PAP-1PC	Farm Fresh	Semi-Ripe Sweet Papaya, 1 pc (~1 kg)	1000	g	70	55	https://images.unsplash.com/photo-1517282009859-f000ec3b26fe?auto=format&fit=crop&w=400&q=80	t
+var-ff-tom-desi-1kg	prod-farm-fresh-fresh-country-desi-tomato-tamatar	\N	FF-TOM-DESI-1KG	Farm Fresh	Desi Country Tomato, 1 kg	1000	g	45	36	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80	t
+var-ff-tom-desi-500g	prod-farm-fresh-fresh-country-desi-tomato-tamatar	\N	FF-TOM-DESI-500G	Farm Fresh	Desi Country Tomato, 500g	500	g	25	19	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80	t
+var-ff-oni-red-1kg	prod-farm-fresh-fresh-nashik-red-onion-pyaz	\N	FF-ONI-RED-1KG	Farm Fresh	Nashik Red Onion, 1 kg	1000	g	50	39	https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=400&q=80	t
+var-ff-oni-red-2kg	prod-farm-fresh-fresh-nashik-red-onion-pyaz	\N	FF-ONI-RED-2KG	Farm Fresh	Nashik Red Onion, 2 kg Pack	2000	g	95	75	https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=400&q=80	t
+var-ff-pot-agra-1kg	prod-farm-fresh-fresh-agra-new-crop-potatoes-aloo	\N	FF-POT-AGRA-1KG	Farm Fresh	Agra Golden Potatoes, 1 kg	1000	g	38	29	https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80	t
+var-ff-pot-agra-2kg	prod-farm-fresh-fresh-agra-new-crop-potatoes-aloo	\N	FF-POT-AGRA-2KG	Farm Fresh	Agra Golden Potatoes, 2 kg Pack	2000	g	75	56	https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80	t
+var-ff-bhn-500g	prod-farm-fresh-fresh-tender-ladyfinger-bhindi	\N	FF-BHN-500G	Farm Fresh	Fresh Tender Bhindi, 500g	500	g	45	35	https://images.unsplash.com/photo-1425543103986-22abb7d7e8d2?auto=format&fit=crop&w=400&q=80	t
+var-ff-gob-1pc	prod-farm-fresh-fresh-clean-cauliflower-gobi	\N	FF-GOB-1PC	Farm Fresh	Clean Cauliflower Head, 1 pc (~500g)	500	g	40	32	https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?auto=format&fit=crop&w=400&q=80	t
+var-ff-bng-bhr-500g	prod-farm-fresh-fresh-purple-bharta-baingan-eggplant	\N	FF-BNG-BHR-500G	Farm Fresh	Bharta Baingan, 500g (1-2 pcs)	500	g	40	30	https://images.unsplash.com/photo-1628773822503-930a84e27f2f?auto=format&fit=crop&w=400&q=80	t
+var-ff-plk-250g	prod-farm-fresh-hydroponic-clean-palak-spinach	\N	FF-PLK-250G	Farm Fresh	Hydroponic Washed Palak, 250g Bunch	250	g	35	26	https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=400&q=80	t
+var-ff-gin-200g	prod-farm-fresh-fresh-ginger-adrak	\N	FF-GIN-200G	Farm Fresh	Fresh Washed Ginger, 200g	200	g	40	32	https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=400&q=80	t
+var-ff-gar-200g	prod-farm-fresh-fresh-mp-garlic-lahsun	\N	FF-GAR-200G	Farm Fresh	Madhya Pradesh Garlic, 200g	200	g	65	52	https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&w=400&q=80	t
+var-ff-chl-100g	prod-farm-fresh-fresh-dark-green-chillies-hari-mirch	\N	FF-CHL-100G	Farm Fresh	Spicy Green Chillies, 100g	100	g	18	12	https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&w=400&q=80	t
+var-ff-sur-pap-500g	prod-farm-fresh-fresh-surti-papdi-beans-valor	\N	FF-SUR-PAP-500G	Farm Fresh	Surti Papdi Flat Beans, 500g	500	g	60	48	https://images.unsplash.com/photo-1597362925123-77861d3fbac7?auto=format&fit=crop&w=400&q=80	t
+var-ff-tuv-lil-250g	prod-farm-fresh-fresh-green-tuver-lilva-pigeon-pea-pods	\N	FF-TUV-LIL-250G	Farm Fresh	Shelled Green Tuver Lilva, 250g	250	g	55	45	https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&w=400&q=80	t
+var-amul-tz-500ml	prod-amul-amul-taaza-homogenised-toned-milk	\N	AMUL-TZ-500ML	Amul	Amul Taaza Milk Pouch, 500ml	500	ml	29	29	https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80	t
+var-amul-tz-1l	prod-amul-amul-taaza-homogenised-toned-milk	\N	AMUL-TZ-1L	Amul	Amul Taaza Milk Tetra Pak, 1L	1000	ml	74	72	https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80	t
+var-amul-paneer-200	prod-amul-amul-fresh-malai-paneer	ing-paneer	AMUL-PAN-200G	Amul	Amul Fresh Malai Paneer, 200g	200	g	95	89	https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=400&q=80	t
+var-md-dahi-400g	prod-mother-dairy-mother-dairy-classic-dahi-curd	\N	MD-DAHI-400G	Mother Dairy	Mother Dairy Set Curd Tub, 400g	400	g	40	38	https://images.unsplash.com/photo-1571212515416-fef01fc43637?auto=format&fit=crop&w=400&q=80	t
+var-amul-chaas-500ml	prod-amul-amul-masti-spiced-buttermilk-chhaas	\N	AMUL-CHAAS-500ML	Amul	Amul Masti Spiced Chaas Tetra, 500ml	500	ml	20	18	https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80	t
+var-mod-bread-400g	prod-modern-modern-100-whole-wheat-bread	\N	MOD-BREAD-400G	Modern	Modern 100% Whole Wheat Bread, 400g	400	g	50	45	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80	t
+var-amul-chs-200g	prod-amul-amul-processed-cheese-slices	\N	AMUL-CHS-200G	Amul	Amul Cheese Slices (10 Slices), 200g	200	g	145	135	https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=400&q=80	t
+var-aashirvaad-atta-5k	prod-aashirvaad-aashirvaad-superior-mp-shudh-chakki-atta	ing-atta	AASH-ATTA-5KG	Aashirvaad	Aashirvaad Shudh Chakki Atta, 5 kg	5000	g	285	265	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80	t
+var-aash-atta-10kg	prod-aashirvaad-aashirvaad-superior-mp-shudh-chakki-atta	\N	AASH-ATTA-10KG	Aashirvaad	Aashirvaad Shudh Chakki Atta, 10 kg	10000	g	540	499	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80	t
+var-ig-basm-1kg	prod-india-gate-india-gate-super-basmati-rice	\N	IG-BASM-1KG	India Gate	India Gate Super Basmati Rice, 1 kg	1000	g	195	165	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80	t
+var-ig-basm-5kg	prod-india-gate-india-gate-super-basmati-rice	\N	IG-BASM-5KG	India Gate	India Gate Super Basmati Rice, 5 kg	5000	g	920	799	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80	t
+var-daaw-roz-1kg	prod-daawat-daawat-rozana-super-basmati-rice	\N	DAAW-ROZ-1KG	Daawat	Daawat Rozana Super Basmati, 1 kg	1000	g	125	105	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80	t
+var-daaw-roz-5kg	prod-daawat-daawat-rozana-super-basmati-rice	\N	DAAW-ROZ-5KG	Daawat	Daawat Rozana Super Basmati, 5 kg	5000	g	580	499	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80	t
+var-fort-baj-1kg	prod-fortune-fortune-desi-bajra-pearl-millet-flour	\N	FORT-BAJ-1KG	Fortune	Fortune Desi Bajra Flour, 1 kg	1000	g	65	55	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80	t
+var-tata-sooj-500g	prod-tata-sampann-tata-sampann-roasted-sooji-rava	\N	TATA-SOOJ-500G	Tata Sampann	Tata Sampann Roasted Sooji, 500g	500	g	42	36	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80	t
+var-tata-poha-500g	prod-tata-sampann-tata-sampann-thick-poha-flattened-rice	\N	TATA-POHA-500G	Tata Sampann	Tata Sampann Thick Poha, 500g	500	g	45	38	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80	t
+var-tata-mng-1kg	prod-tata-sampann-tata-sampann-unpolished-yellow-moong-dal	\N	TATA-MNG-1KG	Tata Sampann	Tata Sampann Moong Dal, 1 kg	1000	g	170	148	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80	t
+var-tata-chana-1kg	prod-tata-sampann-tata-sampann-unpolished-chana-dal	\N	TATA-CHANA-1KG	Tata Sampann	Tata Sampann Chana Dal, 1 kg	1000	g	140	122	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80	t
+var-tata-kab-1kg	prod-tata-sampann-tata-sampann-white-kabuli-chana-chickpeas	\N	TATA-KAB-1KG	Tata Sampann	Tata Sampann Kabuli Chana, 1 kg	1000	g	185	160	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80	t
+var-tata-kab-500g	prod-tata-sampann-tata-sampann-white-kabuli-chana-chickpeas	\N	TATA-KAB-500G	Tata Sampann	Tata Sampann Kabuli Chana, 500g	500	g	98	85	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80	t
+var-tata-rajm-500g	prod-tata-sampann-tata-sampann-kashmiri-rajma-kidney-beans	\N	TATA-RAJM-500G	Tata Sampann	Tata Sampann Kashmiri Rajma, 500g	500	g	110	96	https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80	t
+var-fort-bes-1kg	prod-fortune-fortune-pure-besan-gram-flour	\N	FORT-BES-1KG	Fortune	Fortune Pure Besan, 1 kg	1000	g	110	95	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80	t
+var-fort-bes-500g	prod-fortune-fortune-pure-besan-gram-flour	\N	FORT-BES-500G	Fortune	Fortune Pure Besan, 500g	500	g	60	52	https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80	t
+var-eve-haldi-200g	prod-everest-everest-turmeric-haldi-powder	\N	EVE-HALDI-200G	Everest	Everest Turmeric Powder, 200g	200	g	58	49	https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=400&q=80	t
+var-eve-haldi-500g	prod-everest-everest-turmeric-haldi-powder	\N	EVE-HALDI-500G	Everest	Everest Turmeric Powder, 500g	500	g	135	118	https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=400&q=80	t
+var-mdh-degg-100g	prod-mdh-mdh-deggi-mirch-kashmiri-red-chilli-powder	\N	MDH-DEGG-100G	MDH	MDH Deggi Mirch Powder, 100g	100	g	85	76	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80	t
+var-eve-dhan-200g	prod-everest-everest-coriander-dhania-powder	\N	EVE-DHAN-200G	Everest	Everest Coriander Powder, 200g	200	g	55	46	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80	t
+var-eve-gar-100g	prod-everest-everest-royal-garam-masala	\N	EVE-GAR-100G	Everest	Everest Royal Garam Masala, 100g	100	g	92	82	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80	t
+var-eve-pav-100g	prod-everest-everest-pav-bhaji-masala	\N	EVE-PAV-100G	Everest	Everest Pav Bhaji Masala, 100g	100	g	78	68	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80	t
+var-tata-salt-1kg	prod-tata-salt-tata-salt-vacuum-evaporated-iodized-salt	\N	TATA-SALT-1KG	Tata Salt	Tata Salt Iodized Salt, 1 kg	1000	g	28	25	https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?auto=format&fit=crop&w=400&q=80	t
+var-lg-hing-50g	prod-lg-lg-compounded-asafoetida-hing-powder	\N	LG-HING-50G	LG	LG Compounded Hing Powder, 50g Tub	50	g	65	58	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80	t
+var-amul-ghee-1l	prod-amul-amul-pure-cow-ghee	\N	AMUL-GHEE-1L	Amul	Amul Pure Cow Ghee Tin, 1L	1000	g	660	625	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=400&q=80	t
+var-fort-sun-1l	prod-fortune-fortune-sunlite-refined-sunflower-oil	\N	FORT-SUN-1L	Fortune	Fortune Sunflower Oil Pouch, 1L	1000	ml	155	139	https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80	t
+var-fort-sun-5l	prod-fortune-fortune-sunlite-refined-sunflower-oil	\N	FORT-SUN-5L	Fortune	Fortune Sunflower Oil Can, 5L	5000	ml	780	699	https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80	t
+var-dhara-gnd-1l	prod-dhara-dhara-filtered-groundnut-oil-sing-tel	\N	DHARA-GND-1L	Dhara	Dhara Filtered Groundnut Oil, 1L Pouch	1000	ml	195	179	https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80	t
+var-dhara-gnd-5l	prod-dhara-dhara-filtered-groundnut-oil-sing-tel	\N	DHARA-GND-5L	Dhara	Dhara Groundnut Oil Jar, 5L	5000	ml	960	885	https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80	t
+var-fort-mus-1l	prod-fortune-fortune-kachi-ghani-pure-mustard-oil-sarson-tel	\N	FORT-MUS-1L	Fortune	Fortune Kachi Ghani Mustard Oil, 1L	1000	ml	165	148	https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80	t
+var-balaji-sev-200	prod-balaji-balaji-crunchy-nylon-sev	ing-sev	BAL-SEV-200G	Balaji	Balaji Nylon Sev, 200g Pouch	200	g	45	40	https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=400&q=80	t
+var-bal-sev-400g	prod-balaji-balaji-crunchy-nylon-sev	\N	BAL-SEV-400G	Balaji	Balaji Nylon Sev, 400g Pouch	400	g	85	75	https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=400&q=80	t
+var-hald-aloo-400g	prod-haldirams-haldirams-nagpur-aloo-bhujia	\N	HALD-ALOO-400G	Haldirams	Haldirams Aloo Bhujia, 400g	400	g	120	105	https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=400&q=80	t
+var-shr-khak-meth-200g	prod-shreeji-shreeji-crispy-methi-khakhra	\N	SHR-KHAK-METH-200G	Shreeji	Shreeji Roasted Methi Khakhra, 200g	200	g	70	62	https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=400&q=80	t
+var-parl-g-250g	prod-parle-parle-g-original-glucose-biscuits	\N	PARL-G-250G	Parle	Parle-G Glucose Biscuits Family Pack, 250g	250	g	30	27	https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80	t
+var-brit-gd-200g	prod-britannia-britannia-good-day-butter-cookies	\N	BRIT-GD-200G	Britannia	Britannia Good Day Butter, 200g Pack	200	g	50	45	https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80	t
+var-wb-tea-500g	prod-wagh-bakri-wagh-bakri-premium-ctc-leaf-tea	\N	WB-TEA-500G	Wagh Bakri	Wagh Bakri Premium Leaf Tea, 500g	500	g	285	259	https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80	t
+var-wb-tea-1kg	prod-wagh-bakri-wagh-bakri-premium-ctc-leaf-tea	\N	WB-TEA-1KG	Wagh Bakri	Wagh Bakri Premium Leaf Tea, 1 kg	1000	g	560	499	https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80	t
+var-tata-gold-500g	prod-tata-tea-tata-tea-gold	\N	TATA-GOLD-500G	Tata Tea	Tata Tea Gold Pouch, 500g	500	g	320	285	https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80	t
+var-nes-clas-100g	prod-nescafe-nescafe-classic-100-pure-instant-coffee	\N	NES-CLAS-100G	Nescafe	Nescafe Classic Glass Jar, 100g	100	g	340	310	https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=400&q=80	t
+var-nes-clas-50g	prod-nescafe-nescafe-classic-100-pure-instant-coffee	\N	NES-CLAS-50G	Nescafe	Nescafe Classic Pouch, 50g	50	g	175	160	https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=400&q=80	t
+var-rooh-afza-750ml	prod-hamdard-hamdard-rooh-afza-rose-sharbat	\N	ROOH-AFZA-750ML	Hamdard	Hamdard Rooh Afza Glass Bottle, 750ml	750	ml	170	155	https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80	t
+var-kel-corn-500g	prod-kelloggs-kelloggs-original-corn-flakes-with-real-almond-honey	\N	KEL-CORN-500G	Kelloggs	Kelloggs Corn Flakes Box, 500g	500	g	215	195	https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=400&q=80	t
+var-quak-oats-1kg	prod-quaker-quaker-100-whole-grain-rolled-oats	\N	QUAK-OATS-1KG	Quaker	Quaker Rolled Oats Pouch, 1 kg	1000	g	199	169	https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=400&q=80	t
+var-mtr-poha-80g	prod-mtr-mtr-ready-3-minute-khatta-meetha-poha	\N	MTR-POHA-80G	MTR	MTR 3-Min Poha Cup, 80g	80	g	45	39	https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80	t
+var-magg-4pk-280g	prod-nestle-maggi-maggi-2-minute-masala-instant-noodles	\N	MAGG-4PK-280G	Nestle Maggi	Maggi 2-Minute Noodles (Pack of 4), 280g	280	g	56	52	https://images.unsplash.com/photo-1612927601601-6638404737ce?auto=format&fit=crop&w=400&q=80	t
+var-magg-12pk-840g	prod-nestle-maggi-maggi-2-minute-masala-instant-noodles	\N	MAGG-12PK-840G	Nestle Maggi	Maggi 2-Minute Noodles (Pack of 12), 840g	840	g	168	149	https://images.unsplash.com/photo-1612927601601-6638404737ce?auto=format&fit=crop&w=400&q=80	t
+var-mcc-fries-420g	prod-mccain-mccain-french-fries-crispy-masala	\N	MCC-FRIES-420G	McCain	McCain Crispy French Fries, 420g	420	g	135	119	https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=400&q=80	t
+var-saf-peas-1kg	prod-safal-safal-select-frozen-green-peas-matar	\N	SAF-PEAS-1KG	Safal	Safal Frozen Green Peas, 1 kg	1000	g	160	135	https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&w=400&q=80	t
+var-saf-peas-500g	prod-safal-safal-select-frozen-green-peas-matar	\N	SAF-PEAS-500G	Safal	Safal Frozen Green Peas, 500g	500	g	85	72	https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&w=400&q=80	t
+var-kis-ket-950g	prod-kissan-kissan-fresh-tomato-ketchup	\N	KIS-KET-950G	Kissan	Kissan Fresh Tomato Ketchup Bottle, 950g	950	g	145	125	https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80	t
+var-chng-sch-250g	prod-chings-chings-secret-schezwan-chutney	\N	CHNG-SCH-250G	Chings	Chings Schezwan Chutney Glass Bottle, 250g	250	g	85	75	https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80	t
+var-det-soap-4pk	prod-dettol-dettol-original-germ-protection-bathing-soap	\N	DET-SOAP-4PK	Dettol	Dettol Original Soap (Pack of 4 × 125g)	500	g	198	175	https://images.unsplash.com/photo-1607006314595-36427d14251a?auto=format&fit=crop&w=400&q=80	t
+var-colg-st-200g	prod-colgate-colgate-strong-teeth-dental-cream-toothpaste	\N	COLG-ST-200G	Colgate	Colgate Strong Teeth Toothpaste, 200g Tube	200	g	125	110	https://images.unsplash.com/photo-1559591937-e106093498cb?auto=format&fit=crop&w=400&q=80	t
+var-hs-shmp-340ml	prod-head-shoulders-head-shoulders-anti-dandruff-cool-menthol-shampoo	\N	HS-SHMP-340ML	Head & Shoulders	Head & Shoulders Cool Menthol Shampoo, 340ml	340	ml	340	299	https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&w=400&q=80	t
+var-para-oil-250ml	prod-parachute-parachute-100-pure-coconut-hair-oil	\N	PARA-OIL-250ML	Parachute	Parachute Pure Coconut Oil Bottle, 250ml	250	ml	110	98	https://images.unsplash.com/photo-1608248597359-21629851610c?auto=format&fit=crop&w=400&q=80	t
+var-surf-easy-1kg	prod-surf-excel-surf-excel-easy-wash-detergent-powder	\N	SURF-EASY-1KG	Surf Excel	Surf Excel Easy Wash Powder, 1 kg	1000	g	150	135	https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&w=400&q=80	t
+var-surf-easy-3kg	prod-surf-excel-surf-excel-easy-wash-detergent-powder	\N	SURF-EASY-3KG	Surf Excel	Surf Excel Easy Wash Powder, 3 kg	3000	g	420	379	https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&w=400&q=80	t
+var-vim-gel-750ml	prod-vim-vim-lemon-dishwash-gel-with-real-lime	\N	VIM-GEL-750ML	Vim	Vim Lemon Dishwash Gel Squeezy Bottle, 750ml	750	ml	165	145	https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?auto=format&fit=crop&w=400&q=80	t
+var-harp-pow-1l	prod-harpic-harpic-power-plus-disinfectant-toilet-cleaner	\N	HARP-POW-1L	Harpic	Harpic Power Plus Original, 1L Bottle	1000	ml	215	189	https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?auto=format&fit=crop&w=400&q=80	t
+var-liz-citr-1l	prod-lizol-lizol-disinfectant-surface-floor-cleaner-citrus	\N	LIZ-CITR-1L	Lizol	Lizol Citrus Floor Cleaner, 1L Bottle	1000	ml	235	205	https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?auto=format&fit=crop&w=400&q=80	t
+var-pamp-m-54	prod-pampers-pampers-all-round-protection-baby-diaper-pants	\N	PAMP-M-54	Pampers	Pampers Pants Medium (7-12 kg), 54 pcs	54	pcs	899	749	https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80	t
+var-him-wipe-72	prod-himalaya-himalaya-gentle-baby-wipes-with-aloe-vera-indian-lotus	\N	HIM-WIPE-72	Himalaya	Himalaya Baby Wipes with Flip Lid (72 pcs)	72	pcs	195	159	https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80	t
+var-jhn-soap-75g	prod-johnsons-johnsons-baby-gentle-bathing-soap	\N	JHN-SOAP-75G	Johnsons	Johnsons Baby Soap Bar, 75g	75	g	65	58	https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80	t
 \.
 
 
@@ -2190,6 +5671,7 @@ rec-1794826319880	Kathiyawadi Ringan No Olo mwj58z1h	kathiyawadi-ringan-no-olo-m
 rec-1794826554152	Kathiyawadi Ringan No Olo mwj5dzq9	kathiyawadi-ringan-no-olo-mwj5dzq9	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 10:55:54.16	\N	\N	f
 rec-1794826680717	Kathiyawadi Ringan No Olo mwj5gp68	kathiyawadi-ringan-no-olo-mwj5gp68	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 10:58:00.723	\N	\N	f
 rec-1794827423003	Kathiyawadi Ringan No Olo mwj5wm2p	kathiyawadi-ringan-no-olo-mwj5wm2p	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 11:10:23.007	\N	\N	f
+rec-1794831855007	Kathiyawadi Ringan No Olo mwj8jm4k	kathiyawadi-ringan-no-olo-mwj8jm4k	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 12:24:15.01	\N	\N	f
 rec-1794828591141	Kathiyawadi Ringan No Olo mwj6lngd	kathiyawadi-ringan-no-olo-mwj6lngd	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 11:29:51.147	\N	\N	f
 rec-1794829219790	Kathiyawadi Ringan No Olo mwj6z4en	kathiyawadi-ringan-no-olo-mwj6z4en	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 11:40:19.794	\N	\N	f
 rec-1794830540438	Kathiyawadi Ringan No Olo mwj7rfps	kathiyawadi-ringan-no-olo-mwj7rfps	Smoky roasted eggplant mash with green garlic and Kathiyawadi spices.	Kathiyawadi	{PURE_VEGETARIAN,GLUTEN_FREE}	{LUNCH,DINNER}	20	30	4	Medium	280	12	45	10	6	https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80	120	f	\N	5	1	2026-11-16 12:02:20.444	\N	\N	f
@@ -2715,6 +6197,7 @@ cmwj8g25f001cl3o04lgeecst	cmwj8g1ew000ll3o0s4ydlvql	7daf6a3491a79c86d39eb2011ec0
 cmwj8g2c2001gl3o0rren9bvf	cmwj8g1tf000yl3o0x8rjs5k7	0df2029a992b42019b24c118ed85f7dd90690ee735b4e567cdbaa1a61243c789	fam_e561ab65-61ec-4a27-958a-0da0456fc920	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:28.659	2026-11-16 12:21:28.659	2026-11-23 12:21:28.656	\N
 cmwj8g2oj001nl3o06lqgrvs9	cmwj8g2io001jl3o0sy36ms5s	74d50a99b4e334c9d6a9e2e7853cd7c7d9802173c7fac7d315e1321c475dba73	fam_6caec1e1-7059-4db6-99d3-e738930107f7	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:21:29.107	2026-11-16 12:21:29.107	2026-11-23 12:21:29.104	\N
 cmwj39g35001pl3i4ovfyws6j	cmwj2fa4w0000l3s4x4q1jmst	129292068ce1b8f6f847aee1daa4627fae8a354f4935271aa282f1b922cc664b	fam_7b702b3b-b3a3-4316-b512-1b4ade491bbc	Web Browser	node	2026-11-16 09:56:21.809	2026-11-16 09:56:21.809	2026-11-23 09:56:21.806	\N
+cmwj9bzjk0023l310i959dpbq	cmwj9bz8z001xl3107gjis344	ca44ac93acc2f87d56cdf888a286a5fe061f140af972612825901c1ae01ebfe9	fam_02a43a80-3332-44b2-8ce6-1ff01031c3a9	Pilot Testing Device	node	2026-11-16 12:46:18.033	2026-11-16 12:46:18.033	2026-11-23 12:46:18.03	\N
 cmwj5goct004bl3084rv1bqjc	cmwj2fa4w0000l3s4x4q1jmst	c4f486f230c634f3870de30abc01aa6de0873a2d5cc043d3d8604e30dec3aeb1	fam_6b14449c-973c-47a0-815f-1f86bd8efd97	Web Browser	node	2026-11-16 10:57:58.349	2026-11-16 10:57:58.349	2026-11-23 10:57:58.343	\N
 cmwj3f5l3001pl3g0uor6vqmv	cmwj2fa4w0000l3s4x4q1jmst	c3a5f2fe76c4c273af09ce5b1337d48a56035979a30d4f8afff28968a5308b1d	fam_665c3cb8-668f-4db9-92bf-2f19ac483253	Web Browser	node	2026-11-16 10:00:48.135	2026-11-16 10:00:48.135	2026-11-23 10:00:48.132	\N
 cmwj4ydmp005al3rcn4kvcvov	cmwj2fa4w0000l3s4x4q1jmst	4bccc6bc9be4ea6e87745a56c6042f4b78819f551ccbb30596c5b9a65e2471b1	fam_3dbf80e7-0e6e-495b-b282-e2504cfba7cf	Web Browser	node	2026-11-16 10:43:44.642	2026-11-16 10:43:44.642	2026-11-23 10:43:44.64	\N
@@ -2773,11 +6256,16 @@ cmwj6xdcn00b0l3y8zcooc9a0	cmwj6xd1w00aul3y8ll382ry0	7eb508d9df780f7bbcd7bf6a59c8
 cmwj7rhxq00acl3jslik4mdzn	cmwj7rhsz00a8l3js4vrczhcz	b18671e8c06c0b4b7932ec7a95849503afc165403de17f8825bf9cc2d254979c	fam_b9b46dee-a80e-45d2-ba77-e6078a9dc61b	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:22.479	2026-11-16 12:02:22.479	2026-11-23 12:02:22.472	\N
 cmwj6xeus00c2l3y8hk724svo	cmwj6xeit00bwl3y8yks7cd7r	f2ab5f9cd7989da18573895cdccddf541ecbbb29bee0d8ed696f1da51694b178	fam_106031ac-935c-45f0-9b4a-5d82f85f58bd	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:38:58.804	2026-11-16 11:38:58.804	2026-11-23 11:38:58.802	\N
 cmwj7ri7p00ajl3jsub7gdklv	cmwj7ri2n00afl3jsqgk61fp0	91575d29a2dfc80adc1d9816d862dc1ee2f44817b4cfe92393eb2674e6aa5fe1	fam_e586f12e-cee0-45f8-a09d-ca350ab44cbc	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:22.837	2026-11-16 12:02:22.837	2026-11-23 12:02:22.83	\N
+cmwj8jldy003el3o0xcass6i4	cmwj8jl730036l3o0tcgce9oh	0236ebd66d7a55079f874ea07822b7ad392647ca420288966ee1e4f116c3db0d	fam_df6681da-cdc7-4e81-8944-2555181ee902	Web Browser	node	2026-11-16 12:24:13.318	2026-11-16 12:24:13.318	2026-11-23 12:24:13.314	\N
+cmwj8jllj003ol3o0kpq493oc	cmwj2fa4w0000l3s4x4q1jmst	ba9e14aa7bbe45958fd1310f67afa0673a9d5956d59a4f4479d00b5db630e2f8	fam_24f6a361-9fcc-4da1-837a-20bc0199e94c	Web Browser	node	2026-11-16 12:24:13.591	2026-11-16 12:24:13.591	2026-11-23 12:24:13.588	\N
+cmwj8jnpy004tl3o0us5in6pm	cmwj8jnjp004nl3o0dd5t2gus	965d7dae9911f95971a2cea6c5d594f7c2e829f7d9f880014bb1add4715a4d74	fam_3d9b91dc-f5df-4e3e-998b-b65479e2aa74	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:16.343	2026-11-16 12:24:16.343	2026-11-23 12:24:16.34	\N
 cmwj6z3qw00e6l3y89x3pjm01	cmwj2fa4w0000l3s4x4q1jmst	75018cebf38ec1eba3aca467b58f8bed75805b61b29614571b756fda29e31304	fam_aaeb25e1-5fa8-4be4-94dd-b50a765b3385	Web Browser	node	2026-11-16 11:40:17.721	2026-11-16 11:40:17.721	2026-11-23 11:40:17.717	\N
+cmwj8jo1t0050l3o00dz8r5iq	cmwj8jnv3004wl3o0u2pycvm2	f81d29d49e2746df53f8634c205c755c3c6e621a56e1fd8a52d836824f4559dd	fam_3438712d-6ff5-4f80-9c2e-7628553ce5fb	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:16.769	2026-11-16 12:24:16.769	2026-11-23 12:24:16.766	\N
 cmwj6z6sn00fbl3y8rbr6o8cy	cmwj6z6hh00f5l3y8wly8d46b	120cb05c252748dd0e6bfb2f3346eaaa4bf27f43701fbad185fe3ab20ff59177	fam_ea96c5ff-6945-4c07-9ecf-487361e9a7bd	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:40:21.672	2026-11-16 11:40:21.672	2026-11-23 11:40:21.668	\N
 cmwj6z7e900fil3y8gi01jnel	cmwj6z74200fel3y8b21ragl4	3c3a2c1ad4877bd7763176da3e351d0476264afd193cd8d602de05b6cb6dc35c	fam_9834d1cb-d548-4a71-84bb-2bbf6760cc89	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:40:22.449	2026-11-16 11:40:22.449	2026-11-23 11:40:22.445	\N
 cmwj6z7z100fpl3y8nnrzpdun	cmwj6z7ou00fll3y8gipg5bo4	af226b16bead75431536d320a9797234521856fd52615783b5014cbad8017c69	fam_1bec5bc3-4e5d-4e8e-bfd5-cc8bb4c842b3	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:40:23.197	2026-11-16 11:40:23.197	2026-11-23 11:40:23.194	\N
 cmwj6z8l000fwl3y8t41znwmf	cmwj6z89z00fsl3y8z0848h4i	75a5cedfbfa21660fa3fd4ce7296a35891986e4d70bf7bbe2b49547bacdf5790	fam_19d67e0b-a9c8-4220-9319-f1796614f092	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:40:23.988	2026-11-16 11:40:23.988	2026-11-23 11:40:23.984	\N
+cmwj8jobo0057l3o0tg745ndo	cmwj8jo6y0053l3o0g9s0guqb	6995bde8b760c97a5dda2b454130d93f1f8c88e30dc07efc37c583c2a7e48241	fam_6e061154-5240-469e-9962-a2607d0bf672	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:17.125	2026-11-16 12:24:17.125	2026-11-23 12:24:17.122	\N
 cmwj6z9nz00gjl3y8gvb5n390	cmwj6z8ya00fzl3y8xja0epch	5223098590c220efacb52010b8a292252b3e86546a88840fb3d1a85fd91b15c4	fam_09210635-481a-4d41-9dee-d75052af8c9a	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:40:25.39	2026-11-16 11:40:25.39	2026-11-23 11:40:25.387	\N
 cmwj6za1g00grl3y8gi8jcqe6	cmwj58zak0069l3rc3wksnuya	ae58476db0e0bc5a138a92e38c76e1f4bb9a2d78a48615c91a74bd32272b564f	fam_98db8b05-b129-4f17-8c86-0201e94ae33d	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:40:25.877	2026-11-16 11:40:25.877	2026-11-23 11:40:25.873	\N
 cmwj6zanv00h0l3y848x3jss3	cmwj6zabr00gul3y8iotaejmx	3db5c00d5fdb44f0a664053cd4f32ead324e221240d896b0a7a2f8829e20bb72	fam_8893ac1e-fd4e-4889-badb-4559551a6e2f	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:40:26.683	2026-11-16 11:40:26.683	2026-11-23 11:40:26.679	\N
@@ -2794,13 +6282,17 @@ cmwj7n1nn002pl3jstcgbav03	cmwj7n1e0002jl3jsh9vx8s87	aa0cf2a1c51b02f9edd403758076
 cmwj7n2990032l3jsxmgg1pv1	cmwj7n1yu002wl3jsr6auh782	2cc30a276992d8a87075b86fdbbe8d34f881d862c79ebe72b09ad27db86ca356	fam_eaf799dc-44da-48bc-8fc3-28a5ca1a5894	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:58:55.533	2026-11-16 11:58:55.533	2026-11-23 11:58:55.517	\N
 cmwj7n2kn003al3jso21pezdz	cmwj7n1e0002jl3jsh9vx8s87	420335c77efa0aa3fbcf3466e4305e7ef201ad56222346c3fbb50135149d004a	fam_d80d15f8-f16d-4940-95d3-186aff445490	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:58:55.943	2026-11-16 11:58:55.943	2026-11-23 11:58:55.927	\N
 cmwj7n2vl003el3js5yozf566	cmwj7n1yu002wl3jsr6auh782	5a4ee425ff6d3e97609b8ba178db7ba5644d98bb9334b9e70dc2c312b3b88f29	fam_8589aa5c-4a4f-41b4-9ed8-018148908b07	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:58:56.337	2026-11-16 11:58:56.337	2026-11-23 11:58:56.321	\N
+cmwj8rgz7000rl310fqamzo1o	cmwj8rgs4000ll310t0r3abqk	9b4038757f395510b209d95cc91e30731a2fe130354730198475bba144a6625e	fam_ba9c7f43-9d0e-48e9-8e47-a11a1674938e	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:30:20.851	2026-11-16 12:30:20.851	2026-11-23 12:30:20.838	\N
 cmwj7o7l3004dl3jstapjvkus	cmwj7o7bg0047l3js67k4d347	8142f9ccfbd628e44e525b606762e9651de84c10a8aff2230ed9d226a65131a2	fam_9991f131-75b7-4523-b364-8207513844ae	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:59:49.096	2026-11-16 11:59:49.096	2026-11-23 11:59:49.079	\N
 cmwj7o85q004ql3js7yo56f33	cmwj7o7w0004kl3jsjpz2qr0v	1e9cdd4145a83467dcec2750c055fe8c3eae193f9f18cf5db60b6b5f96dfae53	fam_ed955117-2c68-4834-881f-118dc8505d26	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:59:49.838	2026-11-16 11:59:49.838	2026-11-23 11:59:49.822	\N
 cmwj7o8gj004yl3jssdyzhxpr	cmwj7o7bg0047l3js67k4d347	8b2d4f2e77309fefc4c0afbeb52e492287888884d062dfa2a1aaab881f16181b	fam_2ee5ebc2-a995-4da9-8a18-74233d8d6d99	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:59:50.227	2026-11-16 11:59:50.227	2026-11-23 11:59:50.211	\N
 cmwj7o8q80052l3jsw0qpiy9g	cmwj7o7w0004kl3jsjpz2qr0v	495f5f897b7447ed2c6c7be7dc0232d1028b4c147d043f9a5d4209e461b1db45	fam_0288e6b8-0dba-412b-acba-2078b7efb46b	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 11:59:50.576	2026-11-16 11:59:50.576	2026-11-23 11:59:50.559	\N
+cmwj8rhcn0014l310ydcu85lg	cmwj8rh6t000yl310bgvxb5wu	b131d032b143576270ae1bb71440344438f54f08c67bab9423f666c127b6ac5a	fam_96e8ba24-6cf5-4d88-aa93-fb8568c26c1e	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:30:21.335	2026-11-16 12:30:21.335	2026-11-23 12:30:21.322	\N
 cmwj7opdh005wl3js13fiy83h	cmwj7op3r005ql3jsb2wkt4j7	adb3937a2068670a6cf397b35b1cfe587b575332a95d9447a9501b6b866b5d41	fam_88488305-ffe2-4035-9ae6-2f56ecac7629	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:00:12.148	2026-11-16 12:00:12.148	2026-11-23 12:00:12.146	\N
 cmwj7opyd0069l3jsv5ee5q0t	cmwj7opoi0063l3jsb4gz7quy	8eed21c1a161ac447064894b880949f51bef6ecf4bcef2052b39c2b91e14a5a3	fam_79f03919-7da7-48dd-9f87-882a3f97ed76	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:00:12.901	2026-11-16 12:00:12.901	2026-11-23 12:00:12.899	\N
 cmwj7oq9i006hl3jsg4zpl4pc	cmwj7op3r005ql3jsb2wkt4j7	e2429de3170f592fafe0104035faada1d0e04b75c7df384bc07ab2d6858582e4	fam_dbcc585e-b969-4a7d-aed1-57dedc492386	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:00:13.302	2026-11-16 12:00:13.302	2026-11-23 12:00:13.3	\N
+cmwj8rhl4001cl310metknk91	cmwj8rgs4000ll310t0r3abqk	946a489d1f6af6b7596881c294b1a06a2972479cf12d2e614db79cd41b4a11a9	fam_c22b0751-36d6-4305-8cde-14686200198c	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:30:21.64	2026-11-16 12:30:21.64	2026-11-23 12:30:21.627	\N
+cmwj8rhs6001gl310y3u85eo2	cmwj8rh6t000yl310bgvxb5wu	29676bb9f695ff42a7d9e7a726e87b4641dd0e85209e3afa5c66b50b1832c3ee	fam_1abd18fb-bee3-41c4-877e-d1dd8bc32fa4	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:30:21.895	2026-11-16 12:30:21.895	2026-11-23 12:30:21.882	\N
 cmwj7oqj0006ll3jsz74n5s5e	cmwj7opoi0063l3jsb4gz7quy	6ae0780428107320d7d6b1bea2dd0a460a4dc2398cd28aba55904846872d1aac	fam_5c6531b1-28b8-491f-bd66-4d0dc5e21466	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:00:13.644	2026-11-16 12:00:13.644	2026-11-23 12:00:13.643	\N
 cmwj7or3m006sl3jspttjcyj6	cmwj7oqu3006ol3jscxsley7w	0c861306cb80cbc19f57dc77deafaa9c0ddcb83ce3a1363d1785f98a701eb98b	fam_9bf772b5-c58c-46b8-b0fa-16426c61bea9	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:00:14.386	2026-11-16 12:00:14.386	2026-11-23 12:00:14.384	\N
 cmwj7riuw00b6l3js4ot9qqz9	cmwj7rig500aml3jssdan8w5b	aa1f9de6740e9a7c1662fb1cdf55f7384f02e7976f3f8afe86a761df08b75458	fam_7b695526-9165-4f59-b694-810838d1191c	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:23.672	2026-11-16 12:02:23.672	2026-11-23 12:02:23.666	\N
@@ -2809,6 +6301,191 @@ cmwj7rjll00bnl3jsbf2hz5hm	cmwj7rjei00bhl3jsrnts5en8	8762b1daf6ce0ca5f05faff56cf3
 cmwj7rjxn00c2l3js8nv8egu2	cmwj7rjrx00bwl3jszvkmrhbk	746ba22c6bc55f4fd9fd3b2d42ed1aa0cd19453276b3ffba021e168ef48e3724	fam_9fa7b4b4-56cc-40e4-8400-87d6c403fdbe	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:25.067	2026-11-16 12:02:25.067	2026-11-23 12:02:25.06	\N
 cmwj7rkeu00chl3js6kf1ffup	cmwj7rk9o00cbl3jss734waya	4960b6be39161b14ebdc6b4487648d3e85a57408f7a08869ea9545ddcb337f4f	fam_a26dc238-e9e7-4a37-8c85-8b1a3b44b82a	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:25.687	2026-11-16 12:02:25.687	2026-11-23 12:02:25.68	\N
 cmwj7rl2900djl3js4nzcqcgm	cmwj7rkx000ddl3js2msk70ls	c725236543b332dafb737bc44796b4585637cc5b8f0daef39ba152c3174ba590	fam_3b4ecc21-3e49-4700-a2b9-d2160bb5f3ed	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:02:26.529	2026-11-16 12:02:26.529	2026-11-23 12:02:26.522	\N
+cmwj8jomu005el3o0yp515edz	cmwj8jogj005al3o0paktz6iq	7a8a6e14919b88d665a7490686011217747643a73477c912e2b7964d55dc9135	fam_0711fe0d-6a6b-4fd3-b8e9-eff8c2142059	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:17.526	2026-11-16 12:24:17.526	2026-11-23 12:24:17.523	\N
+cmwj8jpas0061l3o0ukr0y9ob	cmwj8jovs005hl3o03h0hw50t	11cfbfe1fa42d882a75d087fabc5ad15ef443204970b8e38a4ed6690ba038a6c	fam_59b77d90-af3f-455a-994d-5da4bb917ecb	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:18.388	2026-11-16 12:24:18.388	2026-11-23 12:24:18.385	\N
+cmwj8jpim0069l3o09xe0nw1g	cmwj58zak0069l3rc3wksnuya	dc776b27c9b723ec9092f6daaa138e7129fe4c7bc3873b2e8e51dfb963b9dc8c	fam_018d1b8e-991b-4d0d-a120-3d35d0f4d31b	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:18.67	2026-11-16 12:24:18.67	2026-11-23 12:24:18.667	\N
+cmwj8jpud006il3o0sl9selo4	cmwj8jpor006cl3o0ugux8gra	58da264306edd0e066b5be762f38c1304c8c906bc6727ca9d4ff4cf073316810	fam_290e9312-71b6-4bf3-b80a-f307dd229b9c	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:19.093	2026-11-16 12:24:19.093	2026-11-23 12:24:19.09	\N
+cmwj8jqap006xl3o0c5jkwrg7	cmwj8jq2v006rl3o0y7fe0nw9	d55323f2a7d25a6d90b9304ee5a73b6714fbe9e9fb2eb2c16daa3fe38bb0e4c2	fam_73a525f7-fac9-4be9-9362-02fab5ea855f	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:19.681	2026-11-16 12:24:19.681	2026-11-23 12:24:19.678	\N
+cmwj8jqt4007cl3o0laefc08u	cmwj8jqnk0076l3o07schg62o	823d9b1983c72c1330060cf1a6d157f4644863f5a0c9464bd3fac12c389ffc97	fam_f9407358-561f-49fa-99b3-3d5dc9e8c743	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:20.345	2026-11-16 12:24:20.345	2026-11-23 12:24:20.342	\N
+cmwj8jrmu008el3o0spqxfas6	cmwj8jrgz0088l3o0c4zedu9o	7c357332cd510a819e4a885b57c389db645f83ec1dc55d130144ea31dc23fbc7	fam_70cb2290-77a9-4f2a-9d7e-2c89df19078c	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:24:21.414	2026-11-16 12:24:21.414	2026-11-23 12:24:21.411	\N
+cmwj8om4k009il3o0f6lwpqkv	cmwj8olwl009cl3o0ktj4vts0	f7c3c064aebffcaef47ec334f75ec09618633def7f6986b0600c75ca0c6724e2	fam_ad80ce02-f9d4-4539-80f9-84503f5caa26	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:28:07.557	2026-11-16 12:28:07.557	2026-11-23 12:28:07.542	\N
+cmwj8omot009vl3o0f6p8xgwf	cmwj8omdm009pl3o0m2gr0nwe	15ea44490e7d07e3329ba148e11d0c630019ad196470aeb381c4fd6144734ae0	fam_74a87d23-60ea-4062-94ce-7b855739b333	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:28:08.285	2026-11-16 12:28:08.285	2026-11-23 12:28:08.27	\N
+cmwj8omz700a3l3o0tpeudarr	cmwj8olwl009cl3o0ktj4vts0	2f1add5c90547a1470351b5924a0e9c4bf38a7f132c0dbc2fd9a3682449cdf73	fam_3a4b41e1-58f4-406d-9329-e0264bfffa6e	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:28:08.659	2026-11-16 12:28:08.659	2026-11-23 12:28:08.644	\N
+cmwj8on7j00a7l3o0ke4uryel	cmwj8omdm009pl3o0m2gr0nwe	2719a56f9add07432498a9be04aaecf5eb2898ffe40636da3669850b2265a3a5	fam_b6012cc5-44eb-4bdf-82e6-8df9f075732e	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:28:08.959	2026-11-16 12:28:08.959	2026-11-23 12:28:08.945	\N
+cmwj8onor00ael3o0my8s96ao	cmwj8onhk00aal3o076vc7wdz	471eac301a24d4f54df78f6467904d9cf47c153e69989fbb80e530d015104d8e	fam_d437fefc-9e4f-426a-98f6-a4780a5b4643	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:28:09.58	2026-11-16 12:28:09.58	2026-11-23 12:28:09.565	\N
+cmwj8ri70001nl310u8s1ktzs	cmwj8ri0k001jl3105rphs4uc	ed3ca2eaabd5bf91eb546d061e19bd48ec978e7753dfe8fa16da1239756269e3	fam_30046c59-4ba2-40c0-bd49-ddb5bfa55896	Web Browser	node-fetch/1.0 (+https://github.com/bitinn/node-fetch)	2026-11-16 12:30:22.429	2026-11-16 12:30:22.429	2026-11-23 12:30:22.416	\N
+cmwj9cdw20029l310few9qvn5	cmwj9bz8z001xl3107gjis344	3333ce651a1cec23d4fecb27acc1057e6dcc668bd07b01b5e51a3a44bdcb2df2	fam_2b3574ff-f0bb-4b0a-a724-2de3f96ba963	Web Browser	node	2026-11-16 12:46:36.627	2026-11-16 12:46:36.627	2026-11-23 12:46:36.623	\N
+cmwj9cop0002il310iwgj1gqj	cmwj9cogl002cl310c2z255yf	a6590fbf5b031732e3afeb15a11265a356f5995b40af87882ca23cf422fd7329	fam_c49f604f-3a2a-423f-8b0a-bc31dffcd609	Pilot Testing Device	node	2026-11-16 12:46:50.628	2026-11-16 12:46:50.628	2026-11-23 12:46:50.625	2026-11-16 12:46:50.684
+cmwj9coq3002ml310ktb512u5	cmwj9cogl002cl310c2z255yf	09ac2460cba31fefe065ab678b2db2820140e60ea0d7d817fc61cff16fb743f3	fam_c49f604f-3a2a-423f-8b0a-bc31dffcd609	Pilot Testing Device	node	2026-11-16 12:46:50.668	2026-11-16 12:46:50.668	2026-11-23 12:46:50.665	2026-11-16 12:46:50.684
+cmwj9d5sv002vl310i6iuh0ip	cmwj9d5it002pl310hyhn6ozq	f3bd28ee86e6f30ab6f14f81bad5b1cc7815908915cc94048efb281633cca290	fam_30459c6b-c8b3-473f-a6cb-0c93d4f65c8f	Pilot Testing Device	node	2026-11-16 12:47:12.8	2026-11-16 12:47:12.8	2026-11-23 12:47:12.797	2026-11-16 12:47:12.87
+cmwj9d5u1002zl3103cza0q7f	cmwj9d5it002pl310hyhn6ozq	1f34ce012e6a004e4866038fdcc5d54aee2a56e3a17db719197a990efd52395a	fam_30459c6b-c8b3-473f-a6cb-0c93d4f65c8f	Pilot Testing Device	node	2026-11-16 12:47:12.841	2026-11-16 12:47:12.841	2026-11-23 12:47:12.838	2026-11-16 12:47:12.87
+cmwj9dlnu0038l310wmm8g4cy	cmwj9dldz0032l310ocvlj8ve	46b676f8fd4a03ac9f94080fce3e1bda1d99613697a944c024eecd39a4daddb2	fam_9a173e22-1c5a-45d5-99fb-b5d34e752ca8	Pilot Testing Device	node	2026-11-16 12:47:33.354	2026-11-16 12:47:33.354	2026-11-23 12:47:33.352	2026-11-16 12:47:33.408
+cmwj9dlow003cl310z6vqvtez	cmwj9dldz0032l310ocvlj8ve	773a4e01f0779ffb61a4c6511d81abd7fddf3793e8a4a8e02d7035d8e2dd741a	fam_9a173e22-1c5a-45d5-99fb-b5d34e752ca8	Pilot Testing Device	node	2026-11-16 12:47:33.393	2026-11-16 12:47:33.393	2026-11-23 12:47:33.39	2026-11-16 12:47:33.408
+cmwjap1ms0025l3ggid3xuk9y	cmwjahqy20014l3ggjypd0ffc	ee161755aefad3119323cd43ee10df2d9dbe80d9be24aa227bc32edf4793b95e	fam_a8e83ad0-846c-4cec-ab63-cc717f7077f4	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36	2026-11-16 13:24:26.884	2026-11-16 13:24:26.884	2026-11-23 13:24:26.883	2026-11-16 13:24:30.923
+cmwj9dysc003ll310ls2u9igj	cmwj9dyij003fl310ke1i6wb7	6d9ecb7a0adc62993719cfac6e53ea378cde048d67fbc6a934558f70df612f57	fam_47343c83-3f54-47ca-b625-04e1ae4ee081	Pilot Testing Device	node	2026-11-16 12:47:50.364	2026-11-16 12:47:50.364	2026-11-23 12:47:50.362	2026-11-16 12:47:50.415
+cmwj9dytc003pl310hja8d1tg	cmwj9dyij003fl310ke1i6wb7	ecadb1e6b7b82b238c2eea972e21527a31234ae913f38e20d7c357ee3ed96d4c	fam_47343c83-3f54-47ca-b625-04e1ae4ee081	Pilot Testing Device	node	2026-11-16 12:47:50.4	2026-11-16 12:47:50.4	2026-11-23 12:47:50.398	2026-11-16 12:47:50.415
+cmwj9eec3003yl310grh36w1m	cmwj9ee3x003sl310q7chbr0k	3fd1eb951eebc94a6737fd6da4a21394aa14599d39bbc51ff28f01c26027712c	fam_dce92ddc-3dd0-495e-9b93-00eac43600b1	Pilot Testing Device	node	2026-11-16 12:48:10.516	2026-11-16 12:48:10.516	2026-11-23 12:48:10.514	2026-11-16 12:48:10.553
+cmwj9eect0042l310nj7y4597	cmwj9ee3x003sl310q7chbr0k	23db2678bdea27909b8e505abf09a84bc6125efed71dd4475b7fc8adeeeafa90	fam_dce92ddc-3dd0-495e-9b93-00eac43600b1	Pilot Testing Device	node	2026-11-16 12:48:10.542	2026-11-16 12:48:10.542	2026-11-23 12:48:10.54	2026-11-16 12:48:10.553
+cmwj9eyjm004bl310q6umzu0u	cmwj9ey690045l310dpkrb5j2	3bc1437cfdad830ea57a5d5896e56a2e36a5c68a0905284c1bde1c89781dd972	fam_479354aa-3307-4096-8394-7546c0909c90	Pilot Testing Device	node	2026-11-16 12:48:36.706	2026-11-16 12:48:36.706	2026-11-23 12:48:36.704	2026-11-16 12:48:36.755
+cmwj9eykh004fl310e410g8hq	cmwj9ey690045l310dpkrb5j2	dae8f1c01109adb7a4a08470738ff3828359fd811199a1a7048e28a775151eb4	fam_479354aa-3307-4096-8394-7546c0909c90	Pilot Testing Device	node	2026-11-16 12:48:36.737	2026-11-16 12:48:36.737	2026-11-23 12:48:36.735	2026-11-16 12:48:36.755
+cmwj9fqp0004ol3106wimy76u	cmwj9fqgf004il31014ft6mp2	506c7713b001475935ec3f6b9d3a8e0adb24b65356ce38497b242fb2c35c3738	fam_71223386-d89d-47b4-836b-3c75a3aeb18b	Pilot Testing Device	node	2026-11-16 12:49:13.188	2026-11-16 12:49:13.188	2026-11-23 12:49:13.186	2026-11-16 12:49:13.239
+cmwj9fqpw004sl310rx3oppl0	cmwj9fqgf004il31014ft6mp2	a4e95b3ce135f35422712ff6a11d7b19335e219caf36580e8aaa39b167bafbaf	fam_71223386-d89d-47b4-836b-3c75a3aeb18b	Pilot Testing Device	node	2026-11-16 12:49:13.221	2026-11-16 12:49:13.221	2026-11-23 12:49:13.218	2026-11-16 12:49:13.239
+cmwj9gald0051l310umno25lf	cmwj9ga9e004vl310pf3wo4bj	13c7d52b26f5b78440b63d6b6a05600f49bf98e21dbb5f6c1c489d9fb66aeb1e	fam_1733d26e-f4d8-4575-b3e4-dff0e7361891	Pilot Testing Device	node	2026-11-16 12:49:38.978	2026-11-16 12:49:38.978	2026-11-23 12:49:38.976	2026-11-16 12:49:39.026
+cmwj9gam90055l310bjljhb7f	cmwj9ga9e004vl310pf3wo4bj	9bd9b6a4851a4da3a08730b03fa08614f9d758e07b36545c5061aad08a157f4c	fam_1733d26e-f4d8-4575-b3e4-dff0e7361891	Pilot Testing Device	node	2026-11-16 12:49:39.009	2026-11-16 12:49:39.009	2026-11-23 12:49:39.007	2026-11-16 12:49:39.026
+cmwjapsnn002el3ggd67spxk1	cmwjahqy20014l3ggjypd0ffc	b0697ddb6b2a62171c9e0bd942e6f1fd69660c3dfaa2d4dc3649f364a116de7d	fam_0795cd88-84d0-445f-b661-a66ab45acab3	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36	2026-11-16 13:25:01.908	2026-11-16 13:25:01.908	2026-11-23 13:25:01.906	2026-11-16 13:25:05.873
+cmwjaljvw001el3gg51v1frku	cmwjahqy20014l3ggjypd0ffc	8ff35e8d008eb4055193bd480afbb8e0521548966872af5f09381480f4ff030e	fam_d726680c-69bc-4edc-b231-923b14afb19d	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36	2026-11-16 13:21:43.917	2026-11-16 13:21:43.917	2026-11-23 13:21:43.915	\N
+cmwjan42k001il3ggrl2ebwte	cmwjahqy20014l3ggjypd0ffc	a84cff9bc324e02e80ac8dcea88c5e0b0d2e175badf9cd6040f9589f7dec1db5	fam_7c6b3315-4dd5-43ba-9e6e-ec767bfdd2ec	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36	2026-11-16 13:22:56.732	2026-11-16 13:22:56.732	2026-11-23 13:22:56.73	\N
+cmwjan840001ml3ggukd9bedy	cmwjahqy20014l3ggjypd0ffc	1308b33265cb57a1bdcd59c6760378a08a253a61092ce9d88537bd65303bce8c	fam_405d0065-04df-466a-9b61-39ef0258310b	Web Browser	node	2026-11-16 13:23:01.969	2026-11-16 13:23:01.969	2026-11-23 13:23:01.967	\N
+cmwjanqqo001ql3ggowsu6icu	cmwjahqy20014l3ggjypd0ffc	e13a814dd48234fe37bc678a709212d290d4dfa14938f1deb79da9116434f978	fam_fa16c989-96f4-485b-ab8b-1cc2e36869fe	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36	2026-11-16 13:23:26.112	2026-11-16 13:23:26.112	2026-11-23 13:23:26.11	\N
+cmwjaoabf001wl3ggdlfpfv1q	cmwjahqy20014l3ggjypd0ffc	0521a6200b05f6e19e4e0d4a04568463cd086b533b2450dbe49e8ef02dd5e582	fam_aa24a31d-1eb0-4b88-aaae-0ebe25bdc9ed	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36	2026-11-16 13:23:51.484	2026-11-16 13:23:51.484	2026-11-23 13:23:51.481	2026-11-16 13:23:54.992
+cmwjd16hu000ll3rc8qfkrbch	cmwjcyiro0009l3rc132yjnvt	3cfd6b97502a534db7217b4fd32216a1e316be98748d6d58dcfdaefc589b44f9	fam_11603840-3b5c-409a-9a47-ae38edf14bd6	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-16 14:29:52.29	2026-11-16 14:29:52.29	2026-11-23 14:29:52.287	2026-11-16 14:50:14.732
+cmwjdrdqw000pl3rcy2rptv1d	cmwjcyiro0009l3rc132yjnvt	0fe6ebebfac9361a7c648879652c23f2ca1610f01584c9c8e2d2aba69f41a5ff	fam_11603840-3b5c-409a-9a47-ae38edf14bd6	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-16 14:50:14.745	2026-11-16 14:50:14.745	2026-11-23 14:50:14.742	\N
+cmwkae3o00009l39obo4brbuw	cmwj2fa4w0000l3s4x4q1jmst	fc828b371c3cb932a9644e2182b838ae46fdaa70fc29967555bc89069481f090	fam_424bba20-5724-47df-8b60-d8950fb33fb2	Admin Console (node)	node	2026-11-17 06:03:42.48	2026-11-17 06:03:42.48	2026-11-24 06:03:42.475	\N
+cmwkaejpj000jl39osi8ctl8g	cmwj2fa4w0000l3s4x4q1jmst	1e377441d93f2426a8a69d0b4bf483fa6315c27eb83f63de1c90d3a24c84c280	fam_ebaaaeb6-a8ce-4c8f-be8c-e3d2c5a7eb95	Admin Console (node)	node	2026-11-17 06:04:03.271	2026-11-17 06:04:03.271	2026-11-24 06:04:03.267	\N
+cmwkaygaw000nl39o83glp95h	cmwkawlu40000l3f8zugqrfgy	32df97bf44e8d249507de3d759602c61d8a668785d3d85a0c046d04ff62bfffd	fam_1286afc2-5322-44eb-a45a-898f98a97607	Admin Console (Mozilla/5.0 (Windows NT 10.0; )	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-17 06:19:31.977	2026-11-17 06:19:31.977	2026-11-24 06:19:31.972	2026-11-17 06:38:10.948
+cmwkbmfpo0001l3ms7jscysgq	cmwkawlu40000l3f8zugqrfgy	f891cfd1013e4450d52535f1deafebc39fb80cde6f54b87fc7acb4e0efd7f498	fam_1286afc2-5322-44eb-a45a-898f98a97607	Admin Console (Mozilla/5.0 (Windows NT 10.0; )	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-17 06:38:10.956	2026-11-17 06:38:10.956	2026-11-24 06:38:10.954	\N
+cmwkbevk7000vl39oo0snalsj	cmwkawlu40000l3f8zugqrfgy	05837aff97d329edef367eba1829e1bd82fa42c389338faa3e098dacfb594a4a	fam_b48f6050-0eef-4f0b-961a-1e0123ef78ca	Admin Console (Mozilla/5.0 (Windows NT 10.0; )	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-17 06:32:18.247	2026-11-17 06:32:18.247	2026-11-24 06:32:18.246	2026-11-17 06:47:38.369
+cmwkbyljo0003l3mso3mxcqpp	cmwkawlu40000l3f8zugqrfgy	25bc52443dade8fb9e52be06c03e9f0b3d92317c3e1d333d5bfdeaa6d1148fd0	fam_b48f6050-0eef-4f0b-961a-1e0123ef78ca	Admin Console (Mozilla/5.0 (Windows NT 10.0; )	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-17 06:47:38.388	2026-11-17 06:47:38.388	2026-11-24 06:47:38.384	\N
+cmwkc6c1s0009l3ms26kg0vg8	cmwkawlu40000l3f8zugqrfgy	805e5e864c6cc0b985b4b8a8c74babde13c36378a154c4922b57c5037b854cca	fam_d6395d8d-db61-4934-8155-31689fd90a96	Admin Console (Mozilla/5.0 (Windows NT 10.0; )	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-17 06:53:39.328	2026-11-17 06:53:39.328	2026-11-24 06:53:39.319	2026-11-17 08:29:07.558
+cmwkfl3zw0003l34wn2063frq	cmwkawlu40000l3f8zugqrfgy	ad19c742d6f6b676dff334a05b71f1ef4e4806c48775c6c5cfe12916ba1f6129	fam_d6395d8d-db61-4934-8155-31689fd90a96	Admin Console (Mozilla/5.0 (Windows NT 10.0; )	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-17 08:29:07.581	2026-11-17 08:29:07.581	2026-11-24 08:29:07.567	2026-11-17 08:46:46.123
+cmwknn6z7000pl3doykz0hy6w	cmwj2fa4w0000l3s4x4q1jmst	baded873e44fd5018400646890c1658689f888b7f3a67bc7cb1d5099ad1a9106	fam_38c5a4d4-4199-40bc-8823-6fdf42657a47	Web Browser	node	2026-11-17 12:14:41.684	2026-11-17 12:14:41.684	2026-11-24 12:14:41.668	\N
+cmwkno31z000xl3do5ralojdk	cmwj2fa4w0000l3s4x4q1jmst	7234f96d915f3dfcea518b10341ecd5e2e8c7d0cb3633c49db53403f299792ab	fam_1c85d3b7-008a-434c-be20-2ef63139fb5b	Web Browser	node	2026-11-17 12:15:23.255	2026-11-17 12:15:23.255	2026-11-24 12:15:23.239	\N
+cmwkg7ss80005l34w3xhbwbsw	cmwkawlu40000l3f8zugqrfgy	d4b6530b4951d75833e04d9299c527c41bd6f333acbadf0b1c1f74c591ad89e9	fam_d6395d8d-db61-4934-8155-31689fd90a96	Admin Console (Mozilla/5.0 (Windows NT 10.0; )	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-17 08:46:46.136	2026-11-17 08:46:46.136	2026-11-24 08:46:46.131	2026-11-18 07:32:30.865
+cmwknqnh80011l3doe0c4dh7v	cmwj2fa4w0000l3s4x4q1jmst	c193c2a3bc0f813286e006be1481c99ba2110864db78ccf73ca665d9c38f580b	fam_5459e57e-b9a0-48ee-b370-a8c49e188a73	Web Browser	node	2026-11-17 12:17:23.036	2026-11-17 12:17:23.036	2026-11-24 12:17:23.033	\N
+cmwkntfjt0001l37g7hgqk8zd	cmwj2fa4w0000l3s4x4q1jmst	f9c28aaa13f32d00f5303138b0281893b93ee3f3e47c19ca262c159d54cf06cf	fam_7a1ccd4e-c4bc-4fc9-aa9b-9f5b70226fb3	Web Browser	node	2026-11-17 12:19:32.729	2026-11-17 12:19:32.729	2026-11-24 12:19:32.725	\N
+cmwkou6h90001l30g2aiiyxrn	cmwj2fa4w0000l3s4x4q1jmst	1094b20116fe669156a6e5aeb9d8677ef61e797ad17d15f7720c027757a5fb06	fam_04f5570f-fbe3-49f9-8d96-f7075df85879	Web Browser	node	2026-11-17 12:48:07.245	2026-11-17 12:48:07.245	2026-11-24 12:48:07.238	\N
+cmwkoymb80001l3o00wextztw	cmwj2fa4w0000l3s4x4q1jmst	c0c7c2536cb86467cd0294dd1610dd0ee81172e3cfcbf8af50dbf57ed00ab8a4	fam_df5a3634-4937-47bb-87f1-3a2bc6d301c2	Web Browser	node	2026-11-17 12:51:34.388	2026-11-17 12:51:34.388	2026-11-24 12:51:34.379	\N
+cmwkp06yb0001l3o08nvsajvg	cmwj2fa4w0000l3s4x4q1jmst	7307a17d34bc8c03960a1294c6a224f1e93bdc6f5df6c42f28c5cea8ef478386	fam_41eff197-a132-41b1-a242-570cd5f4cef2	Web Browser	node	2026-11-17 12:52:47.795	2026-11-17 12:52:47.795	2026-11-24 12:52:47.791	\N
+cmwkp0d4t000bl3o0w0yc3eeg	cmwj2fa4w0000l3s4x4q1jmst	a89924a597c5ea45418fcf9e561d08c704e94929406b3bec5dfa3553578b83a0	fam_325fce23-85bc-42fe-952e-cb2fd39657a7	Web Browser	node	2026-11-17 12:52:55.806	2026-11-17 12:52:55.806	2026-11-24 12:52:55.803	\N
+cmwkp28qy000xl3o09yk6dnzi	cmwj2fa4w0000l3s4x4q1jmst	1e9e4db26ae9344d1c344b4b6b6b57baf25d9b7e22a980a7634ee5ef618ea4c9	fam_271c7915-64d0-41d2-a898-d51541bd4c65	Web Browser	node	2026-11-17 12:54:23.434	2026-11-17 12:54:23.434	2026-11-24 12:54:23.418	\N
+cmwkq3pqt0003l3v0lg8vgdl1	cmwj2fa4w0000l3s4x4q1jmst	0c72f4edaa90060fe788f6ca817ac828c5fc533f2f33a19bf2b18cc4e871c951	fam_029e0a31-5e74-41ff-baa0-5cd458a7d8f1	Web Browser	node	2026-11-17 13:23:31.733	2026-11-17 13:23:31.733	2026-11-24 13:23:31.723	\N
+cmwkq5r2d0001l3zw73k4knrm	cmwj2fa4w0000l3s4x4q1jmst	0b2b8713591ba0226956787fe3241bd478d10746dd11c89c65e3db3d9c805de3	fam_1c037aaa-0684-46bc-8c26-80587051a48a	Web Browser	node	2026-11-17 13:25:06.757	2026-11-17 13:25:06.757	2026-11-24 13:25:06.755	\N
+cmwkq6ee30021l3zwkbuwk26p	cmwj2fa4w0000l3s4x4q1jmst	fa955ab54a77a1bf7a68019cdf3873bf6c0e8b1cbb44c809704d40da14b97b90	fam_c931726d-0c22-41dd-a7cb-259120880541	Web Browser	node	2026-11-17 13:25:36.987	2026-11-17 13:25:36.987	2026-11-24 13:25:36.985	\N
+cmwkq6j2f002hl3zw5cp5lqxt	cmwj2fa4w0000l3s4x4q1jmst	474e87ec02f4b0400fe9850c14b08aa8098dbbc76f161ff0372ea50049e30cf5	fam_c5da6807-0d78-4105-9ae0-f94ef7128ec2	Web Browser	node	2026-11-17 13:25:43.047	2026-11-17 13:25:43.047	2026-11-24 13:25:43.045	\N
+cmwkq6w1q0037l3zwu8sueaue	cmwj2fa4w0000l3s4x4q1jmst	35c6a25c94d2aaabef2c3179f16be51daa295fc5a2e093c8ca1c9270d0016e61	fam_2bf495bc-7049-4222-99b1-304e72000dce	Web Browser	node	2026-11-17 13:25:59.87	2026-11-17 13:25:59.87	2026-11-24 13:25:59.868	\N
+cmwks7ta30001l3541cseqazn	cmwj2fa4w0000l3s4x4q1jmst	77800d9107f25ba4e36cd9e26227fd7d7f7eb024ee992b0ffba5cafe6ba1483b	fam_def3bfdd-979f-4035-ace0-41229710d5e1	Web Browser	node	2026-11-17 14:22:42.171	2026-11-17 14:22:42.171	2026-11-24 14:22:42.166	\N
+cmwks9ybg0001l30g8zc0ck83	cmwj2fa4w0000l3s4x4q1jmst	b7d7c4a4b036bf24f888076b44614a07fe50c7301d551fb30dacab4b275000b1	fam_c7842650-5bff-42de-88cf-01952318fe03	Web Browser	node	2026-11-17 14:24:22.012	2026-11-17 14:24:22.012	2026-11-24 14:24:22.004	\N
+cmwksb38k000jl30gh725jzcy	cmwj2fa4w0000l3s4x4q1jmst	f2aec27ed33ce9be5d1c13fb1c99d3fb5ecfebd2ab35a8bc61f36342755de1d4	fam_c56d940f-9048-47b0-af90-8624023c729b	Web Browser	node	2026-11-17 14:25:15.044	2026-11-17 14:25:15.044	2026-11-24 14:25:15.041	\N
+cmwksc0dz000pl30gia020ixb	cmwj2fa4w0000l3s4x4q1jmst	5b43ab207ed3a451f60aa3b483c1863d860de97e385991e6a1d1c36fe9771ed1	fam_ae432691-3872-495a-bb57-6d4450d301f9	Web Browser	node	2026-11-17 14:25:58.007	2026-11-17 14:25:58.007	2026-11-24 14:25:58.004	\N
+cmwkscl7v002fl30ggnz9vvsl	cmwj2fa4w0000l3s4x4q1jmst	8a305dbe0242f87e97463fa3c59a95743bc5fc60133ad5772f37fdb2018649cc	fam_bb00020b-243f-42d3-913e-acc17e9b521a	Web Browser	node	2026-11-17 14:26:25.003	2026-11-17 14:26:25.003	2026-11-24 14:26:24.997	\N
+cmwksd4ez004fl30gtccawi6o	cmwj2fa4w0000l3s4x4q1jmst	079a1f7520195b19759c2d458772217e2e27757bcf2c06be53f122b97d2da49a	fam_5ce12c48-1fef-4d9e-8727-1785f11d3244	Web Browser	node	2026-11-17 14:26:49.883	2026-11-17 14:26:49.883	2026-11-24 14:26:49.878	\N
+cmwksfsjl0001l34o84auiqig	cmwj2fa4w0000l3s4x4q1jmst	cdbcdacc7559da251314bc9abb1b11ea4717ddfb2767af1b5ecbe4b3e9781145	fam_c4d31e25-3f0d-4b77-84f1-c3bff037f2b3	Web Browser	node	2026-11-17 14:28:54.465	2026-11-17 14:28:54.465	2026-11-24 14:28:54.463	\N
+cmwksic4k0001l3z0txrgwem4	cmwj2fa4w0000l3s4x4q1jmst	228fa662cee414f439245e7e6f8ebcb679e79c6de59133b7f18c348563d7a674	fam_bef8e210-668f-4f3c-a023-6dffd67cca7a	Web Browser	node	2026-11-17 14:30:53.156	2026-11-17 14:30:53.156	2026-11-24 14:30:53.149	\N
+cmwksitcw001fl3z05ds3qa33	cmwj2fa4w0000l3s4x4q1jmst	3199564b77081cfbab2a23f6e87a70ad955bc7d2c9492b75013ba0aa848da2c0	fam_7184d03e-4cb1-48dd-9b85-276016e6863a	Web Browser	node	2026-11-17 14:31:15.488	2026-11-17 14:31:15.488	2026-11-24 14:31:15.482	\N
+cmwksj02r0025l3z0jvfubimi	cmwj2fa4w0000l3s4x4q1jmst	1b1bbdea46cfa967a387de6e580f72adcc47d512e7af5f24097d225286d03d7e	fam_9832e8ad-8fe4-41f9-899c-835f6532489f	Web Browser	node	2026-11-17 14:31:24.195	2026-11-17 14:31:24.195	2026-11-24 14:31:24.188	\N
+cmwksj6eg002ll3z0zk4n6uz2	cmwj2fa4w0000l3s4x4q1jmst	0ea45946320e0dd1a06b8b90a85be147497da810ffccac1df62d4a479bb02f69	fam_38029ea5-3eaa-444f-98f5-ca198cdb3fc0	Web Browser	node	2026-11-17 14:31:32.392	2026-11-17 14:31:32.392	2026-11-24 14:31:32.386	\N
+cmwktuhu90003l3xcr97r5klh	cmwj2fa4w0000l3s4x4q1jmst	8b516edf24dd8cbcfded0eb3f3dd5f3278aecfdbd344eafa1cbc3eaea2be8765	fam_8d1ff5b6-b46f-4b99-af83-eb4d6c3a93e5	Web Browser	node	2026-11-17 15:08:20.05	2026-11-17 15:08:20.05	2026-11-24 15:08:20.045	\N
+cmwktuuf30007l3xc79n6m8rw	cmwj2fa4w0000l3s4x4q1jmst	e2e5544611d9e6d253ca1bccb24db491fc82f528d98c597d8ab4e6191f635d5e	fam_6086ff3e-2370-4723-85fe-457985fdba3c	Web Browser	node	2026-11-17 15:08:36.351	2026-11-17 15:08:36.351	2026-11-24 15:08:36.347	\N
+cmwku2dad000zl3cwx8fmivir	cmwj2fa4w0000l3s4x4q1jmst	921386c1459a3bd3e6c7c90270b96839d70f3ec90dd1d7b34100dd89f9bbcd84	fam_ca5e7daf-4ac0-4800-8d80-8f5045d61ba3	Web Browser	node	2026-11-17 15:14:27.398	2026-11-17 15:14:27.398	2026-11-24 15:14:27.394	\N
+cmwku2eal001pl3cwfhow4rit	cmwj2fa4w0000l3s4x4q1jmst	a606c3104115cc958fbdd583ea402fcd354d5ba8804ebb40520dc8af336134ae	fam_9e671f8a-aaaa-4024-88a5-9731995e7508	Web Browser	node	2026-11-17 15:14:28.702	2026-11-17 15:14:28.702	2026-11-24 15:14:28.698	\N
+cmwku2kny0025l3cwnhfd8g1n	cmwj2fa4w0000l3s4x4q1jmst	441c197840c27b330b3f0d465c9eab1e429e26eb2b0a595192e5bcc9b804d5dd	fam_9cd503ac-8b88-4c33-a0a4-539bb15c28c8	Web Browser	node	2026-11-17 15:14:36.958	2026-11-17 15:14:36.958	2026-11-24 15:14:36.955	\N
+cmwku2lw70045l3cwm8rmuxa5	cmwj2fa4w0000l3s4x4q1jmst	70c567583a07bb8e69560661e2960b73f81ba1aef16371d4f8e2dd5be029465b	fam_83544a37-8329-4570-b84c-d76c086cec84	Web Browser	node	2026-11-17 15:14:38.552	2026-11-17 15:14:38.552	2026-11-24 15:14:38.549	\N
+cmwkvfutt001nl3cgv4alt3ck	cmwj2fa4w0000l3s4x4q1jmst	552c129be61f526daa0072805b9a58ced28ad69b53ec5bee50b997d3c073b6bc	fam_ff10bbfc-cc48-4ce0-936d-1f33f43dd154	Web Browser	node	2026-11-17 15:52:56.274	2026-11-17 15:52:56.274	2026-11-24 15:52:56.259	\N
+cmwkvfveo002dl3cgb39bln66	cmwj2fa4w0000l3s4x4q1jmst	0805e706916ce1a2a9bda1a6feb1870cfc44222f839da9c7a2c792fcbd6c39e8	fam_146540ae-759f-4552-9d97-a73f3fd44c09	Web Browser	node	2026-11-17 15:52:57.025	2026-11-17 15:52:57.025	2026-11-24 15:52:57.009	\N
+cmwkvfwd1002tl3cgg4w3vzyl	cmwj2fa4w0000l3s4x4q1jmst	207e627829032a3f5097ee4bf0c3cfcf674a275d5d861847659dbed9077c3e77	fam_9cb230d8-b5fd-4d70-b0d5-ceb1c1bfaaee	Web Browser	node	2026-11-17 15:52:58.261	2026-11-17 15:52:58.261	2026-11-24 15:52:58.246	\N
+cmwkvg9oy004hl3cgx4cperuk	cmwj2fa4w0000l3s4x4q1jmst	abc576484eb924af46e6a08580d7d5f613dc574aff8342c5b5afce564ff745c9	fam_b86125f2-f1d5-47cd-87a5-28730ef029e9	Web Browser	node	2026-11-17 15:53:15.538	2026-11-17 15:53:15.538	2026-11-24 15:53:15.523	\N
+cmwkviyoj0001l3moc0uy0ehw	cmwj2fa4w0000l3s4x4q1jmst	f913cbe76b8ba82787482b322653caaaa933b42235e2cdb31eb4c787f5290735	fam_3f35fd4e-0399-4776-92a3-b0700ab3a162	Web Browser	node	2026-11-17 15:55:21.235	2026-11-17 15:55:21.235	2026-11-24 15:55:21.221	\N
+cmwkvjsxm0021l3mom1yf3635	cmwj2fa4w0000l3s4x4q1jmst	1e69160edbd2829a8618782f952debc130aafca4a868911dee5ec76b08335d58	fam_97794473-525a-438f-a5e5-8e970ae9aa29	Web Browser	node	2026-11-17 15:56:00.443	2026-11-17 15:56:00.443	2026-11-24 15:56:00.429	\N
+cmwkvk61b0041l3mo7ktd5pp0	cmwj2fa4w0000l3s4x4q1jmst	f34e497c035365989ce321194ad4b2b71019f7753dc06d181b35153bd9707c38	fam_44962288-b841-400d-b72d-505597897206	Web Browser	node	2026-11-17 15:56:17.423	2026-11-17 15:56:17.423	2026-11-24 15:56:17.416	\N
+cmwkvkcqq004hl3mot34u0sdy	cmwj2fa4w0000l3s4x4q1jmst	3d38f16008ca4ae660dbcfd78597725d1c13665760d905de7db61574f11705fc	fam_47cf9db4-d3a6-487a-a50d-220549421d43	Web Browser	node	2026-11-17 15:56:26.114	2026-11-17 15:56:26.114	2026-11-24 15:56:26.107	\N
+cmwkwwyd10083l3mo1qv10dnr	cmwkwwuqv007rl3mompcwif43	f029ae19df0687c0b42cd57f113797b70a4568a630e078b86271729237f68966	fam_a37d36d1-93c1-4eb0-9a78-fb47a2ad5102	Web Browser	node	2026-11-17 16:34:13.622	2026-11-17 16:34:13.622	2026-11-24 16:34:13.62	\N
+cmwkwx2xz008il3mom68iov1v	cmwkwwymt0086l3morcmsdgnq	d6df70cbeb67b8078c13d204758faa61d38e4dc2c1e2cc769e836b2bd32ce243	fam_2ddb00d9-eb0f-4706-8159-815f94f73412	Web Browser	node	2026-11-17 16:34:19.56	2026-11-17 16:34:19.56	2026-11-24 16:34:19.557	\N
+cmwkwxden008xl3mo851hnmqb	cmwkwxauo008ll3mos42pjnr3	28f3e72066b43ac6a2ee0485fa65ad21ea8e674d80fead55a799c8fee5035632	fam_ea298e1a-4b7f-453e-9a2b-5e9ecb9ea0a4	Web Browser	node	2026-11-17 16:34:33.119	2026-11-17 16:34:33.119	2026-11-24 16:34:33.117	\N
+cmwkwxgsl009cl3mooueb08z8	cmwkwxdoi0090l3mo4y7e0h0g	25a1a3babd167a5639c2c71d17515c1b5b9057490f6acdb0b7e38cdd7d93e157	fam_a7795a0b-2903-410b-875b-0ab444aaffee	Web Browser	node	2026-11-17 16:34:37.509	2026-11-17 16:34:37.509	2026-11-24 16:34:37.508	\N
+cmwkwxk2400a0l3mowe1v6685	cmwkwxh4g009ol3moqm9jqz0v	05f62bdb46d811b5b6f6faefeb1d8d8ed1985f0bc46b4d275cc37f75d4267f9c	fam_6a48a589-5192-4ec4-967f-425b725d58ec	Web Browser	node	2026-11-17 16:34:41.741	2026-11-17 16:34:41.741	2026-11-24 16:34:41.739	\N
+cmwkwz4uu00apl3moupdfp3en	cmwkwz25k00adl3mo0v3y8ki4	f8986cf8e432e4c2207d3260fee8956ef8b9d5e26f08ef7de12151c6e11677a8	fam_33f511b2-41b5-481f-b794-bd64fa4a4384	Web Browser	node	2026-11-17 16:35:55.351	2026-11-17 16:35:55.351	2026-11-24 16:35:55.347	\N
+cmwkwz7wf00b4l3mozth46yz7	cmwkwz55a00asl3mo24tv8bil	e38489d44bc563e3bbd0723d1bd13ca01a034aae20a7bc1c8edcab60f2c30fef	fam_e8caa944-5349-41fb-8e1e-07413bdf1e0f	Web Browser	node	2026-11-17 16:35:59.296	2026-11-17 16:35:59.296	2026-11-24 16:35:59.292	\N
+cmwkwzbmr00bsl3mo0c93a0n0	cmwkwz89k00bgl3mozeamoofv	ece67b3ec284cb390ebec35f8fc8b23690defaaaac89e1373771d5e30a8813c1	fam_3cada189-74ad-4510-aa8c-40b05321419c	Web Browser	node	2026-11-17 16:36:04.132	2026-11-17 16:36:04.132	2026-11-24 16:36:04.128	\N
+cmwkx2cdp00chl3mo2ibnly31	cmwkx29l300c5l3moeug8a2rp	6f5abb6926b6af52abd59343e14cf65dabe732ae4262654e41748b673f0eb91a	fam_8354749c-a0e2-4bbd-9714-f6450b73bfe5	Web Browser	node	2026-11-17 16:38:25.069	2026-11-17 16:38:25.069	2026-11-24 16:38:25.062	\N
+cmwkx2f7t00cwl3mow7v4limz	cmwkx2cor00ckl3mommh5snpf	c10839f0d36875957ecc984670154c54d6e587a53236db255d57ff8ac072242f	fam_e6424f41-9cfa-4899-ab3d-ce50ac613112	Web Browser	node	2026-11-17 16:38:28.745	2026-11-17 16:38:28.745	2026-11-24 16:38:28.738	\N
+cmwkx2icy00del3mo9bu1jysp	cmwkx2fj100d2l3mofqhxnmgz	62a8c05a5b3de4c81f61b3755312ed5a69ddd7486e33e7efd3810d09d272a09a	fam_ab204fbe-5db0-4e94-9385-b983500a3ca7	Web Browser	node	2026-11-17 16:38:32.818	2026-11-17 16:38:32.818	2026-11-24 16:38:32.811	\N
+cmwkx3cf000dzl3mow008yrsv	cmwkx396g00dnl3mo5cxmw396	b014f8e259e47b0fa3507a48466197805024ca77420f8b719cf5f53990ed017b	fam_fdf47812-c4e9-4b36-84ae-5db93a702ce5	Web Browser	node	2026-11-17 16:39:11.772	2026-11-17 16:39:11.772	2026-11-24 16:39:11.765	\N
+cmwkx3f8e00eel3mot9wmhufu	cmwkx3con00e2l3mocunijwct	265e3b49683d311e44ba594d126026b07384f6790d1dd1d2ec100fde93ac86b5	fam_ab58c227-43c2-4358-8117-ee22da75a4d1	Web Browser	node	2026-11-17 16:39:15.423	2026-11-17 16:39:15.423	2026-11-24 16:39:15.415	\N
+cmwkx3ife00ewl3moyrwbgsib	cmwkx3fjb00ekl3mo6qe6eaan	c8c18fba5259e28d45e1d198600120262083f6ee396d93553c9e28ce6a511e64	fam_7aef8626-4b18-494c-b14c-5188b2b83af5	Web Browser	node	2026-11-17 16:39:19.562	2026-11-17 16:39:19.562	2026-11-24 16:39:19.555	\N
+cmwkx4iri00fhl3mo2av04i7n	cmwkx4fa200f5l3moxe9iari8	841def9fd057485b77c85616dfba2901288d5b78561804ab3da2f5cd950d0128	fam_b0769ee5-dc74-4911-98b1-37651fded4e6	Web Browser	node	2026-11-17 16:40:06.654	2026-11-17 16:40:06.654	2026-11-24 16:40:06.64	\N
+cmwkx4lp400fwl3mogllbyo9o	cmwkx4j1a00fkl3mol4xvmw2q	f93934b51b7dd967ce6a33182fb578de9b593490d6fba5f6e2f90d8addbf6d25	fam_ed0fbf00-6fbf-4c18-be39-87e076f6e945	Web Browser	node	2026-11-17 16:40:10.456	2026-11-17 16:40:10.456	2026-11-24 16:40:10.443	\N
+cmwkx4ow200gel3mojynx8vbs	cmwkx4m0100g2l3mohjj1nx7i	f527db2b67b29fb078afe564f97c3b0e2d8ce97da31d61ae7d8993737438b22b	fam_348ae89f-87bd-4d9f-8e11-549a82a6aba9	Web Browser	node	2026-11-17 16:40:14.594	2026-11-17 16:40:14.594	2026-11-24 16:40:14.581	\N
+cmwkx5lt900hol3mokfpdswc7	cmwj2fa4w0000l3s4x4q1jmst	da1e870d6a729f860e7c79345d034d547de043155e34a7db717b1279d5286ecd	fam_195ed032-e836-4949-9ba0-35782fdb1d20	Web Browser	node	2026-11-17 16:40:57.261	2026-11-17 16:40:57.261	2026-11-24 16:40:57.247	\N
+cmwkx5mti00iel3mo6rco34dj	cmwj2fa4w0000l3s4x4q1jmst	84843620bc485ddc1fc2db8ed743b22231bbf5cc962f811b4ec5bd32ab710928	fam_efb6a87d-5efe-4aac-871a-e5a4ccfcd8d0	Web Browser	node	2026-11-17 16:40:58.566	2026-11-17 16:40:58.566	2026-11-24 16:40:58.552	\N
+cmwkx5o1c00iul3mofwlbmrtn	cmwj2fa4w0000l3s4x4q1jmst	73863b123cb5cd73aa8c483c94ef26328a1613fc80dadbd6a72e94fca22fc289	fam_152876c2-fded-4348-aea4-4b5f96c16404	Web Browser	node	2026-11-17 16:41:00.145	2026-11-17 16:41:00.145	2026-11-24 16:41:00.131	\N
+cmwkx5zri00ldl3moslora6br	cmwkx5wxd00l1l3mowf771xh9	dd708c644ed478c5ae0068953266e4d14af6d234381356d8cddbef5ca4557810	fam_9371c10b-7608-457b-8717-cfd3ffefac13	Web Browser	node	2026-11-17 16:41:15.343	2026-11-17 16:41:15.343	2026-11-24 16:41:15.328	\N
+cmwkx6cge00lsl3mo6spwod0h	cmwkx603t00lgl3mom0i6myrq	db6c93e34a9b465d520244daf83a72cf6e737f1a5e937d62f4aedfe200e11ffe	fam_e8362054-54a1-445c-ac02-8d804e5fda00	Web Browser	node	2026-11-17 16:41:31.79	2026-11-17 16:41:31.79	2026-11-24 16:41:31.775	\N
+cmwkx6goj00mal3mos7tcpldo	cmwkx6crb00lyl3mo006moex0	536111e4725f78dcfe78b9e798523bdd8495836b2917b7683ae56af9704cdd70	fam_df0f6e69-b534-40af-961f-70d569d01da8	Web Browser	node	2026-11-17 16:41:37.267	2026-11-17 16:41:37.267	2026-11-24 16:41:37.252	\N
+cmwkxhtew0011l3ocm5z8fvzx	cmwj2fa4w0000l3s4x4q1jmst	333d527ac47e5261766ac6229225b06f11615748590580ed257da31234d2e9d2	fam_0e5e1880-b6e4-475f-973c-bfded8e6620c	Web Browser	node	2026-11-17 16:50:26.985	2026-11-17 16:50:26.985	2026-11-24 16:50:26.982	\N
+cmwkxhufc001rl3oc5fakx448	cmwj2fa4w0000l3s4x4q1jmst	e6a8f15d423fbc896762207f6f2f872ccea9a91cf1789a4622777caf510aa7f6	fam_e41b90eb-6605-4000-b420-1c9d3d6961b8	Web Browser	node	2026-11-17 16:50:28.296	2026-11-17 16:50:28.296	2026-11-24 16:50:28.294	\N
+cmwkxhvle0027l3oc8xqnc7la	cmwj2fa4w0000l3s4x4q1jmst	b3ba25c30e0486590989132ca9f0d1696b6048e88fb5a7e6dee2506c498b871d	fam_f810b4f1-4d81-404e-9a91-b0087098cf22	Web Browser	node	2026-11-17 16:50:29.81	2026-11-17 16:50:29.81	2026-11-24 16:50:29.808	\N
+cmwkxib6a004ql3ocbuy21223	cmwkxi4jr004el3ocoa8hht1u	b825009dd70aed59c31a1e152d37d11f5e0067e847cfa049330568e3e7320c22	fam_2432a5b9-89de-4084-a94d-df90f383f805	Web Browser	node	2026-11-17 16:50:50.002	2026-11-17 16:50:50.002	2026-11-24 16:50:50	\N
+cmwkxiilz0055l3ocryjs3k8k	cmwkxibh7004tl3oc7c5twn9n	b94d0f4b9575584eb8f4ad3d62d7d6d527ec8381db5378ac55be5e2b87c516d8	fam_4463b54d-fc07-4782-ba26-4c1bfcaf5435	Web Browser	node	2026-11-17 16:50:59.639	2026-11-17 16:50:59.639	2026-11-24 16:50:59.637	\N
+cmwkxilml005nl3ocyfgmnwwk	cmwkxiixh005bl3ocsxmyooyu	092e80ad728b0cdc4eb77289482c8da66dc67f482c09ffe4133272d7ac1602bc	fam_7c6c1593-fc73-4320-9c90-4b53310c1d44	Web Browser	node	2026-11-17 16:51:03.549	2026-11-17 16:51:03.549	2026-11-24 16:51:03.547	\N
+cmwlrx4m60011l3wo52onrvml	cmwj2fa4w0000l3s4x4q1jmst	c77079a70cb4d94aed2437e759e81ea5ee3f8ec4223b0b80db6b90db927d06fc	fam_b2c19b5d-973d-4ba9-971b-56f0644a3154	Web Browser	node	2026-11-18 07:02:09.822	2026-11-18 07:02:09.822	2026-11-25 07:02:09.816	\N
+cmwlrx5mr001rl3wosfczxiqp	cmwj2fa4w0000l3s4x4q1jmst	ce23be9915c433c9f90d3bcc2745e65b98fd33ee333243087efb74c37204b2f3	fam_baac5b21-c036-4ce9-ac14-b8f13dec302a	Web Browser	node	2026-11-18 07:02:11.139	2026-11-18 07:02:11.139	2026-11-25 07:02:11.135	\N
+cmwlrxs6f002cl3woiczw6afx	cmwlrxogg0020l3wohce8kia3	d53a96fdc7a23ae09f06e0e223bbfa75c89e93e327a855c23cf13b4a6543201a	fam_3cd27485-18c1-4336-aa90-e2bca9f0cf7b	Web Browser	node	2026-11-18 07:02:40.359	2026-11-18 07:02:40.359	2026-11-25 07:02:40.354	\N
+cmwlrxvpg002rl3wo1qww9hr2	cmwlrxsg2002fl3woul4jib8w	23e1e6e106e80bc67eecae8c21684de388810c868ee64b56a6f32a73d12c0856	fam_3f66a0cd-7be0-4955-8bda-aafa6b3aef56	Web Browser	node	2026-11-18 07:02:44.933	2026-11-18 07:02:44.933	2026-11-25 07:02:44.927	\N
+cmwls9lxs0001l37suwwt2xx4	cmwj2fa4w0000l3s4x4q1jmst	686c66b68841ce24dc26862b9c5a6370abc760b1b443e7cbaea96cb00063c7bc	fam_3643fb0b-f381-4f98-b3b4-1e21f18c4a6d	Web Browser	node	2026-11-18 07:11:52.144	2026-11-18 07:11:52.144	2026-11-25 07:11:52.131	\N
+cmwlsb05i000hl37syx39ohg1	cmwj2fa4w0000l3s4x4q1jmst	5094c1edcbcb40bd355cd79532efeb419a9304c69b81f8c3ce3d437ab283ef39	fam_e4fb6e40-1c5f-4c09-b4a4-540f47443d40	Web Browser	node	2026-11-18 07:12:57.223	2026-11-18 07:12:57.223	2026-11-25 07:12:57.219	\N
+cmwlsc76e002fl37s8rcat0y1	cmwj2fa4w0000l3s4x4q1jmst	08ca7581125983aa3f0c1ba4b5fef37f3097a37eacd95c57a77bbad82c3ab745	fam_9b1e0666-cb78-40d5-8150-7a701d265c40	Web Browser	node	2026-11-18 07:13:52.982	2026-11-18 07:13:52.982	2026-11-25 07:13:52.98	\N
+cmwlscpje004yl37sd70pmgkd	cmwlscmb6004ml37sgp4x2ldl	092c8d9a4742fa8df11569a70b9dbf335f7e50bdb7db849355d6d61f92a2ad83	fam_02493695-c810-43d2-810c-e3d4e7d3bd81	Web Browser	node	2026-11-18 07:14:16.778	2026-11-18 07:14:16.778	2026-11-25 07:14:16.775	\N
+cmwlscsd7005dl37s48rpi9qn	cmwlscptp0051l37sex523org	de2ff5a677ba3dee82fad85f5fb160ddd88de6be300b27ec0abd12eefd6687ca	fam_846befc8-0277-4241-9e39-a9d30c8d9a3c	Web Browser	node	2026-11-18 07:14:20.443	2026-11-18 07:14:20.443	2026-11-25 07:14:20.441	\N
+cmwlscw1a005vl37su6i768ye	cmwlscsku005jl37se8nvwqse	33ea9ea336430ae85dc058ffd47fee1fe65df903a264e5f17f49863184c79aff	fam_d26ecfc7-c3b5-4cf1-9a01-9c33f801b08f	Web Browser	node	2026-11-18 07:14:25.198	2026-11-18 07:14:25.198	2026-11-25 07:14:25.196	\N
+cmwlspu210065l37sbqhtcvc9	cmwj2fa4w0000l3s4x4q1jmst	023425ff444f2a90255518f04b342b3570ad925bdb8dff01f9ff7238e9eb7142	fam_5705a444-331a-46e0-ba6f-9e6fdeecf1a3	Web Browser	node	2026-11-18 07:24:29.162	2026-11-18 07:24:29.162	2026-11-25 07:24:29.153	\N
+cmwlsq3zy006wl37sdw1lq4yq	cmwlsq12h006kl37semulwczh	09cb0bc7ae731d7e9cd4dc04dfe97810371b4ef51847314a8d5da09602eef6a0	fam_04635419-dd11-48b1-8e14-d1f03c4f37b8	Web Browser	node	2026-11-18 07:24:42.046	2026-11-18 07:24:42.046	2026-11-25 07:24:42.043	\N
+cmwlsq6xl007bl37s19rqouul	cmwlsq49o006zl37sh8xeotoe	e625b93e1830416e91eff1b3ad8ac1c86a31ca6b11cc58ec84db2b5c0266939a	fam_3072c2a2-df5b-4a63-97ce-5e433f0668c5	Web Browser	node	2026-11-18 07:24:45.849	2026-11-18 07:24:45.849	2026-11-25 07:24:45.846	\N
+cmwlsqa1y007tl37stgra7gci	cmwlsq78l007hl37su4h25vpp	3148c290490f4a0b710f44c7f73a96453affba8e15b36257ba52ee5be4a89f3d	fam_cc5ceb53-e0ff-4aed-aa18-b2fb2f793d08	Web Browser	node	2026-11-18 07:24:49.894	2026-11-18 07:24:49.894	2026-11-25 07:24:49.89	\N
+cmwlt1ljn009bl37sknvjs8zs	cmwjb5fej003ql3gghywo88u2	93a6fb85c7cb94a7158beabd5c35835d3de9f06b524cafd074bd532d6cfb3700	fam_889654b8-0dfd-47cb-814e-8df347218fcc	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 07:33:38.003	2026-11-18 07:33:38.003	2026-11-25 07:33:38.001	2026-11-18 07:40:03.516
+cmwlta3md009il37sq28rnmz0	cmwjb5fej003ql3gghywo88u2	e0cbe2b947b03eb5d80bf0e77074d4b538df539a948a056800ce16caba3801a3	fam_8134d1cb-c424-439d-a50d-19f257f9a668	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 07:40:14.677	2026-11-18 07:40:14.677	2026-11-25 07:40:14.675	2026-11-18 07:42:11.813
+cmwlte08q009tl37sv9rb3y8l	cmwjb5fej003ql3gghywo88u2	f371565906edabb08de59b7187ee2ca5683cf90a8f2419fc0947a11a60f2a9f4	fam_f6811ec9-ac15-4553-9f7d-84c98027a4d1	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 07:43:16.922	2026-11-18 07:43:16.922	2026-11-25 07:43:16.917	2026-11-18 08:00:12.132
+cmwlucuhl00b9l37sdognchr6	cmwlucrnx00axl37s08ria2ta	6d7ace4e38806b0c22688ffb81621edeab598f8c74785ecaf1a07b703b917c45	fam_786c8da4-160a-4ecc-bfdd-560ff1533669	Web Browser	node	2026-11-18 08:10:22.425	2026-11-18 08:10:22.425	2026-11-25 08:10:22.423	\N
+cmwlucxk600bwl37sla0mdhu8	cmwlucuz600bkl37sxjs47if5	7e2b2a0710d8533d5d520af9447cf6fe9d209b7fda821504b0decbc19680cdb4	fam_9ead68f7-b43d-4228-a696-7a22748e1e10	Web Browser	node	2026-11-18 08:10:26.407	2026-11-18 08:10:26.407	2026-11-25 08:10:26.405	\N
+cmwlud2no00cfl37sukrgxnx9	cmwlucy0b00c3l37sjoa9xngk	75ac7725f9ec39f86c8693a397e3ac75f42bc16210824f19c32730db829c00fc	fam_066e89b1-c732-43e0-b058-69ccc7754d53	Web Browser	node	2026-11-18 08:10:33.012	2026-11-18 08:10:33.012	2026-11-25 08:10:33.01	\N
+cmwlt05r80097l37s1hbxfy2e	cmwkawlu40000l3f8zugqrfgy	f56c2df33bee8dc570b0e259a979af91cb1ef051edacce4867d5f1aeab2edace	fam_d6395d8d-db61-4934-8155-31689fd90a96	Admin Console (Mozilla/5.0 (Windows NT 10.0; )	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 07:32:30.884	2026-11-18 07:32:30.884	2026-11-25 07:32:30.879	2026-11-18 08:14:17.827
+cmwltuna400aol37s5ygz9jyq	cmwltrwwc00acl37siffy7u9l	153895f3959708653a5ca5214cc1c594a515a82d56f413cf2a963ea63d6dcaf0	fam_e12efeb2-a43b-4332-af9e-d322f75834ed	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 07:56:13.276	2026-11-18 07:56:13.276	2026-11-25 07:56:13.274	2026-11-18 08:17:51.949
+cmwltzrle00awl37sskxvituy	cmwjb5fej003ql3gghywo88u2	1e05aeaa1b7c49d72bfb249f10dd71e51e62be0999ab9d8357d10166b04f56ac	fam_f6811ec9-ac15-4553-9f7d-84c98027a4d1	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 08:00:12.146	2026-11-18 08:00:12.146	2026-11-25 08:00:12.143	2026-11-18 08:18:15.591
+cmwluhw5b00cnl37stlx59wya	cmwkawlu40000l3f8zugqrfgy	3a57fd41a55f9460373bab1ef678e70514bd7c22fb9d598f5cb935473c197df2	fam_d6395d8d-db61-4934-8155-31689fd90a96	Admin Console (Mozilla/5.0 (Windows NT 10.0; )	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 08:14:17.855	2026-11-18 08:14:17.855	2026-11-25 08:14:17.846	2026-11-18 10:10:00.127
+cmwlumhct00cpl37s4oujs9av	cmwltrwwc00acl37siffy7u9l	31359985f8308605026aa00353dec1afa82ea4cc04bc5afc169362d412cd7826	fam_e12efeb2-a43b-4332-af9e-d322f75834ed	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 08:17:51.966	2026-11-18 08:17:51.966	2026-11-25 08:17:51.963	2026-11-18 10:52:59.21
+cmwlutj5y000cl378eemtd3xu	cmwluteid0000l3788hcz6990	8e9a2ba74c69d067805d89cec664bddbd2f479b7032ffb94d1d743efaf777935	fam_e51fbbc7-8a81-42d7-9530-433f92273267	Web Browser	node	2026-11-18 08:23:20.903	2026-11-18 08:23:20.903	2026-11-25 08:23:20.888	\N
+cmwlutnk0000zl37854r23bbq	cmwlutjlb000nl378o8jmwhbc	be3a4479d5515c9ebd63796dc23228a3ef92900477118cdcaff0187007885605	fam_cec498c6-302a-4f62-bd49-378de4b08994	Web Browser	node	2026-11-18 08:23:26.592	2026-11-18 08:23:26.592	2026-11-25 08:23:26.577	\N
+cmwlutr28001il3785bl12ovc	cmwlutnyu0016l378xwczb3pb	ba8b66386e7ddd2d166498af4051b3555e9dab02d9fbfa2073b32488c33f337f	fam_1a1fd34f-91af-4c3e-b295-02df5f5e1934	Web Browser	node	2026-11-18 08:23:31.137	2026-11-18 08:23:31.137	2026-11-25 08:23:31.122	\N
+cmwluvsm30021l378sk85vc7p	cmwluvp8d001pl378lv9i8eqm	e1520f6eb0adfa60ab8835fb0bbb397de41bd8041656c95fb51d3640aafec4df	fam_dba7f66c-5fdf-405b-8d64-b25331339b9e	Web Browser	node	2026-11-18 08:25:06.46	2026-11-18 08:25:06.46	2026-11-25 08:25:06.448	\N
+cmwluvvtr002ol37856lxwrhw	cmwluvt42002cl378qx2ivo25	162f47adad21a605c523e0e9b56d3517851eb46a77edb7ada18213f537c10940	fam_2043cf38-a18d-4394-aeb3-ddc815835b7c	Web Browser	node	2026-11-18 08:25:10.623	2026-11-18 08:25:10.623	2026-11-25 08:25:10.612	\N
+cmwluw0v20037l378pewlums7	cmwluvw8q002vl378oiuhuj8x	466665c064355c820e3c1876f68ac13d11d95c960f17e1fa6517994f166601ee	fam_62b2dc89-40cb-40d1-aa71-823bfd3fa635	Web Browser	node	2026-11-18 08:25:17.15	2026-11-18 08:25:17.15	2026-11-25 08:25:17.139	\N
+cmwluypys003fl378hvgcxdh9	cmwj2fa4w0000l3s4x4q1jmst	94026661effeb4e6ea397e7e9df119be284e57f014ed8e6b875560193fc0e922	fam_80f7461c-83b5-4807-878f-6238087b08d5	Web Browser	node	2026-11-18 08:27:22.996	2026-11-18 08:27:22.996	2026-11-25 08:27:22.994	\N
+cmwluyx4m0045l3784krenll0	cmwj2fa4w0000l3s4x4q1jmst	89d8adb0b62109c077a15fd68abb43fdf51775e05fbd6c5aa879842d89d31957	fam_11cb07e6-8509-4f69-b7ca-7e6698d0084c	Web Browser	node	2026-11-18 08:27:32.278	2026-11-18 08:27:32.278	2026-11-25 08:27:32.276	\N
+cmwluz4db004ll378b1o2dlzj	cmwj2fa4w0000l3s4x4q1jmst	ea1ebd93c4cbe6e7f7e29010f6955c55c2ecfb05163d6398bd2f2e6fdb11375e	fam_672ac7bf-aee6-4061-9993-d2805b2f2731	Web Browser	node	2026-11-18 08:27:41.663	2026-11-18 08:27:41.663	2026-11-25 08:27:41.661	\N
+cmwlv097n0074l378alikd17d	cmwlv0470006sl378yxzqecwd	1f7ccaf924f544b7d5b6e1c9acea515f352b38f97fd1038fc047566c06dc7a8e	fam_41268a42-e6e3-4052-ac1d-f1530ebad11d	Web Browser	node	2026-11-18 08:28:34.596	2026-11-18 08:28:34.596	2026-11-25 08:28:34.594	\N
+cmwlv0c54007jl378nq5it3go	cmwlv09hw0077l378nkol1n6z	c3f62093370d6569163127d0fa2f97c660de26766a9d692e8c625d50d461a92d	fam_5e138b00-2d1c-4948-884f-77dd7c4db297	Web Browser	node	2026-11-18 08:28:38.393	2026-11-18 08:28:38.393	2026-11-25 08:28:38.391	\N
+cmwlv0geu0081l378zy36vbhd	cmwlv0cga007pl378h3tlmlyp	f68f876b5795765b0f3c0bc56fc9b6603172f07f351e4a8609b5e55c560ec4a8	fam_c7a61440-3436-428c-b84e-672e0fb1a1e4	Web Browser	node	2026-11-18 08:28:43.926	2026-11-18 08:28:43.926	2026-11-25 08:28:43.924	\N
+cmwlz6w1w0007l33cabhne8h2	cmwj2fa4w0000l3s4x4q1jmst	a039c38aaab1ef9bd723817f9ccb9271cd269e4be072d620ef4325cb70cea08d	fam_87256212-4d85-4b96-b0ef-d9a1aa47f5ae	Web Browser	node	2026-11-18 10:25:42.597	2026-11-18 10:25:42.597	2026-11-25 10:25:42.591	\N
+cmwlz81u5000bl33cfn5qerpk	cmwj2fa4w0000l3s4x4q1jmst	0355ecae80d4fcee8900f6f813082c0678e41b970a0d5ffa8cf0a288881da795	fam_bfeb8c2f-7d57-443d-a202-280c8cab9293	Web Browser	node	2026-11-18 10:26:36.75	2026-11-18 10:26:36.75	2026-11-25 10:26:36.748	\N
+cmwlz9n6n0001l3j4z2y5lpfj	cmwj2fa4w0000l3s4x4q1jmst	52f45cda8c8bc330c54f5b9443d48c07358c7ab2a8ea32e71972717fac31e79e	fam_e7bd0551-ae7b-4464-81db-6e339f806f56	Web Browser	node	2026-11-18 10:27:51.071	2026-11-18 10:27:51.071	2026-11-25 10:27:51.07	\N
+cmwlzah5m000rl3j48u6yhn7x	cmwj2fa4w0000l3s4x4q1jmst	329c02d0ccfa06e1c8e55bc3207b912dbca87c798ad4a28bd32c49829e4cabb5	fam_ae1a6da7-03dd-4037-96b8-360fca5c8613	Web Browser	node	2026-11-18 10:28:29.915	2026-11-18 10:28:29.915	2026-11-25 10:28:29.913	\N
+cmwlzcu0l001hl3j4xetgi2on	cmwj2fa4w0000l3s4x4q1jmst	1c374eb5294124335547d0b73c4a7cbebbc70ae9dde64a27c2142944c4c1a779	fam_71da0ebe-cac1-4878-92d9-dab24da47315	Web Browser	node	2026-11-18 10:30:19.892	2026-11-18 10:30:19.892	2026-11-25 10:30:19.885	\N
+cmwlzdjsw0027l3j407iyk12e	cmwj2fa4w0000l3s4x4q1jmst	2d90422d75e689745dad76f736415e217a366fa402bb031fa6dd545a21f55e46	fam_b9cbe512-6f3e-4d7e-aabe-30e7d7729cc0	Web Browser	node	2026-11-18 10:30:53.312	2026-11-18 10:30:53.312	2026-11-25 10:30:53.309	\N
+cmwlzef9b002xl3j4c1sgnsku	cmwj2fa4w0000l3s4x4q1jmst	38f1c080cdc3cf9fdb969af85e915bdb54d3d720776e740b91c7a5f755d3d148	fam_ecb0a0f1-0850-4083-8800-a8695a303907	Web Browser	node	2026-11-18 10:31:34.079	2026-11-18 10:31:34.079	2026-11-25 10:31:34.076	\N
+cmwlzg40w003dl3j4b3it6vec	cmwj2fa4w0000l3s4x4q1jmst	068b3c00c722cffdf0b6d10f3bf37a5e3e89778eaf8a16fcedb0802f65b3b855	fam_c1755aaa-f341-4ff0-98e5-41b5e3185e57	Web Browser	node	2026-11-18 10:32:52.833	2026-11-18 10:32:52.833	2026-11-25 10:32:52.831	\N
+cmwlzh7ld0059l3j44pliyjnb	cmwj2fa4w0000l3s4x4q1jmst	d7a1a380f9577067e612541ada02b55cb89f7c0d959ebdc4c3ff6c47111a6686	fam_f2391737-81f3-4318-ad7b-5d386bf57153	Web Browser	node	2026-11-18 10:33:44.114	2026-11-18 10:33:44.114	2026-11-25 10:33:44.112	\N
+cmwlzjvs7007sl3j4zuq6ske3	cmwlzjs7m007gl3j4xmuko7ij	361ce0f9811172a5036709add90db7fb3682c7c3ca0a70c4fe0e8408aae65cbe	fam_f914b4f6-99b7-4e31-8e17-6e96a79c69f6	Web Browser	node	2026-11-18 10:35:48.776	2026-11-18 10:35:48.776	2026-11-25 10:35:48.769	\N
+cmwlzjyce0087l3j4jn59p4dg	cmwlzjvyv007vl3j4d70egwty	0fcbc5fdcd3b6a7e96424d39793338481a985dfe6a70d704da6cca2ea8ec9d54	fam_482992dc-918d-4b56-98bd-b18f3e88806a	Web Browser	node	2026-11-18 10:35:52.094	2026-11-18 10:35:52.094	2026-11-25 10:35:52.088	\N
+cmwlzk1kd008pl3j4qbi5ng26	cmwlzjyjc008dl3j4cz2inlyd	07dce84bd19effa42b8b23566e76b7e185a388f34c0c180acbb860494cd35780	fam_e5c85c83-760d-4b65-9668-68a9480d33e2	Web Browser	node	2026-11-18 10:35:56.27	2026-11-18 10:35:56.27	2026-11-25 10:35:56.263	\N
+cmwlzlbdl009al3j4pnuznreh	cmwlzl7zs008yl3j4de7xmrom	914ffa110b727781835f2e4814066bbb877c205c4fb9733814d252312e1a6763	fam_c15f559e-844a-4932-be49-71393416df08	Web Browser	node	2026-11-18 10:36:55.641	2026-11-18 10:36:55.641	2026-11-25 10:36:55.638	\N
+cmwlzle6n009xl3j4xkzug7kw	cmwlzlbrh009ll3j4r28i362j	62aaa70079d44460711de48fa0b4534ac1a4987517fa35b0e7a5f56b1c05cc40	fam_cf75b95d-db6d-4297-ac15-bee860c147dc	Web Browser	node	2026-11-18 10:36:59.28	2026-11-18 10:36:59.28	2026-11-25 10:36:59.277	\N
+cmwlzli5800agl3j4ysr2w5to	cmwlzlegx00a4l3j4jmenjzct	bc4613c2e5c0a6598b35a2fe55942c3642089102f248ac93d2577c3992b55497	fam_d8a4b13e-b366-4ec8-b9ae-5faca7711ffd	Web Browser	node	2026-11-18 10:37:04.412	2026-11-18 10:37:04.412	2026-11-25 10:37:04.409	\N
+cmwlumzlg00crl37sc63yoxou	cmwjb5fej003ql3gghywo88u2	23ab17748f31b14b096877b4b9cddc406204add843be6c39d5b761a14fd87de0	fam_f6811ec9-ac15-4553-9f7d-84c98027a4d1	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 08:18:15.604	2026-11-18 08:18:15.604	2026-11-25 08:18:15.602	2026-11-18 10:52:59.22
+cmwm05yvv00ayl3j4r4fnkth9	cmwjb5fej003ql3gghywo88u2	d96b83c4ac57bdd3f6e2215f0f3eec177f2069dbae324a17012b6bba9a0ffb7a	fam_f6811ec9-ac15-4553-9f7d-84c98027a4d1	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 10:52:59.227	2026-11-18 10:52:59.227	2026-11-25 10:52:59.226	2026-11-18 11:18:17.588
+cmwm05ywn00b0l3j4f1qyj21k	cmwltrwwc00acl37siffy7u9l	6d987fce7f037564b6d06584b6bd7a722818802be48870b876cbb776144aa4be	fam_e12efeb2-a43b-4332-af9e-d322f75834ed	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 10:52:59.218	2026-11-18 10:52:59.218	2026-11-25 10:52:59.216	2026-11-18 11:18:17.812
+cmwlymouj0001l3os82cuk1an	cmwkawlu40000l3f8zugqrfgy	cf38a528b37d3d34c8a6db2fa9721f26a45012605c6a50d989672a7c1ee6f7f9	fam_d6395d8d-db61-4934-8155-31689fd90a96	Admin Console (Mozilla/5.0 (Windows NT 10.0; )	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 10:10:00.139	2026-11-18 10:10:00.139	2026-11-25 10:10:00.137	2026-11-18 11:07:22.875
+cmwm0ohah0007l3lkeym7sgkt	cmwkawlu40000l3f8zugqrfgy	9af865e5b5874c28b1626d78f3a2000eee1afab099d75e26e5919efbb3c39cc8	fam_d6395d8d-db61-4934-8155-31689fd90a96	Admin Console (Mozilla/5.0 (Windows NT 10.0; )	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 11:07:22.889	2026-11-18 11:07:22.889	2026-11-25 11:07:22.885	\N
+cmwm12in4000bl3lk6vtatjc3	cmwltrwwc00acl37siffy7u9l	58abd15e9ae857bf3e15ce065cbea9b9e2e2a8ed5dde7c2d27bbb4f53e4ae649	fam_e12efeb2-a43b-4332-af9e-d322f75834ed	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 11:18:17.825	2026-11-18 11:18:17.825	2026-11-25 11:18:17.818	\N
+cmwm12igz0009l3lkt46p08cf	cmwjb5fej003ql3gghywo88u2	12d056b29a41fa1b0c847d725543ce6c339c4b9e92534a5112d48d4d4c52678e	fam_f6811ec9-ac15-4553-9f7d-84c98027a4d1	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 11:18:17.603	2026-11-18 11:18:17.603	2026-11-25 11:18:17.596	2026-11-18 11:45:16.141
+cmwm217cn0003l3ooczn5annr	cmwjb5fej003ql3gghywo88u2	139b44650fc6d82ae9339434e967efddcd722b4f2c080b0ae441c6d4a93a30a1	fam_f6811ec9-ac15-4553-9f7d-84c98027a4d1	Web Browser	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36	2026-11-18 11:45:16.152	2026-11-18 11:45:16.152	2026-11-25 11:45:16.15	\N
+cmwm2df8g0005l3oozzcxl22v	cmwj2fa4w0000l3s4x4q1jmst	06bbcf7e4f13927feb5d4ec7bd77d0271fd76465cd1b6a02917025c548467fef	fam_d0f4fcfa-856c-47ff-8ac5-514a80ed95a9	Web Browser	node	2026-11-18 11:54:46.24	2026-11-18 11:54:46.24	2026-11-25 11:54:46.238	\N
+cmwm2dlts000vl3oodj94bfwr	cmwj2fa4w0000l3s4x4q1jmst	46e4155d419ce43aca6042c22c7a5a4e7858f11f535d2f8b8b4d6c6355eb84ca	fam_c5d169b2-9ac8-47b4-80bd-42b57de44bfe	Web Browser	node	2026-11-18 11:54:54.784	2026-11-18 11:54:54.784	2026-11-25 11:54:54.783	\N
+cmwm2dt1d001bl3ook0fuagza	cmwj2fa4w0000l3s4x4q1jmst	b981d8fa70a4dcc71e53d3f2ab9194144c55fc282b6b8402eacd7cab0c9803e1	fam_1973d913-ef3f-405a-a491-3068225218d9	Web Browser	node	2026-11-18 11:55:04.13	2026-11-18 11:55:04.13	2026-11-25 11:55:04.128	\N
+cmwm2gltn0042l3oo4rz9lpep	cmwm2gikc003ql3ooztalvyqf	134969916d247d33aa38eedf4babd87855b11a310c263668a79edfc20a20890f	fam_f8398ce9-f743-4ff3-8239-aadf23306a21	Web Browser	node	2026-11-18 11:57:14.747	2026-11-18 11:57:14.747	2026-11-25 11:57:14.745	\N
+cmwm2gosx004hl3oorj27g6id	cmwm2glzv0045l3oovuguj96j	389c4a4ada2ba4419fe960598f691646587f6f0e6890a2f0a8f621694c1d04a9	fam_0c2bec58-4291-4231-8648-1b3f57c5cf70	Web Browser	node	2026-11-18 11:57:18.61	2026-11-18 11:57:18.61	2026-11-25 11:57:18.607	\N
+cmwm2gt05004zl3oon6a560i8	cmwm2goze004nl3oo73a8qf4t	21efc21e0c9a784a3e7dfcc9da017fa055f4e66ed905eba07cfe01c08493f06d	fam_53359b93-f479-4ddb-9439-b64e977339bb	Web Browser	node	2026-11-18 11:57:24.053	2026-11-18 11:57:24.053	2026-11-25 11:57:24.051	\N
+cmwm2hjgj005kl3ood8l6zfr5	cmwm2hgoz0058l3oo1vidsq7g	e26ab62cf580f0118e3b84105aaf84a7f28cd942e06e9aab2f57828cc846fe8d	fam_c1bbf731-2df5-476c-a584-f22cb92e22d7	Web Browser	node	2026-11-18 11:57:58.339	2026-11-18 11:57:58.339	2026-11-25 11:57:58.337	\N
+cmwm2hncf0067l3oorggwbkc7	cmwm2hjsu005vl3oou3jeub9w	9cb3416861ff4f69eaf1456efddccfecdaa99677d80e45ed85c8d32af56cc001	fam_a3bb3094-0a7a-4f46-a014-3d903490842a	Web Browser	node	2026-11-18 11:58:03.376	2026-11-18 11:58:03.376	2026-11-25 11:58:03.375	\N
+cmwm2htgc006ql3oon17zy9bi	cmwm2hnny006el3oovgstr3jy	8664e27557d6b5923826d04183e0d90c7dc6ca53bb2537ec7d28e2f1e591bdcd	fam_d5de4af1-5011-4e73-9367-6c267bc87760	Web Browser	node	2026-11-18 11:58:11.292	2026-11-18 11:58:11.292	2026-11-25 11:58:11.291	\N
 \.
 
 
@@ -2817,10 +6494,6 @@ cmwj7rl2900djl3js4nzcqcgm	cmwj7rkx000ddl3js2msk70ls	c725236543b332dafb737bc44796
 --
 
 COPY public."Retailer" (id, name, slug, "logoUrl", "deliveryTimeEstimate", "deliveryFeeInr", "freeDeliveryThresholdInr", "minOrderValueInr", rating, status, "suspendedAt", "suspendedReason") FROM stdin;
-ret-blinkit	Blinkit	blinkit	https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?auto=format&fit=crop&w=200&q=80	10-15 mins	25	399	99	4.8	ACTIVE	\N	\N
-ret-zepto	Zepto	zepto	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	10 mins	29	499	99	4.9	ACTIVE	\N	\N
-ret-dmart	DMart Ready	dmart-ready	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=200&q=80	Tomorrow Morning	49	1000	500	4.7	ACTIVE	\N	\N
-ret-bigbasket	BigBasket	bigbasket	https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=200&q=80	Same Day (2-4 hrs)	35	600	200	4.6	ACTIVE	\N	\N
 ret-fresh-greens-mart-mwj4s4j1	Fresh Greens Mart mwj4s4j1	fresh-greens-mart-mwj4s4j1	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	SUSPENDED	2026-11-16 10:38:53.834	Audit pending
 ret-fresh-greens-mart-mwj4tzkq	Fresh Greens Mart mwj4tzkq	fresh-greens-mart-mwj4tzkq	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	SUSPENDED	2026-11-16 10:40:20.758	Audit pending
 ret-fresh-greens-mart-mwj4vql1	Fresh Greens Mart mwj4vql1	fresh-greens-mart-mwj4vql1	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	SUSPENDED	2026-11-16 10:41:42.51	Audit pending
@@ -2847,6 +6520,9 @@ ret-alpha-grocers-1794830334772	Alpha Grocers 1794830334772	alpha-grocers-179483
 ret-beta-provisions-1794830335550	Beta Provisions 1794830335550	beta-provisions-1794830335550	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
 ret-alpha-grocers-1794830389112	Alpha Grocers 1794830389112	alpha-grocers-1794830389112	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
 ret-beta-provisions-1794830389855	Beta Provisions 1794830389855	beta-provisions-1794830389855	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
+ret-zepto	Zepto	zepto	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	10 mins	29	499	99	4.9	ACTIVE	\N	\N
+ret-dmart	DMart Ready	dmart-ready	https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=200&q=80	Tomorrow Morning	49	1000	500	4.7	ACTIVE	\N	\N
+ret-bigbasket	BigBasket	bigbasket	https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=200&q=80	Same Day (2-4 hrs)	35	600	200	4.6	ACTIVE	\N	\N
 ret-alpha-grocers-1794830412167	Alpha Grocers 1794830412167	alpha-grocers-1794830412167	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
 ret-beta-provisions-1794830412920	Beta Provisions 1794830412920	beta-provisions-1794830412920	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
 ret-fresh-greens-mart-mwj7rfps	Fresh Greens Mart mwj7rfps	fresh-greens-mart-mwj7rfps	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	SUSPENDED	2026-11-16 12:02:20.352	Audit pending
@@ -2854,6 +6530,14 @@ ret-organic-greens-1794830545700	Organic Greens 1794830545700	organic-greens-179
 ret-pilot-store-1794830546671	Pilot Store 1794830546671	pilot-store-1794830546671	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
 ret-alpha-grocers-1794831687719	Alpha Grocers 1794831687719	alpha-grocers-1794831687719	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
 ret-beta-provisions-1794831688199	Beta Provisions 1794831688199	beta-provisions-1794831688199	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
+ret-fresh-greens-mart-mwj8jm4k	Fresh Greens Mart mwj8jm4k	fresh-greens-mart-mwj8jm4k	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	SUSPENDED	2026-11-16 12:24:14.865	Audit pending
+ret-organic-greens-1794831860382	Organic Greens 1794831860382	organic-greens-1794831860382	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
+ret-pilot-store-1794831861579	Pilot Store 1794831861579	pilot-store-1794831861579	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
+ret-alpha-grocers-1794832087565	Alpha Grocers 1794832087565	alpha-grocers-1794832087565	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
+ret-beta-provisions-1794832088303	Beta Provisions 1794832088303	beta-provisions-1794832088303	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
+ret-alpha-grocers-1794832220867	Alpha Grocers 1794832220867	alpha-grocers-1794832220867	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
+ret-beta-provisions-1794832221348	Beta Provisions 1794832221348	beta-provisions-1794832221348	https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80	30-45 mins	29	500	99	4.7	ACTIVE	\N	\N
+ret-blinkit	Blinkit	blinkit	https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?auto=format&fit=crop&w=200&q=80	10-15 mins	25	399	99	4.8	ACTIVE	\N	\N
 \.
 
 
@@ -2910,6 +6594,19 @@ cmwj8g1mc000vl3o0ij8uw5ur	cmwj8g1ew000ll3o0s4ydlvql	Alpha Grocers 1794831687719	
 cmwj8g1zi0018l3o0wguruoe1	cmwj8g1tf000yl3o0x8rjs5k7	Beta Provisions 1794831688199	{}	APPROVED	2026-11-16 12:21:28.205	2026-11-16 12:21:28.213	superadmin@rasoiiq.in	\N
 cmwj8g2p8001rl3o0pe9sjj33	cmwj8g2io001jl3o0sy36ms5s	Self Review Store 1794831689123	{}	PENDING	2026-11-16 12:21:29.133	\N	\N	\N
 cmwj8g2z80001l3ykqqkf0h85	cmwj8g2wk001sl3o0az4czbyk	Suspended Merchant 1794831689491	{"phone": "1234567890"}	PENDING	2026-11-16 12:21:29.492	\N	\N	\N
+cmwj8jlgc003ml3o0gtiu15ru	cmwj8jjxp0023l3o00bvthbh8	Joshi Organic Groceries	{"city": "Ahmedabad", "phone": "+91 98980 12345"}	APPROVED	2026-11-16 12:24:13.404	2026-11-16 12:24:13.63	cmwj2fa4w0000l3s4x4q1jmst	\N
+cmwj8jmil0003l3iw5s8a35ly	cmwj8jm9i003ul3o0rxxhuc97	Fresh Greens Mart mwj8jm4k	{"city": "Ahmedabad", "phone": "9876543210"}	APPROVED	2026-11-16 12:24:14.781	2026-11-16 12:24:14.813	admin@rasoiiq.in	\N
+cmwj8jpbi0065l3o0jwj6utgj	cmwj8jogj005al3o0paktz6iq	Admin Rogue Grocers	{}	PENDING	2026-11-16 12:24:18.414	\N	\N	\N
+cmwj8jqug007ml3o02qbfn846	cmwj8jqnk0076l3o07schg62o	Organic Greens 1794831860382	{"city": "Bengaluru", "phone": "+91 9876543210"}	APPROVED	2026-11-16 12:24:20.392	2026-11-16 12:24:20.412	superadmin@rasoiiq.in	\N
+cmwj8jrrn008ml3o0q4c0x0so	cmwj8jr48007pl3o0yv3oqxwz	Pilot Store 1794831861579	{"city": "Bengaluru"}	APPROVED	2026-11-16 12:24:21.587	2026-11-16 12:24:21.602	superadmin@rasoiiq.in	\N
+cmwj8om59009ml3o0d9wpkeg2	cmwj8olwl009cl3o0ktj4vts0	Alpha Grocers 1794832087565	{}	APPROVED	2026-11-16 12:28:07.582	2026-11-16 12:28:07.589	superadmin@rasoiiq.in	\N
+cmwj8omq7009zl3o0ka14s5ar	cmwj8omdm009pl3o0m2gr0nwe	Beta Provisions 1794832088303	{}	APPROVED	2026-11-16 12:28:08.335	2026-11-16 12:28:08.338	superadmin@rasoiiq.in	\N
+cmwj8onpk00ail3o03m41cl7q	cmwj8onhk00aal3o076vc7wdz	Self Review Store 1794832089585	{}	PENDING	2026-11-16 12:28:09.608	\N	\N	\N
+cmwj8onz20001l36smjsv5zvp	cmwj8onxx00ajl3o0pc0lmhs9	Suspended Merchant 1794832089941	{"phone": "1234567890"}	PENDING	2026-11-16 12:28:09.95	\N	\N	\N
+cmwj8rh01000vl310wup1z4ib	cmwj8rgs4000ll310t0r3abqk	Alpha Grocers 1794832220867	{}	APPROVED	2026-11-16 12:30:20.881	2026-11-16 12:30:20.89	superadmin@rasoiiq.in	\N
+cmwj8rhdb0018l310cvcepoju	cmwj8rh6t000yl310bgvxb5wu	Beta Provisions 1794832221348	{}	APPROVED	2026-11-16 12:30:21.36	2026-11-16 12:30:21.364	superadmin@rasoiiq.in	\N
+cmwj8ri7h001rl310qmq0sho6	cmwj8ri0k001jl3105rphs4uc	Self Review Store 1794832222437	{}	PENDING	2026-11-16 12:30:22.446	\N	\N	\N
+cmwj8rieh0001l3t0mvauvph4	cmwj8ridx001sl310n026mvsa	Suspended Merchant 1794832222694	{"phone": "1234567890"}	PENDING	2026-11-16 12:30:22.697	\N	\N	\N
 \.
 
 
@@ -2964,6 +6661,31 @@ cmwj7rave0075l3js8hiibuvb	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItd
 cmwj7rfan008wl3jsphc8bsdi	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqN3JkZHQwMDc4bDNqczk5cW5oNW51IiwiaWQiOiJjbXdqN3JkZHQwMDc4bDNqczk5cW5oNW51IiwiZW1haWwiOiJwaWxvdC51c2VyLm13ajdyZDRzQHRlc3RyYXNvaS5pbiIsImZ1bGxOYW1lIjoiVml2ZWsgSm9zaGkiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgzMDUzNzk1My1hNGE2YWMzNTI4MmZjNmFjMmEwYjliYzgyYmFiMGU4MiIsImlhdCI6MTc5NDgzMDUzNywiZXhwIjoxNzk0ODMxNDM3LCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.nh2yvukycw95666BPu6A-Tyn0rS5HJqD0PVNTInm6_o	User logout	2026-11-16 12:02:19.054	2026-11-16 12:17:17
 cmwj8jgsd001xl3o0ger02xhv	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItZGVtby0xIiwiZW1haWwiOiJkZW1vQHJhc29paXEuaW4iLCJmdWxsTmFtZSI6IlBvb2phIFNoYXJtYSIsInJvbGUiOiJDVVNUT01FUiIsImhvdXNlaG9sZElkIjoiaGgtc2hhcm1hLWZhbWlseSIsImp0aSI6IjE3OTQ4MzE4NDczNDQtZzl3cmhiNSIsImlhdCI6MTc5NDgzMTg0NywiZXhwIjoxNzk1NDM2NjQ3fQ.YMQPo2Rsl5WFAOA6oCNaXGKJlcWVzuYizy1IWGskaGo	User logout	2026-11-16 12:24:07.354	2026-11-23 12:24:07
 cmwj8jh890020l3o08uwgme6g	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXItdGVtcC1yZXZva2UiLCJlbWFpbCI6ImRlbW9AcmFzb2lpcS5pbiIsImZ1bGxOYW1lIjoiUG9vamEgU2hhcm1hIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJoaC1zaGFybWEtZmFtaWx5IiwianRpIjoiMTc5NDgzMTg0NzkxOC12N2VtcmNjIiwiaWF0IjoxNzk0ODMxODQ3LCJleHAiOjE3OTU0MzY2NDd9.Ix7vu-WgRs9NOdgiJBqie7avSu_5NdlwEmbKl7O1yiE	User logout	2026-11-16 12:24:07.927	2026-11-23 12:24:07
+cmwj8jln1003rl3o0405wgv3i	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqOGpqeHAwMDIzbDNvMDBidnRoYmg4IiwiaWQiOiJjbXdqOGpqeHAwMDIzbDNvMDBidnRoYmg4IiwiZW1haWwiOiJwaWxvdC51c2VyLm13ajhqam93QHRlc3RyYXNvaS5pbiIsImZ1bGxOYW1lIjoiVml2ZWsgSm9zaGkiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgzMTg1MjgwMC0xODYzYzFkNTZlODY4ZDYxNDFjYWFmMDI4YjZkYTZlYSIsImlhdCI6MTc5NDgzMTg1MiwiZXhwIjoxNzk0ODMyNzUyLCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.CjIpW40AmjefTFnpwXQopAC4cKJKN8jvTl77loU18ng	User logout	2026-11-16 12:24:13.642	2026-11-16 12:39:12
+cmwjafdr50019l31kjnfjlbb7	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqYWZjMzYwMDBnbDMxa3Z0cm9mdHFpIiwiaWQiOiJjbXdqYWZjMzYwMDBnbDMxa3Z0cm9mdHFpIiwiZW1haWwiOiJwaWxvdC51c2VyLjE3OTQ4MzUwMTM2NzRAZXhhbXBsZS5jb20iLCJmdWxsTmFtZSI6IkFuYW55YSBTLiBTaGFybWEiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgzNTAxNTk2Ny1iNDgxZTU3NzYxMzhlYjc0YTQ3NDc4NjMyYTM1M2VjOCIsImlhdCI6MTc5NDgzNTAxNSwiZXhwIjoxNzk0ODM1OTE1LCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.LP2FZiQ58WvxcQY7kITH0hyeQubr0C1_lk4oxscQngA	User logout	2026-11-16 13:16:56.032	2026-11-16 13:31:55
+cmwjah3ih000vl3gg97f2wwk0	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqYWgxdGkwMDAybDNnZ2ZjNDY5ZXNwIiwiaWQiOiJjbXdqYWgxdGkwMDAybDNnZ2ZjNDY5ZXNwIiwiZW1haWwiOiJwaWxvdC51c2VyLjE3OTQ4MzUwOTM2OTNAZXhhbXBsZS5jb20iLCJmdWxsTmFtZSI6IkFuYW55YSBTLiBTaGFybWEiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgzNTA5NjAyOS0zMmU4NTI0NzFkMmVlNjhhZmY2Yjg3MDA0YjI3MGZkYiIsImlhdCI6MTc5NDgzNTA5NiwiZXhwIjoxNzk0ODM1OTk2LCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.k0qurtFTgAA84JIcodo-b-Kq55ApZqhLDIFU1agBE9s	User logout	2026-11-16 13:18:16.072	2026-11-16 13:33:16
+cmwjaod0n0021l3ggu20jungi	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqYWhxeTIwMDE0bDNnZ2p5cGQwZmZjIiwiaWQiOiJjbXdqYWhxeTIwMDE0bDNnZ2p5cGQwZmZjIiwiZW1haWwiOiJicm93c2VyLnBpbG90QGV4YW1wbGUuY29tIiwiZnVsbE5hbWUiOiJQb29qYSBTaGFybWEiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgzNTQzMTQ4MC03ZDcyYWNiMzVjM2I2MjY0NTE1N2IxOWJjNjU4Yzk4YyIsImlhdCI6MTc5NDgzNTQzMSwiZXhwIjoxNzk0ODM2MzMxLCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.wEGSyQk87g13p_-H_V8U14LyyTOzdLeZnrplEIyqwjw	User logout	2026-11-16 13:23:54.981	2026-11-16 13:38:51
+cmwjap4qs002al3gg7nupexiz	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqYWhxeTIwMDE0bDNnZ2p5cGQwZmZjIiwiaWQiOiJjbXdqYWhxeTIwMDE0bDNnZ2p5cGQwZmZjIiwiZW1haWwiOiJicm93c2VyLnBpbG90QGV4YW1wbGUuY29tIiwiZnVsbE5hbWUiOiJQb29qYSBTaGFybWEiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgzNTQ2Njg4Mi0wZWUwZmNiYjIzOTdjNzdmZWMzYTRhODFjYjY3ZjEwOSIsImlhdCI6MTc5NDgzNTQ2NiwiZXhwIjoxNzk0ODM2MzY2LCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.ByHArrM400hlGLbZQeU37zNy_6QNBy-YtewQdCpQLQs	User logout	2026-11-16 13:24:30.915	2026-11-16 13:39:26
+cmwjapvpi002jl3ggfspw2p9j	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqYWhxeTIwMDE0bDNnZ2p5cGQwZmZjIiwiaWQiOiJjbXdqYWhxeTIwMDE0bDNnZ2p5cGQwZmZjIiwiZW1haWwiOiJicm93c2VyLnBpbG90QGV4YW1wbGUuY29tIiwiZnVsbE5hbWUiOiJQb29qYSBTaGFybWEiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgzNTUwMTkwNS1hODVkZTUzMWM0OTc2ODgxOTgxOWM4MmU0NmJiZDJkZSIsImlhdCI6MTc5NDgzNTUwMSwiZXhwIjoxNzk0ODM2NDAxLCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.K3CtZAkyqwKW_ZuaRfHsDhoufUWyJZcJ14v5U1iGlvY	User logout	2026-11-16 13:25:05.861	2026-11-16 13:40:01
+cmwjaq8sj003hl3ggctdzoe6a	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqYXE3aHkwMDJvbDNnZzlrbXY0Z2w4IiwiaWQiOiJjbXdqYXE3aHkwMDJvbDNnZzlrbXY0Z2w4IiwiZW1haWwiOiJwaWxvdC51c2VyLjE3OTQ4MzU1MjEwMDVAZXhhbXBsZS5jb20iLCJmdWxsTmFtZSI6IkFuYW55YSBTLiBTaGFybWEiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRSb2xlIjoiTUVNQkVSIiwianRpIjoiMTc5NDgzNTUyMjc4OC0wNjM4YTM5NGQ1YjBlMGUyN2EwZGU1ZDYwZTgyY2FlZSIsImlhdCI6MTc5NDgzNTUyMiwiZXhwIjoxNzk0ODM2NDIyLCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.-QpKelK6RmCq_i-TYGW8P_--5ebp8mkDcOwTLmFwCcU	User logout	2026-11-16 13:25:22.818	2026-11-16 13:40:22
+cmwjbz2jz000zl3tgoe8djiht	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqYnl6eGIwMDAybDN0Z2RyM3Q4MHAyIiwiaWQiOiJjbXdqYnl6eGIwMDAybDN0Z2RyM3Q4MHAyIiwiZW1haWwiOiJwaWxvdC51c2VyLjE3OTQ4Mzc2MTA1MTZAZXhhbXBsZS5jb20iLCJmdWxsTmFtZSI6IkFuYW55YSBTLiBTaGFybWEiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2pieXp4azAwMDRsM3RndndpbjU4cWUiLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0ODM3NjE0MTYxLTZlZWQzNDYyOTkwNzMwNDI3YmI3MDk2NmQ4ZGM2MjUxIiwiaWF0IjoxNzk0ODM3NjE0LCJleHAiOjE3OTQ4Mzg1MTQsImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.SA8_O6qcjqw5Mbjn1XG2h2TxrlC-CTJQQXXo5NVRS18	User logout	2026-11-16 14:00:14.253	2026-11-16 14:15:14
+cmwjca7dk000zl358kfx5xm2i	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqY2E1NTgwMDAybDM1OGdrdDRjdzJhIiwiaWQiOiJjbXdqY2E1NTgwMDAybDM1OGdrdDRjdzJhIiwiZW1haWwiOiJwaWxvdC51c2VyLjE3OTQ4MzgxMzA1OTlAZXhhbXBsZS5jb20iLCJmdWxsTmFtZSI6IkFuYW55YSBTLiBTaGFybWEiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2pjYTU1ZzAwMDRsMzU4dGtxN3FmZHUiLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0ODM4MTMzNjIxLWYyNDFiYTBlOThjMGIwODYzZjQxNjc5NDU4MWUwNDZhIiwiaWF0IjoxNzk0ODM4MTMzLCJleHAiOjE3OTQ4MzkwMzMsImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.nBYJ-gjPFP8w5D7d9Kc1coXpYuU1pHnOxDkMN1QX3vQ	User logout	2026-11-16 14:08:53.705	2026-11-16 14:23:53
+cmwjdw3a1000zl3ach8au9hz9	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqZHZyc2MwMDAybDNhY2txYXZsYnVpIiwiaWQiOiJjbXdqZHZyc2MwMDAybDNhY2txYXZsYnVpIiwiZW1haWwiOiJwaWxvdC51c2VyLjE3OTQ4NDA4MTkyMzdAZXhhbXBsZS5jb20iLCJmdWxsTmFtZSI6IkFuYW55YSBTLiBTaGFybWEiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2pkdnJzbDAwMDRsM2FjdnplYmlvd2ciLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0ODQwODM0MzY5LTcwZjM1YzMwOTMwOTIwYzYyYTFjYWI4OTJkZTBjNjI2IiwiaWF0IjoxNzk0ODQwODM0LCJleHAiOjE3OTQ4NDE3MzQsImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.iiAebCE0m6NsmFUzFGARc2w4XFUJh656maVbVWLW2Nk	User logout	2026-11-16 14:53:54.456	2026-11-16 15:08:54
+cmwkwxgto009fl3mor9e4z5xx	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdrd3hkb2kwMDkwbDNtbzR5N2UwaDBnIiwiaWQiOiJjbXdrd3hkb2kwMDkwbDNtbzR5N2UwaDBnIiwiZW1haWwiOiJyZXZvY190ZXN0XzE3OTQ5MzMyNjkzNzhAcmFzb2kubG9jYWwiLCJmdWxsTmFtZSI6IlJldm9jIFVzZXIiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2t3eGRvbzAwOTJsM21vMm1qeXBqbHUiLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0OTMzMjc3NTA3LTkwMDcxMGRiYzdmNTdmZGRjNGEyNmZiYzdlOGJhMGIyIiwiaWF0IjoxNzk0OTMzMjc3LCJleHAiOjE3OTQ5MzQxNzcsImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.URjRoMzFI_F25utiC9aqKaB1oRxiY9vIUAK02eDksKA	User logout	2026-11-17 16:34:37.547	2026-11-17 16:49:37
+cmwkwz7xi00b7l3moogev3soo	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdrd3o1NWEwMGFzbDNtbzI0dHY4YmlsIiwiaWQiOiJjbXdrd3o1NWEwMGFzbDNtbzI0dHY4YmlsIiwiZW1haWwiOiJyZXZvY190ZXN0XzE3OTQ5MzMzNTEzMzVAcmFzb2kubG9jYWwiLCJmdWxsTmFtZSI6IlJldm9jIFVzZXIiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2t3ejU1aDAwYXVsM21vaGd5am5oN2wiLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0OTMzMzU5MjkxLTU0MGVkNzQxNDRlZjYxMzJlZmNlMzZhMmYyODZjYTNjIiwiaWF0IjoxNzk0OTMzMzU5LCJleHAiOjE3OTQ5MzQyNTksImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.8TG-GfTP-AvWCFdHJQ1wZmpQodgpWHTi-i4WfPcmeJY	User logout	2026-11-17 16:35:59.33	2026-11-17 16:50:59
+cmwkx2f8y00czl3modjdop2le	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdreDJjb3IwMGNrbDNtb21taDVzbnBmIiwiaWQiOiJjbXdreDJjb3IwMGNrbDNtb21taDVzbnBmIiwiZW1haWwiOiJyZXZvY190ZXN0XzE3OTQ5MzM1MDA5NzVAcmFzb2kubG9jYWwiLCJmdWxsTmFtZSI6IlJldm9jIFVzZXIiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2t4MmNveDAwY21sM21vNmE1ZjlsbzUiLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0OTMzNTA4NzM3LWVlNWQ0NTRkMTFhMzAxMjQ5N2IzZDQ3MWJlNGYxMmQ2IiwiaWF0IjoxNzk0OTMzNTA4LCJleHAiOjE3OTQ5MzQ0MDgsImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.GYuijq_Zk9srccopjv1U_rCDBo6lb41rYJPsSmScoGM	User logout	2026-11-17 16:38:28.779	2026-11-17 16:53:28
+cmwkx3f9g00ehl3mo3saqo9g8	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdreDNjb24wMGUybDNtb2N1bmlqd2N0IiwiaWQiOiJjbXdreDNjb24wMGUybDNtb2N1bmlqd2N0IiwiZW1haWwiOiJyZXZvY190ZXN0XzE3OTQ5MzM1NDcxMzVAcmFzb2kubG9jYWwiLCJmdWxsTmFtZSI6IlJldm9jIFVzZXIiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2t4M2NvdTAwZTRsM21veWowMXNnc2kiLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0OTMzNTU1NDE0LWU4YTcwMDI2ZTJkOGRlZTMxYmRjZmQyYTZlMDJhNjFjIiwiaWF0IjoxNzk0OTMzNTU1LCJleHAiOjE3OTQ5MzQ0NTUsImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.DOiBO4y8ZipftFk0wozY4E56hOQSMp220HmE1XMSc1k	User logout	2026-11-17 16:39:15.453	2026-11-17 16:54:15
+cmwkx4lq700fzl3mo728qhh4r	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdreDRqMWEwMGZrbDNtb2w0eHZtdzJxIiwiaWQiOiJjbXdreDRqMWEwMGZrbDNtb2w0eHZtdzJxIiwiZW1haWwiOiJyZXZvY190ZXN0XzE3OTQ5MzM2MDE3MjFAcmFzb2kubG9jYWwiLCJmdWxsTmFtZSI6IlJldm9jIFVzZXIiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2t4NGoxaDAwZm1sM21vMDNja200YWkiLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0OTMzNjEwNDQyLTYyOWFlNzdmOTMyMTBiYTQ5MGIwZjk3OTdlN2MzN2E2IiwiaWF0IjoxNzk0OTMzNjEwLCJleHAiOjE3OTQ5MzQ1MTAsImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.KsLyoCIim4rebBqwXv8P-jwXSBT54ZYZaXVtYCJpRXc	User logout	2026-11-17 16:40:10.481	2026-11-17 16:55:10
+cmwkx6chd00lvl3moyw6a2vtb	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdreDYwM3QwMGxnbDNtb20waTZteXJxIiwiaWQiOiJjbXdreDYwM3QwMGxnbDNtb20waTZteXJxIiwiZW1haWwiOiJyZXZvY190ZXN0XzE3OTQ5MzM2NzExNTBAcmFzb2kubG9jYWwiLCJmdWxsTmFtZSI6IlJldm9jIFVzZXIiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2t4NjA0MjAwbGlsM21vNm96N25mYnUiLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0OTMzNjkxNzc1LTQyZDQwMmU2NjFmNzBjNjgxN2Q3OWNkNjEwNjFkMzhjIiwiaWF0IjoxNzk0OTMzNjkxLCJleHAiOjE3OTQ5MzQ1OTEsImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.z1_t7PMMD_wfZhrfjk5RG_5ocwIWntBZBBv4rTawd3Y	User logout	2026-11-17 16:41:31.81	2026-11-17 16:56:31
+cmwkxiin10058l3ocl8uzbp6n	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdreGliaDcwMDR0bDNvYzdjNXR3bjluIiwiaWQiOiJjbXdreGliaDcwMDR0bDNvYzdjNXR3bjluIiwiZW1haWwiOiJyZXZvY190ZXN0XzE3OTQ5MzQyNDA5NzNAcmFzb2kubG9jYWwiLCJmdWxsTmFtZSI6IlJldm9jIFVzZXIiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2t4aWJoZDAwNHZsM29jbnU1ZGFhcGUiLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0OTM0MjU5NjM2LTY5ZmQwZmFlZjExNzJmODFiZDQyNTg5NGE1ZTdiNzY3IiwiaWF0IjoxNzk0OTM0MjU5LCJleHAiOjE3OTQ5MzUxNTksImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.rAVSx36P9amKFCa1PgRYI2sDdSOEFxyZKRk4jnl1vo4	User logout	2026-11-17 16:50:59.675	2026-11-17 17:05:59
+cmwlrxvql002ul3worsdx480a	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdscnhzZzIwMDJmbDN3b3VsNGppYjh3IiwiaWQiOiJjbXdscnhzZzIwMDJmbDN3b3VsNGppYjh3IiwiZW1haWwiOiJyZXZvY190ZXN0XzE3OTQ5ODUzNTUwNjBAcmFzb2kubG9jYWwiLCJmdWxsTmFtZSI6IlJldm9jIFVzZXIiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2xyeHNnNjAwMmhsM3dvcW85Z3E3MnoiLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0OTg1MzY0OTI2LTUzOGFlMTc1MTRhOTdlNTVjN2FjYzI3ZWNiOTlhYWJkIiwiaWF0IjoxNzk0OTg1MzY0LCJleHAiOjE3OTQ5ODYyNjQsImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.8xK3zoKcVck7L1pl4E4lJpGvOJhgPW7mKr722J22wkg	User logout	2026-11-18 07:02:44.968	2026-11-18 07:17:44
+cmwlscse2005gl37s55chh2d9	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdsc2NwdHAwMDUxbDM3c2V4NTIzb3JnIiwiaWQiOiJjbXdsc2NwdHAwMDUxbDM3c2V4NTIzb3JnIiwiZW1haWwiOiJyZXZvY190ZXN0XzE3OTQ5ODYwNTIxNDNAcmFzb2kubG9jYWwiLCJmdWxsTmFtZSI6IlJldm9jIFVzZXIiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2xzY3B0djAwNTNsMzdzYzNrcjJxNWkiLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0OTg2MDYwNDQwLTE4ZWRlMWU3ZGZmMWUwYmFkMjRhYzU5YjYxN2FmOGI3IiwiaWF0IjoxNzk0OTg2MDYwLCJleHAiOjE3OTQ5ODY5NjAsImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.Mj851Db5KWkbXCjGkhOjoqAeZlOEH6GuTOtXaun3Ij8	User logout	2026-11-18 07:14:20.471	2026-11-18 07:29:20
+cmwlsq6yp007el37sx1cd4sd7	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdsc3E0OW8wMDZ6bDM3c2g4eGVvdG9lIiwiaWQiOiJjbXdsc3E0OW8wMDZ6bDM3c2g4eGVvdG9lIiwiZW1haWwiOiJyZXZvY190ZXN0XzE3OTQ5ODY2Nzc4MzJAcmFzb2kubG9jYWwiLCJmdWxsTmFtZSI6IlJldm9jIFVzZXIiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2xzcTQ5djAwNzFsMzdzYmppMm1rZmkiLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0OTg2Njg1ODQ1LTI1OGUwMjhhM2ZhNjNlNDI4M2U5YTNmMmU4YjRjNmE5IiwiaWF0IjoxNzk0OTg2Njg1LCJleHAiOjE3OTQ5ODc1ODUsImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.GJ9nWaCbXirMsrBIN55yI3w7bqnyZAq1oI9H81dL9ug	User logout	2026-11-18 07:24:45.885	2026-11-18 07:39:45
+cmwlt9uzg009el37smou7s72l	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqYjVmZWowMDNxbDNnZ2h5d284OHUyIiwiaWQiOiJjbXdqYjVmZWowMDNxbDNnZ2h5d284OHUyIiwiZW1haWwiOiJhY2JkNDEwNEBnbWFpbC5jb20iLCJmdWxsTmFtZSI6IlZpdmVrIFBhbmNoYW5pIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJjbXdqYm84dGIwMDAxbDNya3M5eW1pdzRpIiwiaG91c2Vob2xkUm9sZSI6Ik9XTkVSIiwianRpIjoiMTc5NDk4NzIxODAwMC1iYzRmYzUyMTdjYzNhNDNjMzMxYzFkNDUyZWQ1NjQwNyIsImlhdCI6MTc5NDk4NzIxOCwiZXhwIjoxNzk0OTg4MTE4LCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.U4pzZzUSyP_HL08zXRffZe41K7Zg3Zx9HqhGrt5juyA	User logout	2026-11-18 07:40:03.452	2026-11-18 07:48:38
+cmwltct40009pl37sosr13t4v	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdqYjVmZWowMDNxbDNnZ2h5d284OHUyIiwiaWQiOiJjbXdqYjVmZWowMDNxbDNnZ2h5d284OHUyIiwiZW1haWwiOiJhY2JkNDEwNEBnbWFpbC5jb20iLCJmdWxsTmFtZSI6IlZpdmVrIFBhbmNoYW5pIiwicm9sZSI6IkNVU1RPTUVSIiwiaG91c2Vob2xkSWQiOiJjbXdqYm84dGIwMDAxbDNya3M5eW1pdzRpIiwiaG91c2Vob2xkUm9sZSI6Ik9XTkVSIiwianRpIjoiMTc5NDk4NzYxNDY3NC1lODZkZjdlZTljMTMwMDgwZjI0MmFkZjA3NzJjZDJhOCIsImlhdCI6MTc5NDk4NzYxNCwiZXhwIjoxNzk0OTg4NTE0LCJhdWQiOiJyYXNvaS1pcS1hcHAiLCJpc3MiOiJyYXNvaS1pcSJ9.cn3z3tYqldcjFgXKLjFa77Ar0ZDuOl2b6FVI-p2X2NU	User logout	2026-11-18 07:42:21.02	2026-11-18 07:55:14
+cmwlv0c66007ml378ii3xvaj6	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXdsdjA5aHcwMDc3bDM3OG5rb2wxbjZ6IiwiaWQiOiJjbXdsdjA5aHcwMDc3bDM3OG5rb2wxbjZ6IiwiZW1haWwiOiJyZXZvY190ZXN0XzE3OTQ5OTA1MDc2NjJAcmFzb2kubG9jYWwiLCJmdWxsTmFtZSI6IlJldm9jIFVzZXIiLCJyb2xlIjoiQ1VTVE9NRVIiLCJob3VzZWhvbGRJZCI6ImNtd2x2MDlpMjAwNzlsMzc4d3g5eWpnd3EiLCJob3VzZWhvbGRSb2xlIjoiT1dORVIiLCJqdGkiOiIxNzk0OTkwNTE4MzkwLWNjYjlhM2RjZjk1YTc1M2U5ZDQ0YjU0YzZlYzczMmU3IiwiaWF0IjoxNzk0OTkwNTE4LCJleHAiOjE3OTQ5OTE0MTgsImF1ZCI6InJhc29pLWlxLWFwcCIsImlzcyI6InJhc29pLWlxIn0.2Q9L7jaT8Mkq2nzdjlQV4Wv_eKDHJwBxWWcCfNr7ago	User logout	2026-11-18 08:28:38.428	2026-11-18 08:43:38
+cmwlzjyd2008al3j4svqutiu0	jti:1794998152087-b0c5ffb6fda01f2b0cf62a3a6e67483e	User logout	2026-11-18 10:35:52.112	2026-11-18 10:50:52
+cmwm2gots004kl3ootg8r6y49	jti:1795003038606-f354c3c6ae59adeb3844520332f2f5b9	User logout	2026-11-18 11:57:18.639	2026-11-18 12:12:18
 \.
 
 
@@ -2980,6 +6702,10 @@ COPY public."Session" (id, "userId", token, "expiresAt", "createdAt") FROM stdin
 --
 
 COPY public."Store" (id, "retailerId", name, city, pincode) FROM stdin;
+store-blinkit-hub	ret-blinkit	Blinkit Central Hub	Ahmedabad	380015
+store-zepto-hub	ret-zepto	Zepto Central Hub	Ahmedabad	380015
+store-dmart-ready-hub	ret-dmart	DMart Ready Central Hub	Ahmedabad	380015
+store-bigbasket-hub	ret-bigbasket	BigBasket Central Hub	Ahmedabad	380015
 \.
 
 
@@ -2988,6 +6714,414 @@ COPY public."Store" (id, "retailerId", name, city, pincode) FROM stdin;
 --
 
 COPY public."StoreProduct" (id, "storeId", "productVariantId", "inStock", "stockCount", "localPriceInr") FROM stdin;
+cmwkkl6480001l32kutbauleu	store-blinkit-hub	var-ff-mng-alph-1kg	t	50	399
+cmwkkl64i0003l32k5agd220l	store-zepto-hub	var-ff-mng-alph-1kg	t	50	407
+cmwkkl64n0005l32kv0ojlmgz	store-dmart-ready-hub	var-ff-mng-alph-1kg	t	50	375
+cmwkkl64t0007l32ktfs8p2le	store-bigbasket-hub	var-ff-mng-alph-1kg	t	50	387
+cmwkkl6590009l32kwpb41tlf	store-blinkit-hub	var-ff-ban-rob-1kg	t	50	49
+cmwkkl65e000bl32ke9v5rplt	store-zepto-hub	var-ff-ban-rob-1kg	t	50	50
+cmwkkl65i000dl32k4pmuabce	store-dmart-ready-hub	var-ff-ban-rob-1kg	t	50	46
+cmwkkl65m000fl32k2l7q9zor	store-bigbasket-hub	var-ff-ban-rob-1kg	t	50	48
+cmwkkl65v000hl32kn35o0one	store-blinkit-hub	var-ff-ban-rob-500g	t	50	28
+cmwkkl65z000jl32kdqsmjzph	store-zepto-hub	var-ff-ban-rob-500g	t	50	29
+cmwkkl664000ll32kgdvsa7c2	store-dmart-ready-hub	var-ff-ban-rob-500g	t	50	26
+cmwkkl668000nl32kt4i4imee	store-bigbasket-hub	var-ff-ban-rob-500g	t	50	27
+cmwkkl66l000pl32kbd04uh3a	store-blinkit-hub	var-ff-app-shim-4pcs	t	50	135
+cmwkkl66p000rl32ka7dlqi8v	store-zepto-hub	var-ff-app-shim-4pcs	t	50	138
+cmwkkl66t000tl32ku1n3qmcc	store-dmart-ready-hub	var-ff-app-shim-4pcs	t	50	127
+cmwkkl66y000vl32kf70m2kkc	store-bigbasket-hub	var-ff-app-shim-4pcs	t	50	131
+cmwkkl67c000xl32knf0ggph5	store-blinkit-hub	var-ff-org-nag-1kg	t	50	89
+cmwkkl67i000zl32k2p30uuxh	store-zepto-hub	var-ff-org-nag-1kg	t	50	91
+cmwkkl67m0011l32k72746mpm	store-dmart-ready-hub	var-ff-org-nag-1kg	t	50	84
+cmwkkl67q0013l32k907srahw	store-bigbasket-hub	var-ff-org-nag-1kg	t	50	86
+cmwkkl6860015l32kfp354wy3	store-blinkit-hub	var-ff-pom-red-4pcs	t	50	155
+cmwkkl68e0017l32kc48p0o4t	store-zepto-hub	var-ff-pom-red-4pcs	t	50	158
+cmwkkl68i0019l32kpgd0do4i	store-dmart-ready-hub	var-ff-pom-red-4pcs	t	50	146
+cmwkkl68l001bl32k6dfjvco6	store-bigbasket-hub	var-ff-pom-red-4pcs	t	50	150
+cmwkkl690001dl32kjhj1egak	store-blinkit-hub	var-ff-mos-1kg	t	50	75
+cmwkkl693001fl32ksytopcv1	store-zepto-hub	var-ff-mos-1kg	t	50	77
+cmwkkl698001hl32ky3xd62gz	store-dmart-ready-hub	var-ff-mos-1kg	t	50	71
+cmwkkl69d001jl32k2hfnrbnf	store-bigbasket-hub	var-ff-mos-1kg	t	50	73
+cmwkkl69s001ll32kazhcooib	store-blinkit-hub	var-ff-grp-grn-500g	t	50	69
+cmwkkl69w001nl32kn48dbav8	store-zepto-hub	var-ff-grp-grn-500g	t	50	70
+cmwkkl6a0001pl32kn9pr5s3b	store-dmart-ready-hub	var-ff-grp-grn-500g	t	50	65
+cmwkkl6a4001rl32k07k96tuk	store-bigbasket-hub	var-ff-grp-grn-500g	t	50	67
+cmwkkl6ai001tl32kqca0v8jt	store-blinkit-hub	var-ff-pap-1pc	t	50	55
+cmwkkl6an001vl32keppbanyg	store-zepto-hub	var-ff-pap-1pc	t	50	56
+cmwkkl6as001xl32k5uxxsu8l	store-dmart-ready-hub	var-ff-pap-1pc	t	50	52
+cmwkkl6aw001zl32kpsvq1hrw	store-bigbasket-hub	var-ff-pap-1pc	t	50	53
+cmwkkl6ba0021l32k7tsy9f6i	store-blinkit-hub	var-ff-tom-desi-1kg	t	50	36
+cmwkkl6be0023l32krblykfkc	store-zepto-hub	var-ff-tom-desi-1kg	t	50	37
+cmwkkl6bh0025l32k69np6gem	store-dmart-ready-hub	var-ff-tom-desi-1kg	t	50	34
+cmwkkl6bm0027l32kf7tmpaba	store-bigbasket-hub	var-ff-tom-desi-1kg	t	50	35
+cmwkkl6bw0029l32k9bal8tje	store-blinkit-hub	var-ff-tom-desi-500g	t	50	19
+cmwkkl6c0002bl32k7j9kjlq4	store-zepto-hub	var-ff-tom-desi-500g	t	50	19
+cmwkkl6c4002dl32k3zvvxq5o	store-dmart-ready-hub	var-ff-tom-desi-500g	t	50	18
+cmwkkl6c8002fl32k3e0pq9um	store-bigbasket-hub	var-ff-tom-desi-500g	t	50	18
+cmwkkl6cl002hl32kjl0nwyy0	store-blinkit-hub	var-ff-oni-red-1kg	t	50	39
+cmwkkl6cq002jl32kdz4tet2v	store-zepto-hub	var-ff-oni-red-1kg	t	50	40
+cmwkkl6cu002ll32kgi39cxew	store-dmart-ready-hub	var-ff-oni-red-1kg	t	50	37
+cmwkkl6cy002nl32ksb1kbmim	store-bigbasket-hub	var-ff-oni-red-1kg	t	50	38
+cmwkkl6d8002pl32ky5xtupcr	store-blinkit-hub	var-ff-oni-red-2kg	t	50	75
+cmwkkl6dc002rl32kxnal267d	store-zepto-hub	var-ff-oni-red-2kg	t	50	77
+cmwkkl6dh002tl32kuktva37p	store-dmart-ready-hub	var-ff-oni-red-2kg	t	50	71
+cmwkkl6dn002vl32kb5acx0p6	store-bigbasket-hub	var-ff-oni-red-2kg	t	50	73
+cmwkkl6e1002xl32k506je1mo	store-blinkit-hub	var-ff-pot-agra-1kg	t	50	29
+cmwkkl6e6002zl32kdgkk28qs	store-zepto-hub	var-ff-pot-agra-1kg	t	50	30
+cmwkkl6ea0031l32ka8o03ygl	store-dmart-ready-hub	var-ff-pot-agra-1kg	t	50	27
+cmwkkl6ee0033l32kbdoufo0x	store-bigbasket-hub	var-ff-pot-agra-1kg	t	50	28
+cmwkkl6en0035l32kzfz94rl1	store-blinkit-hub	var-ff-pot-agra-2kg	t	50	56
+cmwkkl6er0037l32kp3wvul0p	store-zepto-hub	var-ff-pot-agra-2kg	t	50	57
+cmwkkl6ew0039l32kas4f8xfh	store-dmart-ready-hub	var-ff-pot-agra-2kg	t	50	53
+cmwkkl6ez003bl32ko5cu1yej	store-bigbasket-hub	var-ff-pot-agra-2kg	t	50	54
+cmwkkl6fc003dl32ki6fm85q0	store-blinkit-hub	var-ff-bhn-500g	t	50	35
+cmwkkl6fg003fl32kee3du5k3	store-zepto-hub	var-ff-bhn-500g	t	50	36
+cmwkkl6fk003hl32kn9g6nlmn	store-dmart-ready-hub	var-ff-bhn-500g	t	50	33
+cmwkkl6fo003jl32k2d4esh76	store-bigbasket-hub	var-ff-bhn-500g	t	50	34
+cmwkkl6g2003ll32knazetlkp	store-blinkit-hub	var-ff-gob-1pc	t	50	32
+cmwkkl6g7003nl32ktf8fmc1t	store-zepto-hub	var-ff-gob-1pc	t	50	33
+cmwkkl6gb003pl32knx9ad8d9	store-dmart-ready-hub	var-ff-gob-1pc	t	50	30
+cmwkkl6gg003rl32kk4td9is5	store-bigbasket-hub	var-ff-gob-1pc	t	50	31
+cmwkkl6gx003tl32kn8joxkkl	store-blinkit-hub	var-ff-bng-bhr-500g	t	50	30
+cmwkkl6h0003vl32k0rldnmlt	store-zepto-hub	var-ff-bng-bhr-500g	t	50	31
+cmwkkl6h4003xl32kgii4ta8h	store-dmart-ready-hub	var-ff-bng-bhr-500g	t	50	28
+cmwkkl6h9003zl32kosrtv9t3	store-bigbasket-hub	var-ff-bng-bhr-500g	t	50	29
+cmwkkl6hm0041l32kqyiotd5q	store-blinkit-hub	var-ff-plk-250g	t	50	26
+cmwkkl6hq0043l32kaqvwr7p6	store-zepto-hub	var-ff-plk-250g	t	50	27
+cmwkkl6hu0045l32ksci89ank	store-dmart-ready-hub	var-ff-plk-250g	t	50	24
+cmwkkl6hx0047l32k96kb072v	store-bigbasket-hub	var-ff-plk-250g	t	50	25
+cmwkkl6id0049l32kzvlsm398	store-blinkit-hub	var-ff-gin-200g	t	50	32
+cmwkkl6ii004bl32k65p6docu	store-zepto-hub	var-ff-gin-200g	t	50	33
+cmwkkl6im004dl32k9nz0ig9v	store-dmart-ready-hub	var-ff-gin-200g	t	50	30
+cmwkkl6is004fl32kkn6vcolr	store-bigbasket-hub	var-ff-gin-200g	t	50	31
+cmwkkl6j6004hl32kjd7bqm01	store-blinkit-hub	var-ff-gar-200g	t	50	52
+cmwkkl6jb004jl32kpiyqaoa3	store-zepto-hub	var-ff-gar-200g	t	50	53
+cmwkkl6jh004ll32klbex9h3s	store-dmart-ready-hub	var-ff-gar-200g	t	50	49
+cmwkkl6jm004nl32kbzyykqbg	store-bigbasket-hub	var-ff-gar-200g	t	50	50
+cmwkkl6k1004pl32kueyu7cvj	store-blinkit-hub	var-ff-chl-100g	t	50	12
+cmwkkl6k6004rl32kk4pf7czs	store-zepto-hub	var-ff-chl-100g	t	50	12
+cmwkkl6ka004tl32k0baewniq	store-dmart-ready-hub	var-ff-chl-100g	t	50	11
+cmwkkl6ke004vl32k12to1rse	store-bigbasket-hub	var-ff-chl-100g	t	50	12
+cmwkkl6ks004xl32k61da7lqu	store-blinkit-hub	var-ff-sur-pap-500g	t	50	48
+cmwkkl6kx004zl32k41j3sfgv	store-zepto-hub	var-ff-sur-pap-500g	t	50	49
+cmwkkl6l10051l32k8u54e4uv	store-dmart-ready-hub	var-ff-sur-pap-500g	t	50	45
+cmwkkl6l60053l32k905xudbu	store-bigbasket-hub	var-ff-sur-pap-500g	t	50	47
+cmwkkl6ll0055l32kv93w00hg	store-blinkit-hub	var-ff-tuv-lil-250g	t	50	45
+cmwkkl6lq0057l32kvc6wt3kf	store-zepto-hub	var-ff-tuv-lil-250g	t	50	46
+cmwkkl6lv0059l32k69pvu4oq	store-dmart-ready-hub	var-ff-tuv-lil-250g	t	50	42
+cmwkkl6m0005bl32kzzrrw4za	store-bigbasket-hub	var-ff-tuv-lil-250g	t	50	44
+cmwkkl6me005dl32kxzukmdu0	store-blinkit-hub	var-amul-tz-500ml	t	50	29
+cmwkkl6mj005fl32k4j6qvpuj	store-zepto-hub	var-amul-tz-500ml	t	50	30
+cmwkkl6mm005hl32kw2608kse	store-dmart-ready-hub	var-amul-tz-500ml	t	50	27
+cmwkkl6mq005jl32kewt9wqoz	store-bigbasket-hub	var-amul-tz-500ml	t	50	28
+cmwkkl6mz005ll32kf7jvq9f9	store-blinkit-hub	var-amul-tz-1l	t	50	72
+cmwkkl6n4005nl32kqm5pha1c	store-zepto-hub	var-amul-tz-1l	t	50	73
+cmwkkl6n9005pl32kh1vxqaa8	store-dmart-ready-hub	var-amul-tz-1l	t	50	68
+cmwkkl6ne005rl32kka5o1lvq	store-bigbasket-hub	var-amul-tz-1l	t	50	70
+cmwkkl6ns005tl32kxf2bb07b	store-blinkit-hub	var-amul-paneer-200	t	50	89
+cmwkkl6nw005vl32kjbtylc1n	store-zepto-hub	var-amul-paneer-200	t	50	91
+cmwkkl6o1005xl32keia05fjt	store-dmart-ready-hub	var-amul-paneer-200	t	50	84
+cmwkkl6o5005zl32km9z2zgw9	store-bigbasket-hub	var-amul-paneer-200	t	50	86
+cmwkkl6oe0061l32khy7667i7	store-blinkit-hub	var-amul-paneer-500	t	50	215
+cmwkkl6oj0063l32ki2098dkz	store-zepto-hub	var-amul-paneer-500	t	50	219
+cmwkkl6oo0065l32kn0igsik9	store-dmart-ready-hub	var-amul-paneer-500	t	50	202
+cmwkkl6ot0067l32kthxzsf6i	store-bigbasket-hub	var-amul-paneer-500	t	50	209
+cmwkkl6p90069l32kkqf9li3a	store-blinkit-hub	var-amul-butter-100	t	50	58
+cmwkkl6pd006bl32kqog00hpp	store-zepto-hub	var-amul-butter-100	t	50	59
+cmwkkl6pi006dl32ks5jrdw6n	store-dmart-ready-hub	var-amul-butter-100	t	50	55
+cmwkkl6po006fl32k4fdo05cp	store-bigbasket-hub	var-amul-butter-100	t	50	56
+cmwkkl6py006hl32k6j3gl8np	store-blinkit-hub	var-amul-butter-500	t	50	275
+cmwkkl6q3006jl32kjg9q9zcq	store-zepto-hub	var-amul-butter-500	t	50	281
+cmwkkl6q7006ll32ko8dopg7m	store-dmart-ready-hub	var-amul-butter-500	t	50	259
+cmwkkl6qc006nl32kl072jp05	store-bigbasket-hub	var-amul-butter-500	t	50	267
+cmwkkl6qr006pl32k2z49by9c	store-blinkit-hub	var-md-dahi-400g	t	50	38
+cmwkkl6qv006rl32klgj418x5	store-zepto-hub	var-md-dahi-400g	t	50	39
+cmwkkl6qz006tl32kedmcxro9	store-dmart-ready-hub	var-md-dahi-400g	t	50	36
+cmwkkl6r4006vl32kc93mkfpw	store-bigbasket-hub	var-md-dahi-400g	t	50	37
+cmwkkl6rj006xl32kig0fzk34	store-blinkit-hub	var-amul-chaas-500ml	t	50	18
+cmwkkl6rm006zl32kxk4pbg83	store-zepto-hub	var-amul-chaas-500ml	t	50	18
+cmwkkl6rq0071l32k33h4eymd	store-dmart-ready-hub	var-amul-chaas-500ml	t	50	17
+cmwkkl6rv0073l32kynyzs36k	store-bigbasket-hub	var-amul-chaas-500ml	t	50	17
+cmwkkl6s90075l32kn18m3qjj	store-blinkit-hub	var-mod-bread-400g	t	50	45
+cmwkkl6sd0077l32kc12v4njl	store-zepto-hub	var-mod-bread-400g	t	50	46
+cmwkkl6si0079l32kams0g9qq	store-dmart-ready-hub	var-mod-bread-400g	t	50	42
+cmwkkl6sm007bl32kg16a0ubt	store-bigbasket-hub	var-mod-bread-400g	t	50	44
+cmwkkl6t0007dl32kr0d4xe1p	store-blinkit-hub	var-amul-chs-200g	t	50	135
+cmwkkl6t4007fl32kl9q9osps	store-zepto-hub	var-amul-chs-200g	t	50	138
+cmwkkl6t9007hl32kmynzxcuy	store-dmart-ready-hub	var-amul-chs-200g	t	50	127
+cmwkkl6td007jl32kx6nqwlfk	store-bigbasket-hub	var-amul-chs-200g	t	50	131
+cmwkkl6tq007ll32kadm896mb	store-blinkit-hub	var-aashirvaad-atta-5k	t	50	265
+cmwkkl6tu007nl32kxrlmj93t	store-zepto-hub	var-aashirvaad-atta-5k	t	50	270
+cmwkkl6tz007pl32k1rny6cw7	store-dmart-ready-hub	var-aashirvaad-atta-5k	t	50	249
+cmwkkl6u4007rl32kh9dpkoyw	store-bigbasket-hub	var-aashirvaad-atta-5k	t	50	257
+cmwkkl6ue007tl32kgm8wd6ci	store-blinkit-hub	var-aashirvaad-atta-1k	t	50	68
+cmwkkl6uk007vl32kk4jwbalo	store-zepto-hub	var-aashirvaad-atta-1k	t	50	69
+cmwkkl6up007xl32kwyluwtzo	store-dmart-ready-hub	var-aashirvaad-atta-1k	t	50	64
+cmwkkl6ut007zl32k5l4do7wl	store-bigbasket-hub	var-aashirvaad-atta-1k	t	50	66
+cmwkkl6v50081l32kgtq37w8w	store-blinkit-hub	var-aash-atta-10kg	t	50	499
+cmwkkl6va0083l32kuga0pygj	store-zepto-hub	var-aash-atta-10kg	t	50	509
+cmwkkl6vf0085l32kk5x0v7rx	store-dmart-ready-hub	var-aash-atta-10kg	t	50	469
+cmwkkl6vk0087l32kp984tffg	store-bigbasket-hub	var-aash-atta-10kg	t	50	484
+cmwkkl6vy0089l32kukfolr2o	store-blinkit-hub	var-ig-basm-1kg	t	50	165
+cmwkkl6w3008bl32kmu9zox8n	store-zepto-hub	var-ig-basm-1kg	t	50	168
+cmwkkl6w7008dl32kvmq1js6z	store-dmart-ready-hub	var-ig-basm-1kg	t	50	155
+cmwkkl6wc008fl32kr6676pqs	store-bigbasket-hub	var-ig-basm-1kg	t	50	160
+cmwkkl6wk008hl32kxfbjx4ti	store-blinkit-hub	var-ig-basm-5kg	t	50	799
+cmwkkl6wp008jl32kmcts9cok	store-zepto-hub	var-ig-basm-5kg	t	50	815
+cmwkkl6wv008ll32kvu2rau95	store-dmart-ready-hub	var-ig-basm-5kg	t	50	751
+cmwkkl6wz008nl32kfem0xy5k	store-bigbasket-hub	var-ig-basm-5kg	t	50	775
+cmwkkl6xc008pl32klgb8exmb	store-blinkit-hub	var-daaw-roz-1kg	t	50	105
+cmwkkl6xg008rl32kg6eg8sby	store-zepto-hub	var-daaw-roz-1kg	t	50	107
+cmwkkl6xl008tl32kdq3j1mbz	store-dmart-ready-hub	var-daaw-roz-1kg	t	50	99
+cmwkkl6xp008vl32ky0igmndl	store-bigbasket-hub	var-daaw-roz-1kg	t	50	102
+cmwkkl6xx008xl32kue91yg4y	store-blinkit-hub	var-daaw-roz-5kg	t	50	499
+cmwkkl6y1008zl32kbedbfv09	store-zepto-hub	var-daaw-roz-5kg	t	50	509
+cmwkkl6y40091l32k195ya251	store-dmart-ready-hub	var-daaw-roz-5kg	t	50	469
+cmwkkl6y90093l32kld7beuo9	store-bigbasket-hub	var-daaw-roz-5kg	t	50	484
+cmwkkl6yo0095l32k0munmzge	store-blinkit-hub	var-fort-baj-1kg	t	50	55
+cmwkkl6yt0097l32k3ebimm3h	store-zepto-hub	var-fort-baj-1kg	t	50	56
+cmwkkl6yx0099l32kpu32kvs4	store-dmart-ready-hub	var-fort-baj-1kg	t	50	52
+cmwkkl6z2009bl32kf19v2qjk	store-bigbasket-hub	var-fort-baj-1kg	t	50	53
+cmwkkl6zf009dl32k7zr6prcs	store-blinkit-hub	var-tata-sooj-500g	t	50	36
+cmwkkl6zk009fl32krggja0pr	store-zepto-hub	var-tata-sooj-500g	t	50	37
+cmwkkl6zo009hl32krxjnwz5o	store-dmart-ready-hub	var-tata-sooj-500g	t	50	34
+cmwkkl6zs009jl32k0sx8dahx	store-bigbasket-hub	var-tata-sooj-500g	t	50	35
+cmwkkl707009ll32kz3d1ztb3	store-blinkit-hub	var-tata-poha-500g	t	50	38
+cmwkkl70b009nl32km2vinag7	store-zepto-hub	var-tata-poha-500g	t	50	39
+cmwkkl70g009pl32k323lbmyg	store-dmart-ready-hub	var-tata-poha-500g	t	50	36
+cmwkkl70l009rl32kt1iyg6p4	store-bigbasket-hub	var-tata-poha-500g	t	50	37
+cmwkkl70y009tl32kdvgshpf4	store-blinkit-hub	var-tata-toor-1k	t	50	172
+cmwkkl713009vl32ky8uy1zgi	store-zepto-hub	var-tata-toor-1k	t	50	175
+cmwkkl716009xl32kkvkcy6c4	store-dmart-ready-hub	var-tata-toor-1k	t	50	162
+cmwkkl71a009zl32kicp35uy9	store-bigbasket-hub	var-tata-toor-1k	t	50	167
+cmwkkl71i00a1l32kdhkn0f6x	store-blinkit-hub	var-tata-toor-500	t	50	92
+cmwkkl71m00a3l32k5sju7z43	store-zepto-hub	var-tata-toor-500	t	50	94
+cmwkkl71q00a5l32kk96gxduh	store-dmart-ready-hub	var-tata-toor-500	t	50	86
+cmwkkl71v00a7l32kf6o4mk6q	store-bigbasket-hub	var-tata-toor-500	t	50	89
+cmwkkl72800a9l32kt6xkg1b7	store-blinkit-hub	var-tata-mng-1kg	t	50	148
+cmwkkl72c00abl32k7e98aba0	store-zepto-hub	var-tata-mng-1kg	t	50	151
+cmwkkl72i00adl32kdcd1jemi	store-dmart-ready-hub	var-tata-mng-1kg	t	50	139
+cmwkkl72l00afl32kdw3t9ibl	store-bigbasket-hub	var-tata-mng-1kg	t	50	144
+cmwkkl72y00ahl32kqaouu17b	store-blinkit-hub	var-tata-chana-1kg	t	50	122
+cmwkkl73200ajl32kfebk8i3k	store-zepto-hub	var-tata-chana-1kg	t	50	124
+cmwkkl73600all32k57uap3uf	store-dmart-ready-hub	var-tata-chana-1kg	t	50	115
+cmwkkl73a00anl32kuivk36ln	store-bigbasket-hub	var-tata-chana-1kg	t	50	118
+cmwkkl73n00apl32kylqfr5t6	store-blinkit-hub	var-tata-kab-1kg	t	50	160
+cmwkkl73v00arl32k9k4bmlr0	store-zepto-hub	var-tata-kab-1kg	t	50	163
+cmwkkl73z00atl32k05bd1m93	store-dmart-ready-hub	var-tata-kab-1kg	t	50	150
+cmwkkl74400avl32ktz6743c2	store-bigbasket-hub	var-tata-kab-1kg	t	50	155
+cmwkkl74d00axl32kkzfsi5wr	store-blinkit-hub	var-tata-kab-500g	t	50	85
+cmwkkl74i00azl32k1fszphs0	store-zepto-hub	var-tata-kab-500g	t	50	87
+cmwkkl74m00b1l32k9tr4sijp	store-dmart-ready-hub	var-tata-kab-500g	t	50	80
+cmwkkl74q00b3l32k6uq53ql4	store-bigbasket-hub	var-tata-kab-500g	t	50	82
+cmwkkl75200b5l32k8l6y98v5	store-blinkit-hub	var-tata-rajm-500g	t	50	96
+cmwkkl75700b7l32kikfd3vzn	store-zepto-hub	var-tata-rajm-500g	t	50	98
+cmwkkl75b00b9l32kemdj92vk	store-dmart-ready-hub	var-tata-rajm-500g	t	50	90
+cmwkkl75e00bbl32k3jf7c7ef	store-bigbasket-hub	var-tata-rajm-500g	t	50	93
+cmwkkl75r00bdl32kyo92pw6d	store-blinkit-hub	var-fort-bes-1kg	t	50	95
+cmwkkl75v00bfl32keyra4rx5	store-zepto-hub	var-fort-bes-1kg	t	50	97
+cmwkkl75z00bhl32koptoclo9	store-dmart-ready-hub	var-fort-bes-1kg	t	50	89
+cmwkkl76300bjl32kr8ckr7z2	store-bigbasket-hub	var-fort-bes-1kg	t	50	92
+cmwkkl76c00bll32kaxekcysr	store-blinkit-hub	var-fort-bes-500g	t	50	52
+cmwkkl76g00bnl32ktcjanl53	store-zepto-hub	var-fort-bes-500g	t	50	53
+cmwkkl76l00bpl32kkig05wcz	store-dmart-ready-hub	var-fort-bes-500g	t	50	49
+cmwkkl76p00brl32koj3gqmpd	store-bigbasket-hub	var-fort-bes-500g	t	50	50
+cmwkkl77300btl32k4893vknn	store-blinkit-hub	var-eve-haldi-200g	t	50	49
+cmwkkl77700bvl32kkq2tage8	store-zepto-hub	var-eve-haldi-200g	t	50	50
+cmwkkl77b00bxl32ka9lx0e52	store-dmart-ready-hub	var-eve-haldi-200g	t	50	46
+cmwkkl77f00bzl32kdl56om92	store-bigbasket-hub	var-eve-haldi-200g	t	50	48
+cmwkkl77p00c1l32kkl9w6cmh	store-blinkit-hub	var-eve-haldi-500g	t	50	118
+cmwkkl77t00c3l32k0fjy1ckm	store-zepto-hub	var-eve-haldi-500g	t	50	120
+cmwkkl77w00c5l32kn5b8ku02	store-dmart-ready-hub	var-eve-haldi-500g	t	50	111
+cmwkkl78000c7l32k22nc243t	store-bigbasket-hub	var-eve-haldi-500g	t	50	114
+cmwkkl78f00c9l32kbpk3u7us	store-blinkit-hub	var-mdh-degg-100g	t	50	76
+cmwkkl78k00cbl32kigfc03v3	store-zepto-hub	var-mdh-degg-100g	t	50	78
+cmwkkl78o00cdl32kjc7fyxaj	store-dmart-ready-hub	var-mdh-degg-100g	t	50	71
+cmwkkl78s00cfl32k6vesl9zq	store-bigbasket-hub	var-mdh-degg-100g	t	50	74
+cmwkkl79500chl32k1yjpszot	store-blinkit-hub	var-eve-dhan-200g	t	50	46
+cmwkkl79900cjl32kfa50humg	store-zepto-hub	var-eve-dhan-200g	t	50	47
+cmwkkl79e00cll32kukpzqv45	store-dmart-ready-hub	var-eve-dhan-200g	t	50	43
+cmwkkl79j00cnl32kn6m7047e	store-bigbasket-hub	var-eve-dhan-200g	t	50	45
+cmwkkl7a000cpl32kgp46547k	store-blinkit-hub	var-eve-gar-100g	t	50	82
+cmwkkl7a500crl32kb1t8mu4d	store-zepto-hub	var-eve-gar-100g	t	50	84
+cmwkkl7a900ctl32knqckfcge	store-dmart-ready-hub	var-eve-gar-100g	t	50	77
+cmwkkl7ae00cvl32kap7b7q75	store-bigbasket-hub	var-eve-gar-100g	t	50	80
+cmwkkl7aq00cxl32kxjqqqxia	store-blinkit-hub	var-eve-pav-100g	t	50	68
+cmwkkl7au00czl32kpn8h9l2s	store-zepto-hub	var-eve-pav-100g	t	50	69
+cmwkkl7ay00d1l32kpnsx29wk	store-dmart-ready-hub	var-eve-pav-100g	t	50	64
+cmwkkl7b200d3l32kbzp61zpj	store-bigbasket-hub	var-eve-pav-100g	t	50	66
+cmwkkl7bf00d5l32kha8dpo65	store-blinkit-hub	var-tata-salt-1kg	t	50	25
+cmwkkl7bj00d7l32kcenzlh37	store-zepto-hub	var-tata-salt-1kg	t	50	26
+cmwkkl7bn00d9l32k9mdvocu3	store-dmart-ready-hub	var-tata-salt-1kg	t	50	24
+cmwkkl7br00dbl32kdfd90afi	store-bigbasket-hub	var-tata-salt-1kg	t	50	24
+cmwkkl7c500ddl32k2x74k75m	store-blinkit-hub	var-lg-hing-50g	t	50	58
+cmwkkl7ca00dfl32kxx1cs3eo	store-zepto-hub	var-lg-hing-50g	t	50	59
+cmwkkl7ce00dhl32kwob4m207	store-dmart-ready-hub	var-lg-hing-50g	t	50	55
+cmwkkl7ci00djl32k6ccwbbsi	store-bigbasket-hub	var-lg-hing-50g	t	50	56
+cmwkkl7cz00dll32ksh62u0yr	store-blinkit-hub	var-amul-ghee-500	t	50	320
+cmwkkl7d300dnl32kxrkp7ixh	store-zepto-hub	var-amul-ghee-500	t	50	326
+cmwkkl7d800dpl32k9uogwhy6	store-dmart-ready-hub	var-amul-ghee-500	t	50	301
+cmwkkl7dc00drl32kelo2eacy	store-bigbasket-hub	var-amul-ghee-500	t	50	310
+cmwkkl7dl00dtl32kxnynaszh	store-blinkit-hub	var-amul-ghee-1l	t	50	625
+cmwkkl7dq00dvl32kiw9hnj4p	store-zepto-hub	var-amul-ghee-1l	t	50	638
+cmwkkl7dv00dxl32khx2izh3j	store-dmart-ready-hub	var-amul-ghee-1l	t	50	588
+cmwkkl7e000dzl32kyyqu8pd2	store-bigbasket-hub	var-amul-ghee-1l	t	50	606
+cmwkkl7eg00e1l32k8d5hc9i7	store-blinkit-hub	var-fort-sun-1l	t	50	139
+cmwkkl7el00e3l32kxlij1i5i	store-zepto-hub	var-fort-sun-1l	t	50	142
+cmwkkl7ep00e5l32k8qd4j61q	store-dmart-ready-hub	var-fort-sun-1l	t	50	131
+cmwkkl7eu00e7l32kml73rnsg	store-bigbasket-hub	var-fort-sun-1l	t	50	135
+cmwkkl7f400e9l32k5f8vz4gb	store-blinkit-hub	var-fort-sun-5l	t	50	699
+cmwkkl7f900ebl32kseqef6bj	store-zepto-hub	var-fort-sun-5l	t	50	713
+cmwkkl7fd00edl32knwwtns9b	store-dmart-ready-hub	var-fort-sun-5l	t	50	657
+cmwkkl7fk00efl32kwxnpfqgs	store-bigbasket-hub	var-fort-sun-5l	t	50	678
+cmwkkl7g000ehl32kxcrmxbju	store-blinkit-hub	var-dhara-gnd-1l	t	50	179
+cmwkkl7g600ejl32k5xpsf627	store-zepto-hub	var-dhara-gnd-1l	t	50	183
+cmwkkl7ga00ell32k51z9h40i	store-dmart-ready-hub	var-dhara-gnd-1l	t	50	168
+cmwkkl7gf00enl32krlugvv7v	store-bigbasket-hub	var-dhara-gnd-1l	t	50	174
+cmwkkl7go00epl32ktvyn3uxd	store-blinkit-hub	var-dhara-gnd-5l	t	50	885
+cmwkkl7gt00erl32k22tb6p64	store-zepto-hub	var-dhara-gnd-5l	t	50	903
+cmwkkl7gx00etl32km0zq3rz2	store-dmart-ready-hub	var-dhara-gnd-5l	t	50	832
+cmwkkl7h100evl32kexh0tcik	store-bigbasket-hub	var-dhara-gnd-5l	t	50	858
+cmwkkl7hh00exl32kqkkp0s8u	store-blinkit-hub	var-fort-mus-1l	t	50	148
+cmwkkl7hm00ezl32kpb0iilfb	store-zepto-hub	var-fort-mus-1l	t	50	151
+cmwkkl7hr00f1l32kqjiwocum	store-dmart-ready-hub	var-fort-mus-1l	t	50	139
+cmwkkl7hw00f3l32k8xoe7x0k	store-bigbasket-hub	var-fort-mus-1l	t	50	144
+cmwkkl7ic00f5l32kc4oludwq	store-blinkit-hub	var-balaji-sev-200	t	50	40
+cmwkkl7ii00f7l32kr4h1jqoa	store-zepto-hub	var-balaji-sev-200	t	50	41
+cmwkkl7io00f9l32kikxy2sof	store-dmart-ready-hub	var-balaji-sev-200	t	50	38
+cmwkkl7iu00fbl32kmdgb6pa9	store-bigbasket-hub	var-balaji-sev-200	t	50	39
+cmwkkl7j300fdl32kks64vift	store-blinkit-hub	var-bal-sev-400g	t	50	75
+cmwkkl7j800ffl32kklv77wv0	store-zepto-hub	var-bal-sev-400g	t	50	77
+cmwkkl7jd00fhl32khvlqujpg	store-dmart-ready-hub	var-bal-sev-400g	t	50	71
+cmwkkl7jh00fjl32kvakeq9ov	store-bigbasket-hub	var-bal-sev-400g	t	50	73
+cmwkkl7jv00fll32k76h7raqi	store-blinkit-hub	var-hald-aloo-400g	t	50	105
+cmwkkl7jz00fnl32kfxxd1s4r	store-zepto-hub	var-hald-aloo-400g	t	50	107
+cmwkkl7k400fpl32kynoc8noj	store-dmart-ready-hub	var-hald-aloo-400g	t	50	99
+cmwkkl7k900frl32k6xfa364d	store-bigbasket-hub	var-hald-aloo-400g	t	50	102
+cmwkkl7kp00ftl32kcspz1u2e	store-blinkit-hub	var-shr-khak-meth-200g	t	50	62
+cmwkkl7kt00fvl32k3e2ohvcy	store-zepto-hub	var-shr-khak-meth-200g	t	50	63
+cmwkkl7kx00fxl32kyfamjq1d	store-dmart-ready-hub	var-shr-khak-meth-200g	t	50	58
+cmwkkl7l200fzl32k8sesf975	store-bigbasket-hub	var-shr-khak-meth-200g	t	50	60
+cmwkkl7le00g1l32k5y26lkno	store-blinkit-hub	var-parl-g-250g	t	50	27
+cmwkkl7lj00g3l32k38p63g88	store-zepto-hub	var-parl-g-250g	t	50	28
+cmwkkl7ln00g5l32k4qu8cnll	store-dmart-ready-hub	var-parl-g-250g	t	50	25
+cmwkkl7ls00g7l32kcoa7zw0x	store-bigbasket-hub	var-parl-g-250g	t	50	26
+cmwkkl7m700g9l32k0n9vzb81	store-blinkit-hub	var-brit-gd-200g	t	50	45
+cmwkkl7mc00gbl32km8ajrlow	store-zepto-hub	var-brit-gd-200g	t	50	46
+cmwkkl7mh00gdl32km0i27p2g	store-dmart-ready-hub	var-brit-gd-200g	t	50	42
+cmwkkl7ml00gfl32kk877y7yl	store-bigbasket-hub	var-brit-gd-200g	t	50	44
+cmwkkl7mz00ghl32kkinp5epz	store-blinkit-hub	var-wb-tea-500g	t	50	259
+cmwkkl7n500gjl32kc7o4gibw	store-zepto-hub	var-wb-tea-500g	t	50	264
+cmwkkl7n900gll32km5redsaw	store-dmart-ready-hub	var-wb-tea-500g	t	50	243
+cmwkkl7ne00gnl32kk0wch6lq	store-bigbasket-hub	var-wb-tea-500g	t	50	251
+cmwkkl7no00gpl32khscoahg8	store-blinkit-hub	var-wb-tea-1kg	t	50	499
+cmwkkl7nt00grl32kjiao2u7z	store-zepto-hub	var-wb-tea-1kg	t	50	509
+cmwkkl7nx00gtl32k4dkuaauv	store-dmart-ready-hub	var-wb-tea-1kg	t	50	469
+cmwkkl7o200gvl32kmgaqgpi9	store-bigbasket-hub	var-wb-tea-1kg	t	50	484
+cmwkkl7og00gxl32k4swbmfpo	store-blinkit-hub	var-tata-gold-500g	t	50	285
+cmwkkl7ol00gzl32khdsjpdfn	store-zepto-hub	var-tata-gold-500g	t	50	291
+cmwkkl7or00h1l32k0s29ejs9	store-dmart-ready-hub	var-tata-gold-500g	t	50	268
+cmwkkl7ov00h3l32kf2mdbye2	store-bigbasket-hub	var-tata-gold-500g	t	50	276
+cmwkkl7p900h5l32kht139hgg	store-blinkit-hub	var-nes-clas-100g	t	50	310
+cmwkkl7pe00h7l32k2wp4shp9	store-zepto-hub	var-nes-clas-100g	t	50	316
+cmwkkl7pi00h9l32kuwbj9df8	store-dmart-ready-hub	var-nes-clas-100g	t	50	291
+cmwkkl7pm00hbl32kltd426lj	store-bigbasket-hub	var-nes-clas-100g	t	50	301
+cmwkkl7pv00hdl32kajkbml3b	store-blinkit-hub	var-nes-clas-50g	t	50	160
+cmwkkl7q000hfl32kfz86lwb4	store-zepto-hub	var-nes-clas-50g	t	50	163
+cmwkkl7q500hhl32kn0ffmlfy	store-dmart-ready-hub	var-nes-clas-50g	t	50	150
+cmwkkl7q900hjl32kmcrh5kyv	store-bigbasket-hub	var-nes-clas-50g	t	50	155
+cmwkkl7qm00hll32kn7p0bmzs	store-blinkit-hub	var-rooh-afza-750ml	t	50	155
+cmwkkl7qr00hnl32kszrlhnn5	store-zepto-hub	var-rooh-afza-750ml	t	50	158
+cmwkkl7qv00hpl32ki1ws9fcy	store-dmart-ready-hub	var-rooh-afza-750ml	t	50	146
+cmwkkl7qz00hrl32ks9vxhr92	store-bigbasket-hub	var-rooh-afza-750ml	t	50	150
+cmwkkl7rf00htl32kcg7r7pim	store-blinkit-hub	var-kel-corn-500g	t	50	195
+cmwkkl7rk00hvl32kjh99lqkr	store-zepto-hub	var-kel-corn-500g	t	50	199
+cmwkkl7ro00hxl32kcr3pduz1	store-dmart-ready-hub	var-kel-corn-500g	t	50	183
+cmwkkl7rs00hzl32kko5hfi2p	store-bigbasket-hub	var-kel-corn-500g	t	50	189
+cmwkkl7s500i1l32kh64nv9v3	store-blinkit-hub	var-quak-oats-1kg	t	50	169
+cmwkkl7sc00i3l32kxj4et53a	store-zepto-hub	var-quak-oats-1kg	t	50	172
+cmwkkl7sh00i5l32kki4fkmm1	store-dmart-ready-hub	var-quak-oats-1kg	t	50	159
+cmwkkl7sl00i7l32kyp4wst8e	store-bigbasket-hub	var-quak-oats-1kg	t	50	164
+cmwkkl7t000i9l32kmerkfgra	store-blinkit-hub	var-mtr-poha-80g	t	50	39
+cmwkkl7t400ibl32kmnxmovgj	store-zepto-hub	var-mtr-poha-80g	t	50	40
+cmwkkl7t900idl32k8asuf5il	store-dmart-ready-hub	var-mtr-poha-80g	t	50	37
+cmwkkl7te00ifl32kpta85p86	store-bigbasket-hub	var-mtr-poha-80g	t	50	38
+cmwkkl7ts00ihl32kjozzywe1	store-blinkit-hub	var-magg-4pk-280g	t	50	52
+cmwkkl7ty00ijl32k09bug697	store-zepto-hub	var-magg-4pk-280g	t	50	53
+cmwkkl7u300ill32kb21bad0l	store-dmart-ready-hub	var-magg-4pk-280g	t	50	49
+cmwkkl7u700inl32kj55d9qnt	store-bigbasket-hub	var-magg-4pk-280g	t	50	50
+cmwkkl7uh00ipl32khpubpurt	store-blinkit-hub	var-magg-12pk-840g	t	50	149
+cmwkkl7ul00irl32kqo0uak2i	store-zepto-hub	var-magg-12pk-840g	t	50	152
+cmwkkl7up00itl32kvq5vx7qu	store-dmart-ready-hub	var-magg-12pk-840g	t	50	140
+cmwkkl7uu00ivl32kl0rzgysw	store-bigbasket-hub	var-magg-12pk-840g	t	50	145
+cmwkkl7vb00ixl32ks80ciawg	store-blinkit-hub	var-mcc-fries-420g	t	50	119
+cmwkkl7vg00izl32ko50wafy6	store-zepto-hub	var-mcc-fries-420g	t	50	121
+cmwkkl7vl00j1l32kudakx1sd	store-dmart-ready-hub	var-mcc-fries-420g	t	50	112
+cmwkkl7vq00j3l32kd4kbnb0j	store-bigbasket-hub	var-mcc-fries-420g	t	50	115
+cmwkkl7w600j5l32knm4u8wou	store-blinkit-hub	var-saf-peas-1kg	t	50	135
+cmwkkl7wb00j7l32kgcky8c12	store-zepto-hub	var-saf-peas-1kg	t	50	138
+cmwkkl7wh00j9l32k0a2h4y2y	store-dmart-ready-hub	var-saf-peas-1kg	t	50	127
+cmwkkl7wq00jbl32kmsq2wsss	store-bigbasket-hub	var-saf-peas-1kg	t	50	131
+cmwkkl7x000jdl32k0krji8vn	store-blinkit-hub	var-saf-peas-500g	t	50	72
+cmwkkl7x500jfl32kg6whmd4u	store-zepto-hub	var-saf-peas-500g	t	50	73
+cmwkkl7xa00jhl32kq8e244w5	store-dmart-ready-hub	var-saf-peas-500g	t	50	68
+cmwkkl7xh00jjl32k0oz1ftuu	store-bigbasket-hub	var-saf-peas-500g	t	50	70
+cmwkkl7xz00jll32kj0l0uqx2	store-blinkit-hub	var-kis-ket-950g	t	50	125
+cmwkkl7y400jnl32kgz9ut4c1	store-zepto-hub	var-kis-ket-950g	t	50	128
+cmwkkl7y800jpl32kkz7xoh8j	store-dmart-ready-hub	var-kis-ket-950g	t	50	118
+cmwkkl7yd00jrl32kai8lxsdg	store-bigbasket-hub	var-kis-ket-950g	t	50	121
+cmwkkl7yu00jtl32kamin3zj0	store-blinkit-hub	var-chng-sch-250g	t	50	75
+cmwkkl7yy00jvl32keil8brn3	store-zepto-hub	var-chng-sch-250g	t	50	77
+cmwkkl7z400jxl32kw00lczrm	store-dmart-ready-hub	var-chng-sch-250g	t	50	71
+cmwkkl7z800jzl32krp1tvdf3	store-bigbasket-hub	var-chng-sch-250g	t	50	73
+cmwkkl7zn00k1l32kf3p2ydj3	store-blinkit-hub	var-det-soap-4pk	t	50	175
+cmwkkl7zs00k3l32kovrm6gt7	store-zepto-hub	var-det-soap-4pk	t	50	179
+cmwkkl7zy00k5l32kajnn4955	store-dmart-ready-hub	var-det-soap-4pk	t	50	165
+cmwkkl80200k7l32kmjadx6qu	store-bigbasket-hub	var-det-soap-4pk	t	50	170
+cmwkkl80i00k9l32kmul96rg1	store-blinkit-hub	var-colg-st-200g	t	50	110
+cmwkkl80n00kbl32k3njz9pm3	store-zepto-hub	var-colg-st-200g	t	50	112
+cmwkkl80s00kdl32k11w23jny	store-dmart-ready-hub	var-colg-st-200g	t	50	103
+cmwkkl80w00kfl32k3dgb8idm	store-bigbasket-hub	var-colg-st-200g	t	50	107
+cmwkkl81d00khl32k1fd50cj1	store-blinkit-hub	var-hs-shmp-340ml	t	50	299
+cmwkkl81h00kjl32kvbgzg333	store-zepto-hub	var-hs-shmp-340ml	t	50	305
+cmwkkl81m00kll32kltdhzr4n	store-dmart-ready-hub	var-hs-shmp-340ml	t	50	281
+cmwkkl81s00knl32kuu78i737	store-bigbasket-hub	var-hs-shmp-340ml	t	50	290
+cmwkkl82800kpl32kghwujq0z	store-blinkit-hub	var-para-oil-250ml	t	50	98
+cmwkkl82d00krl32kfp7c9p6c	store-zepto-hub	var-para-oil-250ml	t	50	100
+cmwkkl82k00ktl32kw80zlxek	store-dmart-ready-hub	var-para-oil-250ml	t	50	92
+cmwkkl82p00kvl32km4lia1yc	store-bigbasket-hub	var-para-oil-250ml	t	50	95
+cmwkkl83500kxl32kgos4vqos	store-blinkit-hub	var-surf-easy-1kg	t	50	135
+cmwkkl83900kzl32k9qfcwwuf	store-zepto-hub	var-surf-easy-1kg	t	50	138
+cmwkkl83e00l1l32kkcjsdjs4	store-dmart-ready-hub	var-surf-easy-1kg	t	50	127
+cmwkkl83k00l3l32kja2nu294	store-bigbasket-hub	var-surf-easy-1kg	t	50	131
+cmwkkl83u00l5l32k9x0u3058	store-blinkit-hub	var-surf-easy-3kg	t	50	379
+cmwkkl83z00l7l32ky4kdatvi	store-zepto-hub	var-surf-easy-3kg	t	50	387
+cmwkkl84400l9l32k70x14492	store-dmart-ready-hub	var-surf-easy-3kg	t	50	356
+cmwkkl84a00lbl32k20vhh5xh	store-bigbasket-hub	var-surf-easy-3kg	t	50	368
+cmwkkl84q00ldl32kasnzufjw	store-blinkit-hub	var-vim-gel-750ml	t	50	145
+cmwkkl84v00lfl32k2g9zb12z	store-zepto-hub	var-vim-gel-750ml	t	50	148
+cmwkkl85000lhl32kssyhfp6m	store-dmart-ready-hub	var-vim-gel-750ml	t	50	136
+cmwkkl85500ljl32kvfpjqqf7	store-bigbasket-hub	var-vim-gel-750ml	t	50	141
+cmwkkl85k00lll32k1fo7frtl	store-blinkit-hub	var-harp-pow-1l	t	50	189
+cmwkkl85p00lnl32krmi2oxpg	store-zepto-hub	var-harp-pow-1l	t	50	193
+cmwkkl85v00lpl32kxpeeb4tb	store-dmart-ready-hub	var-harp-pow-1l	t	50	178
+cmwkkl86000lrl32k88ka2vyn	store-bigbasket-hub	var-harp-pow-1l	t	50	183
+cmwkkl86g00ltl32k2pkadqmz	store-blinkit-hub	var-liz-citr-1l	t	50	205
+cmwkkl86l00lvl32kaywum3sb	store-zepto-hub	var-liz-citr-1l	t	50	209
+cmwkkl86p00lxl32kbjrsidjp	store-dmart-ready-hub	var-liz-citr-1l	t	50	193
+cmwkkl86u00lzl32krahwpx85	store-bigbasket-hub	var-liz-citr-1l	t	50	199
+cmwkkl87700m1l32kbz1j3jux	store-blinkit-hub	var-pamp-m-54	t	50	749
+cmwkkl87d00m3l32kim2k2lb8	store-zepto-hub	var-pamp-m-54	t	50	764
+cmwkkl87h00m5l32k8eeozlog	store-dmart-ready-hub	var-pamp-m-54	t	50	704
+cmwkkl87k00m7l32k8uueh1fw	store-bigbasket-hub	var-pamp-m-54	t	50	727
+cmwkkl87z00m9l32kfjad11zk	store-blinkit-hub	var-him-wipe-72	t	50	159
+cmwkkl88300mbl32k6qsu8q48	store-zepto-hub	var-him-wipe-72	t	50	162
+cmwkkl88800mdl32khxws33b2	store-dmart-ready-hub	var-him-wipe-72	t	50	149
+cmwkkl88e00mfl32k8euf9vq7	store-bigbasket-hub	var-him-wipe-72	t	50	154
+cmwkkl88s00mhl32ketnkfr6i	store-blinkit-hub	var-jhn-soap-75g	t	50	58
+cmwkkl88w00mjl32kgwzadrfa	store-zepto-hub	var-jhn-soap-75g	t	50	59
+cmwkkl89100mll32kda815hpp	store-dmart-ready-hub	var-jhn-soap-75g	t	50	55
+cmwkkl89600mnl32kmpjhjnxg	store-bigbasket-hub	var-jhn-soap-75g	t	50	56
 \.
 
 
@@ -3002,7 +7136,7 @@ cmwj4s5o6000xl32wnkyy0jlm	platform.max_members_per_household	10	Maximum family m
 cmwj4s5oa000yl32ww1uw6qho	platform.demo_orders_enabled	true	Permit simulated checkout and demo order generation	\N	2026-11-16 10:38:54.394	2026-11-16 10:38:54.394
 cmwj4s5oe000zl32wll9ja17r	ai.gemini_model	gemini-2.5-flash-lite	Active Google Gemini LLM model identifier	\N	2026-11-16 10:38:54.398	2026-11-16 10:38:54.398
 cmwj4s5oj0010l32wntsx9v9q	ai.secondary_provider	deterministic-offline	Fallback AI planning engine when primary quota is exhausted	\N	2026-11-16 10:38:54.403	2026-11-16 10:38:54.403
-cmwj4s5on0011l32wh1uxro1d	pricing.default_delivery_fee_inr	35	Quick-commerce delivery fee in INR	superadmin@rasoiiq.in	2026-11-16 12:02:20.735	2026-11-16 10:38:54.407
+cmwj4s5on0011l32wh1uxro1d	pricing.default_delivery_fee_inr	35	Quick-commerce delivery fee in INR	superadmin@rasoiiq.in	2026-11-16 12:24:15.344	2026-11-16 10:38:54.407
 \.
 
 
@@ -3017,7 +7151,7 @@ user-demo-mehta	mehta.family@rasoiiq.demo	$2b$10$demo_hash_rasoi_iq_2026	Kirit M
 cmwj4vrp1001kl3rcpspgngcx	ops.lead.mwj4vql1@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$w+j+U73JA17dNB8/1NDNPA$OCt4+5KK/EX9HcTZESeNLQ3D77eZISzlRZLBtFJprlI	Operations Lead	\N	SUPPORT	2026-11-16 10:41:42.901	2026-11-16 10:41:42.917	2026-11-16 10:41:42.9	\N	ops.lead.mwj4vql1@rasoiiq.in	ACTIVE	\N	\N	\N
 cmwj4nyub0000l3ic1cbm4scv	superadmin@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$wDj/oOtWUls8fkoLoaqBJg$RbWn/vvrELtxlPT598OkshrIEXR1xSJrI9lyMlOxIN0	Super Administrator	\N	SUPER_ADMIN	2026-11-16 10:35:38.915	2026-11-16 10:35:38.915	2026-11-16 10:35:38.907	\N	superadmin@rasoiiq.in	ACTIVE	\N	\N	\N
 cmwj4rt2s0000l32wbc1f7nfy	rogue.admin.mwj4rste@test.in	$argon2id$v=19$m=65536,t=3,p=1$GIvNKgcG+OAxb/nCPfWSUA$EMQi7/iEW1UVjQLo0YZaQf/GvbTxsBADTDobFS0x5lc	Rogue Admin Attempt	\N	CUSTOMER	2026-11-16 10:38:38.068	2026-11-16 10:38:38.068	\N	\N	rogue.admin.mwj4rste@test.in	PENDING_VERIFICATION	\N	\N	\N
-cmwj58zak0069l3rc3wksnuya	rogue.admin.mwj58z1h@test.in	$argon2id$v=19$m=65536,t=3,p=4$aClFmmqVQ+WgupIt8NQ0FA$OCfFdK9zKgRI0L64lOQQzFwJKLS8KNqfb9nR6p0duCw	Rogue Admin Attempt	\N	RETAILER	2026-11-16 10:51:59.277	2026-11-16 12:02:24.048	\N	2026-11-16 12:02:24.041	rogue.admin.mwj58z1h@test.in	ACTIVE	\N	\N	\N
+cmwj58zak0069l3rc3wksnuya	rogue.admin.mwj58z1h@test.in	$argon2id$v=19$m=65536,t=3,p=4$8km8/c+56mulf/CVZ+zehQ$X8Ysr7EOFRAmcnb38t1+oTYeQSgWDfu3HXfHyeQBB7E	Rogue Admin Attempt	\N	RETAILER	2026-11-16 10:51:59.277	2026-11-16 12:24:18.675	\N	2026-11-16 12:24:18.672	rogue.admin.mwj58z1h@test.in	ACTIVE	\N	\N	\N
 cmwj4s4se0005l32w7q19yt5l	rogue.admin.mwj4s4j1@test.in	$argon2id$v=19$m=65536,t=3,p=1$ZLsazWsmfTdmlJNKXzCU9g$PkEKpBk85+kdohKNh6TcRbYzZ6S7JeoPsocNiPP259w	Rogue Admin Attempt	\N	RETAILER	2026-11-16 10:38:53.247	2026-11-16 10:38:53.798	\N	\N	rogue.admin.mwj4s4j1@test.in	ACTIVE	\N	\N	\N
 cmwj4s5ml000ql32wsc99mofs	ops.lead.mwj4s4j1@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$NRaWRIuLShNmNNzR3aS8Sw$hux9pWr5qbO4rIxABqNhYlgHz5X6klzwfBBgW9D2MrU	Operations Lead	\N	SUPPORT	2026-11-16 10:38:54.334	2026-11-16 10:38:54.357	2026-11-16 10:38:54.329	\N	ops.lead.mwj4s4j1@rasoiiq.in	ACTIVE	\N	\N	\N
 cmwj5902u006ul3rc3rb95v74	ops.lead.mwj58z1h@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$AsYSFAytMs7sv5Y7Hc2OAQ$3p1hI1itfxeg2mKSTVCE8M6njkrHZkMOTugWVdxUPhA	Operations Lead	\N	SUPPORT	2026-11-16 10:52:00.294	2026-11-16 10:52:00.319	2026-11-16 10:52:00.292	\N	ops.lead.mwj58z1h@rasoiiq.in	ACTIVE	\N	\N	\N
@@ -3039,7 +7173,7 @@ cmwj69j7f001il31w0f1f7u85	adm-1794828022272@rasoi.internal	$argon2id$v=19$m=6553
 cmwj69jw1001pl31wlxz9v75z	victim-1794828025254@test.com	$argon2id$v=19$m=65536,t=3,p=1$k8zlEjbBr30fSphd+wszzQ$Rf3u7V0pH9EzcZ5KxpifHUTy7FlIH3jwLtfzmIoXr0U	Victim User	\N	CUSTOMER	2026-11-16 11:20:25.585	2026-11-16 11:20:26.525	2026-11-16 11:20:25.604	2026-11-16 11:20:26.514	victim-1794828025254@test.com	ACTIVE	\N	\N	\N
 cmwj6a0o7002el31w6imlht2w	cust-1794828046990@test.com	$argon2id$v=19$m=65536,t=3,p=1$uh6q3YhOctAD2aVaOZiXjA$LBqikzWmy9buVWqMDJLJQJKdIeGU5JFt0uOtu1jPdVw	Test Customer Role	\N	CUSTOMER	2026-11-16 11:20:47.335	2026-11-16 11:20:47.703	2026-11-16 11:20:47.35	2026-11-16 11:20:47.693	cust-1794828046990@test.com	ACTIVE	\N	\N	\N
 cmwj6a17w002nl31w11gbuhpy	supp-1794828046990@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$I2K6XaSybeNv8Bhw9aO1rg$q9ZF+WuJHwlIvwYpo8d+L5e47ROp3lYzPcxGNfLmqm4	Staff SUPPORT	\N	SUPPORT	2026-11-16 11:20:48.045	2026-11-16 11:20:48.383	2026-11-16 11:20:48.034	2026-11-16 11:20:48.373	supp-1794828046990@rasoi.internal	ACTIVE	\N	\N	\N
-cmwj2fa4w0000l3s4x4q1jmst	admin@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$TfUYCY8ObBkFhXavknrTrA$M0D5ShbMC+KqI6phtRMy2I3B998moRxFpt8IgFf8Bqo	Platform Administrator	\N	ADMIN	2026-11-16 09:32:54.416	2026-11-16 12:02:19.017	2026-11-16 09:32:54.413	2026-11-16 12:02:19.015	admin@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwj2fa4w0000l3s4x4q1jmst	admin@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$6ZXu/L8NlKKL6/BZOzibdg$+zLv/DO2ghYtsHHGVqH5W7JERtcl4CruX2VnzsUF9co	Platform Administrator	\N	ADMIN	2026-11-16 09:32:54.416	2026-11-18 11:55:04.137	2026-11-16 09:32:54.413	2026-11-18 11:55:04.135	admin@rasoiiq.in	ACTIVE	\N	\N	\N
 cmwj6a1qq002ul31wd5hbzrci	ops-1794828046990@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$+TzDIpMi/JMWUi0x+pLT1w$LEi6QFmrXPB9LgIFVvHgzX70MelzOZRbw6MCnMLvuiw	Staff OPERATIONS	\N	OPERATIONS	2026-11-16 11:20:48.722	2026-11-16 11:20:49.066	2026-11-16 11:20:48.712	2026-11-16 11:20:49.055	ops-1794828046990@rasoi.internal	ACTIVE	\N	\N	\N
 cmwj6a29s0031l31wowndvpej	adm-1794828046990@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$Kib3G6qTJq77c6NGOBhDVA$XDiq+Grw2/vFfbV+ijB7eJLc4D0/MS1TdZMac8rNDsQ	Staff ADMIN	\N	ADMIN	2026-11-16 11:20:49.409	2026-11-16 11:20:49.765	2026-11-16 11:20:49.398	2026-11-16 11:20:49.755	adm-1794828046990@rasoi.internal	ACTIVE	\N	\N	\N
 cmwj6fsb00000l3rc0jdk9bkv	cust-1794828316096@test.com	$argon2id$v=19$m=65536,t=3,p=1$GjZs7FoLtatFGU+a9wRGNg$GC/5fvugK4KfB3sPcTjF7erpMHzlQrNTdoes3sGO0uY	Test Customer Role	\N	CUSTOMER	2026-11-16 11:25:16.428	2026-11-16 11:25:16.825	2026-11-16 11:25:16.459	2026-11-16 11:25:16.822	cust-1794828316096@test.com	ACTIVE	\N	\N	\N
@@ -3066,6 +7200,7 @@ cmwj6i45g000ul3y88a15dh2l	victim-1794828424660@test.com	$argon2id$v=19$m=65536,t
 cmwj6i5l7001pl3y8mka3cba2	c1-1794828426601@test.com	$argon2id$v=19$m=65536,t=3,p=1$6BOVX20li6PSJ0LxvkecHg$nY76rAkw73aNI38qi44ovLv3Ar38LWSWVzBAMHhJy/Y	User One	\N	CUSTOMER	2026-11-16 11:27:06.955	2026-11-16 11:27:07.386	2026-11-16 11:27:06.969	2026-11-16 11:27:07.372	c1-1794828426601@test.com	ACTIVE	\N	\N	\N
 cmwj6i69z0024l3y82xdd2a3j	c2-1794828427432@test.com	$argon2id$v=19$m=65536,t=3,p=1$CkzC5vxkmq6tK0Q9Jh0Q3w$Z2PL2zjcwdnxk9t0AupemdO5Ngo83207PCRbc8ItQoU	User Two	\N	CUSTOMER	2026-11-16 11:27:07.847	2026-11-16 11:27:08.266	2026-11-16 11:27:07.861	2026-11-16 11:27:08.252	c2-1794828427432@test.com	ACTIVE	\N	\N	\N
 cmwj6i7ax002jl3y8cvctzzmw	merchant-cust-1794828428835@test.com	$argon2id$v=19$m=65536,t=3,p=1$52Ghw8Q3oei+zZ2JDR5CFg$tJd9QazN3v0kjKKj8G8IApU4Yb9ZZtnzZ7QukqmB+4s	Merchant Customer	\N	RETAILER	2026-11-16 11:27:09.178	2026-11-16 11:27:09.66	2026-11-16 11:27:09.189	2026-11-16 11:27:09.548	merchant-cust-1794828428835@test.com	ACTIVE	\N	\N	\N
+cmwjb5fej003ql3gghywo88u2	acbd4104@gmail.com	$argon2id$v=19$m=65536,t=3,p=1$8hWf7ltJqy6HFr6CL2mUGQ$JPMrFKdiBEIULfbgi3sfFrT78JbF6kcKQqx5lNRbJq4	Vivek Panchani	7265950563	CUSTOMER	2026-11-16 13:37:11.227	2026-11-18 07:43:16.933	2026-11-16 13:42:26.239	2026-11-18 07:43:16.928	acbd4104@gmail.com	ACTIVE	\N	\N	\N
 cmwj6i8oi003ll3y8ckc7swdj	invited-1794828430554@pilot.com	$argon2id$v=19$m=65536,t=3,p=1$OPyG1TNavI1UPDCMZA3yVQ$xyGAiFG6+eVxx6NI6WgY9qKXflCgOOQ6XHtUS/C745Q	Aarav Patel	\N	CUSTOMER	2026-11-16 11:27:10.962	2026-11-16 11:27:11.334	2026-11-16 11:27:10.978	2026-11-16 11:27:11.319	invited-1794828430554@pilot.com	ACTIVE	\N	\N	\N
 cmwj6i80g0032l3y87a4qyxrq	pilot-e2e-1794828429721@rasoi.pilot	$argon2id$v=19$m=65536,t=3,p=1$sueF8kzlqb2QgwYFaAGqmw$8kUh9RBWg14Nyocs9OJ02Q9vx38u0CKojEQBoeJGe94	Pilot Lead	\N	RETAILER	2026-11-16 11:27:10.096	2026-11-16 11:27:11.665	2026-11-16 11:27:10.108	2026-11-16 11:27:10.503	pilot-e2e-1794828429721@rasoi.pilot	SUSPENDED	2026-11-16 11:27:11.651	superadmin@rasoiiq.in	End-of-pilot verification suspension
 cmwj6x9tt0095l3y8z0swl428	victim-1794829131883@test.com	$argon2id$v=19$m=65536,t=3,p=1$JFpaMvVcbjmMPDVfgL43JQ$Jt6m06lNLQ0QLhxzEURaAOdHClZMnVTql/YBE/4k8NM	Victim User	\N	CUSTOMER	2026-11-16 11:38:52.289	2026-11-16 11:38:53.302	2026-11-16 11:38:52.324	2026-11-16 11:38:53.301	victim-1794829131883@test.com	ACTIVE	\N	\N	\N
@@ -3125,13 +7260,132 @@ cmwj8g2wk001sl3o0az4czbyk	suspapp-1794831689159@pilot.com	$argon2id$v=19$m=65536
 cmwj8g0uk0000l3o0weyxl9zb	cust-susp-1794831686519@pilot.com	$argon2id$v=19$m=65536,t=3,p=1$JDvZ1dB+SWJRKD7xPME2tw$le/C2TsUBsKLCreTIH+kOosIvMewXYC7nDwYOt5H9Kk	Suspension Test Customer	\N	CUSTOMER	2026-11-16 12:21:26.732	2026-11-16 12:21:27.129	2026-11-16 12:21:26.755	2026-11-16 12:21:26.943	cust-susp-1794831686519@pilot.com	ACTIVE	\N	\N	\N
 cmwj7rig500aml3jssdan8w5b	victim-1794830542933@test.com	$argon2id$v=19$m=65536,t=3,p=1$WGTEdQQOXTIl5k/R2UYTDA$5/YFembe09Y1TBcgl7Dt70El73v036IX2wbFFX8mIHk	Victim User	\N	CUSTOMER	2026-11-16 12:02:23.141	2026-11-16 12:02:23.678	2026-11-16 12:02:23.142	2026-11-16 12:02:23.671	victim-1794830542933@test.com	ACTIVE	\N	\N	\N
 cmwj7rjei00bhl3jsrnts5en8	c1-1794830544073@test.com	$argon2id$v=19$m=65536,t=3,p=1$VQOOEO2QeAZUg7DB93lnTQ$wXwAu0xx07eYaX83hr+w56DzxvNiU2TcJkBkNlVdMN4	User One	\N	CUSTOMER	2026-11-16 12:02:24.378	2026-11-16 12:02:24.638	2026-11-16 12:02:24.386	2026-11-16 12:02:24.631	c1-1794830544073@test.com	ACTIVE	\N	\N	\N
+cmwj8jm9i003ul3o0rxxhuc97	rogue.admin.mwj8jm4k@test.in	$argon2id$v=19$m=65536,t=3,p=1$f9Yv69cJ3M1BmNzD/kVuDw$PmgdW+OG06wJjkpps5CAec3sGtRiOl90saB4hQTACF8	Rogue Admin Attempt	\N	RETAILER	2026-11-16 12:24:14.455	2026-11-16 12:24:14.821	\N	\N	rogue.admin.mwj8jm4k@test.in	ACTIVE	\N	\N	\N
 cmwj7rjrx00bwl3jszvkmrhbk	c2-1794830544653@test.com	$argon2id$v=19$m=65536,t=3,p=1$D9QY4fJMGOKK4JMnAtjepQ$4UyEL6b5nb3deO0tgzhaTIu3A7T9XrOmyyrrdXubofQ	User Two	\N	CUSTOMER	2026-11-16 12:02:24.861	2026-11-16 12:02:25.073	2026-11-16 12:02:24.862	2026-11-16 12:02:25.066	c2-1794830544653@test.com	ACTIVE	\N	\N	\N
+cmwj8jmx5004fl3o000ntbyj7	ops.lead.mwj8jm4k@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$8swwFI1KWLUe4ubd6fM/Fw$jQNWymvh42sE2TDgfLHHkt9kaYBif9h/KNjuaTqeJ0w	Operations Lead	\N	SUPPORT	2026-11-16 12:24:15.306	2026-11-16 12:24:15.323	2026-11-16 12:24:15.303	\N	ops.lead.mwj8jm4k@rasoiiq.in	ACTIVE	\N	\N	\N
 cmwj7rk9o00cbl3jss734waya	merchant-cust-1794830545328@test.com	$argon2id$v=19$m=65536,t=3,p=1$5UV+ZosFPbG1znTqej2zTA$udJ+K/0k6I5v4t3pwPWTAKVcC6Ti5Kb7Cfipwumikeg	Merchant Customer	\N	RETAILER	2026-11-16 12:02:25.501	2026-11-16 12:02:25.731	2026-11-16 12:02:25.501	2026-11-16 12:02:25.685	merchant-cust-1794830545328@test.com	ACTIVE	\N	\N	\N
 cmwj7rkx000ddl3js2msk70ls	invited-1794830546133@pilot.com	$argon2id$v=19$m=65536,t=3,p=1$V68qPwov0KbVq+W/wX53fA$AzHA5pYz9sWWPMZnfvAm32uc53nuZOI/LPUkyXjKzk4	Aarav Patel	\N	CUSTOMER	2026-11-16 12:02:26.34	2026-11-16 12:02:26.534	2026-11-16 12:02:26.337	2026-11-16 12:02:26.527	invited-1794830546133@pilot.com	ACTIVE	\N	\N	\N
+cmwj8jogj005al3o0paktz6iq	adm-1794831855893@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$jbqIOUg5K7VLrh5EPGvXoQ$xUi0BDxaOT4pmBaCeKgS6J8o9vk5lUgeXl5qC//wWPY	Staff ADMIN	\N	ADMIN	2026-11-16 12:24:17.299	2026-11-16 12:24:17.532	2026-11-16 12:24:17.296	2026-11-16 12:24:17.529	adm-1794831855893@rasoi.internal	ACTIVE	\N	\N	\N
 cmwj7rklp00cul3jspzl5jack	pilot-e2e-1794830545752@rasoi.pilot	$argon2id$v=19$m=65536,t=3,p=1$TZOgIo55c9015NiHMPbZyw$nbrh3tLV4wI05t+bxwFvuxNKFlgOy9NKlReUHlZnzBM	Pilot Lead	\N	RETAILER	2026-11-16 12:02:25.933	2026-11-16 12:02:26.738	2026-11-16 12:02:25.931	2026-11-16 12:02:26.119	pilot-e2e-1794830545752@rasoi.pilot	SUSPENDED	2026-11-16 12:02:26.731	superadmin@rasoiiq.in	End-of-pilot verification suspension
 cmwj8g1ew000ll3o0s4ydlvql	reta-1794831687228@merchant.com	$argon2id$v=19$m=65536,t=3,p=1$PgxGAc21s6ijkts2kwhxLA$hD2/4J7W0OeZA+6BWh5841C2Oh73ryyGi9EKIUoLsOc	Merchant A Owner	\N	RETAILER	2026-11-16 12:21:27.464	2026-11-16 12:21:28.425	2026-11-16 12:21:27.48	2026-11-16 12:21:28.422	reta-1794831687228@merchant.com	ACTIVE	\N	\N	\N
 cmwj8g1tf000yl3o0x8rjs5k7	retb-1794831687777@merchant.com	$argon2id$v=19$m=65536,t=3,p=1$hQTv2wDjoj8IaUDS2GYx9A$jyxuz3YsdWA+/OOtLJuOK3Q7EVQyJ2sMwawxFpt0acI	Merchant B Owner	\N	RETAILER	2026-11-16 12:21:27.988	2026-11-16 12:21:28.664	2026-11-16 12:21:27.999	2026-11-16 12:21:28.661	retb-1794831687777@merchant.com	ACTIVE	\N	\N	\N
 cmwj8g2io001jl3o0sy36ms5s	selfreview-1794831688718@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$c4TEIWANCVaDgLdSjf4Skw$zLT1aLv8SfEkaUCfGy5BGbke6ZRvXO1x1NUXo6Y499o	Self Review Admin	\N	ADMIN	2026-11-16 12:21:28.896	2026-11-16 12:21:29.113	2026-11-16 12:21:28.893	2026-11-16 12:21:29.11	selfreview-1794831688718@rasoi.internal	ACTIVE	\N	\N	\N
+cmwj8jl730036l3o0tcgce9oh	invited.family.mwj8jjow@testrasoi.in	$argon2id$v=19$m=65536,t=3,p=1$Q3MUox2UpSF96TlVZZe/qw$PBs+VHP3JoiytWuH1h8meUk344iGvl0vaX3ynQT7Tjc	Aarti Joshi	\N	CUSTOMER	2026-11-16 12:24:13.071	2026-11-16 12:24:13.324	2026-11-16 12:24:13.084	2026-11-16 12:24:13.321	invited.family.mwj8jjow@testrasoi.in	ACTIVE	\N	\N	\N
+cmwj8jjxp0023l3o00bvthbh8	pilot.user.mwj8jjow@testrasoi.in	$argon2id$v=19$m=65536,t=3,p=1$H8mXrJxEkfnZxIVna+cxIw$uQX4XeOu0djMnq8sKl+4suSn8Zh2uLZ8XoW75D1VpIQ	Vivek Joshi	+91 9988776655	RETAILER	2026-11-16 12:24:11.438	2026-11-16 12:24:13.638	2026-11-16 12:24:11.527	2026-11-16 12:24:12.805	pilot.user.mwj8jjow@testrasoi.in	ACTIVE	\N	\N	\N
+cmwj8jnjp004nl3o0dd5t2gus	cust-1794831855893@test.com	$argon2id$v=19$m=65536,t=3,p=1$+VuMZUnWdyhjzbAkMWLBVg$Qd+tSv2dlnBfjymhhD7vJtfXPoXiIrf5oPNO6GRSxqA	Test Customer Role	\N	CUSTOMER	2026-11-16 12:24:16.118	2026-11-16 12:24:16.347	2026-11-16 12:24:16.131	2026-11-16 12:24:16.344	cust-1794831855893@test.com	ACTIVE	\N	\N	\N
+cmwj8jnv3004wl3o0u2pycvm2	supp-1794831855893@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$BIKvIYqw7UAD3qzgggDNEA$v8c0ocLrUOvKVlesiQOGBPbsK2U4QE5XO1rC55C8PfM	Staff SUPPORT	\N	SUPPORT	2026-11-16 12:24:16.528	2026-11-16 12:24:16.774	2026-11-16 12:24:16.525	2026-11-16 12:24:16.772	supp-1794831855893@rasoi.internal	ACTIVE	\N	\N	\N
+cmwj8jo6y0053l3o0g9s0guqb	ops-1794831855893@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$6HL366pJ3F47JKpUJjnFFQ$2h+4PyvATqjdP7ne1T9BL/DgkgVFQsONhxwmOyC5hC0	Staff OPERATIONS	\N	OPERATIONS	2026-11-16 12:24:16.954	2026-11-16 12:24:17.129	2026-11-16 12:24:16.952	2026-11-16 12:24:17.126	ops-1794831855893@rasoi.internal	ACTIVE	\N	\N	\N
+cmwj8jovs005hl3o03h0hw50t	victim-1794831857662@test.com	$argon2id$v=19$m=65536,t=3,p=1$HVX62i6ZtRGAyyzkay2DBg$BeLQn4++liPS7goiLHmvYWDPoiwFF9SvRzwvFHnMQok	Victim User	\N	CUSTOMER	2026-11-16 12:24:17.849	2026-11-16 12:24:18.393	2026-11-16 12:24:17.864	2026-11-16 12:24:18.39	victim-1794831857662@test.com	ACTIVE	\N	\N	\N
+cmwj8jqnk0076l3o07schg62o	merchant-cust-1794831859969@test.com	$argon2id$v=19$m=65536,t=3,p=1$SKD9PJJtGUmC+PjgD0Gkiw$IuFb8i9SCA+yE/mqvVnT6y4+e9yRAXAXrUT/oKMKaU4	Merchant Customer	\N	RETAILER	2026-11-16 12:24:20.144	2026-11-16 12:24:20.419	2026-11-16 12:24:20.159	2026-11-16 12:24:20.346	merchant-cust-1794831859969@test.com	ACTIVE	\N	\N	\N
+cmwj8jq2v006rl3o0y7fe0nw9	c2-1794831859130@test.com	$argon2id$v=19$m=65536,t=3,p=1$qsJwfGeNdnmev1UgphbCtA$6vAb5Nij1OIN4qZupCkkrBxzt+cAo35igkYARb/zS4s	User Two	\N	CUSTOMER	2026-11-16 12:24:19.399	2026-11-16 12:24:19.686	2026-11-16 12:24:19.423	2026-11-16 12:24:19.683	c2-1794831859130@test.com	ACTIVE	\N	\N	\N
+cmwj8jpor006cl3o0ugux8gra	c1-1794831858705@test.com	$argon2id$v=19$m=65536,t=3,p=1$WyPWpMm3mM8WzhrjuSzRlw$Kr1djOQucbLzsyyIopXQ34P9fQ1f4elEs8hPnSUHnqY	User One	\N	CUSTOMER	2026-11-16 12:24:18.892	2026-11-16 12:24:19.099	2026-11-16 12:24:18.906	2026-11-16 12:24:19.096	c1-1794831858705@test.com	ACTIVE	\N	\N	\N
+cmwj8jr48007pl3o0yv3oqxwz	pilot-e2e-1794831860505@rasoi.pilot	$argon2id$v=19$m=65536,t=3,p=1$YtMEw6qymbGgEzymgoq9EQ$Ca1FMCjs5ShpBnQhZrBW+BUEBL9CTyoeWCCsnD/v2to	Pilot Lead	\N	RETAILER	2026-11-16 12:24:20.744	2026-11-16 12:24:21.639	2026-11-16 12:24:20.761	2026-11-16 12:24:20.96	pilot-e2e-1794831860505@rasoi.pilot	SUSPENDED	2026-11-16 12:24:21.636	superadmin@rasoiiq.in	End-of-pilot verification suspension
+cmwj8jrgz0088l3o0c4zedu9o	invited-1794831860985@pilot.com	$argon2id$v=19$m=65536,t=3,p=1$crIO5EYppPrMQ9aRcrWFyw$p7xNKBxaHWJjHg9Wf/cXSM26kx1eDEhdxZAIUM7nVFY	Aarav Patel	\N	CUSTOMER	2026-11-16 12:24:21.204	2026-11-16 12:24:21.418	2026-11-16 12:24:21.213	2026-11-16 12:24:21.415	invited-1794831860985@pilot.com	ACTIVE	\N	\N	\N
+cmwj9cogl002cl310c2z255yf	pilot-customer-1794833209972@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$Mcy6orPPsGhZ/AHIrqMEYA$DcJ3rCLZ+uM/zirTHb8vmKw+JfkEA6EEVgc5EPxS5gA	Pilot Test Customer	9876543210	CUSTOMER	2026-11-16 12:46:50.326	2026-11-16 12:46:50.633	2026-11-16 12:46:50.35	2026-11-16 12:46:50.63	pilot-customer-1794833209972@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwj8ol50008rl3o03g2qfv3y	cust-susp-1794832085977@pilot.com	$argon2id$v=19$m=65536,t=3,p=1$bexQUBKMyafu5PoJgspxpQ$2l1MCFBN9ngK/0yzAbffbdwFCBdjDQby4zPm0FevdKw	Suspension Test Customer	\N	CUSTOMER	2026-11-16 12:28:06.276	2026-11-16 12:28:06.876	2026-11-16 12:28:06.304	2026-11-16 12:28:06.644	cust-susp-1794832085977@pilot.com	ACTIVE	\N	\N	\N
+cmwj9d5it002pl310hyhn6ozq	pilot-customer-1794833232020@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$Nko77ceuB2b4VJIn09E1IA$0Fz3lFVbD79GSf7oOOpukVOB5ocrSYe85kgepbxB8GE	Pilot Test Customer	9876543210	CUSTOMER	2026-11-16 12:47:12.437	2026-11-16 12:47:12.805	2026-11-16 12:47:12.479	2026-11-16 12:47:12.802	pilot-customer-1794833232020@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwj8rgs4000ll310t0r3abqk	reta-1794832220383@merchant.com	$argon2id$v=19$m=65536,t=3,p=1$ltdWJ54oJrP52JYzEH9SBw$S9eup8miga10ssA1lOQsjT4pVuHw3h+KvffjTBaj21k	Merchant A Owner	\N	RETAILER	2026-11-16 12:30:20.597	2026-11-16 12:30:21.648	2026-11-16 12:30:20.611	2026-11-16 12:30:21.635	reta-1794832220383@merchant.com	ACTIVE	\N	\N	\N
+cmwj8rh6t000yl310bgvxb5wu	retb-1794832220933@merchant.com	$argon2id$v=19$m=65536,t=3,p=1$I2hIsRv82MJMwHHgVAJW9g$kne6nFRbPp3BOnai2tHlTCjCvf/opcG3qtuAne7xVKg	Merchant B Owner	\N	RETAILER	2026-11-16 12:30:21.125	2026-11-16 12:30:21.901	2026-11-16 12:30:21.133	2026-11-16 12:30:21.888	retb-1794832220933@merchant.com	ACTIVE	\N	\N	\N
+cmwj8olwl009cl3o0ktj4vts0	reta-1794832086969@merchant.com	$argon2id$v=19$m=65536,t=3,p=1$Aq/hEAGK2p6ksb0Km3ZPWw$KQ253BnD6TlGj7jLgSfyf951udJ8SH+hGAb74XjMLuE	Merchant A Owner	\N	RETAILER	2026-11-16 12:28:07.27	2026-11-16 12:28:08.665	2026-11-16 12:28:07.287	2026-11-16 12:28:08.65	reta-1794832086969@merchant.com	ACTIVE	\N	\N	\N
+cmwj8omdm009pl3o0m2gr0nwe	retb-1794832087623@merchant.com	$argon2id$v=19$m=65536,t=3,p=1$JiENJhYNS+FIMAhXf8gOIg$k19B8LNtptGUbw9qOM9s9PSS6Da3oiJdOvJXtnrfwWY	Merchant B Owner	\N	RETAILER	2026-11-16 12:28:07.883	2026-11-16 12:28:08.965	2026-11-16 12:28:07.891	2026-11-16 12:28:08.95	retb-1794832087623@merchant.com	ACTIVE	\N	\N	\N
+cmwj8onhk00aal3o076vc7wdz	selfreview-1794832089037@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$DvWLwXpnMyceXM5NtkMeIw$J/XbrVLBj8g+/9YVhJpoyorbIn7uGHhpI8JzQ2VUfFA	Self Review Admin	\N	ADMIN	2026-11-16 12:28:09.32	2026-11-16 12:28:09.585	2026-11-16 12:28:09.306	2026-11-16 12:28:09.57	selfreview-1794832089037@rasoi.internal	ACTIVE	\N	\N	\N
+cmwj8onxx00ajl3o0pc0lmhs9	suspapp-1794832089637@pilot.com	$argon2id$v=19$m=65536,t=3,p=1$7/B8VZ/017rF9WcUFcSxqw$vRb4JCVw+EXLQVgvvgujrwzuDTfNdNdtWSv1LtIC/Pk	Suspended Applicant	\N	CUSTOMER	2026-11-16 12:28:09.91	2026-11-16 12:28:09.943	2026-11-16 12:28:09.934	\N	suspapp-1794832089637@pilot.com	SUSPENDED	\N	\N	\N
+cmwj8ri0k001jl3105rphs4uc	selfreview-1794832221950@rasoi.internal	$argon2id$v=19$m=65536,t=3,p=1$+r1omPWc1GPlwIQAaWyKOQ$+cvZni03b6/leG7vfADeRduQkWNLt4U5eK+28mBdVUU	Self Review Admin	\N	ADMIN	2026-11-16 12:30:22.196	2026-11-16 12:30:22.433	2026-11-16 12:30:22.183	2026-11-16 12:30:22.421	selfreview-1794832221950@rasoi.internal	ACTIVE	\N	\N	\N
+cmwj8rg450000l31098igyczy	cust-susp-1794832219504@pilot.com	$argon2id$v=19$m=65536,t=3,p=1$gmvWG+52an7gZ4sNLPo8gA$7L/qrhgocGI8R6M27BvuLKywqJ97KU+ToS+hpSPlngY	Suspension Test Customer	\N	CUSTOMER	2026-11-16 12:30:19.734	2026-11-16 12:30:20.278	2026-11-16 12:30:19.752	2026-11-16 12:30:20.002	cust-susp-1794832219504@pilot.com	ACTIVE	\N	\N	\N
+cmwj9ga9e004vl310pf3wo4bj	pilot-customer-1794833378053@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$zoEDd23uSYimKmRvgS34qw$L+CqoIQ0zNNCA0ErmK5JUuDGq+gGE0zGKwRqJqqGnD8	Pilot Test Customer	9876543210	CUSTOMER	2026-11-16 12:49:38.547	2026-11-16 12:49:38.983	2026-11-16 12:49:38.574	2026-11-16 12:49:38.981	pilot-customer-1794833378053@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwj8ridx001sl310n026mvsa	suspapp-1794832222460@pilot.com	$argon2id$v=19$m=65536,t=3,p=1$3t9hKpTcVBx+dJOuZXWepg$Oe3OJRcQqtvkojoQVqWSm7zF+D2CNdm28xBzlBxCKU0	Suspended Applicant	\N	CUSTOMER	2026-11-16 12:30:22.678	2026-11-16 12:30:22.693	2026-11-16 12:30:22.689	\N	suspapp-1794832222460@pilot.com	SUSPENDED	\N	\N	\N
+cmwj9dldz0032l310ocvlj8ve	pilot-customer-1794833252594@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$DVqdPNZB1Q8efyM2AD7bVQ$BkPIKJ/f3opA6uwB19VsTUe7e+wgAiO3y88N5JLSEa4	Pilot Test Customer	9876543210	CUSTOMER	2026-11-16 12:47:33	2026-11-16 12:47:33.361	2026-11-16 12:47:33.031	2026-11-16 12:47:33.359	pilot-customer-1794833252594@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwj9bz8z001xl3107gjis344	pilot-customer-1794833177214@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$rcWmCpQwwhVWiDnz+zhG9A$jSS1daFx3YiuYLWagaUoHB/RPUTs5bw1zP6gz6AjM8s	Pilot Test Customer	9876543210	CUSTOMER	2026-11-16 12:46:17.652	2026-11-16 12:46:36.632	2026-11-16 12:46:17.685	2026-11-16 12:46:36.63	pilot-customer-1794833177214@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwj9ey690045l310dpkrb5j2	pilot-customer-1794833315682@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$A4dCHXGrBAHSEIdE95vUFw$kTGgqIK9erjnKbYXUAPlzDniiAaVI1NwrnEsoCl8olg	Pilot Test Customer	9876543210	CUSTOMER	2026-11-16 12:48:36.225	2026-11-16 12:48:36.711	2026-11-16 12:48:36.262	2026-11-16 12:48:36.709	pilot-customer-1794833315682@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwj9dyij003fl310ke1i6wb7	pilot-customer-1794833269640@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$zvY6f3l+g+x2mXvaFpUu7A$8Vgm/Gxu1zqcsXJQsuNQtvRr5yokv/gIcrlEgDu0nik	Pilot Test Customer	9876543210	CUSTOMER	2026-11-16 12:47:50.011	2026-11-16 12:47:50.369	2026-11-16 12:47:50.042	2026-11-16 12:47:50.368	pilot-customer-1794833269640@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwjad58r0002l31kbumbhh6d	pilot.user.1794834911530@example.com	$argon2id$v=19$m=65536,t=3,p=1$czPHsZBMn6quobQ25G27yA$LiRg4rD+D7oQQbuU8Gj8N9S8l+rlfJF5ZIYcezLZ1EM	Ananya Sharma	+91 98765 12345	CUSTOMER	2026-11-16 13:15:11.691	2026-11-16 13:15:11.691	\N	\N	pilot.user.1794834911530@example.com	PENDING_VERIFICATION	\N	\N	\N
+cmwj9ee3x003sl310q7chbr0k	pilot-customer-1794833289859@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$npRdi7jeYo8sc/s976I08Q$PBShMu+8f7yYoBWSv54d5iDcAc5s84GZC3JkqBJopcI	Pilot Test Customer	9876543210	CUSTOMER	2026-11-16 12:48:10.221	2026-11-16 12:48:10.521	2026-11-16 12:48:10.255	2026-11-16 12:48:10.519	pilot-customer-1794833289859@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwj9fqgf004il31014ft6mp2	pilot-customer-1794833352588@rasoiiq.in	$argon2id$v=19$m=65536,t=3,p=1$Wejgddc3r+LEwn6MsDFkSQ$YeIBtyizXGLzCBl4b7inww5VEUTeK0WFNCqUp1qWH6I	Pilot Test Customer	9876543210	CUSTOMER	2026-11-16 12:49:12.88	2026-11-16 12:49:13.193	2026-11-16 12:49:12.905	2026-11-16 12:49:13.191	pilot-customer-1794833352588@rasoiiq.in	ACTIVE	\N	\N	\N
+cmwjafc36000gl31kvtroftqi	pilot.user.1794835013674@example.com	$argon2id$v=19$m=65536,t=3,p=1$mpXHtBsyvVLo9pvxbSJoCA$27HaVaLCaFe6VOoxHXz/fGoZGfgQ05DgQreDlN/4NiE	Ananya S. Sharma	+91 99999 88888	CUSTOMER	2026-11-16 13:16:53.874	2026-11-16 13:16:56.795	2026-11-16 13:16:54.312	2026-11-16 13:16:56.793	pilot.user.1794835013674@example.com	ACTIVE	\N	\N	Pilot safety freeze
+cmwjaelxy0009l31k661qevyc	pilot.user.1794834979762@example.com	$argon2id$v=19$m=65536,t=3,p=1$Lz7DPMqI522S+85wy9R2Nw$VhEyoNVg7bynTS/mqV709696eFykUghNSJwkciT50t0	Ananya Sharma	+91 98765 12345	CUSTOMER	2026-11-16 13:16:19.99	2026-11-16 13:16:19.99	\N	\N	pilot.user.1794834979762@example.com	PENDING_VERIFICATION	\N	\N	\N
+cmwjah1ti0002l3ggfc469esp	archived_cmwjah1ti0002l3ggfc469esp@test.local	$argon2id$v=19$m=65536,t=3,p=1$Vx6w5tZ4rM5AkTqXnOBjIA$yhdLGcbuxAPCJGv1TQUBFA0sejkpn5DZ9XNCurYJ71o	Ananya S. Sharma	+91 99999 88888	CUSTOMER	2026-11-16 13:18:13.878	2026-11-16 13:18:16.759	2026-11-16 13:18:14.296	2026-11-16 13:18:16.758	pilot.user.1794835093693@example.com	DELETED	\N	\N	Pilot safety freeze
+cmwjahqy20014l3ggjypd0ffc	browser.pilot@example.com	$argon2id$v=19$m=65536,t=3,p=1$OMh8RufMFzm9Lu5mWGLgvg$iAxsy0cAxe0feDxClG4apjLx7I/3F6lPbGU6Ke4v5Wc	Pooja Sharma	9876543210	CUSTOMER	2026-11-16 13:18:46.442	2026-11-16 13:25:03.682	2026-11-16 13:18:46.487	2026-11-16 13:25:01.911	browser.pilot@example.com	ACTIVE	\N	\N	\N
+cmwjaq7hy002ol3gg9kmv4gl8	archived_cmwjaq7hy002ol3gg9kmv4gl8@test.local	$argon2id$v=19$m=65536,t=3,p=1$eAe2AM04t5Josz1CvihXKw$aTeMQWq30dYlNt54FdyB9cuEDH2hflglToITWxTWAbU	Ananya S. Sharma	+91 99999 88888	CUSTOMER	2026-11-16 13:25:21.143	2026-11-16 13:25:23.293	2026-11-16 13:25:21.463	2026-11-16 13:25:23.291	pilot.user.1794835521005@example.com	DELETED	\N	\N	Pilot safety freeze
+cmwkwwuqv007rl3mompcwif43	pilot_smoke_a_1794933248501@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$5YSkdPFT2sYsxUB5Wep+mA$QlL7yp5eQ4osDorp3P6+h541IZmlHf59GZrtNfnaF8Y	Smoke User A	9876543210	CUSTOMER	2026-11-17 16:34:08.936	2026-11-17 16:34:13.629	2026-11-17 16:34:13.249	2026-11-17 16:34:13.627	pilot_smoke_a_1794933248501@rasoi.local	ACTIVE	\N	\N	\N
+cmwkwxh4g009ol3moqm9jqz0v	pilot_smoke_b_1794933269378@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$89F/qKoT8JfBqjapJNo7aQ$gjlBarW6b17BmU9imUT3j+eyjgOYw3Yj9JPSfWZpRjc	Smoke User B	9876543210	CUSTOMER	2026-11-17 16:34:37.937	2026-11-17 16:34:41.747	2026-11-17 16:34:41.391	2026-11-17 16:34:41.745	pilot_smoke_b_1794933269378@rasoi.local	ACTIVE	\N	\N	\N
+cmwkwwymt0086l3morcmsdgnq	revoc_test_1794933248501@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$+Vp12fpEoD56GmUjMXbNfQ$fyn/sNyYPMFpHOSR4dSJAKODvAum3saAAy+EmxjbwYs	Revoc User	9876543210	CUSTOMER	2026-11-17 16:34:13.974	2026-11-17 16:34:19.567	2026-11-17 16:34:19.126	2026-11-17 16:34:19.565	revoc_test_1794933248501@rasoi.local	ACTIVE	\N	\N	\N
+cmwjbyzxb0002l3tgdr3t80p2	archived_cmwjbyzxb0002l3tgdr3t80p2@test.local	$argon2id$v=19$m=65536,t=3,p=1$4SbW4zUKvutfchvOFcB/uw$+mNoGkseNsUq7i1iKxRQkewAKzfDjDqMWVnSt020haA	Ananya S. Sharma	+91 99999 88888	CUSTOMER	2026-11-16 14:00:10.848	2026-11-16 14:00:15.218	2026-11-16 14:00:11.407	2026-11-16 14:00:15.217	pilot.user.1794837610516@example.com	DELETED	\N	\N	Pilot safety freeze
+cmwjdvrsc0002l3ackqavlbui	archived_cmwjdvrsc0002l3ackqavlbui@test.local	$argon2id$v=19$m=65536,t=3,p=1$P56MbHRGSsCGZFaHllm2wQ$vhhYM8EFk1x3VMbm+0wvTJr67mLnmXui22rDPgFSB84	Ananya S. Sharma	+91 99999 88888	CUSTOMER	2026-11-16 14:53:39.564	2026-11-16 14:53:55.378	2026-11-16 14:53:43.497	2026-11-16 14:53:55.377	pilot.user.1794840819237@example.com	DELETED	\N	\N	Pilot safety freeze
+cmwkwxauo008ll3mos42pjnr3	pilot_smoke_a_1794933269378@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$oB8rajm9RqJLheRVcE5ZEA$MmXvTIr9HwNEYSVPgK3vQ0c5G8MOxPLKycpG4T/2w4I	Smoke User A	9876543210	CUSTOMER	2026-11-17 16:34:29.808	2026-11-17 16:34:33.128	2026-11-17 16:34:32.757	2026-11-17 16:34:33.127	pilot_smoke_a_1794933269378@rasoi.local	ACTIVE	\N	\N	\N
+cmwkawlu40000l3f8zugqrfgy	panchanivivek0401@gmail.com	$argon2id$v=19$m=65536,t=3,p=1$3KoHHhVG45uuUbhx4RFsww$8b6bheVvaKqEZ21ld6Dn0P7AKZlr0dyRC91rm8tAV+s	Platform Administrator	\N	SUPER_ADMIN	2026-11-17 06:18:05.836	2026-11-17 06:53:39.347	2026-11-17 06:18:05.822	2026-11-17 06:53:39.338	panchanivivek0401@gmail.com	ACTIVE	\N	\N	\N
+cmwjca5580002l358gkt4cw2a	archived_cmwjca5580002l358gkt4cw2a@test.local	$argon2id$v=19$m=65536,t=3,p=1$97xLUM5CSdpDgzIp8ieW3g$XC6I1tLjqdWsx6WhdeUsf4DZ8fSX34j9ZP5nQDWIiEk	Ananya S. Sharma	+91 99999 88888	CUSTOMER	2026-11-16 14:08:50.828	2026-11-16 14:08:54.593	2026-11-16 14:08:51.528	2026-11-16 14:08:54.577	pilot.user.1794838130599@example.com	DELETED	\N	\N	Pilot safety freeze
+cmwjcu6w50000l3rcosw7oze7	panchanivivek0401+test1794839065753@gmail.com	$argon2id$v=19$m=65536,t=3,p=1$XYV0ZOSjq9cjOnq+TgagMA$3J8Mdb9IyTJdTY/08yU0p7NuTChSCz7yaiGlaQ+ny5U	Vivek Test	\N	CUSTOMER	2026-11-16 14:24:26.213	2026-11-16 14:24:43.449	\N	\N	panchanivivek0401+test1794839065753@gmail.com	DELETED	\N	\N	\N
+cmwku3csl0000l3e4u70s3oul	smoketest_a_20261117204513@rasoidev.test	$argon2id$v=19$m=65536,t=3,p=1$8duHE6wSD4urG6IuC7aEAQ$4U/fxwDrBB/SLNs0uquvNRyAmA2aOag7AeldGouT5gM	Smoke UserA 20261117204513	+919876543210	CUSTOMER	2026-11-17 15:15:13.414	2026-11-17 15:15:13.414	\N	\N	smoketest_a_20261117204513@rasoidev.test	PENDING_VERIFICATION	\N	\N	\N
+cmwjcyiro0009l3rc132yjnvt	absta73@gmail.com	$argon2id$v=19$m=65536,t=3,p=1$krlh7sPkR0SzHEExzePQXA$hhd+91tC9MXByVKu6hO22kj9CT4/yEt3Ih9M3yz5QlU	Ac Bd	\N	CUSTOMER	2026-11-16 14:27:48.228	2026-11-16 14:29:52.3	2026-11-16 14:29:40.012	2026-11-16 14:29:52.297	absta73@gmail.com	ACTIVE	\N	\N	\N
+cmwkui8240002l3dgafp0gni3	reorder_userb@test.invalid	$argon2id$v=19$m=65536,t=3,p=1$D3K3GSAQ34Q2lt4LUW2F2Q$W/0c5kAGpOK5z/VaNuIMxngxg/ExrevpUh9n8mC1SJs	Reorder Test UserB	\N	CUSTOMER	2026-11-17 15:26:47.116	2026-11-17 15:26:47.116	\N	\N	reorder_userb@test.invalid	PENDING_VERIFICATION	\N	\N	\N
+cmwkui82d0005l3dghimmtq7s	reorder_usera@test.invalid	$argon2id$v=19$m=65536,t=3,p=1$uXYqunkBBy9byoA4wcrkZg$63D8Ufpr3127up+oqAFQ7q3ngvFkC5WXf4cMYoMbIs8	Reorder Test UserA	\N	CUSTOMER	2026-11-17 15:26:47.126	2026-11-17 15:26:47.126	\N	\N	reorder_usera@test.invalid	PENDING_VERIFICATION	\N	\N	\N
+cmwkwutmj0070l3mow26tql75	pilot_smoke_a_1794933153886@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$Rir1Vi5u7g1HkDtdczA9Yw$sz/T2P6Th7fgl9AcVK4jHtqObcQ3/w9eJnAVEbxZGsI	Smoke User A	9876543210	CUSTOMER	2026-11-17 16:32:34.171	2026-11-17 16:32:34.171	\N	\N	pilot_smoke_a_1794933153886@rasoi.local	PENDING_VERIFICATION	\N	\N	\N
+cmwkwv2720079l3morb2h2099	revoc_test_1794933153886@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$tYHzV5eJ0SlqPJ9rTf91EQ$Azlb0Hcwe0AMF3yYZIF6xNmQFWBDaPR6wX9Oh8Kzgqw	Revoc User	9876543211	CUSTOMER	2026-11-17 16:32:45.279	2026-11-17 16:32:45.279	\N	\N	revoc_test_1794933153886@rasoi.local	PENDING_VERIFICATION	\N	\N	\N
+cmwkwvdup007il3mokxt8omnn	temp12345@rasoi.test	$argon2id$v=19$m=65536,t=3,p=1$E3MKquZP5x6AUiQ84qmUMw$bpTpc9Q7pixc9DepF8xT2VTdrzr71NqVcTGZJ0Z9PnY	Test Usr	9876543210	CUSTOMER	2026-11-17 16:33:00.385	2026-11-17 16:33:00.385	\N	\N	temp12345@rasoi.test	PENDING_VERIFICATION	\N	\N	\N
+cmwkwxdoi0090l3mo4y7e0h0g	revoc_test_1794933269378@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$C9il/pojsfPmE1RUmDYSpA$UKpePjr7H961xGQedRk8QwUB7841DrHkiY3jwhl+5qY	Revoc User	9876543210	CUSTOMER	2026-11-17 16:34:33.475	2026-11-17 16:34:37.516	2026-11-17 16:34:37.159	2026-11-17 16:34:37.514	revoc_test_1794933269378@rasoi.local	ACTIVE	\N	\N	\N
+cmwkwz25k00adl3mo0v3y8ki4	pilot_smoke_a_1794933351335@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$suu7u2S5djfWX0IcIj2hmg$nPY5/vCp6qSbrt73VMYMVYstVhdj52yWCx79va9UK2k	Smoke User A	9876543210	CUSTOMER	2026-11-17 16:35:51.848	2026-11-17 16:35:55.358	2026-11-17 16:35:54.964	2026-11-17 16:35:55.354	pilot_smoke_a_1794933351335@rasoi.local	ACTIVE	\N	\N	\N
+cmwkwz89k00bgl3mozeamoofv	pilot_smoke_b_1794933351335@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$otDpXaam5VvRFIPsEgU3cg$VI4m8GMImgR4Zua/m+Dh0Fd2brMVG9ssh3yGEUNgt8M	Smoke User B	9876543210	CUSTOMER	2026-11-17 16:35:59.768	2026-11-17 16:36:04.14	2026-11-17 16:36:03.705	2026-11-17 16:36:04.136	pilot_smoke_b_1794933351335@rasoi.local	ACTIVE	\N	\N	\N
+cmwkwz55a00asl3mo24tv8bil	revoc_test_1794933351335@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$0DBZMvwMvQFBdwfvKd9Emw$StcHlpGBGfmUq6S6BzdgXqHzJowL9z3tZ2V/0r4uJtE	Revoc User	9876543210	CUSTOMER	2026-11-17 16:35:55.726	2026-11-17 16:35:59.303	2026-11-17 16:35:58.905	2026-11-17 16:35:59.299	revoc_test_1794933351335@rasoi.local	ACTIVE	\N	\N	\N
+cmwkx29l300c5l3moeug8a2rp	pilot_smoke_a_1794933500975@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$DMunETJH8ny9ZhGtjd3Q+Q$INnvOn4TeTqPAb6QWJjiiqTV1K3Dpz34lJ7VegNDnrc	Smoke User A	9876543210	CUSTOMER	2026-11-17 16:38:21.448	2026-11-17 16:38:25.079	2026-11-17 16:38:24.673	2026-11-17 16:38:25.071	pilot_smoke_a_1794933500975@rasoi.local	ACTIVE	\N	\N	\N
+cmwkx2cor00ckl3mommh5snpf	revoc_test_1794933500975@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$YJr99UdcH36/eG+Qb5BlZQ$5SSLBKfOiuSQn0nsy+gcUYIdEvgtZ5hKGRz4pu881LQ	Revoc User	9876543210	CUSTOMER	2026-11-17 16:38:25.467	2026-11-17 16:38:28.752	2026-11-17 16:38:28.384	2026-11-17 16:38:28.744	revoc_test_1794933500975@rasoi.local	ACTIVE	\N	\N	\N
+cmwkx2fj100d2l3mofqhxnmgz	pilot_smoke_b_1794933500975@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$hcJkBzzAka1T+a9WM9Kppw$G1lKe1vYM9qc0kzezn3C+zzXYk/uJNwM7ORVq/BduBQ	Smoke User B	9876543210	CUSTOMER	2026-11-17 16:38:29.15	2026-11-17 16:38:32.824	2026-11-17 16:38:32.457	2026-11-17 16:38:32.817	pilot_smoke_b_1794933500975@rasoi.local	ACTIVE	\N	\N	\N
+cmwkx396g00dnl3mo5cxmw396	pilot_smoke_a_1794933547135@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$FgaQVDGqcMb7ppCyhCf95Q$3neDRlffZWvhu35K+1KdbVbINuY6fiReklGW7kUjeZc	Smoke User A	9876543210	CUSTOMER	2026-11-17 16:39:07.577	2026-11-17 16:39:11.781	2026-11-17 16:39:11.401	2026-11-17 16:39:11.773	pilot_smoke_a_1794933547135@rasoi.local	ACTIVE	\N	\N	\N
+cmwkx3con00e2l3mocunijwct	revoc_test_1794933547135@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$hy/smEzhQ4vpUG2EDtr/Fg$5etqrmcybCdsl1HGmWMSDj4l98m4r13D6PerSf03UTs	Revoc User	9876543210	CUSTOMER	2026-11-17 16:39:12.119	2026-11-17 16:39:15.429	2026-11-17 16:39:15.057	2026-11-17 16:39:15.422	revoc_test_1794933547135@rasoi.local	ACTIVE	\N	\N	\N
+cmwkx3fjb00ekl3mo6qe6eaan	pilot_smoke_b_1794933547135@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$98+epvgjYc97tboAfnicnA$YHDdGonvxtjMWed37Lykw9i+wLeus1SR9RzmpM3zbCw	Smoke User B	9876543210	CUSTOMER	2026-11-17 16:39:15.815	2026-11-17 16:39:19.569	2026-11-17 16:39:19.2	2026-11-17 16:39:19.561	pilot_smoke_b_1794933547135@rasoi.local	ACTIVE	\N	\N	\N
+cmwkx4fa200f5l3moxe9iari8	pilot_smoke_a_1794933601721@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$jMMVE4UA56qQBCAeHS0wuA$uSZh3TI8m51WNbgXPEche/jvB+mLJghjJ2a6BJZSSPA	Smoke User A	9876543210	CUSTOMER	2026-11-17 16:40:02.138	2026-11-17 16:40:06.661	2026-11-17 16:40:06.276	2026-11-17 16:40:06.648	pilot_smoke_a_1794933601721@rasoi.local	ACTIVE	\N	\N	\N
+cmwkxiixh005bl3ocsxmyooyu	pilot_smoke_b_1794934240973@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$x1L2WmRBCgH0m0DoGEuTTg$yVedwio+9Rjpbn4s5ah1LkNrMNnXWT5AqzPutQpv4Jg	Smoke User B	9876543210	CUSTOMER	2026-11-17 16:51:00.053	2026-11-17 16:51:03.557	2026-11-17 16:51:03.158	2026-11-17 16:51:03.555	pilot_smoke_b_1794934240973@rasoi.local	ACTIVE	\N	\N	\N
+cmwkx4j1a00fkl3mol4xvmw2q	revoc_test_1794933601721@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$mpJpHZGjrQFt5P/0JIjcHQ$4M1/ekGomFNs9XH+l29LYOEwk59ik4WmmbbOAPFafZc	Revoc User	9876543210	CUSTOMER	2026-11-17 16:40:07.006	2026-11-17 16:40:10.464	2026-11-17 16:40:10.084	2026-11-17 16:40:10.45	revoc_test_1794933601721@rasoi.local	ACTIVE	\N	\N	\N
+cmwkx4m0100g2l3mohjj1nx7i	pilot_smoke_b_1794933601721@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$9bzrWWPtHMyg3YoQ3g3PUw$3GXJJo01yT6ZkwHg5PDT8tsRFx9/apkY8w13tQPVgTM	Smoke User B	9876543210	CUSTOMER	2026-11-17 16:40:10.85	2026-11-17 16:40:14.602	2026-11-17 16:40:14.235	2026-11-17 16:40:14.589	pilot_smoke_b_1794933601721@rasoi.local	ACTIVE	\N	\N	\N
+cmwlucrnx00axl37s08ria2ta	sharma_family_1794989418335@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$+Uelzz1wqoUoBYT0dUaWog$wKvYslBfcYVtbaBKxhykxLhAIaiK912NJk5IIU6fTHc	Aarav Sharma	9876543210	CUSTOMER	2026-11-18 08:10:18.765	2026-11-18 08:10:22.434	2026-11-18 08:10:22.059	2026-11-18 08:10:22.432	sharma_family_1794989418335@pilot.local	ACTIVE	\N	\N	\N
+cmwkx5wxd00l1l3mowf771xh9	pilot_smoke_a_1794933671150@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$7M9/9UTXqjZIcrJBxDjuEw$ym5x7ikSO+N1TGvNjyybiSMC3/duTXYpsz85AWwO+FU	Smoke User A	9876543210	CUSTOMER	2026-11-17 16:41:11.666	2026-11-17 16:41:15.352	2026-11-17 16:41:14.936	2026-11-17 16:41:15.337	pilot_smoke_a_1794933671150@rasoi.local	ACTIVE	\N	\N	\N
+cmwlrxogg0020l3wohce8kia3	pilot_smoke_a_1794985355060@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$X9fjE7M6+VQsgQXbHSHh0g$fyXFV7CG9/WN5se0yN5eoDzIHeo5odfkrDB1VP5t4o8	Smoke User A	9876543210	CUSTOMER	2026-11-18 07:02:35.537	2026-11-18 07:02:40.37	2026-11-18 07:02:39.991	2026-11-18 07:02:40.365	pilot_smoke_a_1794985355060@rasoi.local	ACTIVE	\N	\N	\N
+cmwkx603t00lgl3mom0i6myrq	revoc_test_1794933671150@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$m7jjVzWElnztM9pF75xJHw$mIO8x5zaqipo6InoJLR3wuynmEATlDuPVKQayCFE6fs	Revoc User	9876543210	CUSTOMER	2026-11-17 16:41:15.785	2026-11-17 16:41:31.796	2026-11-17 16:41:31.394	2026-11-17 16:41:31.781	revoc_test_1794933671150@rasoi.local	ACTIVE	\N	\N	\N
+cmwkx6crb00lyl3mo006moex0	pilot_smoke_b_1794933671150@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$XZ8ksC5ltPkTpfotoqskhw$/iHCHzDZfni8GmL2vF/gVRWofDi3WC2tOlfJ2QSQrD4	Smoke User B	9876543210	CUSTOMER	2026-11-17 16:41:32.183	2026-11-17 16:41:37.273	2026-11-17 16:41:36.868	2026-11-17 16:41:37.259	pilot_smoke_b_1794933671150@rasoi.local	ACTIVE	\N	\N	\N
+cmwlscsku005jl37se8nvwqse	pilot_smoke_b_1794986052143@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$hlC0RXKvMXePoJs0mHP81g$NSXIzfMVotIL/CLPW1G0syf+DV1245poXqvEWa/xCTw	Smoke User B	9876543210	CUSTOMER	2026-11-18 07:14:20.718	2026-11-18 07:14:25.204	2026-11-18 07:14:24.921	2026-11-18 07:14:25.202	pilot_smoke_b_1794986052143@rasoi.local	ACTIVE	\N	\N	\N
+cmwkxi4jr004el3ocoa8hht1u	pilot_smoke_a_1794934240973@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$WeQxI6A/bDt/Z5/SFc1JyQ$6NFCuJAuA6bUv4Vf2JWTXMVLtsqWlWpuOVl1A7cMdhg	Smoke User A	9876543210	CUSTOMER	2026-11-17 16:50:41.415	2026-11-17 16:50:50.011	2026-11-17 16:50:49.635	2026-11-17 16:50:50.009	pilot_smoke_a_1794934240973@rasoi.local	ACTIVE	\N	\N	\N
+cmwlrxsg2002fl3woul4jib8w	revoc_test_1794985355060@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$FG9TB2v5Cij+Z2KyiCaK4g$wfNClcWpDE81S8hX4mGTzIuHUeps5g7eeYcSEzn+Xjw	Revoc User	9876543210	CUSTOMER	2026-11-18 07:02:40.706	2026-11-18 07:02:44.94	2026-11-18 07:02:44.593	2026-11-18 07:02:44.935	revoc_test_1794985355060@rasoi.local	ACTIVE	\N	\N	\N
+cmwkxibh7004tl3oc7c5twn9n	revoc_test_1794934240973@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$8e7H+HXXtgbTl3Ig008xuA$pecQPkxbWonsS/kkr4MuMUyvc8AB/rifgUBLy5SWXQ4	Revoc User	9876543210	CUSTOMER	2026-11-17 16:50:50.395	2026-11-17 16:50:59.646	2026-11-17 16:50:59.268	2026-11-17 16:50:59.644	revoc_test_1794934240973@rasoi.local	ACTIVE	\N	\N	\N
+cmwlrxw0a002xl3wo652h7lar	pilot_smoke_b_1794985355060@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$a1FZsnZV+rPZfqkXUjw2yQ$ClQA2HUDY0CNK9XrqDtzhTT6Lpb01lrraK0tmWEdCoY	Smoke User B	9876543210	CUSTOMER	2026-11-18 07:02:45.323	2026-11-18 07:02:50.033	2026-11-18 07:02:50.028	\N	pilot_smoke_b_1794985355060@rasoi.local	ACTIVE	\N	\N	\N
+cmwlsq78l007hl37su4h25vpp	pilot_smoke_b_1794986677832@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$4dBT+M9e9VHdm95Z4hJELw$MLFj4bQ4D4ipRuC/Fw//yI7du5408ODAaXLv8awimaQ	Smoke User B	9876543210	CUSTOMER	2026-11-18 07:24:46.245	2026-11-18 07:24:49.902	2026-11-18 07:24:49.553	2026-11-18 07:24:49.898	pilot_smoke_b_1794986677832@rasoi.local	ACTIVE	\N	\N	\N
+cmwlscmb6004ml37sgp4x2ldl	pilot_smoke_a_1794986052143@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$hCgj5qBhKA4HsIaptYnkag$0CcDxe1g++c7Uxl6Vfpfdbc5D3VUYSM854jil1BDrfk	Smoke User A	9876543210	CUSTOMER	2026-11-18 07:14:12.594	2026-11-18 07:14:16.787	2026-11-18 07:14:16.404	2026-11-18 07:14:16.784	pilot_smoke_a_1794986052143@rasoi.local	ACTIVE	\N	\N	\N
+cmwlsq12h006kl37semulwczh	pilot_smoke_a_1794986677832@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$3j76Vma1rg2HuZ85/NdjCg$C4ZKwOaRq02xIcpZ2JyicGvIVeyhsDHrplpA4NMQZQE	Smoke User A	9876543210	CUSTOMER	2026-11-18 07:24:38.25	2026-11-18 07:24:42.053	2026-11-18 07:24:41.691	2026-11-18 07:24:42.05	pilot_smoke_a_1794986677832@rasoi.local	ACTIVE	\N	\N	\N
+cmwlscptp0051l37sex523org	revoc_test_1794986052143@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$O/m3fasn/M7txhxLk6X4dQ$jrIO3+bI846oNlh3F/+zifjo8FUQPEQAqGsedHoU3z0	Revoc User	9876543210	CUSTOMER	2026-11-18 07:14:17.149	2026-11-18 07:14:20.452	2026-11-18 07:14:20.196	2026-11-18 07:14:20.449	revoc_test_1794986052143@rasoi.local	ACTIVE	\N	\N	\N
+cmwlsq49o006zl37sh8xeotoe	revoc_test_1794986677832@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$+rC7W7QbMqtpdvYHtZVikg$z0/n4YOUDFSir7tkFYOSkIEVyA6MINC/DhJTblEqBsU	Revoc User	9876543210	CUSTOMER	2026-11-18 07:24:42.396	2026-11-18 07:24:45.858	2026-11-18 07:24:45.503	2026-11-18 07:24:45.854	revoc_test_1794986677832@rasoi.local	ACTIVE	\N	\N	\N
+cmwltrwwc00acl37siffy7u9l	asm27052002@gmail.com	$argon2id$v=19$m=65536,t=3,p=1$JLs/nyt1XfkE/tt2kAJd8g$DH2/0My5NgdscbdW6Ic8H57wJr05WgkZo0q/Ot412nY	Asm	\N	CUSTOMER	2026-11-18 07:54:05.773	2026-11-18 07:56:13.289	2026-11-18 07:55:37.556	2026-11-18 07:56:13.286	asm27052002@gmail.com	ACTIVE	\N	\N	\N
+cmwlucuz600bkl37sxjs47if5	patel_jain_1794989418335@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$G7jpuaA89QYQz+satZBnqw$BLXIBzNnC4RHfGzDP9hhl2IeEgz77LNuuEhAkOXcbw4	Bhavin Patel	9876543210	CUSTOMER	2026-11-18 08:10:23.059	2026-11-18 08:10:26.416	2026-11-18 08:10:26.026	2026-11-18 08:10:26.414	patel_jain_1794989418335@pilot.local	ACTIVE	\N	\N	\N
+cmwlucy0b00c3l37sjoa9xngk	kapoor_family_1794989418335@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$4/QvmKuumE6BEzDm9BCAyA$okLK99AAiwy2v4rF3RSl1G7sfYU5oTrQ3GVogfqjhoA	Vikram Kapoor	9876543210	CUSTOMER	2026-11-18 08:10:26.987	2026-11-18 08:10:33.018	2026-11-18 08:10:32.654	2026-11-18 08:10:33.016	kapoor_family_1794989418335@pilot.local	ACTIVE	\N	\N	\N
+cmwluteid0000l3788hcz6990	sharma_family_1794990193728@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$ngbERuFOoO25rMPbm/w4Zg$xc2dFC5SVMWmiioW2cDwZlf85IbF1PPZAf9KVYIUg78	Aarav Sharma	9876543210	CUSTOMER	2026-11-18 08:23:14.869	2026-11-18 08:23:20.91	2026-11-18 08:23:20.649	2026-11-18 08:23:20.896	sharma_family_1794990193728@pilot.local	ACTIVE	\N	\N	\N
+cmwlutjlb000nl378o8jmwhbc	patel_jain_1794990193728@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$fHCAzKjwZuW3o8wwKK628A$xVSAUwrWPkd1yz22bcbJuEQFZW/2xBFbH4BJLfFcpMw	Bhavin Patel	9876543210	CUSTOMER	2026-11-18 08:23:21.455	2026-11-18 08:23:26.601	2026-11-18 08:23:26.301	2026-11-18 08:23:26.587	patel_jain_1794990193728@pilot.local	ACTIVE	\N	\N	\N
+cmwlutnyu0016l378xwczb3pb	kapoor_family_1794990193728@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$4tmLWHK0Vm7V8xiED3yUIA$tF/+3OMEGVGJXbFAe4S1ISHX8jUNEGsZaxZA66/F2Qw	Vikram Kapoor	9876543210	CUSTOMER	2026-11-18 08:23:27.126	2026-11-18 08:23:31.146	2026-11-18 08:23:30.814	2026-11-18 08:23:31.131	kapoor_family_1794990193728@pilot.local	ACTIVE	\N	\N	\N
+cmwluvp8d001pl378lv9i8eqm	sharma_family_1794990301648@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$90eFbbjdQR+VO/YE9unPfw$ytLTlBaCfbsYfQW3iHEDWdmRfIE2HGMu5vPoHqMmjZo	Aarav Sharma	9876543210	CUSTOMER	2026-11-18 08:25:02.077	2026-11-18 08:25:06.469	2026-11-18 08:25:06.079	2026-11-18 08:25:06.457	sharma_family_1794990301648@pilot.local	ACTIVE	\N	\N	\N
+cmwluvt42002cl378qx2ivo25	patel_jain_1794990301648@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$E2zPxSNAqCPb4W33KwTDzA$28vrANF3xtN9EKtlb8QhAQyFA7RGjpPWI4ZHB+Kee3o	Bhavin Patel	9876543210	CUSTOMER	2026-11-18 08:25:07.107	2026-11-18 08:25:10.631	2026-11-18 08:25:10.247	2026-11-18 08:25:10.619	patel_jain_1794990301648@pilot.local	ACTIVE	\N	\N	\N
+cmwluvw8q002vl378oiuhuj8x	kapoor_family_1794990301648@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$5BweV7KuTu2ZBkx74mM04w$mQ3jMyrd6Jfs2PqjEWJ6/a8s7hjv1awqiQlYOdf/LVA	Vikram Kapoor	9876543210	CUSTOMER	2026-11-18 08:25:11.162	2026-11-18 08:25:17.157	2026-11-18 08:25:16.748	2026-11-18 08:25:17.145	kapoor_family_1794990301648@pilot.local	ACTIVE	\N	\N	\N
+cmwlv0470006sl378yxzqecwd	pilot_smoke_a_1794990507662@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$Ifc+KFlP+haVyjbqmiiI4g$WJ4Ru7WF67Re+KV/I9SD9Wt2WY0FOtrgH89iWUOBIB0	Smoke User A	9876543210	CUSTOMER	2026-11-18 08:28:28.092	2026-11-18 08:28:34.602	2026-11-18 08:28:34.243	2026-11-18 08:28:34.6	pilot_smoke_a_1794990507662@rasoi.local	ACTIVE	\N	\N	\N
+cmwlzjyjc008dl3j4cz2inlyd	pilot_smoke_b_1794998143864@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$UYYWCJPesLfeNdpGy6L9Tg$LnHbUttHnkoThQQYpNOU2p/5L1PEnqyuCvsrENScHtQ	Smoke User B	9876543210	CUSTOMER	2026-11-18 10:35:52.345	2026-11-18 10:35:56.275	2026-11-18 10:35:56.027	2026-11-18 10:35:56.268	pilot_smoke_b_1794998143864@rasoi.local	ACTIVE	\N	\N	\N
+cmwlv09hw0077l378nkol1n6z	revoc_test_1794990507662@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$a3qDEBli5g0qIsKC6WKD6w$1BAdSahbQ8pcOsgOzrFz3NTtl64yD1EFJc3z/8gTz14	Revoc User	9876543210	CUSTOMER	2026-11-18 08:28:34.963	2026-11-18 08:28:38.399	2026-11-18 08:28:38.044	2026-11-18 08:28:38.397	revoc_test_1794990507662@rasoi.local	ACTIVE	\N	\N	\N
+cmwlv0cga007pl378h3tlmlyp	pilot_smoke_b_1794990507662@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$3cVuKcGanfNhxT7bsUBiqA$8/scoX9EuhOAE8aVRTunOG9ma3MjIzWg1lc8+UiEibc	Smoke User B	9876543210	CUSTOMER	2026-11-18 08:28:38.795	2026-11-18 08:28:43.934	2026-11-18 08:28:43.582	2026-11-18 08:28:43.932	pilot_smoke_b_1794990507662@rasoi.local	ACTIVE	\N	\N	\N
+cmwlzjs7m007gl3j4xmuko7ij	pilot_smoke_a_1794998143864@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$zCCU+8BTDPOivkp/MrYi9w$X4sDwqGQpOtGx0cqwB3IuctWgJNjk4lO3xeBzB8vGTY	Smoke User A	9876543210	CUSTOMER	2026-11-18 10:35:44.146	2026-11-18 10:35:48.782	2026-11-18 10:35:48.567	2026-11-18 10:35:48.776	pilot_smoke_a_1794998143864@rasoi.local	ACTIVE	\N	\N	\N
+cmwlzl7zs008yl3j4de7xmrom	sharma_family_1794998210975@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$nKoiQNZgsltIuU95M5xC2w$/y0jBn2Wdftat/p7I6q+xL8jCxotxwq5eCSLZoAIBLU	Aarav Sharma	9876543210	CUSTOMER	2026-11-18 10:36:51.257	2026-11-18 10:36:55.646	2026-11-18 10:36:55.407	2026-11-18 10:36:55.643	sharma_family_1794998210975@pilot.local	ACTIVE	\N	\N	\N
+cmwlzjvyv007vl3j4d70egwty	revoc_test_1794998143864@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$xfr7pFsLZIqXQAkx/zgsXQ$Q3C9D9Jx/dBOd+MUdUUx3/LrOh5iPbsiEM/g0BAA6Sk	Revoc User	9876543210	CUSTOMER	2026-11-18 10:35:49.015	2026-11-18 10:35:52.098	2026-11-18 10:35:51.884	2026-11-18 10:35:52.092	revoc_test_1794998143864@rasoi.local	ACTIVE	\N	\N	\N
+cmwm2hgoz0058l3oo1vidsq7g	sharma_family_1795003074453@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$vty8F87/YgsyakJrr9FE6g$7Ze/l7/DmljMWRDa3N1rhdCWrjzGvkFJH19s9A0+zMI	Aarav Sharma	9876543210	CUSTOMER	2026-11-18 11:57:54.755	2026-11-18 11:57:58.346	2026-11-18 11:57:58.14	2026-11-18 11:57:58.344	sharma_family_1795003074453@pilot.local	ACTIVE	\N	\N	\N
+cmwlzlbrh009ll3j4r28i362j	patel_jain_1794998210975@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$U8CLiHyVK/JLe3EfJJIf3w$YoFzov0KbXwiInYRWgkZQzy24/qoJf7yzu/lbOdYSy4	Bhavin Patel	9876543210	CUSTOMER	2026-11-18 10:36:56.142	2026-11-18 10:36:59.287	2026-11-18 10:36:59.044	2026-11-18 10:36:59.284	patel_jain_1794998210975@pilot.local	ACTIVE	\N	\N	\N
+cmwm2gikc003ql3ooztalvyqf	pilot_smoke_a_1795003030208@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$7CS+yadcSufz5Zu/sTeJGw$GD3jTDhfqfEaTQ4tlrQIwA0jrrQeHS5L2PJFViozP70	Smoke User A	9876543210	CUSTOMER	2026-11-18 11:57:10.525	2026-11-18 11:57:14.755	2026-11-18 11:57:14.493	2026-11-18 11:57:14.753	pilot_smoke_a_1795003030208@rasoi.local	ACTIVE	\N	\N	\N
+cmwlzlegx00a4l3j4jmenjzct	kapoor_family_1794998210975@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$xKRKzCdqgJOy9LCOLq9J2A$Y5a/TYKqIDxINrK9bSN6ZVL5DANeq5Hh+88AHZ4dLn4	Vikram Kapoor	9876543210	CUSTOMER	2026-11-18 10:36:59.649	2026-11-18 10:37:04.417	2026-11-18 10:37:04.192	2026-11-18 10:37:04.414	kapoor_family_1794998210975@pilot.local	ACTIVE	\N	\N	\N
+cmwm2glzv0045l3oovuguj96j	revoc_test_1795003030208@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$M5Xfii78vRCo5DsBnSx+1w$22lPjm+ebNHc5Z7CL4vseDmvQJuTgMuEipHPDfPGqcE	Revoc User	9876543210	CUSTOMER	2026-11-18 11:57:14.972	2026-11-18 11:57:18.615	2026-11-18 11:57:18.324	2026-11-18 11:57:18.613	revoc_test_1795003030208@rasoi.local	ACTIVE	\N	\N	\N
+cmwm2goze004nl3oo73a8qf4t	pilot_smoke_b_1795003030208@rasoi.local	$argon2id$v=19$m=65536,t=3,p=1$6BjSErrgPeXkD6OLV1sQKQ$fzvo7iTazBO/CwyU6R7a3Dmfe2DwChSq6bnPamWUO/Y	Smoke User B	9876543210	CUSTOMER	2026-11-18 11:57:18.843	2026-11-18 11:57:24.058	2026-11-18 11:57:23.796	2026-11-18 11:57:24.056	pilot_smoke_b_1795003030208@rasoi.local	ACTIVE	\N	\N	\N
+cmwm2hjsu005vl3oou3jeub9w	patel_jain_1795003074453@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$60+B7FstG0giPxZTOig7Nw$WIs1AdjBBII0g27CWt6EJcY52CoZnIBg32r+s7Kkgig	Bhavin Patel	9876543210	CUSTOMER	2026-11-18 11:57:58.783	2026-11-18 11:58:03.382	2026-11-18 11:58:03.158	2026-11-18 11:58:03.381	patel_jain_1795003074453@pilot.local	ACTIVE	\N	\N	\N
+cmwm2hnny006el3oovgstr3jy	kapoor_family_1795003074453@pilot.local	$argon2id$v=19$m=65536,t=3,p=1$kVaR/EByUwDlSMhxfFCVqg$/fHTY8FraNLGb+CYvj3Uef1N3wnuj2Tz06R1P4AlS3c	Vikram Kapoor	9876543210	CUSTOMER	2026-11-18 11:58:03.791	2026-11-18 11:58:11.297	2026-11-18 11:58:11.096	2026-11-18 11:58:11.295	kapoor_family_1795003074453@pilot.local	ACTIVE	\N	\N	\N
+\.
+
+
+--
+-- Data for Name: _prisma_migrations; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public._prisma_migrations (id, checksum, finished_at, migration_name, logs, rolled_back_at, started_at, applied_steps_count) FROM stdin;
+dded6623-8026-4d6b-8f58-c78d989622a0	7c1d95b46b38c15279fd999665cd0df17bee9086580bf6a3f9210b9c15856bb9	2026-11-17 13:11:05.841137+00	20261117_phase621_order_lifecycle		\N	2026-11-17 13:11:05.841137+00	0
+5894418c-88e0-4df7-9a2b-65ce84e685fd	458fd9ba13d34de05f6fdbf6fbe68604494c4e418d069183aade6f347b4813ca	2026-11-17 14:16:08.346305+00	20261115000000_init		\N	2026-11-17 14:16:08.346305+00	0
+8b521b30-290c-4895-ba5b-9f8b2bf3deaf	78cfba02f88b43c1715840cd93d3e16ed1f6e509f774af058aec800ddcd06d79	2026-11-18 09:55:56.574424+00	20261118_phase627_order_household_ownership	\N	\N	2026-11-18 09:55:56.513288+00	1
 \.
 
 
@@ -3237,6 +7491,14 @@ ALTER TABLE ONLY public."MealPlan"
 
 ALTER TABLE ONLY public."OrderItem"
     ADD CONSTRAINT "OrderItem_pkey" PRIMARY KEY (id);
+
+
+--
+-- Name: OrderStatusHistory OrderStatusHistory_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."OrderStatusHistory"
+    ADD CONSTRAINT "OrderStatusHistory_pkey" PRIMARY KEY (id);
 
 
 --
@@ -3384,6 +7646,14 @@ ALTER TABLE ONLY public."User"
 
 
 --
+-- Name: _prisma_migrations _prisma_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public._prisma_migrations
+    ADD CONSTRAINT _prisma_migrations_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: AuditLog_action_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -3461,6 +7731,41 @@ CREATE UNIQUE INDEX "Ingredient_name_key" ON public."Ingredient" USING btree (na
 
 
 --
+-- Name: OrderStatusHistory_createdAt_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "OrderStatusHistory_createdAt_idx" ON public."OrderStatusHistory" USING btree ("createdAt");
+
+
+--
+-- Name: OrderStatusHistory_orderId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "OrderStatusHistory_orderId_idx" ON public."OrderStatusHistory" USING btree ("orderId");
+
+
+--
+-- Name: Order_householdId_createdAt_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "Order_householdId_createdAt_idx" ON public."Order" USING btree ("householdId", "createdAt");
+
+
+--
+-- Name: Order_householdId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "Order_householdId_idx" ON public."Order" USING btree ("householdId");
+
+
+--
+-- Name: Order_userId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "Order_userId_idx" ON public."Order" USING btree ("userId");
+
+
+--
 -- Name: PasswordResetToken_tokenHash_key; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -3489,10 +7794,52 @@ CREATE UNIQUE INDEX "Payment_transactionId_key" ON public."Payment" USING btree 
 
 
 --
+-- Name: ProductVariant_productId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "ProductVariant_productId_idx" ON public."ProductVariant" USING btree ("productId");
+
+
+--
+-- Name: ProductVariant_sku_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "ProductVariant_sku_idx" ON public."ProductVariant" USING btree (sku);
+
+
+--
 -- Name: ProductVariant_sku_key; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE UNIQUE INDEX "ProductVariant_sku_key" ON public."ProductVariant" USING btree (sku);
+
+
+--
+-- Name: Product_brand_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "Product_brand_idx" ON public."Product" USING btree (brand);
+
+
+--
+-- Name: Product_category_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "Product_category_idx" ON public."Product" USING btree (category);
+
+
+--
+-- Name: Product_slug_key; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "Product_slug_key" ON public."Product" USING btree (slug);
+
+
+--
+-- Name: Product_status_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "Product_status_idx" ON public."Product" USING btree (status);
 
 
 --
@@ -3556,6 +7903,27 @@ CREATE UNIQUE INDEX "RevokedToken_token_key" ON public."RevokedToken" USING btre
 --
 
 CREATE UNIQUE INDEX "Session_token_key" ON public."Session" USING btree (token);
+
+
+--
+-- Name: StoreProduct_productVariantId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "StoreProduct_productVariantId_idx" ON public."StoreProduct" USING btree ("productVariantId");
+
+
+--
+-- Name: StoreProduct_storeId_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "StoreProduct_storeId_idx" ON public."StoreProduct" USING btree ("storeId");
+
+
+--
+-- Name: StoreProduct_storeId_productVariantId_key; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "StoreProduct_storeId_productVariantId_key" ON public."StoreProduct" USING btree ("storeId", "productVariantId");
 
 
 --
@@ -3719,7 +8087,23 @@ ALTER TABLE ONLY public."OrderItem"
 --
 
 ALTER TABLE ONLY public."OrderItem"
-    ADD CONSTRAINT "OrderItem_productVariantId_fkey" FOREIGN KEY ("productVariantId") REFERENCES public."ProductVariant"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+    ADD CONSTRAINT "OrderItem_productVariantId_fkey" FOREIGN KEY ("productVariantId") REFERENCES public."ProductVariant"(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: OrderStatusHistory OrderStatusHistory_orderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."OrderStatusHistory"
+    ADD CONSTRAINT "OrderStatusHistory_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES public."Order"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: Order Order_householdId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."Order"
+    ADD CONSTRAINT "Order_householdId_fkey" FOREIGN KEY ("householdId") REFERENCES public."Household"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
@@ -3767,7 +8151,7 @@ ALTER TABLE ONLY public."Payment"
 --
 
 ALTER TABLE ONLY public."ProductVariant"
-    ADD CONSTRAINT "ProductVariant_ingredientId_fkey" FOREIGN KEY ("ingredientId") REFERENCES public."Ingredient"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+    ADD CONSTRAINT "ProductVariant_ingredientId_fkey" FOREIGN KEY ("ingredientId") REFERENCES public."Ingredient"(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
@@ -3854,5 +8238,5 @@ ALTER TABLE ONLY public."Store"
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Ly5D0SR7ZIbUb4gRkc5npcMjShsCxF3hEUQIBSPLRU9teO3bTqiFMAcbdolpndl
+\unrestrict OkR9rJO7YfVaVFib4Hdp282ypJdmRUi3QqF9xKWyl8TYCdqmouvVLuQhawWkYKE
 

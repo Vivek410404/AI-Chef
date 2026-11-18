@@ -7,8 +7,12 @@
  */
 
 import * as fs from 'fs';
+import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client';
 
+const prisma = new PrismaClient();
 const API_BASE = 'http://localhost:4000/api';
+const JWT_SECRET = process.env.JWT_SECRET || 'rasoi_iq_super_secret_jwt_key_2026';
 let INTERNAL_WORKER_SECRET = process.env.INTERNAL_WORKER_SECRET;
 if (!INTERNAL_WORKER_SECRET && fs.existsSync('services/api/.env')) {
   const envText = fs.readFileSync('services/api/.env', 'utf-8');
@@ -31,6 +35,26 @@ async function fetchJson(url, options = {}) {
 }
 
 async function loginUser(email, password = '') {
+  if (!password) {
+    const user = await prisma.user.findFirst({
+      where: { OR: [{ email: email.toLowerCase() }, { normalizedEmail: email.toLowerCase() }] }
+    });
+    if (user) {
+      const householdId = (user.id === 'user-demo-patel' || email.includes('patel'))
+        ? 'hh-patel-family'
+        : (user.id === 'user-demo-mehta' || email.includes('mehta'))
+        ? 'hh-mehta-family'
+        : (user.id === 'user-demo-1' || email.includes('sharma') || email === 'demo@rasoiiq.in')
+        ? 'hh-sharma-family'
+        : 'hh-sharma-family';
+      const token = jwt.sign(
+        { sub: user.id, id: user.id, role: user.role, email: user.email, householdId },
+        JWT_SECRET,
+        { expiresIn: '2h' }
+      );
+      return token;
+    }
+  }
   const res = await fetchJson(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -98,12 +122,12 @@ async function runSuite() {
 
   // 1.2 Retailer attempts system-worker transition
   // Create retailer token via demo helper or login
-  const retailerLogin = await fetchJson(`${API_BASE}/auth/demo-session`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'RETAILER', retailerId: 'ret-blinkit', email: 'partner@blinkit.com' })
-  });
-  const retailerToken = retailerLogin.data?.token;
+  const dbRetailerUser = await prisma.user.findFirst({ where: { role: 'RETAILER' } });
+  const retailerToken = jwt.sign(
+    { sub: dbRetailerUser.id, id: dbRetailerUser.id, role: 'RETAILER', retailerId: 'ret-blinkit', email: dbRetailerUser.email },
+    JWT_SECRET,
+    { expiresIn: '2h' }
+  );
 
   const t1_2 = await fetchJson(`${API_BASE}/marketplace/orders/${order1}/status`, {
     method: 'PATCH',

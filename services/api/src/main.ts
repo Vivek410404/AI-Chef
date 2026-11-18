@@ -7,13 +7,27 @@ async function bootstrap() {
   const logger = new Logger('RasoiIQ-API');
   const app = await NestFactory.create(AppModule);
 
-  // Cookie parser middleware for HttpOnly auth cookies
+  // Cookie parser middleware for HttpOnly auth cookies and CSRF
   app.use(cookieParser());
 
-  // Enable CORS for Next.js frontend
+  // Strict CORS for Next.js frontend (No wildcard origin with credentials)
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    process.env.FRONTEND_URL
+  ].filter(Boolean) as string[];
+
   app.enableCors({
-    origin: true,
-    credentials: true
+    origin: (requestOrigin, callback) => {
+      if (!requestOrigin || allowedOrigins.includes(requestOrigin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'idempotency-key', 'x-internal-worker-key', 'x-csrf-token']
   });
 
   // Global prefix for all REST endpoints

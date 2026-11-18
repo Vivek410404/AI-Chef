@@ -94,6 +94,7 @@ try {
   const order = await prisma.order.create({
     data: {
       userId: customer.id,
+      householdId: household.id,
       retailerName: 'Blinkit',
       status: 'ORDER_CONFIRMED',
       totalAmountInr: 345,

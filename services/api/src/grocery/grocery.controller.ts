@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Query, Param, Headers, ForbiddenException, NotFoundException, UnauthorizedException, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Query, Param, Headers, Req, ForbiddenException, NotFoundException, UnauthorizedException, HttpCode } from '@nestjs/common';
 import { GroceryService } from './grocery.service';
 import { AuthService } from '../auth/auth.service';
 import { ScaledIngredientRequirement, GroceryBasket } from '@rasoi/shared-types';
@@ -10,54 +10,78 @@ export class GroceryController {
     private readonly authService: AuthService
   ) { }
 
-  private async resolveHouseholdId(authHeader?: string, requestedHouseholdId?: string): Promise<string> {
-    if (authHeader) {
-      const token = authHeader.replace(/^Bearer\s+/i, '');
-      const user: any = await this.authService.verifyToken(token);
-      if (user.role === 'RETAILER') {
-        throw new ForbiddenException('Access denied. Retailers cannot access household grocery baskets.');
-      }
-      if (user.role === 'CUSTOMER') {
-        if (requestedHouseholdId) {
-          if (requestedHouseholdId === user.householdId) {
-            return requestedHouseholdId;
-          }
-          if (this.authService.store.isPrismaConnected) {
-            const member = await this.authService.store.prisma.householdMember.findFirst({
-              where: { householdId: requestedHouseholdId, userId: user.id || user.sub }
-            });
-            if (member) return requestedHouseholdId;
-            const hh = await this.authService.store.prisma.household.findUnique({
-              where: { id: requestedHouseholdId }
-            });
-            if (hh && hh.userId === (user.id || user.sub)) return requestedHouseholdId;
-          }
-          if (user.id === 'user-demo-1' && requestedHouseholdId === 'hh-sharma-family') return requestedHouseholdId;
-          if (user.id === 'user-demo-patel' && requestedHouseholdId === 'hh-patel-family') return requestedHouseholdId;
-          if (user.id === 'user-demo-mehta' && requestedHouseholdId === 'hh-mehta-family') return requestedHouseholdId;
+  private async resolveHouseholdId(authHeader?: string, requestedHouseholdId?: string, req?: any): Promise<string> {
+    const hasAuthHeader = authHeader !== undefined && authHeader !== null;
+    const cookieToken = req?.cookies?.rasoi_access_token;
 
-          throw new ForbiddenException(`Access denied. You are not a member of household "${requestedHouseholdId}".`);
-        }
-        if (user.householdId) {
-          return user.householdId;
+    if (hasAuthHeader) {
+      const cleanHeader = authHeader.trim();
+      if (!cleanHeader.startsWith('Bearer ') && !cleanHeader.startsWith('bearer ')) {
+        throw new UnauthorizedException('Malformed authorization header. Expected Bearer scheme.');
+      }
+      const token = cleanHeader.replace(/^Bearer\s+/i, '').trim();
+      if (!token) {
+        throw new UnauthorizedException('Authentication token required.');
+      }
+      return this.verifyAndResolveUserHousehold(token, requestedHouseholdId);
+    }
+
+    if (cookieToken) {
+      const token = typeof cookieToken === 'string' ? cookieToken.trim() : '';
+      if (!token) {
+        throw new UnauthorizedException('Authentication token required.');
+      }
+      return this.verifyAndResolveUserHousehold(token, requestedHouseholdId);
+    }
+
+    // Neither authHeader nor cookieToken provided: reject unauthenticated access to household resources
+    throw new UnauthorizedException('Authentication required to access household resources.');
+  }
+
+  private async verifyAndResolveUserHousehold(token: string, requestedHouseholdId?: string): Promise<string> {
+    const user: any = await this.authService.verifyToken(token);
+    if (user.role === 'RETAILER') {
+      throw new ForbiddenException('Access denied. Retailers cannot access household grocery baskets.');
+    }
+    if (user.role === 'CUSTOMER') {
+      const userId = user.id || user.sub;
+      if (requestedHouseholdId) {
+        if (requestedHouseholdId === user.householdId) {
+          return requestedHouseholdId;
         }
         if (this.authService.store.isPrismaConnected) {
-          const userMem = await this.authService.store.prisma.householdMember.findFirst({
-            where: { userId: user.id || user.sub }
-          }) || await this.authService.store.prisma.household.findFirst({
-            where: { userId: user.id || user.sub }
+          const member = await this.authService.store.prisma.householdMember.findFirst({
+            where: { householdId: requestedHouseholdId, userId, status: 'ACTIVE' }
           });
-          if (userMem) {
-            return (userMem as any).householdId || userMem.id;
-          }
+          if (member) return requestedHouseholdId;
+          const hh = await this.authService.store.prisma.household.findUnique({
+            where: { id: requestedHouseholdId }
+          });
+          if (hh && hh.userId === userId) return requestedHouseholdId;
         }
-        return `hh-${user.id || user.sub}`;
+
+        throw new ForbiddenException(`Access denied. You are not an active member of household "${requestedHouseholdId}".`);
       }
-      if (['ADMIN', 'SUPER_ADMIN', 'OPERATIONS'].includes(user.role)) {
-        return requestedHouseholdId || user.householdId || 'hh-sharma-family';
+      if (user.householdId) {
+        return user.householdId;
       }
+      if (this.authService.store.isPrismaConnected) {
+        const userMem = await this.authService.store.prisma.householdMember.findFirst({
+          where: { userId, status: 'ACTIVE' }
+        }) || await this.authService.store.prisma.household.findFirst({
+          where: { userId }
+        });
+        if (userMem) {
+          return (userMem as any).householdId || userMem.id;
+        }
+      }
+      throw new ForbiddenException('No active household membership found for authenticated customer.');
     }
-    return requestedHouseholdId || 'hh-sharma-family';
+    if (['ADMIN', 'SUPER_ADMIN', 'OPERATIONS'].includes(user.role)) {
+      return requestedHouseholdId || user.householdId || 'hh-sharma-family';
+    }
+
+    throw new ForbiddenException(`Access denied for role "${user.role}".`);
   }
 
   // ---------------------------------------------------------------------------
@@ -115,9 +139,10 @@ export class GroceryController {
   @Post('cart/add')
   async addToCart(
     @Body() body: { productVariantId: string; quantity?: number; retailerId?: string; householdId?: string },
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ) {
-    const householdId = await this.resolveHouseholdId(authHeader, body.householdId);
+    const householdId = await this.resolveHouseholdId(authHeader, body.householdId, req);
     return this.groceryService.addToCart(householdId, {
       productVariantId: body.productVariantId,
       quantity: body.quantity,
@@ -128,36 +153,40 @@ export class GroceryController {
   @Post('cart/switch-retailer')
   async switchRetailer(
     @Body() body: { retailerId: string; householdId?: string },
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ) {
-    const householdId = await this.resolveHouseholdId(authHeader, body.householdId);
+    const householdId = await this.resolveHouseholdId(authHeader, body.householdId, req);
     return this.groceryService.switchRetailer(householdId, body.retailerId);
   }
 
   @Post('cart/update-item')
   async updateCartItem(
     @Body() body: { productVariantId: string; quantity: number; householdId?: string },
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ) {
-    const householdId = await this.resolveHouseholdId(authHeader, body.householdId);
+    const householdId = await this.resolveHouseholdId(authHeader, body.householdId, req);
     return this.groceryService.updateCartItem(householdId, body.productVariantId, body.quantity);
   }
 
   @Post('cart/remove-item')
   async removeCartItem(
     @Body() body: { productVariantId: string; householdId?: string },
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ) {
-    const householdId = await this.resolveHouseholdId(authHeader, body.householdId);
+    const householdId = await this.resolveHouseholdId(authHeader, body.householdId, req);
     return this.groceryService.updateCartItem(householdId, body.productVariantId, 0);
   }
 
   @Post('cart/clear')
   async clearCart(
     @Body() body: { householdId?: string },
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ) {
-    const householdId = await this.resolveHouseholdId(authHeader, body?.householdId);
+    const householdId = await this.resolveHouseholdId(authHeader, body?.householdId, req);
     return this.groceryService.clearCart(householdId);
   }
 
@@ -166,14 +195,15 @@ export class GroceryController {
   async reorderBasket(
     @Body() body: { orderId: string; targetRetailerId?: string; replaceCart?: boolean; householdId?: string; idempotencyKey?: string },
     @Headers('authorization') authHeader?: string,
-    @Headers('idempotency-key') idempotencyHeader?: string
+    @Headers('idempotency-key') idempotencyHeader?: string,
+    @Req() req?: any
   ) {
-    if (!authHeader) {
+    const rawToken = authHeader?.replace(/^Bearer\s+/i, '') || req?.cookies?.rasoi_access_token;
+    if (!rawToken) {
       throw new UnauthorizedException('Authentication required to reorder.');
     }
-    const token = authHeader.replace(/^Bearer\s+/i, '');
-    const user: any = await this.authService.verifyToken(token);
-    const householdId = await this.resolveHouseholdId(authHeader, body.householdId);
+    const user: any = await this.authService.verifyToken(rawToken);
+    const householdId = await this.resolveHouseholdId(authHeader, body.householdId, req);
 
     return this.groceryService.reorderBasket(
       householdId,
@@ -190,9 +220,10 @@ export class GroceryController {
   @Get('pantry-restock-suggestions')
   async getPantryRestockSuggestions(
     @Query('householdId') queryHouseholdId?: string,
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ) {
-    const householdId = await this.resolveHouseholdId(authHeader, queryHouseholdId);
+    const householdId = await this.resolveHouseholdId(authHeader, queryHouseholdId, req);
     return this.groceryService.getPantryRestockSuggestions(householdId);
   }
 
@@ -226,9 +257,10 @@ export class GroceryController {
   @Get('requirements')
   async getRequirements(
     @Query('householdId') queryHouseholdId?: string,
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ): Promise<ScaledIngredientRequirement[]> {
-    const householdId = await this.resolveHouseholdId(authHeader, queryHouseholdId);
+    const householdId = await this.resolveHouseholdId(authHeader, queryHouseholdId, req);
     return this.groceryService.getRequirements(householdId);
   }
 
@@ -236,36 +268,40 @@ export class GroceryController {
   async getBasket(
     @Query('retailerId') retailerId?: string,
     @Query('householdId') queryHouseholdId?: string,
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ): Promise<GroceryBasket> {
-    const householdId = await this.resolveHouseholdId(authHeader, queryHouseholdId);
+    const householdId = await this.resolveHouseholdId(authHeader, queryHouseholdId, req);
     return this.groceryService.getBasket(householdId, retailerId);
   }
 
   @Post('basket/toggle')
   async toggleBasketItem(
     @Body() body: { ingredientId: string; isSelected: boolean; householdId?: string },
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ): Promise<GroceryBasket> {
-    const householdId = await this.resolveHouseholdId(authHeader, body.householdId);
+    const householdId = await this.resolveHouseholdId(authHeader, body.householdId, req);
     return this.groceryService.toggleBasketItem(householdId, body.ingredientId, body.isSelected);
   }
 
   @Put('basket/swap-variant')
   async swapVariant(
     @Body() body: { ingredientId: string; variantId: string; householdId?: string },
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ): Promise<GroceryBasket> {
-    const householdId = await this.resolveHouseholdId(authHeader, body.householdId);
+    const householdId = await this.resolveHouseholdId(authHeader, body.householdId, req);
     return this.groceryService.swapProductVariant(householdId, body.ingredientId, body.variantId);
   }
 
   @Put('basket/update-packs')
   async updatePacks(
     @Body() body: { ingredientId: string; packs: number; householdId?: string },
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ): Promise<GroceryBasket> {
-    const householdId = await this.resolveHouseholdId(authHeader, body.householdId);
+    const householdId = await this.resolveHouseholdId(authHeader, body.householdId, req);
     return this.groceryService.updateItemPacks(householdId, body.ingredientId, body.packs);
   }
 }

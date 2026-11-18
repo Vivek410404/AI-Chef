@@ -1,4 +1,4 @@
-import { Module, Global } from '@nestjs/common';
+import { Module, Global, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { StoreService } from './data/store.service';
 import { AuthModule } from './auth/auth.module';
@@ -11,6 +11,7 @@ import { MarketplaceModule } from './marketplace/marketplace.module';
 import { AiModule } from './ai/ai.module';
 import { HealthModule } from './health/health.module';
 import { AdminModule } from './admin/admin.module';
+import { CsrfMiddleware } from './auth/security/csrf.middleware';
 
 @Global()
 @Module({
@@ -38,4 +39,10 @@ export class StoreModule { }
     AdminModule
   ]
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(CsrfMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}

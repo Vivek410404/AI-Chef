@@ -74,15 +74,17 @@ async function main() {
   );
 
   // 3. Retailer token
+  const dbRetailer = await prisma.user.findFirst({ where: { role: 'RETAILER' } });
   const tokenRetailer = jwt.sign(
-    { sub: 'usr-ret-blinkit-owner', id: 'usr-ret-blinkit-owner', role: 'RETAILER', retailerId: 'ret-blinkit', email: 'owner@blinkit-partner.in' },
+    { sub: dbRetailer.id, id: dbRetailer.id, role: 'RETAILER', retailerId: 'ret-blinkit', email: dbRetailer.email },
     JWT_SECRET,
     { expiresIn: '1h' }
   );
 
   // 4. Admin token
+  const dbAdmin = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
   const tokenAdmin = jwt.sign(
-    { sub: 'admin-super-id', id: 'admin-super-id', role: 'ADMIN', email: 'admin@rasoiiq.in' },
+    { sub: dbAdmin.id, id: dbAdmin.id, role: 'ADMIN', email: dbAdmin.email },
     JWT_SECRET,
     { expiresIn: '1h' }
   );
@@ -124,6 +126,7 @@ async function main() {
     orderHhA = await prisma.order.create({
       data: {
         userId: 'user-demo-1',
+        householdId: 'hh-sharma-family',
         retailerName: 'Blinkit',
         status: 'ORDER_CONFIRMED',
         totalAmountInr: 450,
@@ -272,6 +275,7 @@ async function main() {
   const testOrder = await prisma.order.create({
     data: {
       userId: 'user-demo-1',
+      householdId: 'hh-sharma-family',
       retailerName: 'Blinkit',
       status: 'ORDER_CONFIRMED',
       totalAmountInr: 399,
@@ -367,7 +371,7 @@ async function main() {
   const latestHistory = await prisma.orderStatusHistory.findFirst({
     where: { orderId: testOrder.id, toStatus: 'OUT_FOR_DELIVERY' }
   });
-  assert(res19.status === 200 && latestHistory?.changedBy === 'admin@rasoiiq.in', '19. Admin token + worker header preserves ADMIN identity in audit history (200 OK, changedBy: admin@rasoiiq.in)');
+  assert(res19.status === 200 && latestHistory?.changedBy === dbAdmin.email, `19. Admin token + worker header preserves ADMIN identity in audit history (200 OK, changedBy: ${dbAdmin.email})`);
 
   // Test 20: Expired JWT plus worker header -> 401 Unauthorized
   const res20 = await request(`/marketplace/orders/${testOrder.id}/status`, {
@@ -453,6 +457,7 @@ async function main() {
   const raceOrder = await prisma.order.create({
     data: {
       userId: 'user-demo-1',
+      householdId: 'hh-sharma-family',
       retailerName: 'Blinkit',
       status: 'ORDER_CONFIRMED',
       totalAmountInr: 299,

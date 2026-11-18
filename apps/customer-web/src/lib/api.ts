@@ -24,32 +24,61 @@ function getApiBaseUrl(): string {
   return process.env.INTERNAL_API_URL || 'http://localhost:4000/api';
 }
 
-let inMemoryAuthToken: string | null = null;
+function getCsrfTokenFromCookie(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)rasoi_csrf_token=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+let csrfPromise: Promise<string | null> | null = null;
+
+async function getOrFetchCsrfToken(): Promise<string | null> {
+  const existing = getCsrfTokenFromCookie();
+  if (existing) return existing;
+  if (typeof window === 'undefined') return null;
+
+  if (!csrfPromise) {
+    csrfPromise = (async () => {
+      try {
+        const baseUrl = getApiBaseUrl();
+        const res = await fetch(`${baseUrl}/auth/csrf`, { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          return data?.csrfToken || getCsrfTokenFromCookie();
+        }
+      } catch {}
+      return getCsrfTokenFromCookie();
+    })().finally(() => {
+      csrfPromise = null;
+    });
+  }
+  return await csrfPromise;
+}
+
 let isRefreshing = false;
-let refreshPromise: Promise<string | null> | null = null;
-
-export function setMemoryToken(token: string | null) {
-  inMemoryAuthToken = token;
-}
-
-export function getMemoryToken(): string | null {
-  return inMemoryAuthToken;
-}
+let refreshPromise: Promise<boolean> | null = null;
 
 async function fetchJson<T>(endpoint: string, options?: RequestInit, isRetry = false): Promise<T> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}${endpoint}`;
   try {
-    const authHeaders: Record<string, string> = inMemoryAuthToken
-      ? { Authorization: `Bearer ${inMemoryAuthToken}` }
-      : {};
+    const method = (options?.method || 'GET').toUpperCase();
+    const isStateChanging = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+    const csrfToken = isStateChanging ? await getOrFetchCsrfToken() : null;
+
+    const csrfHeaders: Record<string, string> = {
+      'X-Requested-With': 'XMLHttpRequest'
+    };
+    if (csrfToken) {
+      csrfHeaders['X-CSRF-Token'] = csrfToken;
+    }
 
     const res = await fetch(url, {
       ...options,
-      credentials: 'include',
+      credentials: 'include', // Ensure HttpOnly cookies are automatically and consistently sent
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
+        ...csrfHeaders,
         ...(options?.headers || {})
       }
     });
@@ -66,33 +95,31 @@ async function fetchJson<T>(endpoint: string, options?: RequestInit, isRetry = f
           isRefreshing = true;
           refreshPromise = (async () => {
             try {
+              const csrfForRefresh = await getOrFetchCsrfToken();
               const refreshRes = await fetch(`${baseUrl}/auth/refresh`, {
                 method: 'POST',
                 credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest',
+                  ...(csrfForRefresh ? { 'X-CSRF-Token': csrfForRefresh } : {})
+                },
                 body: JSON.stringify({})
               });
-              if (refreshRes.ok) {
-                const data = await refreshRes.json();
-                inMemoryAuthToken = data.accessToken || null;
-                return inMemoryAuthToken;
-              }
-              inMemoryAuthToken = null;
-              return null;
+              return refreshRes.ok;
             } catch {
-              inMemoryAuthToken = null;
-              return null;
+              return false;
             } finally {
               isRefreshing = false;
             }
           })();
         }
-        const newToken = await refreshPromise;
-        if (newToken) {
+        const refreshed = await refreshPromise;
+        if (refreshed) {
           return fetchJson<T>(endpoint, options, true);
         }
       } catch {
-        inMemoryAuthToken = null;
+        // Refresh failed; proceed to throw 401
       }
     }
 
@@ -130,14 +157,10 @@ export const api = {
   },
 
   async verifyEmail(token: string) {
-    const res = await fetchJson<{ success: boolean; message: string; token?: string; accessToken?: string; user?: any }>('/auth/verify-email', {
+    return fetchJson<{ success: boolean; message: string; user?: any }>('/auth/verify-email', {
       method: 'POST',
       body: JSON.stringify({ token })
     });
-    if (res?.accessToken || res?.token) {
-      inMemoryAuthToken = res.accessToken || res.token || null;
-    }
-    return res;
   },
 
   async resendVerification(email: string) {
@@ -207,25 +230,17 @@ export const api = {
   },
 
   async getDemoSession(role: 'CUSTOMER' | 'RETAILER' | 'ADMIN' = 'CUSTOMER', body?: any) {
-    const res = await fetchJson<{ token: string; user: any }>('/auth/demo-session', {
+    return fetchJson<{ user: any }>('/auth/demo-session', {
       method: 'POST',
       body: JSON.stringify({ role, ...(body || {}) })
     });
-    if (res?.token) {
-      inMemoryAuthToken = res.token;
-    }
-    return res;
   },
 
   async login(email: string, password?: string) {
-    const res = await fetchJson<{ token?: string; accessToken?: string; user: any; refreshToken?: string }>('/auth/login', {
+    return fetchJson<{ user: any }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password })
     });
-    if (res?.accessToken || res?.token) {
-      inMemoryAuthToken = res.accessToken || res.token || null;
-    }
-    return res;
   },
 
   async adminLogin(email: string, password: string) {
@@ -241,19 +256,10 @@ export const api = {
   },
 
   async adminVerifyOtp(mfaSessionId: string, otp: string) {
-    const res = await fetchJson<{
-      accessToken: string;
-      refreshToken: string;
-      expiresIn: number;
-      user: any;
-    }>('/auth/admin/verify-otp', {
+    return fetchJson<{ user: any }>('/auth/admin/verify-otp', {
       method: 'POST',
       body: JSON.stringify({ mfaSessionId, otp })
     });
-    if (res?.accessToken) {
-      inMemoryAuthToken = res.accessToken;
-    }
-    return res;
   },
 
   async adminResendOtp(mfaSessionId: string) {
@@ -268,13 +274,11 @@ export const api = {
       await fetchJson<{ success: boolean }>('/auth/logout', { method: 'POST' });
     } catch {
       // Ignore network failure on logout
-    } finally {
-      inMemoryAuthToken = null;
     }
   },
 
   getAuthToken(): string | null {
-    return inMemoryAuthToken;
+    return null;
   },
 
   // Households (Multi-Tenant & Invitations)

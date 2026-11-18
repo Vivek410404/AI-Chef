@@ -80,11 +80,6 @@ export class PasswordService {
       }
     }
 
-    // Exact match only for explicit dev demo hashes like "$2b$10$demo_hash_rasoi_iq_2026"
-    if (hash.includes('demo_hash_rasoi_iq')) {
-      return plain === 'RasoiDemo@2026' || plain === 'demo12345678' || plain === '';
-    }
-
     return false;
   }
 }

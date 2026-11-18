@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Patch, Body, Param, UseGuards, Headers, Req, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Body, Param, UseGuards, Headers, Req, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { MarketplaceService } from './marketplace.service';
 import { Retailer, ProductVariant } from '@rasoi/shared-types';
 import { RolesGuard } from '../auth/roles.guard';
@@ -27,51 +27,112 @@ export class MarketplaceController {
     return this.marketplaceService.getProductsByIngredient(ingredientId);
   }
 
+  private extractToken(authHeader?: string, req?: any): string | null {
+    if (authHeader !== undefined && authHeader !== null) {
+      const cleanHeader = authHeader.trim();
+      if (!cleanHeader.startsWith('Bearer ') && !cleanHeader.startsWith('bearer ')) {
+        throw new UnauthorizedException('Malformed authorization header. Expected Bearer scheme.');
+      }
+      const token = cleanHeader.replace(/^Bearer\s+/i, '').trim();
+      if (!token) {
+        throw new UnauthorizedException('Authentication token required.');
+      }
+      return token;
+    }
+    const cookieToken = req?.cookies?.rasoi_access_token;
+    if (cookieToken && typeof cookieToken === 'string' && cookieToken.trim()) {
+      return cookieToken.trim();
+    }
+    return null;
+  }
+
   @Post('checkout')
   async checkout(
     @Body() body: { retailerId: string; items: any[]; totalInr: number; deliveryAddress?: string; idempotencyKey?: string; householdId?: string },
     @Headers('idempotency-key') idempotencyHeader?: string,
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ) {
-    let currentUser: any;
-    if (authHeader) {
-      try {
-        const token = authHeader.replace(/^Bearer\s+/i, '');
-        currentUser = await this.authService.verifyToken(token);
-      } catch { }
+    const rawToken = this.extractToken(authHeader, req);
+    if (!rawToken) {
+      throw new UnauthorizedException('Authentication required for checkout.');
     }
+    const currentUser: any = await this.authService.verifyToken(rawToken);
+    if (currentUser.role === 'RETAILER') {
+      throw new ForbiddenException('Access denied. Retailers cannot place household grocery orders.');
+    }
+
+    const userId = currentUser.id || currentUser.sub;
+    let householdId = body.householdId || currentUser.householdId;
+
+    if (currentUser.role === 'CUSTOMER') {
+      if (this.authService.store.isPrismaConnected) {
+        if (!householdId) {
+          const userMem = await this.authService.store.prisma.householdMember.findFirst({
+            where: { userId, status: 'ACTIVE' }
+          }) || await this.authService.store.prisma.household.findFirst({
+            where: { userId }
+          });
+          householdId = (userMem as any)?.householdId || userMem?.id;
+        }
+
+        if (householdId) {
+          const member = await this.authService.store.prisma.householdMember.findFirst({
+            where: { householdId, userId, status: 'ACTIVE' }
+          });
+          if (member) {
+            if (member.role === 'COOK') {
+              throw new ForbiddenException('Household members with COOK role are not permitted to place grocery orders.');
+            }
+          } else {
+            const hh = await this.authService.store.prisma.household.findUnique({
+              where: { id: householdId }
+            });
+            if (!hh || hh.userId !== userId) {
+              throw new ForbiddenException(`Access denied. You are not an active member of household "${householdId}".`);
+            }
+          }
+        }
+      }
+    }
+
+    if (!householdId) {
+      if (['ADMIN', 'SUPER_ADMIN', 'OPERATIONS'].includes(currentUser.role)) {
+        householdId = 'hh-sharma-family';
+      } else {
+        throw new ForbiddenException('No active household membership found for checkout.');
+      }
+    }
+
     return this.marketplaceService.placeOrder({
       ...body,
       idempotencyKey: idempotencyHeader || body.idempotencyKey,
-      userId: currentUser?.id,
-      householdId: currentUser?.householdId || body.householdId || 'hh-sharma-family'
+      userId,
+      householdId
     });
   }
 
   @Get('orders')
-  async getOrders(@Headers('authorization') authHeader?: string) {
-    let currentUser: any;
-    if (authHeader) {
-      try {
-        const token = authHeader.replace(/^Bearer\s+/i, '');
-        currentUser = await this.authService.verifyToken(token);
-      } catch { }
+  async getOrders(@Headers('authorization') authHeader?: string, @Req() req?: any) {
+    const rawToken = this.extractToken(authHeader, req);
+    if (!rawToken) {
+      throw new UnauthorizedException('Authentication required to access orders.');
     }
+    const currentUser = await this.authService.verifyToken(rawToken);
     return this.marketplaceService.getOrders(currentUser);
   }
 
   @Get('orders/:id')
   async getOrderById(
     @Param('id') id: string,
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ) {
-    let currentUser: any;
-    if (authHeader) {
-      try {
-        const token = authHeader.replace(/^Bearer\s+/i, '');
-        currentUser = await this.authService.verifyToken(token);
-      } catch { }
+    const rawToken = this.extractToken(authHeader, req);
+    if (!rawToken) {
+      throw new UnauthorizedException('Authentication required to access order.');
     }
+    const currentUser = await this.authService.verifyToken(rawToken);
     return this.marketplaceService.getOrderById(id, currentUser);
   }
 
@@ -80,12 +141,13 @@ export class MarketplaceController {
     @Param('id') id: string,
     @Body() body: { status: string; statusReason?: string; substitutionNotes?: string; fulfillmentNotes?: string },
     @Headers('authorization') authHeader?: string,
-    @Headers('x-internal-worker-key') internalWorkerKey?: string
+    @Headers('x-internal-worker-key') internalWorkerKey?: string,
+    @Req() req?: any
   ) {
     let currentUser: any;
-    if (authHeader) {
-      const token = authHeader.replace(/^Bearer\s+/i, '');
-      currentUser = await this.authService.verifyToken(token);
+    const rawToken = this.extractToken(authHeader, req);
+    if (rawToken) {
+      currentUser = await this.authService.verifyToken(rawToken);
     }
 
     // Phase 6.2.5: Secure Server-Side System Worker Verification & Role Purity
@@ -139,15 +201,14 @@ export class MarketplaceController {
   async cancelOrder(
     @Param('id') id: string,
     @Body() body: { reason?: string; statusReason?: string },
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ) {
-    let currentUser: any;
-    if (authHeader) {
-      try {
-        const token = authHeader.replace(/^Bearer\s+/i, '');
-        currentUser = await this.authService.verifyToken(token);
-      } catch { }
+    const rawToken = this.extractToken(authHeader, req);
+    if (!rawToken) {
+      throw new UnauthorizedException('Authentication required to cancel order.');
     }
+    const currentUser = await this.authService.verifyToken(rawToken);
     const statusReason = body.reason || body.statusReason || 'Customer requested order cancellation.';
     return this.marketplaceService.updateOrderStatus(id, { status: 'CANCELLED', statusReason }, currentUser);
   }
@@ -155,15 +216,14 @@ export class MarketplaceController {
   @Get('orders/:id/history')
   async getOrderStatusHistory(
     @Param('id') id: string,
-    @Headers('authorization') authHeader?: string
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
   ) {
-    let currentUser: any;
-    if (authHeader) {
-      try {
-        const token = authHeader.replace(/^Bearer\s+/i, '');
-        currentUser = await this.authService.verifyToken(token);
-      } catch { }
+    const rawToken = this.extractToken(authHeader, req);
+    if (!rawToken) {
+      throw new UnauthorizedException('Authentication required to view order history.');
     }
+    const currentUser = await this.authService.verifyToken(rawToken);
     return this.marketplaceService.getOrderStatusHistory(id, currentUser);
   }
 

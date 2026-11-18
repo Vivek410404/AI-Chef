@@ -28,7 +28,8 @@ export class MarketplaceService {
   }
 
   async placeOrder(orderData: {
-    retailerId: string;
+    retailerId?: string;
+    retailerName?: string;
     items: any[];
     totalInr: number;
     deliveryAddress?: string;
@@ -51,11 +52,12 @@ export class MarketplaceService {
       }
     }
 
+    const rawRetailerId = orderData.retailerId || (orderData.retailerName ? `ret-${orderData.retailerName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : 'ret-blinkit');
     const retailer = this.store.retailers.find(
-      r => r.id === orderData.retailerId || r.slug === orderData.retailerId || r.id === orderData.retailerId.replace('retailer-', 'ret-')
+      r => r.id === rawRetailerId || r.slug === rawRetailerId || r.id === rawRetailerId.replace('retailer-', 'ret-') || (orderData.retailerName && r.name.toLowerCase() === orderData.retailerName.toLowerCase())
     );
     if (!retailer) {
-      throw new NotFoundException(`Retailer ${orderData.retailerId} not found`);
+      throw new NotFoundException(`Retailer ${orderData.retailerId || orderData.retailerName} not found`);
     }
 
     // 2. Duplicate Order Submission Prevention:
@@ -170,8 +172,23 @@ export class MarketplaceService {
 
   async getOrders(currentUser?: any) {
     if (currentUser && currentUser.role === 'CUSTOMER') {
-      const userHouseholdId = currentUser.householdId;
+      let userHouseholdId = currentUser.householdId;
+      if (!userHouseholdId && this.store.isPrismaConnected) {
+        const mem = await this.store.prisma.householdMember.findFirst({
+          where: { userId: currentUser.id || currentUser.sub, status: 'ACTIVE' }
+        });
+        if (mem) userHouseholdId = mem.householdId;
+      }
       if (!userHouseholdId) return [];
+
+      if (this.store.isPrismaConnected) {
+        const dbOrders = await this.store.prisma.order.findMany({
+          where: { householdId: userHouseholdId },
+          include: { items: true },
+          orderBy: { createdAt: 'desc' }
+        });
+        if (dbOrders.length > 0) return dbOrders;
+      }
       return this.orders.filter(
         o => o.householdId === userHouseholdId || (o.userId === currentUser.id && !o.householdId)
       );
@@ -184,14 +201,45 @@ export class MarketplaceService {
   }
 
   async getOrderById(orderId: string, currentUser?: any) {
-    const order = this.orders.find(o => o.id === orderId || o.orderNumber === orderId);
+    let order: any = this.orders.find(o => o.id === orderId || o.orderNumber === orderId);
+    if (!order && this.store.isPrismaConnected) {
+      const dbOrder = await this.store.prisma.order.findUnique({
+        where: { id: orderId },
+        include: { items: true }
+      });
+      if (dbOrder) {
+        order = {
+          ...dbOrder,
+          householdId: dbOrder.householdId
+        };
+      }
+    }
     if (!order) {
       throw new NotFoundException(`Order ${orderId} not found`);
     }
 
     if (currentUser && currentUser.role === 'CUSTOMER') {
-      const userHouseholdId = currentUser.householdId;
-      if (!userHouseholdId || (order.householdId && order.householdId !== userHouseholdId)) {
+      const userId = currentUser.id || currentUser.sub;
+      let authorized = false;
+      if (order.householdId && order.householdId === currentUser.householdId) {
+        authorized = true;
+      } else if (order.householdId && this.store.isPrismaConnected) {
+        const isMember = await this.store.prisma.householdMember.findFirst({
+          where: { householdId: order.householdId, userId, status: 'ACTIVE' }
+        });
+        if (isMember) {
+          authorized = true;
+        } else {
+          const isOwner = await this.store.prisma.household.findFirst({
+            where: { id: order.householdId, userId }
+          });
+          if (isOwner) authorized = true;
+        }
+      } else if (order.userId === userId) {
+        authorized = true;
+      }
+
+      if (!authorized) {
         throw new ForbiddenException(`Access denied. Customer is not authorized to access orders of household "${order.householdId}".`);
       }
     }

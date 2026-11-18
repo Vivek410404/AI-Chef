@@ -784,7 +784,19 @@ export class StoreService implements OnModuleInit {
   public async persistOrder(order: any) {
     if (!this.isPrismaConnected) return;
     try {
-      const userId = order.householdId === 'hh-patel-family' ? 'user-demo-patel' : order.householdId === 'hh-mehta-family' ? 'user-demo-mehta' : (order.userId || 'user-demo-1');
+      let userId = order.userId;
+      let householdId = order.householdId;
+      if (!householdId && userId) {
+        const mem = await this.prisma.householdMember.findFirst({ where: { userId } });
+        if (mem) householdId = mem.householdId;
+      }
+      if (!householdId) {
+        householdId = 'hh-sharma-family';
+      }
+      if (!userId) {
+        const hh = await this.prisma.household.findUnique({ where: { id: householdId } });
+        userId = hh?.userId || 'user-demo-1';
+      }
 
       const existing = await this.prisma.order.findUnique({ where: { id: order.id } });
       if (existing) {
@@ -796,6 +808,7 @@ export class StoreService implements OnModuleInit {
           data: {
             id: order.id,
             userId,
+            householdId,
             retailerName: order.retailerName || 'Blinkit',
             status: order.status || 'ORDER_CONFIRMED',
             totalAmountInr: order.totalAmountInr || 0,

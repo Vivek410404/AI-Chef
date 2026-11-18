@@ -176,6 +176,7 @@ model Household {
   mealPlans         MealPlan[]
   baskets           Basket[]
   invitations       HouseholdInvitation[]
+  orders            Order[]
 }
 
 model HouseholdMember {
@@ -459,24 +460,30 @@ model BasketItem {
 }
 
 model Order {
-  id              String      @id @default(cuid())
-  userId          String
-  user            User        @relation(fields: [userId], references: [id])
-  retailerName    String
-  status          String      @default("PLACED") // PLACED, PACKED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED
-  totalAmountInr  Float
-  deliveryFeeInr  Float
+  id                String               @id @default(cuid())
+  userId            String
+  user              User                 @relation(fields: [userId], references: [id])
+  householdId       String
+  household         Household            @relation(fields: [householdId], references: [id], onDelete: Restrict)
+  retailerName      String
+  status            String               @default("PLACED") // PLACED, PACKED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED
+  totalAmountInr    Float
+  deliveryFeeInr    Float
   deliveryAddress   String
-  isDemoOrder       Boolean     @default(true)
+  isDemoOrder       Boolean              @default(true)
   substitutionNotes String?
   fulfillmentNotes  String?
   statusReason      String?
   updatedBy         String?
-  createdAt         DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  items           OrderItem[]
-  statusHistory   OrderStatusHistory[]
-  payment         Payment?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  items             OrderItem[]
+  statusHistory     OrderStatusHistory[]
+  payment           Payment?
+
+  @@index([householdId])
+  @@index([userId])
+  @@index([householdId, createdAt])
 }
 
 model OrderItem {

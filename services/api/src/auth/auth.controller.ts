@@ -15,6 +15,7 @@ import {
   UseGuards
 } from '@nestjs/common';
 import { Response, Request } from 'express';
+import * as crypto from 'crypto';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -59,6 +60,14 @@ export class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
     }
+    // Issue / refresh CSRF token cookie on authentication
+    const csrfToken = crypto.randomBytes(32).toString('hex');
+    res.cookie('rasoi_csrf_token', csrfToken, {
+      httpOnly: false,
+      secure: isProd,
+      sameSite: 'lax',
+      path: '/'
+    });
   }
 
   private clearAuthCookies(res: Response) {
@@ -75,6 +84,28 @@ export class AuthController {
       sameSite: 'lax',
       path: '/'
     });
+    res.clearCookie('rasoi_csrf_token', {
+      httpOnly: false,
+      secure: isProd,
+      sameSite: 'lax',
+      path: '/'
+    });
+  }
+
+  @Get('csrf')
+  getCsrfToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    let csrfToken = (req as any).cookies?.rasoi_csrf_token;
+    if (!csrfToken) {
+      csrfToken = crypto.randomBytes(32).toString('hex');
+      const isProd = process.env.NODE_ENV === 'production';
+      res.cookie('rasoi_csrf_token', csrfToken, {
+        httpOnly: false,
+        secure: isProd,
+        sameSite: 'lax',
+        path: '/'
+      });
+    }
+    return { csrfToken };
   }
 
   @Post('register')

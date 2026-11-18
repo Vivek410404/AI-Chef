@@ -611,12 +611,52 @@ export class GroceryService {
   }
 
   async switchRetailer(householdId = 'hh-sharma-family', newRetailerId: string) {
-    const validRetailer = this.store.retailers.find(r => r.id === newRetailerId);
+    let validRetailer = this.store.retailers.find(r => r.id === newRetailerId);
+    if (!validRetailer && this.store.isPrismaConnected) {
+      const dbRet = await this.store.prisma.retailer.findUnique({ where: { id: newRetailerId } });
+      if (dbRet) {
+        validRetailer = dbRet as any;
+      }
+    }
     if (!validRetailer) {
       throw new Error(`Invalid retailer "${newRetailerId}".`);
     }
     this.selectedRetailers.set(householdId, newRetailerId);
     const basket = await this.getBasket(householdId, newRetailerId);
+
+    // Phase 6.2.7: Persist selected retailer and basket totals to PostgreSQL
+    if (this.store.isPrismaConnected) {
+      try {
+        const hhExists = await this.store.prisma.household.findUnique({ where: { id: householdId } });
+        if (hhExists) {
+          const existing = await this.store.prisma.basket.findFirst({ where: { householdId } });
+          if (existing) {
+            await this.store.prisma.basket.update({
+              where: { id: existing.id },
+              data: {
+                selectedRetailerId: newRetailerId,
+                subtotalInr: basket.subtotalInr,
+                deliveryFeeInr: basket.deliveryFeeInr,
+                totalInr: basket.totalInr
+              }
+            });
+          } else {
+            await this.store.prisma.basket.create({
+              data: {
+                householdId,
+                selectedRetailerId: newRetailerId,
+                subtotalInr: basket.subtotalInr,
+                deliveryFeeInr: basket.deliveryFeeInr,
+                totalInr: basket.totalInr
+              }
+            });
+          }
+        }
+      } catch (e: any) {
+        this.logger.warn(`Failed to persist basket to PostgreSQL: ${e.message}`);
+      }
+    }
+
     return { success: true, basket };
   }
 
@@ -658,6 +698,13 @@ export class GroceryService {
 
     if (retailerId) {
       this.selectedRetailers.set(householdId, retailerId);
+    } else if (!this.selectedRetailers.has(householdId) && this.store.isPrismaConnected) {
+      try {
+        const dbBasket = await this.store.prisma.basket.findFirst({ where: { householdId } });
+        if (dbBasket?.selectedRetailerId) {
+          this.selectedRetailers.set(householdId, dbBasket.selectedRetailerId);
+        }
+      } catch {}
     }
     const currentRetailerId = this.selectedRetailers.get(householdId) || this.store.retailers[0]?.id || 'ret-blinkit';
 
@@ -775,9 +822,14 @@ export class GroceryService {
       // Check if user is member in database
       if (this.store.isPrismaConnected) {
         const member = await this.store.prisma.householdMember.findFirst({
-          where: { householdId, userId }
+          where: { householdId, userId, status: 'ACTIVE' }
         });
-        if (member) return;
+        if (member) {
+          if (member.role === 'COOK') {
+            throw new ForbiddenException('Household members with COOK role are not permitted to trigger grocery reorders.');
+          }
+          return;
+        }
 
         const household = await this.store.prisma.household.findUnique({
           where: { id: householdId }
@@ -787,9 +839,6 @@ export class GroceryService {
 
       // Check in-memory store
       if (user.householdId === householdId) return;
-      if (userId === 'user-demo-1' && householdId === 'hh-sharma-family') return;
-      if (userId === 'user-demo-patel' && householdId === 'hh-patel-family') return;
-      if (userId === 'user-demo-mehta' && householdId === 'hh-mehta-family') return;
 
       throw new ForbiddenException(`Household access violation: You are not an active member of household "${householdId}".`);
     }
@@ -826,8 +875,7 @@ export class GroceryService {
       });
       if (dbOrder) {
         orderUserId = dbOrder.userId;
-        const primaryHh = dbOrder.user?.householdMembers?.[0]?.householdId;
-        orderHouseholdId = primaryHh || (dbOrder as any).householdId;
+        orderHouseholdId = dbOrder.householdId || dbOrder.user?.householdMembers?.[0]?.householdId;
         order = {
           ...dbOrder,
           householdId: orderHouseholdId,

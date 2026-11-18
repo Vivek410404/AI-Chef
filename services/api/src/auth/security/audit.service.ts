@@ -76,7 +76,12 @@ function sanitizeMetadata(obj: any, depth = 0): any {
       lower.includes('apikey') ||
       lower.includes('api_key') ||
       lower.includes('hash') ||
-      lower.includes('privatekey')
+      lower.includes('privatekey') ||
+      lower.includes('private_key') ||
+      lower.includes('access_token') ||
+      lower.includes('refresh_token') ||
+      lower.includes('passwordhash') ||
+      lower.includes('password_hash')
     ) {
       sanitized[key] = '[REDACTED]';
     } else if (value && typeof value === 'object') {

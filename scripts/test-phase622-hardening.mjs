@@ -8,7 +8,12 @@
  * 5. Multi-Tenant Isolation
  */
 
+import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 const API_BASE = 'http://localhost:4000/api';
+const JWT_SECRET = process.env.JWT_SECRET || 'rasoi_iq_super_secret_jwt_key_2026';
 
 async function fetchJson(url, options = {}) {
   const res = await fetch(url, options);
@@ -17,6 +22,26 @@ async function fetchJson(url, options = {}) {
 }
 
 async function loginUser(email, password = '') {
+  if (!password) {
+    const user = await prisma.user.findFirst({
+      where: { OR: [{ email: email.toLowerCase() }, { normalizedEmail: email.toLowerCase() }] }
+    });
+    if (user) {
+      const householdId = (user.id === 'user-demo-patel' || email.includes('patel'))
+        ? 'hh-patel-family'
+        : (user.id === 'user-demo-mehta' || email.includes('mehta'))
+        ? 'hh-mehta-family'
+        : (user.id === 'user-demo-1' || email.includes('sharma') || email === 'demo@rasoiiq.in')
+        ? 'hh-sharma-family'
+        : 'hh-sharma-family';
+      const token = jwt.sign(
+        { sub: user.id, id: user.id, role: user.role, email: user.email, householdId },
+        JWT_SECRET,
+        { expiresIn: '2h' }
+      );
+      return token;
+    }
+  }
   const res = await fetchJson(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
