@@ -28,6 +28,7 @@ import {
   SprayCan,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   ExternalLink,
   AlertCircle
 } from 'lucide-react';
@@ -110,6 +111,10 @@ export function ShopHomeView({
   // Local cart map for instant UI quantity feedback: variantId -> quantity
   const [cartQuantities, setCartQuantities] = useState<Record<string, number>>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Corner Filter & Categories Dropdown state
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -244,6 +249,17 @@ export function ShopHomeView({
     };
     document.addEventListener('mousedown', handleDocClick);
     return () => document.removeEventListener('mousedown', handleDocClick);
+  }, []);
+
+  // Close corner filter dropdown when clicking outside
+  useEffect(() => {
+    const handleFilterDocClick = (e: MouseEvent) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {
+        setIsFilterDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleFilterDocClick);
+    return () => document.removeEventListener('mousedown', handleFilterDocClick);
   }, []);
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
@@ -388,6 +404,10 @@ export function ShopHomeView({
       console.error('Failed to load product detail:', err);
     }
   };
+
+  const activeCategoryObj = categories.find(c => c.slug === selectedCategory || c.name === selectedCategory);
+  const activeCategoryName = activeCategoryObj?.name || (selectedCategory === 'all' ? 'All Groceries & Staples' : selectedCategory);
+  const activeFilterCount = (selectedCategory !== 'all' ? 1 : 0) + (selectedBrand !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -617,63 +637,15 @@ export function ShopHomeView({
           </div>
         )}
 
-        {/* 3. 14 Categories Navigation Carousel / Grid */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold text-forest-900">Explore by Category</h2>
-              <p className="text-xs text-stone-500 font-medium">Browse fresh produce, pantry essentials and household care</p>
-            </div>
-            {selectedCategory !== 'all' && (
-              <button
-                onClick={() => setSelectedCategory('all')}
-                className="text-xs font-bold text-forest-700 hover:text-forest-900 flex items-center gap-1"
-              >
-                <span>View All Products</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
-            {categories.map(cat => {
-              const isSelected = selectedCategory === cat.slug || selectedCategory === cat.name;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCategory(isSelected ? 'all' : cat.slug);
-                    setPagination(p => ({ ...p, page: 1 }));
-                  }}
-                  className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center min-h-[96px] ${isSelected
-                    ? 'border-forest-600 bg-forest-100/70 ring-2 ring-forest-500/20 shadow-soft'
-                    : 'border-cream-300 bg-surface hover:border-forest-300 hover:bg-cream-50'
-                    }`}
-                >
-                  <div className="w-10 h-10 rounded-xl bg-white border border-cream-200 flex items-center justify-center mb-1.5 shadow-soft">
-                    {CATEGORY_ICONS[cat.slug] || <Store className="w-5 h-5 text-forest-600" />}
-                  </div>
-                  <span className="text-xs font-bold text-forest-900 leading-tight block truncate w-full">
-                    {cat.name}
-                  </span>
-                  <span className="text-[10px] text-stone-500 font-medium mt-0.5">
-                    {cat.productCount} items
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 4. Meal Planner Bridge Card */}
+        {/* 3. Meal Planner Bridge Card */}
         {onNavigateToPlanner && (
-          <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-cream-100 via-surface to-emerald-50/50 border border-cream-300 shadow-soft flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-forest-900 text-white flex items-center justify-center shrink-0 shadow-soft">
-                <Calendar className="w-6 h-6 text-saffron-400" />
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-cream-100 via-surface to-emerald-50/50 border border-cream-300 shadow-soft flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-forest-900 text-white flex items-center justify-center shrink-0 shadow-soft">
+                <Calendar className="w-5 h-5 text-saffron-400" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-forest-900">
+                <h3 className="text-xs sm:text-sm font-bold text-forest-900">
                   Planning meals for the week?
                 </h3>
                 <p className="text-xs text-stone-600 mt-0.5">
@@ -683,7 +655,7 @@ export function ShopHomeView({
             </div>
             <button
               onClick={onNavigateToPlanner}
-              className="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-forest-900 text-white text-xs font-bold hover:bg-forest-800 shadow-soft transition-all flex items-center gap-2"
+              className="self-start sm:self-auto px-4 py-2 rounded-xl bg-forest-900 text-white text-xs font-bold hover:bg-forest-800 shadow-soft transition-all flex items-center gap-2"
             >
               <span>Open Weekly Meal Planner</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -691,61 +663,298 @@ export function ShopHomeView({
           </div>
         )}
 
-        {/* 5. Filters & Controls Strip */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-cream-300">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-bold text-stone-600 flex items-center gap-1.5">
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Filters:</span>
-            </span>
-
-            {/* Brand Filter */}
-            {availableBrands.length > 0 && (
-              <select
-                value={selectedBrand}
-                onChange={e => {
-                  setSelectedBrand(e.target.value);
-                  setPagination(p => ({ ...p, page: 1 }));
-                }}
-                className="px-3 py-1.5 rounded-xl bg-white border border-cream-300 text-xs font-semibold text-stone-800 focus:outline-none focus:border-forest-500"
-              >
-                <option value="all">All Brands</option>
-                {availableBrands.map(b => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
-            )}
-
-            {/* Active search filter chip */}
-            {searchQuery && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest-100 text-forest-900 text-xs font-bold">
-                <span>Query: &ldquo;{searchQuery}&rdquo;</span>
-                <button onClick={handleClearSearch}><X className="w-3 h-3" /></button>
+        {/* 4. Catalog Controls & Corner Filters Dropdown */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-cream-300">
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h2 className="text-xl sm:text-2xl font-black text-forest-900 tracking-tight flex items-center gap-2">
+                {selectedCategory !== 'all' && (
+                  <span className="p-1 rounded-lg bg-forest-100 text-forest-800 shrink-0">
+                    {CATEGORY_ICONS[selectedCategory] || <Store className="w-5 h-5 text-forest-600" />}
+                  </span>
+                )}
+                <span>
+                  {selectedCategory === 'all'
+                    ? (searchQuery ? `Results for "${searchQuery}"` : 'All Groceries & Staples')
+                    : activeCategoryName}
+                </span>
+              </h2>
+              <span className="text-xs font-bold text-forest-800 bg-forest-50 px-2.5 py-1 rounded-full border border-forest-200">
+                {pagination.total} {pagination.total === 1 ? 'item' : 'items'}
               </span>
-            )}
+            </div>
+            <p className="text-xs text-stone-500 font-medium mt-1">
+              Delivered fresh via <strong className="text-forest-900 font-semibold">{retailers.find(r => r.id === activeRetailerId)?.name || 'Blinkit'}</strong>
+            </p>
 
-            {/* Active category filter chip */}
-            {selectedCategory !== 'all' && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cream-200 text-stone-800 text-xs font-bold">
-                <span>Category: {selectedCategory}</span>
-                <button onClick={() => setSelectedCategory('all')}><X className="w-3 h-3" /></button>
-              </span>
+            {/* Active filter chips */}
+            {(selectedCategory !== 'all' || selectedBrand !== 'all' || searchQuery) && (
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                {selectedCategory !== 'all' && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-forest-100 text-forest-900 text-xs font-bold border border-forest-200">
+                    <span>Category: {activeCategoryName}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategory('all');
+                        setPagination(p => ({ ...p, page: 1 }));
+                      }}
+                      className="hover:text-forest-700"
+                      aria-label="Remove category filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {selectedBrand !== 'all' && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cream-200 text-stone-800 text-xs font-bold border border-cream-300">
+                    <span>Brand: {selectedBrand}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedBrand('all');
+                        setPagination(p => ({ ...p, page: 1 }));
+                      }}
+                      className="hover:text-stone-900"
+                      aria-label="Remove brand filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {searchQuery && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200">
+                    <span>Query: &ldquo;{searchQuery}&rdquo;</span>
+                    <button type="button" onClick={handleClearSearch} className="hover:text-amber-700" aria-label="Clear search">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleClearAllFilters}
+                  className="text-xs font-bold text-terracotta-600 hover:text-terracotta-800 underline ml-1 cursor-pointer"
+                >
+                  Clear all
+                </button>
+              </div>
             )}
           </div>
 
-          {/* Sort Selector */}
-          <div className="flex items-center gap-2 self-end sm:self-auto">
-            <span className="text-xs text-stone-500 font-medium">Sort by:</span>
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              className="px-3 py-1.5 rounded-xl bg-white border border-cream-300 text-xs font-semibold text-stone-800 focus:outline-none focus:border-forest-500"
-            >
-              <option value="popularity">Popularity</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="name-asc">Product Name (A-Z)</option>
-            </select>
+          {/* Right Corner: The Filters & Categories Dropdown */}
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 relative" ref={filterDropdownRef}>
+            {/* Desktop Direct Category Select */}
+            <div className="hidden lg:block">
+              <select
+                value={selectedCategory}
+                onChange={e => {
+                  setSelectedCategory(e.target.value);
+                  setPagination(p => ({ ...p, page: 1 }));
+                }}
+                className="px-3 py-2 rounded-xl bg-white border border-cream-300 text-xs font-semibold text-stone-800 focus:outline-none focus:border-forest-500 shadow-soft cursor-pointer hover:border-cream-400 transition-colors"
+                aria-label="Filter by Category"
+              >
+                <option value="all">All Categories ({pagination.total})</option>
+                {categories.map(cat => (
+                  <option key={cat.id || cat.slug} value={cat.slug}>
+                    {cat.name} ({cat.productCount})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Desktop Direct Sort Select */}
+            <div className="hidden sm:block">
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value)}
+                className="px-3 py-2 rounded-xl bg-white border border-cream-300 text-xs font-semibold text-stone-800 focus:outline-none focus:border-forest-500 shadow-soft cursor-pointer hover:border-cream-400 transition-colors"
+                aria-label="Sort products by"
+              >
+                <option value="popularity">Sort: Popularity</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="name-asc">Name: A to Z</option>
+              </select>
+            </div>
+
+            {/* Corner Dropdown Button */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsFilterDropdownOpen(prev => !prev)}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-bold transition-all shadow-soft cursor-pointer ${
+                  isFilterDropdownOpen || activeFilterCount > 0
+                    ? 'bg-forest-900 text-white border-forest-900 shadow-md ring-2 ring-forest-500/20'
+                    : 'bg-white text-forest-950 border-cream-300 hover:border-forest-500 hover:bg-cream-50'
+                }`}
+                aria-label="Toggle filters and categories dropdown"
+                aria-expanded={isFilterDropdownOpen}
+              >
+                <SlidersHorizontal className={`w-4 h-4 ${isFilterDropdownOpen || activeFilterCount > 0 ? 'text-saffron-400' : 'text-forest-700'}`} />
+                <span>Filters</span>
+                {activeFilterCount > 0 && (
+                  <span className="w-5 h-5 rounded-full bg-saffron-500 text-forest-950 text-[10px] font-black flex items-center justify-center">
+                    {activeFilterCount}
+                  </span>
+                )}
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Corner Dropdown Floating Menu */}
+              {isFilterDropdownOpen && (
+                <div
+                  role="region"
+                  aria-label="Filter options menu"
+                  className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] bg-surface rounded-2xl shadow-elevated border border-cream-300 p-4 z-40 animate-fade-in divide-y divide-cream-200"
+                >
+                  {/* Dropdown Header */}
+                  <div className="flex items-center justify-between pb-3">
+                    <div className="flex items-center gap-2">
+                      <SlidersHorizontal className="w-4 h-4 text-forest-700" />
+                      <span className="text-sm font-extrabold text-forest-950">Filters &amp; Categories</span>
+                    </div>
+                    {activeFilterCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleClearAllFilters}
+                        className="text-xs font-bold text-terracotta-600 hover:text-terracotta-800 transition-colors"
+                      >
+                        Reset All
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Category Selection ("those groceries, beverages, dairy, snacks...") */}
+                  <div className="py-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
+                        Category ({categories.length + 1})
+                      </span>
+                      {selectedCategory !== 'all' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCategory('all');
+                            setPagination(p => ({ ...p, page: 1 }));
+                          }}
+                          className="text-[11px] font-semibold text-forest-700 hover:underline"
+                        >
+                          All Categories
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-52 overflow-y-auto pr-1 space-y-1">
+                      {/* All Categories Option */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCategory('all');
+                          setPagination(p => ({ ...p, page: 1 }));
+                        }}
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${
+                          selectedCategory === 'all'
+                            ? 'bg-forest-100 text-forest-900 font-bold border border-forest-300'
+                            : 'text-stone-700 hover:bg-cream-100 font-medium'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Store className="w-4 h-4 text-forest-600" />
+                          <span>All Groceries &amp; Staples</span>
+                        </div>
+                        {selectedCategory === 'all' && <Check className="w-3.5 h-3.5 text-forest-700" />}
+                      </button>
+
+                      {/* Individual Categories: Fruits, Vegetables, Dairy, Beverages, etc. */}
+                      {categories.map(cat => {
+                        const isSelected = selectedCategory === cat.slug || selectedCategory === cat.name;
+                        return (
+                          <button
+                            key={cat.id || cat.slug}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCategory(isSelected ? 'all' : cat.slug);
+                              setPagination(p => ({ ...p, page: 1 }));
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${
+                              isSelected
+                                ? 'bg-forest-100 text-forest-900 font-bold border border-forest-300'
+                                : 'text-stone-700 hover:bg-cream-100 font-medium'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 truncate pr-2">
+                              <span className="shrink-0">
+                                {CATEGORY_ICONS[cat.slug] || <Store className="w-4 h-4 text-forest-600" />}
+                              </span>
+                              <span className="truncate">{cat.name}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-[10px] text-stone-400 font-medium">
+                                {cat.productCount}
+                              </span>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-forest-700" />}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Brand Filter */}
+                  {availableBrands.length > 0 && (
+                    <div className="py-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block mb-2">
+                        Brand
+                      </span>
+                      <select
+                        value={selectedBrand}
+                        onChange={e => {
+                          setSelectedBrand(e.target.value);
+                          setPagination(p => ({ ...p, page: 1 }));
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-cream-300 text-xs font-semibold text-stone-800 focus:outline-none focus:border-forest-500"
+                      >
+                        <option value="all">All Brands ({availableBrands.length})</option>
+                        {availableBrands.map(b => (
+                          <option key={b} value={b}>{b}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Sort By Filter */}
+                  <div className="py-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block mb-2">
+                      Sort by
+                    </span>
+                    <select
+                      value={sortBy}
+                      onChange={e => setSortBy(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-cream-300 text-xs font-semibold text-stone-800 focus:outline-none focus:border-forest-500"
+                    >
+                      <option value="popularity">Popularity (Default)</option>
+                      <option value="price-asc">Price: Low to High</option>
+                      <option value="price-desc">Price: High to Low</option>
+                      <option value="name-asc">Product Name: A to Z</option>
+                    </select>
+                  </div>
+
+                  {/* Dropdown Footer */}
+                  <div className="pt-3 flex items-center justify-between">
+                    <span className="text-xs text-stone-500 font-medium">
+                      {pagination.total} items
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsFilterDropdownOpen(false)}
+                      className="px-4 py-1.5 rounded-xl bg-forest-900 hover:bg-forest-800 text-white font-bold text-xs shadow-soft transition-colors"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
