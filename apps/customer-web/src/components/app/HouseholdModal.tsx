@@ -58,6 +58,39 @@ const HOUSEHOLD_CUISINE_OPTIONS = [
 ];
 
 export function HouseholdModal({ isOpen, onClose, household, onSave }: HouseholdModalProps) {
+  const [householdName, setHouseholdName] = useState(household?.name || 'Sharma Family');
+  const [dietaryPreference, setDietaryPreference] = useState<DietaryPreference>(household?.dietaryPreference || 'VEGETARIAN');
+  const [cuisinePreference, setCuisinePreference] = useState<string>(household?.cuisinePreference || 'ALL_INDIAN');
+  const [budget, setBudget] = useState(household?.weeklyBudgetInr || 3500);
+  const [spice, setSpice] = useState(household?.spiceTolerance || 'Medium');
+  const [proteinGoal, setProteinGoal] = useState(household?.nutritionGoals?.dailyProteinGrams || 65);
+  const [calorieGoal, setCalorieGoal] = useState(household?.nutritionGoals?.dailyCalories || 2000);
+  const [members, setMembers] = useState<HouseholdMember[]>(household?.members || []);
+
+  // New Member Form State
+  const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberDiet, setNewMemberDiet] = useState<'vegetarian' | 'non-vegetarian' | 'jain' | 'vegan' | 'eggetarian'>('vegetarian');
+  const [newMemberProtein, setNewMemberProtein] = useState<number>(60);
+  const [newMemberAllergies, setNewMemberAllergies] = useState<string[]>([]);
+  const [newMemberDislikes, setNewMemberDislikes] = useState<string[]>([]);
+
+  // Expanded member card ID for details
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+
+  // Synchronize state when modal opens or household prop updates
+  useEffect(() => {
+    if (household) {
+      setHouseholdName(household.name || 'Sharma Family');
+      setDietaryPreference(household.dietaryPreference || 'VEGETARIAN');
+      setCuisinePreference(household.cuisinePreference || 'ALL_INDIAN');
+      setBudget(household.weeklyBudgetInr || 3500);
+      setSpice(household.spiceTolerance || 'Medium');
+      setProteinGoal(household.nutritionGoals?.dailyProteinGrams || 65);
+      setCalorieGoal(household.nutritionGoals?.dailyCalories || 2000);
+      setMembers(household.members || []);
+    }
+  }, [household, isOpen]);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -73,25 +106,6 @@ export function HouseholdModal({ isOpen, onClose, household, onSave }: Household
   }, [isOpen, onClose]);
 
   if (!isOpen || !household) return null;
-
-  const [householdName, setHouseholdName] = useState(household.name || 'Sharma Family');
-  const [dietaryPreference, setDietaryPreference] = useState<DietaryPreference>(household.dietaryPreference || 'VEGETARIAN');
-  const [cuisinePreference, setCuisinePreference] = useState<string>(household.cuisinePreference || 'ALL_INDIAN');
-  const [budget, setBudget] = useState(household.weeklyBudgetInr || 3500);
-  const [spice, setSpice] = useState(household.spiceTolerance || 'Medium');
-  const [proteinGoal, setProteinGoal] = useState(household.nutritionGoals?.dailyProteinGrams || 65);
-  const [calorieGoal, setCalorieGoal] = useState(household.nutritionGoals?.dailyCalories || 2000);
-  const [members, setMembers] = useState<HouseholdMember[]>(household.members || []);
-
-  // New Member Form State
-  const [newMemberName, setNewMemberName] = useState('');
-  const [newMemberDiet, setNewMemberDiet] = useState<'vegetarian' | 'non-vegetarian' | 'jain' | 'vegan' | 'eggetarian'>('vegetarian');
-  const [newMemberProtein, setNewMemberProtein] = useState<number>(60);
-  const [newMemberAllergies, setNewMemberAllergies] = useState<string[]>([]);
-  const [newMemberDislikes, setNewMemberDislikes] = useState<string[]>([]);
-
-  // Expanded member card ID for details
-  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
 
   const handleAddMember = () => {
     if (!newMemberName.trim()) return;
