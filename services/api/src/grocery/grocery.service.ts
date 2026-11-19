@@ -679,7 +679,61 @@ export class GroceryService {
   }
 
   async clearCart(householdId = 'hh-sharma-family') {
-    this.activeBasketItems.set(householdId, []);
+    let existing = this.activeBasketItems.get(householdId);
+    if (!existing || existing.length === 0) {
+      const current = await this.getBasket(householdId);
+      existing = current.items || [];
+    }
+    // 1. Mark all existing basket items as deselected with 0 quantity
+    const items = existing.map(i => ({
+      ...i,
+      isSelectedForPurchase: false,
+      quantityPacks: 0,
+      totalPriceInr: 0
+    }));
+    this.activeBasketItems.set(householdId, items);
+
+    // 2. Clear persisted basket items in database
+    if (this.store.isPrismaConnected) {
+      try {
+        const dbBasket = await this.store.prisma.basket.findFirst({ where: { householdId } });
+        if (dbBasket) {
+          await this.store.prisma.basketItem.deleteMany({ where: { basketId: dbBasket.id } });
+          await this.store.prisma.basket.update({
+            where: { id: dbBasket.id },
+            data: { subtotalInr: 0, deliveryFeeInr: 0, totalInr: 0 }
+          });
+        }
+      } catch {}
+    }
+
+    const currentRetailerId = this.selectedRetailers.get(householdId) || this.store.retailers[0]?.id || 'ret-blinkit';
+    const retailers = this.store.retailers;
+
+    return {
+      id: `basket-${householdId}`,
+      householdId,
+      selectedRetailerId: currentRetailerId,
+      items,
+      subtotalInr: 0,
+      deliveryFeeInr: 0,
+      totalInr: 0,
+      mrpTotalInr: 0,
+      discountInr: 0,
+      comparisons: retailers.map(r => ({
+        retailer: r,
+        subtotalInr: 0,
+        deliveryFeeInr: 0,
+        estimatedTotalInr: 0,
+        missingItemsCount: 0,
+        isCheapest: false,
+        isFastest: false
+      }))
+    };
+  }
+
+  async resetBasketForPlan(householdId = 'hh-sharma-family') {
+    this.activeBasketItems.delete(householdId);
     return this.getBasket(householdId);
   }
 

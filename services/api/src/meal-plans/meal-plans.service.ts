@@ -96,7 +96,56 @@ export class MealPlansService {
       : this.getDefaultSuggestedMeals(householdId);
 
     for (const suggested of mealsToProcess) {
-      const rec = this.store.recipes.find(r => r.id === suggested.recipeId);
+      let rec = this.store.recipes.find(r => r.id === suggested.recipeId || r.slug === suggested.recipeId);
+      if (!rec && this.store.isPrismaConnected) {
+        try {
+          const dbRec = await this.store.prisma.recipe.findFirst({
+            where: { OR: [{ id: suggested.recipeId }, { slug: suggested.recipeId }] },
+            include: { ingredients: { include: { ingredient: true } }, steps: true }
+          });
+          if (dbRec) {
+            rec = {
+              id: dbRec.id,
+              title: dbRec.title,
+              slug: dbRec.slug,
+              description: dbRec.description || '',
+              cuisine: dbRec.cuisine as any,
+              dietaryTags: (dbRec.dietaryTags as any) || [],
+              mealTypes: (dbRec.mealTypes as any) || [],
+              prepTimeMinutes: dbRec.prepTimeMinutes,
+              cookTimeMinutes: dbRec.cookTimeMinutes,
+              defaultServings: dbRec.defaultServings,
+              difficulty: dbRec.difficulty as any,
+              caloriesPerServing: dbRec.caloriesPerServing,
+              proteinGrams: dbRec.proteinGrams,
+              carbsGrams: dbRec.carbsGrams,
+              fatGrams: dbRec.fatGrams,
+              fiberGrams: dbRec.fiberGrams,
+              imageUrl: dbRec.imageUrl || '',
+              estimatedCostInr: dbRec.estimatedCostInr,
+              isJainFriendly: dbRec.isJainFriendly,
+              jainAlternativeNotes: dbRec.jainAlternativeNotes || undefined,
+              ingredients: (dbRec.ingredients || []).map((di: any, idx: number) => ({
+                id: di.id || `rec-ing-${dbRec.id}-${idx}`,
+                recipeId: dbRec.id,
+                ingredientId: di.ingredientId,
+                ingredient: di.ingredient || { id: di.ingredientId, name: di.ingredientId, category: 'Pantry Staples', standardUnit: di.unit, isJainPermissible: true },
+                quantity: di.quantity,
+                unit: di.unit as any,
+                notes: di.notes || undefined
+              })),
+              instructions: (dbRec.steps || []).map((s: any) => ({
+                stepNumber: s.stepNumber,
+                instruction: s.instruction,
+                timerSeconds: s.timerSeconds || undefined,
+                ingredientNotes: s.ingredientNotes || undefined
+              })),
+              rating: 4.8,
+              ratingCount: 100
+            };
+          }
+        } catch {}
+      }
       if (!rec) continue;
 
       const item: MealPlanItem = {

@@ -406,10 +406,10 @@ export const api = {
     });
   },
 
-  async applyAiPlan(meals: AISuggestedMeal[]): Promise<MealPlanItem[]> {
+  async applyAiPlan(meals: AISuggestedMeal[], householdId?: string): Promise<MealPlanItem[]> {
     return fetchJson<MealPlanItem[]>('/meal-plans/apply-ai-plan', {
       method: 'POST',
-      body: JSON.stringify({ meals })
+      body: JSON.stringify({ meals, householdId })
     });
   },
 
@@ -498,10 +498,17 @@ export const api = {
     });
   },
 
-  async clearCart(): Promise<any> {
+  async clearCart(householdId?: string): Promise<any> {
     return fetchJson<any>('/grocery/cart/clear', {
       method: 'POST',
-      body: JSON.stringify({})
+      body: JSON.stringify({ householdId })
+    });
+  },
+
+  async resetBasketForPlan(householdId?: string): Promise<GroceryBasket> {
+    return fetchJson<GroceryBasket>('/grocery/basket/reset-for-plan', {
+      method: 'POST',
+      body: JSON.stringify({ householdId })
     });
   },
 

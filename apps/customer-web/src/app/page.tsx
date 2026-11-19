@@ -437,11 +437,12 @@ export default function HomePage() {
 
   const handleApplyAiPlan = async (aiResponse: AIPlanGenerationResponse) => {
     try {
-      await api.applyAiPlan(aiResponse.meals);
+      await api.applyAiPlan(aiResponse.meals, household?.id);
       const updated = await api.getCurrentPlan();
       setMealPlanItems(updated);
+      await api.resetBasketForPlan(household?.id);
       await refreshBasket();
-      changeTab('planner');
+      changeTab('basket');
     } catch {
       const newItems: MealPlanItem[] = aiResponse.meals.map(m => {
         const r = recipes.find(rec => rec.id === m.recipeId) || recipes[0];
@@ -459,7 +460,27 @@ export default function HomePage() {
       setMealPlanItems(newItems);
       const reqs = calculateMealPlanRequirements(newItems, pantryItems);
       setRequirements(reqs);
-      changeTab('planner');
+
+      const variants = SEED_PRODUCT_VARIANTS.map(v => ({ ...v, productId: `prod-${v.brand}` }));
+      const bResult = buildGroceryBasket(
+        reqs,
+        variants,
+        SEED_RETAILERS,
+        basket?.selectedRetailerId || 'ret-blinkit'
+      );
+      setBasket({
+        id: 'basket-current',
+        householdId: household?.id || 'hh-sharma-family',
+        selectedRetailerId: basket?.selectedRetailerId || 'ret-blinkit',
+        items: bResult.items,
+        subtotalInr: bResult.subtotalInr,
+        deliveryFeeInr: bResult.deliveryFeeInr,
+        totalInr: bResult.totalInr,
+        mrpTotalInr: bResult.mrpTotalInr,
+        discountInr: bResult.discountInr,
+        comparisons: bResult.comparisons
+      });
+      changeTab('basket');
     }
   };
 
@@ -612,6 +633,35 @@ export default function HomePage() {
 
   const handleRemoveBasketItem = async (ingredientId: string) => {
     await handleToggleBasketItem(ingredientId, false);
+  };
+
+  const handleClearCart = async () => {
+    try {
+      await api.clearCart(household?.id);
+      await refreshBasket();
+    } catch {
+      if (basket) {
+        const clearedItems = basket.items.map(i => ({
+          ...i,
+          isSelectedForPurchase: false,
+          quantityPacks: 0
+        }));
+        setBasket({
+          ...basket,
+          items: clearedItems,
+          subtotalInr: 0,
+          totalInr: 0,
+          discountInr: 0,
+          mrpTotalInr: 0,
+          comparisons: basket.comparisons.map(c => ({
+            ...c,
+            itemsAvailableCount: 0,
+            subtotalInr: 0,
+            estimatedTotalInr: 0
+          }))
+        });
+      }
+    }
   };
 
   const handleSelectRetailer = async (retailerId: string) => {
@@ -887,6 +937,7 @@ export default function HomePage() {
               onUpdatePacks={handleUpdatePacks}
               onSwapVariant={handleSwapVariant}
               onRemoveItem={handleRemoveBasketItem}
+              onClearCart={handleClearCart}
               onSelectRetailer={handleSelectRetailer}
               onCheckout={handleCheckout}
               onOpenPantry={() => setIsPantryModalOpen(true)}

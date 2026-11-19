@@ -42,6 +42,7 @@ interface GroceryBasketViewProps {
   onUpdatePacks: (ingredientId: string, packs: number) => void;
   onSwapVariant: (ingredientId: string, variantId: string) => void;
   onRemoveItem: (ingredientId: string) => void;
+  onClearCart?: () => void;
   onSelectRetailer: (retailerId: string) => void;
   onCheckout: (address?: DeliveryAddress) => void;
   onOpenPantry: () => void;
@@ -61,6 +62,7 @@ export function GroceryBasketView({
   onUpdatePacks,
   onSwapVariant,
   onRemoveItem,
+  onClearCart,
   onSelectRetailer,
   onCheckout,
   onOpenPantry,
@@ -349,9 +351,22 @@ export function GroceryBasketView({
             {/* Selected Items */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-forest-900">
-                  Items in Your Active Basket ({selectedItems.length})
-                </h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-forest-900">
+                    Items in Your Active Basket ({selectedItems.length})
+                  </h3>
+                  {onClearCart && selectedItems.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={onClearCart}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-200 cursor-pointer"
+                      title="Empty all items from your basket"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Empty Cart</span>
+                    </button>
+                  )}
+                </div>
                 <span className="text-[11px] text-stone-500">
                   Billed at {activeRetailerComp?.retailer.name || 'Selected Retailer'} rate
                 </span>
@@ -752,6 +767,17 @@ export function GroceryBasketView({
                   </>
                 )}
               </button>
+
+              {onClearCart && selectedItems.length > 0 && (
+                <button
+                  type="button"
+                  onClick={onClearCart}
+                  className="w-full py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Empty Cart</span>
+                </button>
+              )}
 
               <div className="text-center space-y-1">
                 <p className="text-[11px] text-amber-800 font-semibold">

@@ -190,6 +190,16 @@ export class GroceryController {
     return this.groceryService.clearCart(householdId);
   }
 
+  @Post('basket/reset-for-plan')
+  async resetBasketForPlan(
+    @Body() body?: { householdId?: string },
+    @Headers('authorization') authHeader?: string,
+    @Req() req?: any
+  ) {
+    const householdId = await this.resolveHouseholdId(authHeader, body?.householdId, req);
+    return this.groceryService.resetBasketForPlan(householdId);
+  }
+
   @Post('cart/reorder')
   @HttpCode(200)
   async reorderBasket(
