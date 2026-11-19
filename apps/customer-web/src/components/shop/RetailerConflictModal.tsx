@@ -37,11 +37,11 @@ export function RetailerConflictModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto overflow-x-hidden max-w-[100vw]"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg bg-surface rounded-2xl shadow-elevated border border-cream-300 p-6 sm:p-7 overflow-y-auto max-h-[90vh] no-scrollbar animate-scale-in"
+        className="relative w-full max-w-lg bg-surface rounded-2xl shadow-elevated border border-cream-300 p-4 sm:p-6 md:p-7 overflow-y-auto overflow-x-hidden max-h-[90vh] no-scrollbar animate-scale-in my-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Close Button */}

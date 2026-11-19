@@ -76,11 +76,11 @@ export function RecipeDetailModal({ recipe, onClose, onAddToPlan }: RecipeDetail
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto overflow-x-hidden max-w-[100vw]"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface rounded-3xl w-full max-w-3xl max-h-[92vh] overflow-y-auto no-scrollbar border border-cream-300 shadow-2xl relative"
+        className="bg-surface rounded-3xl w-full max-w-3xl max-h-[92vh] overflow-y-auto overflow-x-hidden no-scrollbar border border-cream-300 shadow-2xl relative my-auto"
       >
         
         {/* Close Button */}
@@ -252,8 +252,8 @@ export function RecipeDetailModal({ recipe, onClose, onAddToPlan }: RecipeDetail
             </div>
 
             {/* Attribution Footnote */}
-            <div className="flex items-center justify-between text-[11px] text-stone-500 pt-1">
-              <div className="flex items-center gap-1.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-stone-500 pt-1 gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <Info className="w-3.5 h-3.5 text-forest-600 shrink-0" />
                 <span>
                   Source:{' '}
@@ -267,7 +267,7 @@ export function RecipeDetailModal({ recipe, onClose, onAddToPlan }: RecipeDetail
               <button
                 type="button"
                 onClick={() => setShowIngredientNutrition(!showIngredientNutrition)}
-                className="flex items-center gap-1 font-bold text-forest-800 hover:text-forest-950 underline decoration-cream-300 ml-2"
+                className="flex items-center gap-1 font-bold text-forest-800 hover:text-forest-950 underline decoration-cream-300 self-start sm:self-auto"
               >
                 <span>{showIngredientNutrition ? 'Hide' : 'View'} ingredient breakdown</span>
                 {showIngredientNutrition ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -284,7 +284,7 @@ export function RecipeDetailModal({ recipe, onClose, onAddToPlan }: RecipeDetail
                   {nutrition.ingredients.map((ing, idx) => (
                     <div
                       key={idx}
-                      className="p-2 rounded-xl bg-surface border border-cream-200 flex items-center justify-between text-xs"
+                      className="p-2.5 rounded-xl bg-surface border border-cream-200 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1.5"
                     >
                       <div>
                         <span className="font-bold text-forest-900">{ing.ingredientName}</span>
@@ -297,9 +297,11 @@ export function RecipeDetailModal({ recipe, onClose, onAddToPlan }: RecipeDetail
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2.5 text-[11px] text-stone-600">
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] text-stone-600">
                         <span>{ing.nutrients.calories} kcal</span>
+                        <span>•</span>
                         <span className="font-bold text-terracotta-600">{ing.nutrients.protein}g protein</span>
+                        <span>•</span>
                         <span className="text-stone-400">{ing.nutrients.carbs}g carbs</span>
                       </div>
                     </div>
@@ -418,7 +420,7 @@ export function RecipeDetailModal({ recipe, onClose, onAddToPlan }: RecipeDetail
                 ))}
               </div>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {(['breakfast', 'lunch', 'dinner', 'snack'] as MealCategory[]).map((m) => (
                   <button
                     key={m}

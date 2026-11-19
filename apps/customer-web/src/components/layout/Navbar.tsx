@@ -133,7 +133,7 @@ export function Navbar({
         </div>
 
         {/* Navigation Tabs (Desktop) */}
-        <nav className="hidden md:flex items-center gap-1 bg-cream-200/80 p-1.5 rounded-2xl border border-cream-300">
+        <nav className="hidden md:flex mx-2 items-center gap-1 bg-cream-200/80 p-1.5 rounded-2xl border border-cream-300">
           {isAuthenticated ? (
             <>
               <button

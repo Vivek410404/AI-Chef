@@ -191,27 +191,27 @@ export function HouseholdModal({ isOpen, onClose, household, onSave }: Household
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto overflow-x-hidden max-w-[100vw]"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-6"
+        className="bg-surface rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden no-scrollbar border border-cream-300 shadow-2xl p-4 sm:p-6 md:p-8 space-y-6 my-auto"
       >
         
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-cream-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-forest-700 text-white flex items-center justify-center shadow-soft">
+        <div className="flex items-start sm:items-center justify-between gap-3 pb-4 border-b border-cream-200">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-2xl bg-forest-700 text-white flex items-center justify-center shadow-soft shrink-0">
               <Users className="w-5 h-5 text-terracotta-200" />
             </div>
-            <div>
-              <h2 className="text-xl font-black text-forest-900">Household Configuration</h2>
-              <p className="text-xs text-stone-500">Configure household profile, members, dietary modes, allergies, and nutrition goals</p>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-black text-forest-900 truncate">Household Configuration</h2>
+              <p className="text-xs text-stone-500 line-clamp-1 sm:line-clamp-none">Configure household profile, members, dietary modes & goals</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-cream-100 transition-colors"
+            className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-cream-100 transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -330,13 +330,13 @@ export function HouseholdModal({ isOpen, onClose, household, onSave }: Household
           {/* Spice Tolerance */}
           <div className="p-4 rounded-2xl bg-cream-50 border border-cream-200 space-y-2">
             <label className="text-xs font-bold text-forest-900 block">Family Spice Tolerance</label>
-            <div className="grid grid-cols-4 gap-1.5 pt-1">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
               {(['Mild', 'Medium', 'Spicy', 'Desi Teekha'] as const).map((level) => (
                 <button
                   key={level}
                   type="button"
                   onClick={() => setSpice(level)}
-                  className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                  className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition-all truncate ${
                     spice === level
                       ? 'bg-forest-700 text-white shadow-xs'
                       : 'bg-surface text-stone-600 border border-cream-200 hover:bg-cream-100'
@@ -433,8 +433,8 @@ export function HouseholdModal({ isOpen, onClose, household, onSave }: Household
                   key={mem.id}
                   className="p-4 rounded-2xl bg-surface border border-cream-200 space-y-3"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <span className="font-extrabold text-forest-900 text-sm">{mem.name}</span>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-cream-100 text-stone-700 border border-cream-300">
                         {mem.dietaryPreference}
@@ -445,7 +445,7 @@ export function HouseholdModal({ isOpen, onClose, household, onSave }: Household
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
                       <button
                         type="button"
                         onClick={() => setEditingMemberId(isExpanded ? null : mem.id)}
@@ -559,9 +559,9 @@ export function HouseholdModal({ isOpen, onClose, household, onSave }: Household
                       </div>
 
                       {/* Protein Goal Presets */}
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="font-bold text-stone-600">Daily Protein Target:</span>
-                        <div className="flex items-center gap-1">
+                      <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1">
+                        <span className="font-bold text-stone-600 text-xs">Daily Protein Target:</span>
+                        <div className="flex flex-wrap items-center gap-1">
                           {[40, 55, 60, 75, 85].map((g) => (
                             <button
                               key={g}

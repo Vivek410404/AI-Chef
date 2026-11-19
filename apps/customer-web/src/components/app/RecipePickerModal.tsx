@@ -68,27 +68,27 @@ export function RecipePickerModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto overflow-x-hidden max-w-[100vw]"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto no-scrollbar border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-6"
+        className="bg-surface rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden no-scrollbar border border-cream-300 shadow-2xl p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6 my-auto"
       >
         
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-cream-200">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-start sm:items-center justify-between pb-4 border-b border-cream-200 gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className="text-[10px] font-extrabold uppercase tracking-wider bg-forest-50 text-forest-700 px-2 py-0.5 rounded-full border border-forest-200">
                 {dayLabel} • {mealLabel}
               </span>
               <span className="text-xs font-semibold text-stone-500">Pick a Dish</span>
             </div>
-            <h2 className="text-xl font-black text-forest-900">Add to Meal Plan</h2>
+            <h2 className="text-lg sm:text-xl font-black text-forest-900 truncate">Add to Meal Plan</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-cream-100 transition-colors"
+            className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-cream-100 transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>

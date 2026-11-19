@@ -129,11 +129,11 @@ export function ProductDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto overflow-x-hidden max-w-[100vw]"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-3xl bg-surface rounded-2xl shadow-elevated border border-cream-300 overflow-y-auto max-h-[92vh] no-scrollbar animate-scale-in"
+        className="relative w-full max-w-3xl bg-surface rounded-2xl shadow-elevated border border-cream-300 overflow-y-auto overflow-x-hidden max-h-[92vh] no-scrollbar animate-scale-in my-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Sticky Close Button */}
@@ -267,18 +267,18 @@ export function ProductDetailModal({
                 {comparisons.map(comp => (
                   <div
                     key={comp.retailerId}
-                    className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border transition-all gap-2.5 ${
                       selectedRetailerId === comp.retailerId
                         ? 'border-forest-600 bg-forest-50/50 shadow-sm'
                         : 'border-cream-300 bg-white hover:border-cream-400'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-cream-100 flex items-center justify-center font-bold text-xs text-forest-900">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-cream-100 flex items-center justify-center font-bold text-xs text-forest-900 shrink-0">
                         {comp.retailerName.slice(0, 2).toUpperCase()}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs font-bold text-stone-900">{comp.retailerName}</span>
                           {comp.isLowestPrice && (
                             <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase tracking-wide">
@@ -292,7 +292,7 @@ export function ProductDetailModal({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 self-end sm:self-auto w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-cream-200">
                       <div className="text-right">
                         <span className="text-sm font-bold text-stone-900 block">₹{comp.priceInr}</span>
                         {comp.mrpInr > comp.priceInr && (
@@ -302,7 +302,7 @@ export function ProductDetailModal({
 
                       <button
                         onClick={() => handleAddWithRetailer(comp.retailerId)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
                           selectedRetailerId === comp.retailerId
                             ? 'bg-forest-900 text-white shadow-soft hover:bg-forest-800'
                             : 'bg-cream-100 text-stone-700 hover:bg-cream-200'
@@ -317,9 +317,9 @@ export function ProductDetailModal({
             </div>
 
             {/* Quantity Selector & Primary Add-to-Cart Action */}
-            <div className="mt-auto pt-4 border-t border-cream-300 flex items-center gap-3">
+            <div className="mt-auto pt-4 border-t border-cream-300 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               {/* Quantity Counter */}
-              <div className="flex items-center border border-cream-300 rounded-xl bg-white p-1">
+              <div className="flex items-center justify-center border border-cream-300 rounded-xl bg-white p-1 self-center sm:self-auto">
                 <button
                   onClick={() => setQuantity(q => Math.max(1, q - 1))}
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-600 hover:bg-cream-100 transition-colors"
@@ -340,7 +340,7 @@ export function ProductDetailModal({
               {/* Add to Cart CTA */}
               <button
                 onClick={handleAddCurrent}
-                className="flex-1 px-5 py-3 rounded-xl bg-forest-900 text-white font-bold text-sm hover:bg-forest-800 shadow-soft transition-all flex items-center justify-center gap-2"
+                className="w-full sm:flex-1 px-5 py-3 rounded-xl bg-forest-900 text-white font-bold text-sm hover:bg-forest-800 shadow-soft transition-all flex items-center justify-center gap-2"
               >
                 <ShoppingCart className="w-4 h-4" />
                 <span>Add {quantity} to Cart (₹{displayPrice * quantity})</span>

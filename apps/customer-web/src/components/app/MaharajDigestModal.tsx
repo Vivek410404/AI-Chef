@@ -217,44 +217,44 @@ export function MaharajDigestModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-forest-950/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-forest-950/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto overflow-x-hidden max-w-[100vw]"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-3xl my-6 bg-surface rounded-3xl border border-cream-300 shadow-elevated overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-3xl my-auto bg-surface rounded-3xl border border-cream-300 shadow-elevated overflow-hidden overflow-x-hidden flex flex-col max-h-[90vh]"
       >
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-5 sm:p-6 border-b border-cream-200 bg-cream-50/70">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-800">
+        <div className="flex items-start sm:items-center justify-between p-4 sm:p-6 border-b border-cream-200 bg-cream-50/70 gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-800 shrink-0">
               <ChefHat className="w-5 h-5" />
             </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-black text-forest-900 flex items-center gap-2">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-xl font-black text-forest-900 truncate">
                 Maharaj / Cook Preparation Digest
               </h2>
-              <p className="text-xs text-stone-600">
+              <p className="text-xs text-stone-600 line-clamp-1 sm:line-clamp-none">
                 Printable & shareable daily kitchen brief for domestic cooks & family helpers
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-cream-200/50 transition-colors"
+            className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-cream-200/50 transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Day Selector & Action Bar */}
-        <div className="px-5 py-3 border-b border-cream-200 bg-white flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+        <div className="px-4 sm:px-5 py-3 border-b border-cream-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 overflow-x-hidden">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 max-w-full">
             {DAYS.map(d => (
               <button
                 key={d.id}
                 onClick={() => setTargetDay(d.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   targetDay === d.id
                     ? 'bg-amber-600 text-white shadow-soft'
                     : 'bg-cream-100 text-stone-600 hover:bg-cream-200'
@@ -286,7 +286,7 @@ export function MaharajDigestModal({
         </div>
 
         {/* Modal Printable Body */}
-        <div id="maharaj-printable-content" className="p-5 sm:p-6 overflow-y-auto no-scrollbar space-y-5 text-sm bg-white">
+        <div id="maharaj-printable-content" className="p-4 sm:p-6 overflow-y-auto overflow-x-hidden no-scrollbar space-y-5 text-sm bg-white">
           
           {/* Metadata Card */}
           <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/70 flex flex-wrap items-center justify-between gap-4">

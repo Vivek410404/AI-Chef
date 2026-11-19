@@ -47,27 +47,27 @@ export function PantryManagerModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto overflow-x-hidden max-w-[100vw]"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-6"
+        className="bg-surface rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden no-scrollbar border border-cream-300 shadow-2xl p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6 my-auto"
       >
         
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-cream-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-soft">
+        <div className="flex items-start sm:items-center justify-between pb-4 border-b border-cream-200 gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-soft shrink-0">
               <Package className="w-5 h-5" />
             </div>
-            <div>
-              <h2 className="text-xl font-black text-forest-900">Kitchen Pantry Manager</h2>
-              <p className="text-xs text-stone-500">Track staples at home to avoid buying duplicate ingredients</p>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-black text-forest-900 truncate">Kitchen Pantry Manager</h2>
+              <p className="text-xs text-stone-500 line-clamp-1 sm:line-clamp-none">Track staples at home to avoid buying duplicate ingredients</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-cream-100 transition-colors"
+            className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-cream-100 transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -132,7 +132,7 @@ export function PantryManagerModal({
             {pantryItems.map((item) => (
               <div
                 key={item.id}
-                className="p-3.5 rounded-2xl bg-surface border border-cream-200 flex items-center justify-between text-xs hover:border-forest-400 transition-colors"
+                className="p-3.5 rounded-2xl bg-surface border border-cream-200 flex flex-wrap items-center justify-between gap-2 text-xs hover:border-forest-400 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <Package className="w-4 h-4 text-stone-400" />

@@ -62,18 +62,18 @@ export function OrderSuccessModal({ isOpen, onClose, onReturnToDashboard, orderD
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto overflow-x-hidden max-w-[100vw]"
       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface rounded-3xl w-full max-w-lg max-h-[92vh] overflow-y-auto no-scrollbar border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-5 text-center relative"
+        className="bg-surface rounded-3xl w-full max-w-lg max-h-[92vh] overflow-y-auto overflow-x-hidden no-scrollbar border border-cream-300 shadow-2xl p-4 sm:p-6 md:p-8 space-y-5 text-center relative my-auto"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-1.5 rounded-full text-stone-400 hover:text-stone-700 hover:bg-cream-100 transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-full text-stone-400 hover:text-stone-700 hover:bg-cream-100 transition-colors"
           title="Close modal"
         >
           <X className="w-5 h-5" />
@@ -155,8 +155,8 @@ export function OrderSuccessModal({ isOpen, onClose, onReturnToDashboard, orderD
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {orderData.items.map((item: any, idx: number) => (
-                  <div key={idx} className="flex justify-between items-center text-[11px] py-0.5">
-                    <span className="text-stone-700 font-medium truncate max-w-[240px]">
+                  <div key={idx} className="flex justify-between items-center text-[11px] py-0.5 gap-2">
+                    <span className="text-stone-700 font-medium truncate flex-1 min-w-0">
                       {item.productName || item.brand || 'Item'} ({item.packSize || 'pack'}) × {item.quantity}
                     </span>
                     <span className="font-bold text-forest-900 shrink-0">

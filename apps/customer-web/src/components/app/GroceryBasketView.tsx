@@ -852,8 +852,8 @@ export function GroceryBasketView({
 
       {/* Product Substitution Modal */}
       {substitutingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-surface rounded-3xl w-full max-w-lg border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto overflow-x-hidden max-w-[100vw]">
+          <div className="bg-surface rounded-3xl w-full max-w-lg border border-cream-300 shadow-2xl p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto overflow-x-hidden max-h-[90vh] my-auto">
             <div className="flex items-center justify-between pb-3 border-b border-cream-200">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-forest-700 bg-forest-50 px-2 py-0.5 rounded border border-forest-200">
@@ -943,12 +943,12 @@ export function GroceryBasketView({
       {isAddressModalOpen && editingAddress && (
         <div
           onClick={() => setIsAddressModalOpen(false)}
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in no-scrollbar overflow-y-auto overflow-x-hidden max-w-[100vw]"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-surface rounded-3xl w-full max-w-md border border-cream-300 shadow-2xl p-6 sm:p-8 space-y-5"
+            className="bg-surface rounded-3xl w-full max-w-md border border-cream-300 shadow-2xl p-4 sm:p-6 md:p-8 space-y-5 overflow-y-auto overflow-x-hidden max-h-[90vh] my-auto"
           >
             <div className="flex items-center justify-between pb-3 border-b border-cream-200">
               <div>
@@ -971,7 +971,7 @@ export function GroceryBasketView({
             <form onSubmit={handleSaveAddressForm} className="space-y-4 text-xs">
               <div>
                 <label className="block font-bold text-stone-700 mb-1.5">Address Label</label>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {(['Home', 'Office', 'Parents', 'Other'] as const).map((lbl) => (
                     <button
                       type="button"
