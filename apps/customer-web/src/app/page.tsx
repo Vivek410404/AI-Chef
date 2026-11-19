@@ -637,14 +637,19 @@ export default function HomePage() {
 
   const handleClearCart = async () => {
     try {
-      await api.clearCart(household?.id);
-      await refreshBasket();
+      const cleared = await api.clearCart(household?.id);
+      if (cleared && cleared.items) {
+        setBasket(cleared);
+      } else {
+        await refreshBasket();
+      }
     } catch {
       if (basket) {
         const clearedItems = basket.items.map(i => ({
           ...i,
           isSelectedForPurchase: false,
-          quantityPacks: 0
+          quantityPacks: 0,
+          totalPriceInr: 0
         }));
         setBasket({
           ...basket,
@@ -716,6 +721,9 @@ export default function HomePage() {
         itemsCount: selectedItems.length
       });
       setOrders(prev => [order, ...prev]);
+
+      // Auto-empty the cart after successful checkout
+      await handleClearCart();
     } catch {
       const ret = SEED_RETAILERS.find(r => r.id === basket.selectedRetailerId) || SEED_RETAILERS[0];
       const fallbackOrder = {
@@ -735,6 +743,9 @@ export default function HomePage() {
       };
       setPlacedOrder(fallbackOrder);
       setOrders(prev => [fallbackOrder, ...prev]);
+
+      // Auto-empty the cart in fallback mode as well
+      await handleClearCart();
     } finally {
       setIsCheckingOut(false);
     }

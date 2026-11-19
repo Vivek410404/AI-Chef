@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { StoreService } from '../data/store.service';
 import { Retailer, ProductVariant } from '@rasoi/shared-types';
-import { evaluateInventoryAvailability } from '../grocery/grocery.service';
+import { evaluateInventoryAvailability, GroceryService } from '../grocery/grocery.service';
 
 @Injectable()
 export class MarketplaceService {
+  private readonly logger = new Logger(MarketplaceService.name);
   get orders(): any[] {
     return this.store.orders;
   }
@@ -13,7 +14,10 @@ export class MarketplaceService {
   }
   private readonly idempotencyRecords: Map<string, { order: any; timestamp: number }> = new Map();
 
-  constructor(private readonly store: StoreService) { }
+  constructor(
+    private readonly store: StoreService,
+    private readonly groceryService: GroceryService
+  ) { }
 
   async getRetailers(): Promise<Retailer[]> {
     return this.store.retailers;
@@ -167,6 +171,16 @@ export class MarketplaceService {
 
     this.orders.unshift(order); // Keep most recent first
     await this.store.persistOrder(order);
+
+    // Phase 6.2: Auto-clear household grocery basket after order creation
+    const targetHouseholdId = orderData.householdId || 'hh-sharma-family';
+    try {
+      await this.groceryService.clearCart(targetHouseholdId);
+      this.logger.log(`[MarketplaceService] Successfully cleared basket for household ${targetHouseholdId} after order ${order.id}`);
+    } catch (err: any) {
+      this.logger.warn(`[MarketplaceService] Failed to auto-clear cart for ${targetHouseholdId}: ${err?.message}`);
+    }
+
     return order;
   }
 
