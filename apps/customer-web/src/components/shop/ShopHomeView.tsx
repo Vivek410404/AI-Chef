@@ -801,7 +801,7 @@ export function ShopHomeView({
           </div>
 
           {/* Right Corner: The Filters & Categories Dropdown */}
-          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 relative" ref={filterDropdownRef}>
+          <div className="flex w-full items-center gap-2 self-start sm:self-auto shrink-0 relative" ref={filterDropdownRef}>
             {/* Desktop Direct Category Select */}
             <div className="hidden lg:block">
               <select
@@ -858,7 +858,7 @@ export function ShopHomeView({
             </div>
 
             {/* Corner Dropdown Button */}
-            <div className="relative">
+            <div className="relative w-full">
               <button
                 type="button"
                 onClick={() => {
@@ -871,11 +871,10 @@ export function ShopHomeView({
                   }
                   setIsFilterDropdownOpen(prev => !prev);
                 }}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-bold transition-all shadow-soft cursor-pointer ${
-                  isFilterDropdownOpen || activeFilterCount > 0
-                    ? 'bg-forest-900 text-white border-forest-900 shadow-md ring-2 ring-forest-500/20'
-                    : 'bg-white text-forest-950 border-cream-300 hover:border-forest-500 hover:bg-cream-50'
-                }`}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-bold transition-all shadow-soft cursor-pointer ${isFilterDropdownOpen || activeFilterCount > 0
+                  ? 'bg-forest-900 text-white border-forest-900 shadow-md ring-2 ring-forest-500/20'
+                  : 'bg-white text-forest-950 border-cream-300 hover:border-forest-500 hover:bg-cream-50'
+                  }`}
                 aria-label="Toggle filters and categories dropdown"
                 aria-expanded={isFilterDropdownOpen}
               >
@@ -919,11 +918,10 @@ export function ShopHomeView({
                       <button
                         type="button"
                         onClick={() => setActiveFilterTab('categories')}
-                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                          activeFilterTab === 'categories'
-                            ? 'bg-surface text-forest-900 shadow-xs'
-                            : 'text-stone-600 hover:text-forest-900'
-                        }`}
+                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${activeFilterTab === 'categories'
+                          ? 'bg-surface text-forest-900 shadow-xs'
+                          : 'text-stone-600 hover:text-forest-900'
+                          }`}
                       >
                         <Store className="w-3.5 h-3.5 text-forest-700" />
                         <span>Categories</span>
@@ -934,11 +932,10 @@ export function ShopHomeView({
                       <button
                         type="button"
                         onClick={() => setActiveFilterTab('brands')}
-                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                          activeFilterTab === 'brands'
-                            ? 'bg-surface text-forest-900 shadow-xs'
-                            : 'text-stone-600 hover:text-forest-900'
-                        }`}
+                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${activeFilterTab === 'brands'
+                          ? 'bg-surface text-forest-900 shadow-xs'
+                          : 'text-stone-600 hover:text-forest-900'
+                          }`}
                       >
                         <Tag className="w-3.5 h-3.5 text-forest-700" />
                         <span>Brands</span>
@@ -949,11 +946,10 @@ export function ShopHomeView({
                       <button
                         type="button"
                         onClick={() => setActiveFilterTab('sort')}
-                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                          activeFilterTab === 'sort'
-                            ? 'bg-surface text-forest-900 shadow-xs'
-                            : 'text-stone-600 hover:text-forest-900'
-                        }`}
+                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${activeFilterTab === 'sort'
+                          ? 'bg-surface text-forest-900 shadow-xs'
+                          : 'text-stone-600 hover:text-forest-900'
+                          }`}
                       >
                         <ArrowUpDown className="w-3.5 h-3.5 text-forest-700" />
                         <span>Sort</span>
@@ -992,11 +988,10 @@ export function ShopHomeView({
                             setSelectedCategory('all');
                             setPagination(p => ({ ...p, page: 1 }));
                           }}
-                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${
-                            selectedCategory === 'all'
-                              ? 'bg-forest-100 text-forest-900 font-bold border border-forest-300'
-                              : 'text-stone-700 hover:bg-cream-100 font-medium'
-                          }`}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${selectedCategory === 'all'
+                            ? 'bg-forest-100 text-forest-900 font-bold border border-forest-300'
+                            : 'text-stone-700 hover:bg-cream-100 font-medium'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <Store className="w-4 h-4 text-forest-600" />
@@ -1016,11 +1011,10 @@ export function ShopHomeView({
                                 setSelectedCategory(isSelected ? 'all' : cat.slug);
                                 setPagination(p => ({ ...p, page: 1 }));
                               }}
-                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${
-                                isSelected
-                                  ? 'bg-forest-100 text-forest-900 font-bold border border-forest-300'
-                                  : 'text-stone-700 hover:bg-cream-100 font-medium'
-                              }`}
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${isSelected
+                                ? 'bg-forest-100 text-forest-900 font-bold border border-forest-300'
+                                : 'text-stone-700 hover:bg-cream-100 font-medium'
+                                }`}
                             >
                               <div className="flex items-center gap-2 truncate pr-2">
                                 <span className="shrink-0">
@@ -1102,11 +1096,10 @@ export function ShopHomeView({
                                     setSelectedBrand(b);
                                     setPagination(p => ({ ...p, page: 1 }));
                                   }}
-                                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
-                                    isSelected
-                                      ? 'bg-forest-900 text-white shadow-soft ring-1 ring-forest-700'
-                                      : 'bg-cream-100 hover:bg-cream-200 text-stone-700 border border-cream-200'
-                                  }`}
+                                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${isSelected
+                                    ? 'bg-forest-900 text-white shadow-soft ring-1 ring-forest-700'
+                                    : 'bg-cream-100 hover:bg-cream-200 text-stone-700 border border-cream-200'
+                                    }`}
                                 >
                                   {b === 'all' ? 'All Brands' : b}
                                 </button>
@@ -1126,11 +1119,10 @@ export function ShopHomeView({
                               setSelectedBrand('all');
                               setPagination(p => ({ ...p, page: 1 }));
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${
-                              selectedBrand === 'all'
-                                ? 'bg-forest-100 text-forest-900 font-bold border border-forest-300'
-                                : 'text-stone-700 hover:bg-cream-100 font-medium'
-                            }`}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${selectedBrand === 'all'
+                              ? 'bg-forest-100 text-forest-900 font-bold border border-forest-300'
+                              : 'text-stone-700 hover:bg-cream-100 font-medium'
+                              }`}
                           >
                             <div className="flex items-center gap-2">
                               <Tag className="w-3.5 h-3.5 text-forest-600" />
@@ -1150,11 +1142,10 @@ export function ShopHomeView({
                                 setSelectedBrand(isSelected ? 'all' : brand);
                                 setPagination(p => ({ ...p, page: 1 }));
                               }}
-                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${
-                                isSelected
-                                  ? 'bg-forest-100 text-forest-900 font-bold border border-forest-300'
-                                  : 'text-stone-700 hover:bg-cream-100 font-medium'
-                              }`}
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-colors ${isSelected
+                                ? 'bg-forest-100 text-forest-900 font-bold border border-forest-300'
+                                : 'text-stone-700 hover:bg-cream-100 font-medium'
+                                }`}
                             >
                               <div className="flex items-center gap-2 truncate pr-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-forest-400"></span>
@@ -1212,11 +1203,10 @@ export function ShopHomeView({
                                   setSortBy(opt.id);
                                   setPagination(p => ({ ...p, page: 1 }));
                                 }}
-                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 ${
-                                  isSelected
-                                    ? 'bg-forest-900 text-white shadow-soft ring-1 ring-forest-700'
-                                    : 'bg-cream-100 hover:bg-cream-200 text-stone-700 border border-cream-200'
-                                }`}
+                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 ${isSelected
+                                  ? 'bg-forest-900 text-white shadow-soft ring-1 ring-forest-700'
+                                  : 'bg-cream-100 hover:bg-cream-200 text-stone-700 border border-cream-200'
+                                  }`}
                               >
                                 {opt.id === 'popularity' ? <Flame className="w-3 h-3 text-saffron-400" /> : null}
                                 <span>{opt.name}</span>
@@ -1238,26 +1228,23 @@ export function ShopHomeView({
                                 setSortBy(opt.id);
                                 setPagination(p => ({ ...p, page: 1 }));
                               }}
-                              className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${
-                                isSelected
-                                  ? 'bg-forest-100/90 text-forest-950 border-forest-400 ring-2 ring-forest-500/20 shadow-xs'
-                                  : 'bg-surface text-stone-800 border-cream-200 hover:border-forest-300 hover:bg-cream-50'
-                              }`}
+                              className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${isSelected
+                                ? 'bg-forest-100/90 text-forest-950 border-forest-400 ring-2 ring-forest-500/20 shadow-xs'
+                                : 'bg-surface text-stone-800 border-cream-200 hover:border-forest-300 hover:bg-cream-50'
+                                }`}
                             >
                               <div className="flex items-center gap-2.5">
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${
-                                  isSelected ? 'bg-white border-forest-300' : 'bg-cream-100 border-cream-200'
-                                }`}>
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${isSelected ? 'bg-white border-forest-300' : 'bg-cream-100 border-cream-200'
+                                  }`}>
                                   {opt.icon}
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-1.5">
                                     <span className="text-xs font-bold leading-tight">{opt.name}</span>
-                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
-                                      isSelected
-                                        ? 'bg-forest-200 text-forest-900'
-                                        : 'bg-cream-200 text-stone-600'
-                                    }`}>
+                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase ${isSelected
+                                      ? 'bg-forest-200 text-forest-900'
+                                      : 'bg-cream-200 text-stone-600'
+                                      }`}>
                                       {opt.badge}
                                     </span>
                                   </div>

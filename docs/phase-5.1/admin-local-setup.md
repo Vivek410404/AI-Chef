@@ -49,14 +49,14 @@ EMAIL_TRANSPORT=console-preview
 ### Step 1: Ensure WSL PostgreSQL Keepalive
 To prevent WSL2 systemd from sleeping during idle moments:
 ```powershell
-# In a background terminal or daemon:
+# In a background terminal or daemon:     
 wsl sleep infinity
 ```
 
 ### Step 2: Bootstrap Super Administrator Account
 If not already created, provision the root Super Administrator:
 ```powershell
-node scripts/bootstrap-admin.mjs --email superadmin@rasoiiq.in --role SUPER_ADMIN --name "Super Administrator" --password "RasoiSuperSecretPassphrase@2026"
+node scripts/bootstrap-admin.mjs --email panchanivivek0401@gmail.com --role SUPER_ADMIN --name "Super Administrator" --password "RasoiSuperSecretPassphrase@2026"
 ```
 
 ### Step 3: Start NestJS Backend API
@@ -83,7 +83,7 @@ Open your browser to:
 
 ### Signing In
 1. **Via Standard Form:** Log in at `/login` with:
-   - Email: `superadmin@rasoiiq.in`
+   - Email: `panchanivivek0401@gmail.com`
    - Password: `RasoiSuperSecretPassphrase@2026`
 2. **Via Local Demo Role Switcher:**
    - If unauthenticated, click the **Super Admin** or **Admin** demo button on the Restricted Access card.
