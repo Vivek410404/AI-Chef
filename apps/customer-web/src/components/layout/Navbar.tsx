@@ -117,14 +117,14 @@ export function Navbar({
           className="flex items-center gap-3 cursor-pointer group"
           title="Return to Home"
         >
-          <div className="w-11 h-11 rounded-2xl bg-forest-700 flex items-center justify-center text-white shadow-soft group-hover:bg-forest-800 transition-all duration-300">
+          <div className="w-11 h-11 rounded-2xl bg-forest-700 flex items-center justify-center text-white shadow-soft group-hover:bg-forest-800 transition-all duration-300 shrink-0">
             <ChefHat className="w-6 h-6 text-terracotta-200" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
               <span className="font-extrabold text-2xl tracking-tight text-forest-900">Rasoi</span>
               <span className="font-extrabold text-2xl tracking-tight text-terracotta-500">IQ</span>
-              <span className="text-[10px] uppercase font-bold tracking-widest bg-forest-50 text-forest-700 px-2 py-0.5 rounded-full border border-forest-200 ml-1">
+              <span className="text-[10px] uppercase font-bold tracking-widest bg-forest-50 text-forest-700 px-2 py-0.5 rounded-full border border-forest-200 ml-1 hidden sm:inline-block">
                 India
               </span>
             </div>
@@ -243,23 +243,23 @@ export function Navbar({
         </nav>
 
         {/* Right Action Cluster */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
 
           {/* Ask AI Chef (Logged In) */}
           {isAuthenticated && onOpenAiPlanner && (
             <button
               onClick={onOpenAiPlanner}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-forest-700 via-forest-500 to-emerald-600 hover:opacity-95 shadow-soft hover:shadow-elevated transition-all duration-200"
+              className="flex items-center gap-1.5 p-2 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-forest-700 via-forest-500 to-emerald-600 hover:opacity-95 shadow-soft hover:shadow-elevated transition-all duration-200 shrink-0"
+              title="Ask AI Chef"
             >
               <Sparkles className="w-4 h-4 text-saffron-500 animate-pulse" />
               <span className="hidden sm:inline">Ask AI Chef</span>
-              <span className="sm:hidden">AI Chef</span>
             </button>
           )}
 
           {/* Household Context / Quick Switcher */}
           {isAuthenticated && (
-            <div className="relative" ref={householdRef}>
+            <div className="relative hidden sm:block shrink-0" ref={householdRef}>
               <button
                 onClick={() => {
                   if (onOpenHousehold) onOpenHousehold();
@@ -285,7 +285,7 @@ export function Navbar({
           {isStaffRole && (
             <Link
               href="/admin"
-              className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 text-xs font-bold hover:bg-purple-100 transition-colors"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 text-xs font-bold hover:bg-purple-100 transition-colors shrink-0"
               title="Platform Operations & Admin Console"
             >
               <ShieldAlert className="w-3.5 h-3.5 text-purple-700" />
@@ -296,7 +296,7 @@ export function Navbar({
           {isRetailer && (
             <button
               onClick={() => handleNavClick('retailer-admin')}
-              className={`p-2 sm:px-3 sm:py-2 rounded-xl border text-xs font-semibold transition-colors flex items-center gap-1.5 ${activeTab === 'retailer-admin'
+              className={`p-2 sm:px-3 sm:py-2 rounded-xl border text-xs font-semibold transition-colors flex items-center gap-1.5 shrink-0 ${activeTab === 'retailer-admin'
                 ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
                 : 'border-cream-300 text-stone-600 hover:text-stone-900 hover:bg-cream-100'
                 }`}
@@ -309,34 +309,34 @@ export function Navbar({
 
           {/* Authentication State: Logged Out vs Logged In */}
           {isLoading ? (
-            <div className="w-9 h-9 rounded-2xl bg-cream-200 animate-pulse" />
+            <div className="w-9 h-9 rounded-2xl bg-cream-200 animate-pulse shrink-0" />
           ) : !isAuthenticated ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <Link
                 href="/login"
-                className="px-3.5 py-2 text-xs sm:text-sm font-bold text-forest-800 hover:text-forest-950 transition-colors"
+                className="px-3 py-2 text-xs sm:text-sm font-bold text-forest-800 hover:text-forest-950 transition-colors"
               >
                 Sign In
               </Link>
               <Link
                 href="/register"
-                className="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-forest-700 hover:bg-forest-800 shadow-soft transition-all"
+                className="hidden sm:inline-flex px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-forest-700 hover:bg-forest-800 shadow-soft transition-all"
               >
                 Create Account
               </Link>
             </div>
           ) : (
             /* Logged-In User Profile Avatar & Dropdown */
-            <div className="relative" ref={accountRef}>
+            <div className="relative shrink-0" ref={accountRef}>
               <button
                 type="button"
                 onClick={() => setIsAccountOpen(prev => !prev)}
-                className="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-2xl bg-surface border border-cream-300 hover:border-forest-600 transition-all focus:outline-none focus:ring-2 focus:ring-forest-600 shadow-sm"
+                className="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-2xl bg-surface border border-cream-300 hover:border-forest-600 transition-all focus:outline-none focus:ring-2 focus:ring-forest-600 shadow-sm shrink-0"
                 aria-haspopup="menu"
                 aria-expanded={isAccountOpen}
                 aria-label="User Account Menu"
               >
-                <div className="w-8 h-8 rounded-xl bg-forest-700 text-white font-extrabold text-xs flex items-center justify-center shadow-soft">
+                <div className="w-8 h-8 rounded-xl bg-forest-700 text-white font-extrabold text-xs flex items-center justify-center shadow-soft shrink-0">
                   {getInitials(user?.fullName)}
                 </div>
                 <div className="text-left hidden md:block">
@@ -347,7 +347,7 @@ export function Navbar({
                     {user?.role?.toLowerCase() || 'Customer'}
                   </p>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-stone-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-stone-400 hidden md:block" />
               </button>
 
               {/* Account Dropdown Menu (Items 1-6) */}
@@ -466,7 +466,7 @@ export function Navbar({
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(prev => !prev)}
-            className="md:hidden p-2 rounded-xl text-stone-600 hover:text-forest-900 hover:bg-cream-200/50"
+            className="md:hidden p-2 rounded-xl text-stone-700 hover:text-forest-900 hover:bg-cream-200/60 shrink-0 transition-colors focus:outline-none focus:ring-2 focus:ring-forest-500"
             aria-label="Toggle navigation menu"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
