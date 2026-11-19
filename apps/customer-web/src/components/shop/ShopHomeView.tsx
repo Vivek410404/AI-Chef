@@ -30,6 +30,10 @@ import {
   ChevronRight,
   ChevronDown,
   Tag,
+  ArrowUpDown,
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
+  ArrowDownAZ,
   ExternalLink,
   AlertCircle
 } from 'lucide-react';
@@ -55,6 +59,38 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   'household-cleaning': <SprayCan className="w-5 h-5 text-teal-600" />,
   'baby-care': <Heart className="w-5 h-5 text-pink-500" />
 };
+
+// Sort options for the improved popularity & sorting filter
+const SORT_OPTIONS = [
+  {
+    id: 'popularity',
+    name: 'Popularity',
+    badge: 'Default',
+    tagline: 'Bestselling staples & everyday essentials',
+    icon: <Flame className="w-4 h-4 text-orange-500" />
+  },
+  {
+    id: 'price-asc',
+    name: 'Price: Low to High',
+    badge: 'Budget Pick',
+    tagline: 'Lowest prices and maximum daily savings first',
+    icon: <ArrowDownWideNarrow className="w-4 h-4 text-emerald-600" />
+  },
+  {
+    id: 'price-desc',
+    name: 'Price: High to Low',
+    badge: 'Value & Bulk',
+    tagline: 'Large family packs and premium staples first',
+    icon: <ArrowUpNarrowWide className="w-4 h-4 text-blue-600" />
+  },
+  {
+    id: 'name-asc',
+    name: 'Product Name (A-Z)',
+    badge: 'Directory',
+    tagline: 'Alphabetical listing from A to Z',
+    icon: <ArrowDownAZ className="w-4 h-4 text-purple-600" />
+  }
+];
 
 interface ShopHomeViewProps {
   onNavigateToBasket?: () => void;
@@ -115,7 +151,7 @@ export function ShopHomeView({
 
   // Corner Filter & Categories Dropdown state
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
-  const [activeFilterTab, setActiveFilterTab] = useState<'categories' | 'brands'>('categories');
+  const [activeFilterTab, setActiveFilterTab] = useState<'categories' | 'brands' | 'sort'>('categories');
   const [brandSearchTerm, setBrandSearchTerm] = useState('');
   const filterDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -411,7 +447,7 @@ export function ShopHomeView({
 
   const activeCategoryObj = categories.find(c => c.slug === selectedCategory || c.name === selectedCategory);
   const activeCategoryName = activeCategoryObj?.name || (selectedCategory === 'all' ? 'All Groceries & Staples' : selectedCategory);
-  const activeFilterCount = (selectedCategory !== 'all' ? 1 : 0) + (selectedBrand !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0);
+  const activeFilterCount = (selectedCategory !== 'all' ? 1 : 0) + (selectedBrand !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0) + (sortBy !== 'popularity' ? 1 : 0);
   const filteredBrands = availableBrands.filter(b =>
     b.toLowerCase().includes(brandSearchTerm.toLowerCase().trim())
   );
@@ -695,7 +731,7 @@ export function ShopHomeView({
             </p>
 
             {/* Active filter chips */}
-            {(selectedCategory !== 'all' || selectedBrand !== 'all' || searchQuery) && (
+            {(selectedCategory !== 'all' || selectedBrand !== 'all' || searchQuery || sortBy !== 'popularity') && (
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                 {selectedCategory !== 'all' && (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-forest-100 text-forest-900 text-xs font-bold border border-forest-200">
@@ -724,6 +760,22 @@ export function ShopHomeView({
                       }}
                       className="hover:text-stone-900"
                       aria-label="Remove brand filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {sortBy !== 'popularity' && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-900 text-xs font-bold border border-blue-200">
+                    <span>Sort: {SORT_OPTIONS.find(o => o.id === sortBy)?.name || sortBy}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSortBy('popularity');
+                        setPagination(p => ({ ...p, page: 1 }));
+                      }}
+                      className="hover:text-blue-700"
+                      aria-label="Reset sort to popularity"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -810,8 +862,12 @@ export function ShopHomeView({
               <button
                 type="button"
                 onClick={() => {
-                  if (!isFilterDropdownOpen && selectedBrand !== 'all' && selectedCategory === 'all') {
-                    setActiveFilterTab('brands');
+                  if (!isFilterDropdownOpen) {
+                    if (sortBy !== 'popularity' && selectedCategory === 'all' && selectedBrand === 'all') {
+                      setActiveFilterTab('sort');
+                    } else if (selectedBrand !== 'all' && selectedCategory === 'all') {
+                      setActiveFilterTab('brands');
+                    }
                   }
                   setIsFilterDropdownOpen(prev => !prev);
                 }}
@@ -857,15 +913,15 @@ export function ShopHomeView({
                     )}
                   </div>
 
-                  {/* Filter Tabs: Categories vs All Brands */}
+                  {/* Filter Tabs: Categories vs All Brands vs Sort */}
                   <div className="py-2.5">
-                    <div className="grid grid-cols-2 gap-1.5 p-1 bg-cream-100/90 rounded-xl">
+                    <div className="grid grid-cols-3 gap-1 p-1 bg-cream-100/90 rounded-xl">
                       <button
                         type="button"
                         onClick={() => setActiveFilterTab('categories')}
-                        className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                           activeFilterTab === 'categories'
-                            ? 'bg-white text-forest-900 shadow-xs'
+                            ? 'bg-surface text-forest-900 shadow-xs'
                             : 'text-stone-600 hover:text-forest-900'
                         }`}
                       >
@@ -878,15 +934,30 @@ export function ShopHomeView({
                       <button
                         type="button"
                         onClick={() => setActiveFilterTab('brands')}
-                        className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                           activeFilterTab === 'brands'
-                            ? 'bg-white text-forest-900 shadow-xs'
+                            ? 'bg-surface text-forest-900 shadow-xs'
                             : 'text-stone-600 hover:text-forest-900'
                         }`}
                       >
                         <Tag className="w-3.5 h-3.5 text-forest-700" />
-                        <span>All Brands ({availableBrands.length})</span>
+                        <span>Brands</span>
                         {selectedBrand !== 'all' && (
+                          <span className="w-2 h-2 rounded-full bg-forest-600 shrink-0"></span>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveFilterTab('sort')}
+                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                          activeFilterTab === 'sort'
+                            ? 'bg-surface text-forest-900 shadow-xs'
+                            : 'text-stone-600 hover:text-forest-900'
+                        }`}
+                      >
+                        <ArrowUpDown className="w-3.5 h-3.5 text-forest-700" />
+                        <span>Sort</span>
+                        {sortBy !== 'popularity' && (
                           <span className="w-2 h-2 rounded-full bg-forest-600 shrink-0"></span>
                         )}
                       </button>
@@ -1103,22 +1174,109 @@ export function ShopHomeView({
                     </div>
                   )}
 
-                  {/* Sort By Filter */}
-                  <div className="py-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block mb-2">
-                      Sort by
-                    </span>
-                    <select
-                      value={sortBy}
-                      onChange={e => setSortBy(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-cream-300 text-xs font-semibold text-stone-800 focus:outline-none focus:border-forest-500"
-                    >
-                      <option value="popularity">Popularity (Default)</option>
-                      <option value="price-asc">Price: Low to High</option>
-                      <option value="price-desc">Price: High to Low</option>
-                      <option value="name-asc">Product Name: A to Z</option>
-                    </select>
-                  </div>
+                  {/* 3. Improved Sort & Popularity Selection Tab */}
+                  {activeFilterTab === 'sort' && (
+                    <div className="py-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-stone-500 flex items-center gap-1.5">
+                          <ArrowUpDown className="w-3.5 h-3.5 text-forest-700" />
+                          <span>Sort &amp; Popularity</span>
+                        </span>
+                        {sortBy !== 'popularity' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSortBy('popularity');
+                              setPagination(p => ({ ...p, page: 1 }));
+                            }}
+                            className="text-[11px] font-semibold text-forest-700 hover:underline"
+                          >
+                            Reset to Default (Popularity)
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Quick 1-Tap Sort Pills */}
+                      <div className="mb-3">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block mb-1">
+                          Quick Sort:
+                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {SORT_OPTIONS.map(opt => {
+                            const isSelected = sortBy === opt.id;
+                            return (
+                              <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => {
+                                  setSortBy(opt.id);
+                                  setPagination(p => ({ ...p, page: 1 }));
+                                }}
+                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 ${
+                                  isSelected
+                                    ? 'bg-forest-900 text-white shadow-soft ring-1 ring-forest-700'
+                                    : 'bg-cream-100 hover:bg-cream-200 text-stone-700 border border-cream-200'
+                                }`}
+                              >
+                                {opt.id === 'popularity' ? <Flame className="w-3 h-3 text-saffron-400" /> : null}
+                                <span>{opt.name}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Detailed Interactive Sort Cards List */}
+                      <div className="space-y-1.5">
+                        {SORT_OPTIONS.map(opt => {
+                          const isSelected = sortBy === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => {
+                                setSortBy(opt.id);
+                                setPagination(p => ({ ...p, page: 1 }));
+                              }}
+                              className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${
+                                isSelected
+                                  ? 'bg-forest-100/90 text-forest-950 border-forest-400 ring-2 ring-forest-500/20 shadow-xs'
+                                  : 'bg-surface text-stone-800 border-cream-200 hover:border-forest-300 hover:bg-cream-50'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${
+                                  isSelected ? 'bg-white border-forest-300' : 'bg-cream-100 border-cream-200'
+                                }`}>
+                                  {opt.icon}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-xs font-bold leading-tight">{opt.name}</span>
+                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                                      isSelected
+                                        ? 'bg-forest-200 text-forest-900'
+                                        : 'bg-cream-200 text-stone-600'
+                                    }`}>
+                                      {opt.badge}
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] text-stone-500 font-medium leading-tight mt-0.5">
+                                    {opt.tagline}
+                                  </p>
+                                </div>
+                              </div>
+                              {isSelected && (
+                                <div className="w-5 h-5 rounded-full bg-forest-700 text-white flex items-center justify-center shrink-0 shadow-xs ml-2">
+                                  <Check className="w-3.5 h-3.5" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Dropdown Footer */}
                   <div className="pt-3 flex items-center justify-between">
