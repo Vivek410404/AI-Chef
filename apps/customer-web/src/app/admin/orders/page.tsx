@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import {
   ShoppingBag,
@@ -15,11 +16,13 @@ import {
   CheckCircle,
   Truck,
   Package,
-  XCircle
+  XCircle,
+  X
 } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function AdminOrdersPage() {
+  const [mounted, setMounted] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [pagination, setPagination] = useState<any>({ total: 0, page: 1, limit: 20, totalPages: 1 });
   const [loading, setLoading] = useState(true);
@@ -34,6 +37,20 @@ export default function AdminOrdersPage() {
   const [fulfillmentNotes, setFulfillmentNotes] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedOrder) {
+        setSelectedOrder(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedOrder]);
 
   const fetchOrders = async (page = 1) => {
     try {
@@ -233,6 +250,7 @@ export default function AdminOrdersPage() {
                           onClick={() => {
                             setSelectedOrder(ord);
                             setNewStatus(ord.status);
+                            setStatusReason(ord.statusReason || '');
                             setSubstitutionNotes(ord.substitutionNotes || '');
                             setFulfillmentNotes(ord.fulfillmentNotes || '');
                           }}
@@ -272,24 +290,67 @@ export default function AdminOrdersPage() {
       </div>
 
       {/* Order Status Update Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-stone-900 border border-stone-800 rounded-3xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-white">Update Fulfillment Status</h3>
-            <p className="text-xs text-stone-300">
-              Order: <span className="font-mono text-terracotta-400">#{selectedOrder.id}</span> ({selectedOrder.retailerName})
-            </p>
-
-            <div className="space-y-3">
+      {selectedOrder && mounted && createPortal(
+        <div
+          className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedOrder(null);
+          }}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="relative w-full max-w-lg mx-auto bg-slate-900/95 border border-white/[0.12] rounded-2xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-xl space-y-5 text-left text-slate-100"
+            style={{ maxWidth: '32rem', width: '100%' }}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between gap-4 border-b border-white/[0.08] pb-4">
               <div>
-                <label className="block text-[11px] font-semibold text-stone-400 mb-1">Status</label>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-sky-500/10 border border-sky-400/30 flex items-center justify-center text-sky-400">
+                    <Package className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-base font-bold text-white tracking-tight">
+                    Update Fulfillment Status
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
+                  <span>Order:</span>
+                  <span className="font-mono font-semibold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-400/20">
+                    #{selectedOrder.id}
+                  </span>
+                  <span className="text-slate-500">•</span>
+                  <span className="text-slate-300 font-medium">
+                    {selectedOrder.retailerName}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedOrder(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition"
+                aria-label="Close modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form Fields */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Fulfillment Status <span className="text-rose-400">*</span>
+                </label>
                 <select
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-stone-950 border border-stone-800 text-xs text-white focus:outline-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-white/[0.12] text-xs font-medium text-slate-100 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
                 >
+                  <option value="PLACED">PLACED</option>
                   <option value="CONFIRMED">CONFIRMED</option>
                   <option value="PREPARING">PREPARING</option>
+                  <option value="OUT_FOR_DELIVERY">OUT_FOR_DELIVERY</option>
                   <option value="DISPATCHED">DISPATCHED</option>
                   <option value="DELIVERED">DELIVERED</option>
                   <option value="CANCELLED">CANCELLED</option>
@@ -297,56 +358,73 @@ export default function AdminOrdersPage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-stone-400 mb-1">Status Reason / Note</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Status Reason / Note
+                </label>
                 <input
                   type="text"
                   value={statusReason}
                   onChange={(e) => setStatusReason(e.target.value)}
                   placeholder="E.g., Out for delivery via Rider #12"
-                  className="w-full p-2.5 rounded-xl bg-stone-950 border border-stone-800 text-xs text-white focus:outline-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-white/[0.12] text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-stone-400 mb-1">Substitution Notes</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Substitution Notes
+                </label>
                 <input
                   type="text"
                   value={substitutionNotes}
                   onChange={(e) => setSubstitutionNotes(e.target.value)}
                   placeholder="E.g., Organic tomatoes substituted with local vine tomatoes"
-                  className="w-full p-2.5 rounded-xl bg-stone-950 border border-stone-800 text-xs text-white focus:outline-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-white/[0.12] text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-stone-400 mb-1">Fulfillment Notes</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Fulfillment Notes
+                </label>
                 <input
                   type="text"
                   value={fulfillmentNotes}
                   onChange={(e) => setFulfillmentNotes(e.target.value)}
                   placeholder="E.g., Delivered to security guard at tower B"
-                  className="w-full p-2.5 rounded-xl bg-stone-950 border border-stone-800 text-xs text-white focus:outline-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-white/[0.12] text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.08]">
               <button
+                type="button"
                 onClick={() => setSelectedOrder(null)}
-                className="px-4 py-2 rounded-xl bg-stone-800 text-xs font-semibold text-stone-300"
+                className="px-4 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-semibold text-slate-300 border border-white/[0.08] transition"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleUpdateStatus}
                 disabled={actionLoading}
-                className="px-4 py-2 rounded-xl bg-terracotta-600 hover:bg-terracotta-500 text-xs font-bold text-white transition"
+                className="px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-xs font-bold text-white shadow-lg shadow-sky-600/30 transition flex items-center gap-2"
               >
-                {actionLoading ? 'Updating...' : 'Save Changes'}
+                {actionLoading ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Updating...</span>
+                  </>
+                ) : (
+                  <span>Save Changes</span>
+                )}
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
