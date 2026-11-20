@@ -1,4 +1,4 @@
-# 🍲 RasoiIQ — AI Meal Planning & Multi-Grocer Marketplace MVP
+# 🍲 RasoiIQ - AI Meal Planning & Multi-Grocer Marketplace MVP
 
 > **The Intelligent Kitchen Operating System for Indian Households.**  
 > Effortlessly orchestrates authentic weekly meal planning, precision nutrition tracking, smart ingredient aggregation, kitchen pantry deductions, and multi-retailer quick-commerce price comparison — completely runnable locally with zero paid subscriptions.
